@@ -1,3 +1,4 @@
+import { Link, useLocation } from 'react-router-dom';
 import {
   DashboardIcon,
   SignalsIcon,
@@ -9,19 +10,21 @@ import {
 } from './Icons';
 
 const navigation = [
-  { name: 'Dashboard', icon: DashboardIcon, href: '#', current: true },
-  { name: 'Signals', icon: SignalsIcon, href: '#signals', current: false },
-  { name: 'Sources', icon: SourcesIcon, href: '#sources', current: false },
-  { name: 'Detection', icon: DetectionIcon, href: '#detection', current: false },
-  { name: 'Audit Trace', icon: TraceIcon, href: '#trace', current: false },
+  { name: 'Dashboard', icon: DashboardIcon, href: '/' },
+  { name: 'Signals', icon: SignalsIcon, href: '/signals' },
+  { name: 'Sources', icon: SourcesIcon, href: '/sources' },
+  { name: 'Detection', icon: DetectionIcon, href: '/detection' },
+  { name: 'Audit Trace', icon: TraceIcon, href: '/trace' },
 ];
 
 const secondaryNav = [
-  { name: 'API Docs', icon: DocsIcon, href: '#docs' },
-  { name: 'Settings', icon: SettingsIcon, href: '#settings' },
+  { name: 'API Docs', icon: DocsIcon, href: '/docs' },
+  { name: 'Settings', icon: SettingsIcon, href: '/settings' },
 ];
 
 export function Sidebar() {
+  const location = useLocation();
+
   return (
     <aside className="fixed left-0 top-16 bottom-0 w-64 bg-surface-800/50 border-r border-surface-600/50 backdrop-blur-xl">
       <nav className="flex flex-col h-full p-4">
@@ -30,26 +33,29 @@ export function Sidebar() {
           <p className="px-3 text-[10px] font-semibold text-lattice-500 uppercase tracking-wider mb-2">
             Navigation
           </p>
-          {navigation.map((item) => (
-            <a
-              key={item.name}
-              href={item.href}
-              className={`
-                flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all
-                ${
-                  item.current
-                    ? 'bg-lattice-500/10 text-lattice-300 border border-lattice-500/20'
-                    : 'text-surface-400 hover:text-lattice-300 hover:bg-surface-700/50'
-                }
-              `}
-            >
-              <item.icon className="w-5 h-5" />
-              {item.name}
-              {item.current && (
-                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-lattice-400" />
-              )}
-            </a>
-          ))}
+          {navigation.map((item) => {
+            const isActive = location.pathname === item.href;
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={`
+                  flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all
+                  ${
+                    isActive
+                      ? 'bg-lattice-500/10 text-lattice-300 border border-lattice-500/20'
+                      : 'text-surface-400 hover:text-lattice-300 hover:bg-surface-700/50'
+                  }
+                `}
+              >
+                <item.icon className="w-5 h-5" />
+                {item.name}
+                {isActive && (
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-lattice-400" />
+                )}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Divider */}
@@ -60,16 +66,29 @@ export function Sidebar() {
           <p className="px-3 text-[10px] font-semibold text-lattice-500 uppercase tracking-wider mb-2">
             Resources
           </p>
-          {secondaryNav.map((item) => (
-            <a
-              key={item.name}
-              href={item.href}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-surface-400 hover:text-lattice-300 hover:bg-surface-700/50 transition-all"
-            >
-              <item.icon className="w-5 h-5" />
-              {item.name}
-            </a>
-          ))}
+          {secondaryNav.map((item) => {
+            const isActive = location.pathname === item.href;
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={`
+                  flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all
+                  ${
+                    isActive
+                      ? 'bg-lattice-500/10 text-lattice-300 border border-lattice-500/20'
+                      : 'text-surface-400 hover:text-lattice-300 hover:bg-surface-700/50'
+                  }
+                `}
+              >
+                <item.icon className="w-5 h-5" />
+                {item.name}
+                {isActive && (
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-lattice-400" />
+                )}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Bottom - Usage */}
