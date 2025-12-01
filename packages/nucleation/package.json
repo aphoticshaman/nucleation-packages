@@ -1,0 +1,60 @@
+{
+  "name": "nucleation",
+  "version": "1.0.0",
+  "description": "Early warning system for phase transitions. Detect the calm before the storm across finance, security, SaaS, IoT, and more.",
+  "type": "module",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "types": "./src/index.d.ts"
+    },
+    "./edge": {
+      "import": "./src/edge.js"
+    }
+  },
+  "scripts": {
+    "test": "node --test test/"
+  },
+  "keywords": [
+    "early-warning",
+    "phase-transition",
+    "anomaly-detection",
+    "regime-detection",
+    "variance",
+    "monitoring",
+    "alerting",
+    "time-series",
+    "wasm",
+    "real-time",
+    "streaming",
+    "kafka",
+    "prometheus",
+    "observability"
+  ],
+  "author": "Ryan Cardwell <aphoticshaman@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aphoticshaman/nucleation-packages.git",
+    "directory": "packages/nucleation"
+  },
+  "homepage": "https://github.com/aphoticshaman/nucleation-packages#readme",
+  "dependencies": {
+    "nucleation-wasm": "^0.1.0",
+    "regime-shift": "^1.0.0",
+    "threat-pulse": "^1.0.0",
+    "churn-harbinger": "^1.0.0",
+    "org-canary": "^1.0.0",
+    "supply-sentinel": "^1.0.0",
+    "sensor-shift": "^1.0.0",
+    "crowd-phase": "^1.0.0",
+    "patient-drift": "^1.0.0",
+    "match-pulse": "^1.0.0",
+    "market-canary": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

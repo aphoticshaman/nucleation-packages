@@ -388,9 +388,8 @@ const restored = await Detector.deserialize(json);
 
 ## Author
 
-Ryan Cardwell ([@Benthic_Shadow](https://x.com/Benthic_Shadow))
+[@Benthic_Shadow](https://x.com/Benthic_Shadow)
 
-15 years US Army EOD. The doctrine of addressing threats before they manifest.
 
 ---
 
