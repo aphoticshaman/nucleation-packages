@@ -101,14 +101,22 @@ export class TelegramSource implements DataSource {
 
       if (!postId || !rawText) continue;
 
-      // Strip HTML tags
-      const text = rawText
-        .replace(/<br\s*\/?>/gi, '\n')
-        .replace(/<[^>]+>/g, '')
+      // Strip HTML tags (loop to handle nested tags)
+      let text = rawText.replace(/<br\s*\/?>/gi, '\n');
+      // Remove all HTML tags - loop until no more tags found
+      let prevText = '';
+      while (prevText !== text) {
+        prevText = text;
+        text = text.replace(/<[^>]+>/g, '');
+      }
+      // Decode HTML entities in correct order (amp LAST to prevent double-unescaping)
+      text = text
         .replace(/&nbsp;/g, ' ')
-        .replace(/&amp;/g, '&')
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&amp;/g, '&') // Must be last to avoid double-unescaping
         .trim();
 
       if (text.length > 0) {
