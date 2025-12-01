@@ -571,8 +571,13 @@ export class LanguageDetector implements PostFilter {
     // Attach detected language
     const processedPost: SocialPost = {
       ...post,
-      language: confidence >= this.config.minConfidence ? language : post.language,
     };
+
+    // Only set language if it has a value
+    const newLanguage = confidence >= this.config.minConfidence ? language : post.language;
+    if (newLanguage) {
+      processedPost.language = newLanguage;
+    }
 
     // Filter if language restrictions are set
     if (this.allowedSet.size > 0 && !this.allowedSet.has(language)) {
@@ -632,7 +637,7 @@ export class LanguageDetector implements PostFilter {
     // Sort by score
     const sorted = [...scores.entries()].sort((a, b) => b[1] - a[1]);
 
-    if (sorted.length === 0 || sorted[0][1] === 0) {
+    if (sorted.length === 0 || sorted[0]![1] === 0) {
       // Fall back to script detection
       if (scriptResult.confidence > 0.3) {
         return { ...scriptResult, alternatives: [] };
@@ -640,7 +645,7 @@ export class LanguageDetector implements PostFilter {
       return { language: 'unknown', confidence: 0, alternatives: [] };
     }
 
-    const topScore = sorted[0][1];
+    const topScore = sorted[0]![1];
     const secondScore = sorted[1]?.[1] ?? 0;
 
     // Calculate confidence based on score gap
@@ -654,7 +659,7 @@ export class LanguageDetector implements PostFilter {
     const alternatives = sorted.slice(1, 4).map(([code, score]) => ({ code, score }));
 
     return {
-      language: sorted[0][0],
+      language: sorted[0]![0],
       confidence,
       alternatives,
     };
