@@ -219,6 +219,28 @@ from .attractor.viz.plot_geodesics import (
     GeodesicPlotter,
 )
 
+from .attractor.regime.regime_sde import (
+    RegimeSDEConfig,
+    RegimeSDE,
+)
+
+from .attractor.viz.plot_persistence import (
+    PersistencePlotConfig,
+    PersistencePlotter,
+    compute_distance_matrix,
+)
+
+from .attractor.viz.anim_particles import (
+    AnimationConfig,
+    ParticleAnimator,
+    animate_from_history,
+)
+
+from .attractor.api.latticeforge import (
+    LatticeForgeConfig,
+    LatticeForge,
+)
+
 __version__ = "0.1.0"
 
 __all__ = [
@@ -351,9 +373,23 @@ __all__ = [
     "estimate_q_from_counts",
     "analyze_q",
     "simulate_markov_chain",
-    # Visualization
+    # Visualization - Basins & Geodesics
     "BasinPlotConfig",
     "BasinPlotter",
     "GeodesicPlotConfig",
     "GeodesicPlotter",
+    # Regime SDE
+    "RegimeSDEConfig",
+    "RegimeSDE",
+    # Visualization - Persistence
+    "PersistencePlotConfig",
+    "PersistencePlotter",
+    "compute_distance_matrix",
+    # Visualization - Animation
+    "AnimationConfig",
+    "ParticleAnimator",
+    "animate_from_history",
+    # High-level API
+    "LatticeForgeConfig",
+    "LatticeForge",
 ]
