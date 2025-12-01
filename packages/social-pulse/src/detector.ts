@@ -21,6 +21,8 @@
  * - Market sentiment regime changes
  */
 
+import { randomBytes } from 'node:crypto';
+
 import type {
   DataSource,
   SearchParams,
@@ -534,10 +536,9 @@ class DataTraceRecorder {
   }
 
   private generateId(): string {
-    // Use crypto-safe random for ID generation
-    const randomBytes = new Uint8Array(8);
-    crypto.getRandomValues(randomBytes);
-    const hex = Array.from(randomBytes, (b) => b.toString(16).padStart(2, '0')).join('');
+    // Use crypto-safe random for ID generation (Node.js compatible)
+    const bytes = randomBytes(8);
+    const hex = bytes.toString('hex');
     return `trace_${Date.now()}_${hex}`;
   }
 
