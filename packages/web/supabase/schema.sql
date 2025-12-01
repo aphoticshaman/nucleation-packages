@@ -93,7 +93,7 @@ CREATE TABLE simulations (
     diffusion DOUBLE PRECISION NOT NULL DEFAULT 0.05,
 
     -- State
-    current_time DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    sim_time DOUBLE PRECISION NOT NULL DEFAULT 0.0,
     n_steps INTEGER NOT NULL DEFAULT 0,
     status VARCHAR(50) NOT NULL DEFAULT 'created',
 

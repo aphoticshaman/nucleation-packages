@@ -64,7 +64,7 @@ export interface Database {
           min_influence: number;
           dt: number;
           diffusion: number;
-          current_time: number;
+          sim_time: number;
           n_steps: number;
           status: string;
           user_id: string | null;
