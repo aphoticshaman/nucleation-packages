@@ -5,7 +5,13 @@
  * Requires no authentication for public data via web preview.
  */
 
-import type { DataSource, SearchParams, SocialPost, AuthorInfo } from '../types.js';
+import type {
+  DataSource,
+  SearchParams,
+  SocialPost,
+  AuthorInfo,
+  EngagementMetrics,
+} from '../types.js';
 
 // Telegram web preview endpoints
 const TELEGRAM_PREVIEW = 'https://t.me/s';
@@ -93,6 +99,8 @@ export class TelegramSource implements DataSource {
       const postId = match[1];
       const rawText = match[2];
 
+      if (!postId || !rawText) continue;
+
       // Strip HTML tags
       const text = rawText
         .replace(/<br\s*\/?>/gi, '\n')
@@ -106,18 +114,23 @@ export class TelegramSource implements DataSource {
       if (text.length > 0) {
         // Extract timestamp
         const timeMatch = /datetime="([^"]+)"/.exec(html.slice(match.index, match.index + 1000));
-        const timestamp = timeMatch ? timeMatch[1] : new Date().toISOString();
+        const timestamp = timeMatch && timeMatch[1] ? timeMatch[1] : new Date().toISOString();
 
         // Extract views
         const viewsMatch = /class="tgme_widget_message_views"[^>]*>([^<]+)/.exec(
           html.slice(match.index, match.index + 2000)
         );
-        const views = viewsMatch ? this.parseViewCount(viewsMatch[1]) : undefined;
+        const views = viewsMatch && viewsMatch[1] ? this.parseViewCount(viewsMatch[1]) : undefined;
 
         const author: AuthorInfo = {
           id: channelName,
           name: channelName,
         };
+
+        const engagement: EngagementMetrics = {};
+        if (views !== undefined) {
+          engagement.views = views;
+        }
 
         posts.push({
           id: postId,
@@ -125,9 +138,7 @@ export class TelegramSource implements DataSource {
           content: text,
           timestamp,
           author,
-          engagement: {
-            views,
-          },
+          engagement,
           raw: { channelName, postId },
         });
       }
