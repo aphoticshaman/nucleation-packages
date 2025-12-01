@@ -187,6 +187,38 @@ from .core.great_attractor_sim import (
     GreatAttractorSimulator,
 )
 
+from .attractor.tda_monitor import (
+    TDAMonitorConfig,
+    TDAMonitorHistory,
+    TDAMonitor,
+    autocorrelation,
+    persistent_entropy,
+)
+
+from .attractor.ga_ogse_bridge import (
+    GAOGSEBridgeConfig,
+    GAOGSEBridge,
+)
+
+from .attractor.regime.q_matrix import (
+    QMatrixResult,
+    build_q_matrix,
+    is_valid_q,
+    estimate_q_from_counts,
+    analyze_q,
+    simulate_markov_chain,
+)
+
+from .attractor.viz.plot_basins import (
+    BasinPlotConfig,
+    BasinPlotter,
+)
+
+from .attractor.viz.plot_geodesics import (
+    GeodesicPlotConfig,
+    GeodesicPlotter,
+)
+
 __version__ = "0.1.0"
 
 __all__ = [
@@ -303,4 +335,25 @@ __all__ = [
     "GreatAttractorConfig",
     "GreatAttractorHistory",
     "GreatAttractorSimulator",
+    # TDA Monitor
+    "TDAMonitorConfig",
+    "TDAMonitorHistory",
+    "TDAMonitor",
+    "autocorrelation",
+    "persistent_entropy",
+    # OGSE-GA Bridge
+    "GAOGSEBridgeConfig",
+    "GAOGSEBridge",
+    # Q-Matrix Utilities
+    "QMatrixResult",
+    "build_q_matrix",
+    "is_valid_q",
+    "estimate_q_from_counts",
+    "analyze_q",
+    "simulate_markov_chain",
+    # Visualization
+    "BasinPlotConfig",
+    "BasinPlotter",
+    "GeodesicPlotConfig",
+    "GeodesicPlotter",
 ]
