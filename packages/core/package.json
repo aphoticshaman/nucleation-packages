@@ -1,0 +1,43 @@
+{
+  "name": "@nucleation/core",
+  "version": "1.0.0",
+  "description": "Shared core for nucleation phase transition detectors",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "nucleation",
+    "phase-transition",
+    "variance-detection",
+    "wasm"
+  ],
+  "author": "Ryan Cardwell <aphoticshaman@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aphoticshaman/nucleation-packages.git",
+    "directory": "packages/core"
+  },
+  "dependencies": {
+    "nucleation-wasm": "^0.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
