@@ -1,0 +1,46 @@
+{
+  "name": "@latticeforge/api",
+  "version": "0.1.0",
+  "description": "LatticeForge Enterprise API - Fort Knox-grade signal intelligence",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "latticeforge-api": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "hono": "^4.0.0",
+    "@hono/node-server": "^1.8.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0"
+  },
+  "keywords": [
+    "api",
+    "enterprise",
+    "signal-intelligence",
+    "latticeforge"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aphoticshaman/nucleation-packages",
+    "directory": "packages/api"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
