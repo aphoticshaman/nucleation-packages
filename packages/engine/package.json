@@ -1,0 +1,48 @@
+{
+  "name": "@nucleation/engine",
+  "version": "0.1.0",
+  "description": "Detection engine with WASM acceleration and data provenance tracking",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@nucleation/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "nucleation-wasm": ">=0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "nucleation-wasm": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "detection",
+    "wasm",
+    "phase-transition",
+    "anomaly-detection",
+    "fusion"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aphoticshaman/nucleation-packages",
+    "directory": "packages/engine"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
