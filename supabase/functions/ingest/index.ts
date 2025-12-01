@@ -218,6 +218,12 @@ function extractFactbookIndicators(economy: any): Record<string, number | null> 
 async function ingestFRED(supabase: any) {
   const results = { series_updated: 0, errors: [] as string[] }
 
+  const fredApiKey = Deno.env.get('FRED_API_KEY')
+  if (!fredApiKey) {
+    results.errors.push('FRED_API_KEY not configured')
+    return results
+  }
+
   // Key FRED series
   const fredSeries = {
     'DFF': 'fed_funds_rate',
@@ -232,11 +238,10 @@ async function ingestFRED(supabase: any) {
     'FEDFUNDS': 'us_fed_funds',
   }
 
-  // FRED requires API key for some series, but many work without
   for (const [seriesId, name] of Object.entries(fredSeries)) {
     try {
       const response = await fetch(
-        `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=DEMO_KEY&file_type=json&limit=1&sort_order=desc`
+        `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${fredApiKey}&file_type=json&limit=1&sort_order=desc`
       )
 
       if (!response.ok) continue
