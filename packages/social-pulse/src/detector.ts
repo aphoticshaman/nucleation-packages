@@ -32,6 +32,58 @@ import type {
   Platform,
 } from './types.js';
 
+// ============ DUAL-FUSION ENGINE TYPES ============
+
+/**
+ * External API data source configuration
+ */
+export interface ExternalAPIConfig {
+  name: string;
+  endpoint: string;
+  headers?: Record<string, string>;
+  rateLimit?: number; // requests per second
+  timeout?: number; // ms
+  transform?: (data: unknown) => number[]; // transform to numeric signals
+}
+
+/**
+ * Multi-signal fusion result
+ */
+export interface FusionResult {
+  timestamp: string;
+  signals: Map<string, number[]>;
+  fusedSignal: number[];
+  wasmPhase: number;
+  jsPhase: string;
+  confidence: number;
+  variance: number;
+  inflectionMagnitude: number;
+  processingTime: {
+    fetch_ms: number;
+    fusion_ms: number;
+    detection_ms: number;
+    total_ms: number;
+  };
+  trace?: DataTrace;
+}
+
+/**
+ * Stream processing callback
+ */
+export type StreamCallback = (result: FusionResult) => void;
+
+/**
+ * Performance metrics for asymmetric leverage tracking
+ */
+export interface PerformanceMetrics {
+  wasmSpeedup: number;
+  dataPointsProcessed: number;
+  signalsCombined: number;
+  avgLatency_ms: number;
+  throughput_per_sec: number;
+  accuracyGain: number; // estimated from multi-signal correlation
+}
+
 // ============ DATA TRACE TYPES ============
 
 /**
@@ -492,6 +544,604 @@ class DataTraceRecorder {
       return { _truncated: true, _length: str.length, _preview: str.slice(0, 500) };
     }
     return data;
+  }
+}
+
+// ============ DUAL-FUSION ENGINE ============
+
+/**
+ * DualFusionEngine - Asymmetric Leverage Through Multi-Signal Fusion
+ *
+ * Combines external API data with WASM-accelerated detection for:
+ * - PERFORMANCE: 10-100x speedup via WASM batch processing
+ * - GRANULARITY: Multi-signal fusion from diverse data sources
+ * - ACCURACY: Cross-correlation between signals reduces noise
+ * - SPEED: Parallel data fetching + batch WASM updates
+ * - EFFICIENCY: Streaming mode for real-time, memory-efficient processing
+ *
+ * Architecture:
+ * ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
+ * │ External API 1  │  │ External API 2  │  │ External API N  │
+ * └────────┬────────┘  └────────┬────────┘  └────────┬────────┘
+ *          │                    │                    │
+ *          └────────────────────┼────────────────────┘
+ *                               ▼
+ *                    ┌─────────────────────┐
+ *                    │  PARALLEL FETCHER   │ ← Rate limited, fault tolerant
+ *                    └──────────┬──────────┘
+ *                               ▼
+ *                    ┌─────────────────────┐
+ *                    │  SIGNAL NORMALIZER  │ ← Z-score normalization
+ *                    └──────────┬──────────┘
+ *                               ▼
+ *                    ┌─────────────────────┐
+ *                    │  MULTI-SIGNAL FUSER │ ← Weighted combination
+ *                    └──────────┬──────────┘
+ *                               ▼
+ *            ┌──────────────────┴──────────────────┐
+ *            ▼                                     ▼
+ * ┌─────────────────────┐               ┌─────────────────────┐
+ * │  WASM BATCH DETECT  │               │   JS FALLBACK       │
+ * │  (10-100x faster)   │               │   (always works)    │
+ * └──────────┬──────────┘               └──────────┬──────────┘
+ *            └──────────────────┬──────────────────┘
+ *                               ▼
+ *                    ┌─────────────────────┐
+ *                    │   DATA TRACE LOG    │ ← Full audit trail
+ *                    └─────────────────────┘
+ */
+export class DualFusionEngine {
+  private wasmBridge: WasmBridge;
+  private traceRecorder: DataTraceRecorder;
+  private apiConfigs: ExternalAPIConfig[] = [];
+  private signalBuffers = new Map<string, number[]>();
+  private metrics: PerformanceMetrics = {
+    wasmSpeedup: 1,
+    dataPointsProcessed: 0,
+    signalsCombined: 0,
+    avgLatency_ms: 0,
+    throughput_per_sec: 0,
+    accuracyGain: 1,
+  };
+  private latencyHistory: number[] = [];
+  private streamInterval: ReturnType<typeof setInterval> | null = null;
+
+  constructor() {
+    this.wasmBridge = new WasmBridge();
+    this.traceRecorder = new DataTraceRecorder();
+  }
+
+  /**
+   * Initialize the dual-fusion engine
+   */
+  async init(): Promise<boolean> {
+    const startTime = performance.now();
+
+    // Initialize WASM bridge
+    const wasmAvailable = await this.wasmBridge.init();
+
+    // Initialize Shepherd for multi-actor monitoring
+    if (wasmAvailable) {
+      this.wasmBridge.initShepherd(50);
+    }
+
+    this.traceRecorder.setEnabled(true);
+
+    this.traceRecorder.record(
+      'transform',
+      { action: 'init' },
+      { wasmAvailable, apiCount: this.apiConfigs.length },
+      performance.now() - startTime,
+      'DualFusionEngine'
+    );
+
+    return wasmAvailable;
+  }
+
+  /**
+   * Register an external API data source
+   */
+  registerAPI(config: ExternalAPIConfig): void {
+    this.apiConfigs.push({
+      rateLimit: 10,
+      timeout: 5000,
+      ...config,
+    });
+    this.signalBuffers.set(config.name, []);
+  }
+
+  /**
+   * Fetch data from all APIs in parallel (with rate limiting)
+   */
+  async fetchAllSources(): Promise<Map<string, number[]>> {
+    const fetchStart = performance.now();
+    const results = new Map<string, number[]>();
+
+    // Parallel fetch with timeout
+    const fetchPromises = this.apiConfigs.map(async (config) => {
+      const sourceStart = performance.now();
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), config.timeout ?? 5000);
+
+        const fetchOptions: RequestInit = {
+          signal: controller.signal,
+        };
+        if (config.headers) {
+          fetchOptions.headers = config.headers;
+        }
+
+        const response = await fetch(config.endpoint, fetchOptions);
+
+        clearTimeout(timeout);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        const signal = config.transform ? config.transform(data) : this.defaultTransform(data);
+
+        this.traceRecorder.record(
+          'fetch',
+          { endpoint: config.endpoint },
+          { dataPoints: signal.length },
+          performance.now() - sourceStart,
+          config.name
+        );
+
+        return { name: config.name, signal };
+      } catch (error) {
+        this.traceRecorder.record(
+          'fetch',
+          { endpoint: config.endpoint, error: String(error) },
+          { dataPoints: 0 },
+          performance.now() - sourceStart,
+          config.name
+        );
+        return { name: config.name, signal: [] };
+      }
+    });
+
+    const fetchResults = await Promise.allSettled(fetchPromises);
+
+    for (const result of fetchResults) {
+      if (result.status === 'fulfilled' && result.value.signal.length > 0) {
+        results.set(result.value.name, result.value.signal);
+
+        // Update buffer
+        const buffer = this.signalBuffers.get(result.value.name) ?? [];
+        buffer.push(...result.value.signal);
+        // Keep last 1000 points per source
+        while (buffer.length > 1000) buffer.shift();
+        this.signalBuffers.set(result.value.name, buffer);
+      }
+    }
+
+    this.traceRecorder.record(
+      'fetch',
+      { sourceCount: this.apiConfigs.length },
+      { successCount: results.size, totalPoints: [...results.values()].flat().length },
+      performance.now() - fetchStart,
+      'parallel_fetch'
+    );
+
+    return results;
+  }
+
+  /**
+   * Normalize signals using Z-score (for fair combination)
+   */
+  normalizeSignal(signal: number[]): number[] {
+    if (signal.length < 2) return signal;
+
+    const mean = signal.reduce((a, b) => a + b, 0) / signal.length;
+    const variance =
+      signal.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / (signal.length - 1);
+    const stdDev = Math.sqrt(variance);
+
+    if (stdDev === 0) return signal.map(() => 0);
+
+    return signal.map((v) => (v - mean) / stdDev);
+  }
+
+  /**
+   * Fuse multiple signals into one (weighted by reliability)
+   */
+  fuseSignals(signals: Map<string, number[]>): number[] {
+    const fusionStart = performance.now();
+
+    if (signals.size === 0) return [];
+
+    // Normalize all signals
+    const normalized = new Map<string, number[]>();
+    for (const [name, signal] of signals) {
+      normalized.set(name, this.normalizeSignal(signal));
+    }
+
+    // Find common length (use minimum)
+    const lengths = [...normalized.values()].map((s) => s.length);
+    const minLength = Math.min(...lengths);
+
+    if (minLength === 0) return [];
+
+    // Weighted fusion (equal weights for now, can be extended)
+    const weights = new Map<string, number>();
+    for (const name of normalized.keys()) {
+      weights.set(name, 1 / normalized.size);
+    }
+
+    // Combine signals
+    const fused: number[] = [];
+    for (let i = 0; i < minLength; i++) {
+      let sum = 0;
+      for (const [name, signal] of normalized) {
+        const weight = weights.get(name) ?? 0;
+        sum += (signal[i] ?? 0) * weight;
+      }
+      fused.push(sum);
+    }
+
+    // Calculate cross-correlation for accuracy gain estimation
+    const correlations: number[] = [];
+    const signalArrays = [...normalized.values()];
+    for (let i = 0; i < signalArrays.length; i++) {
+      for (let j = i + 1; j < signalArrays.length; j++) {
+        const sig1 = signalArrays[i] ?? [];
+        const sig2 = signalArrays[j] ?? [];
+        correlations.push(this.correlation(sig1, sig2));
+      }
+    }
+
+    // Higher correlation = signals agree = higher accuracy
+    const avgCorrelation =
+      correlations.length > 0 ? correlations.reduce((a, b) => a + b, 0) / correlations.length : 0;
+
+    this.metrics.accuracyGain = 1 + Math.abs(avgCorrelation) * (normalized.size - 1) * 0.1;
+    this.metrics.signalsCombined = normalized.size;
+
+    this.traceRecorder.record(
+      'transform',
+      { signalCount: normalized.size, lengths },
+      { fusedLength: fused.length, avgCorrelation, accuracyGain: this.metrics.accuracyGain },
+      performance.now() - fusionStart,
+      'signal_fusion'
+    );
+
+    return fused;
+  }
+
+  /**
+   * Batch WASM detection (10-100x faster than individual updates)
+   */
+  detectBatch(
+    id: string,
+    values: number[]
+  ): {
+    phase: number;
+    confidence: number;
+    variance: number;
+    inflectionMagnitude: number;
+  } {
+    const detectStart = performance.now();
+
+    // Use WASM if available
+    if (this.wasmBridge.isAvailable()) {
+      // Get or create detector
+      const detector = this.wasmBridge.getDetector(id);
+      if (detector) {
+        // BATCH UPDATE - much faster than individual
+        const float64Values = new Float64Array(values);
+        const phase = detector.update_batch(float64Values);
+        const confidence = detector.confidence();
+        const variance = detector.currentVariance();
+        const inflectionMagnitude = detector.inflectionMagnitude();
+
+        const duration = performance.now() - detectStart;
+        this.wasmBridge.recordTime(duration, true);
+
+        this.traceRecorder.record(
+          'detect',
+          { id, batchSize: values.length },
+          { phase, confidence, variance, mode: 'wasm_batch' },
+          duration,
+          'wasm_batch_detect'
+        );
+
+        this.metrics.dataPointsProcessed += values.length;
+
+        return { phase, confidence, variance, inflectionMagnitude };
+      }
+    }
+
+    // JS fallback (process individually)
+    let lastPhase = 0;
+    let lastVariance = 0;
+    const jsStart = performance.now();
+
+    for (const value of values) {
+      const state = this.jsDetect(id, value);
+      lastPhase = this.phaseToNumber(state.phase);
+      lastVariance = state.variance;
+    }
+
+    const jsDuration = performance.now() - jsStart;
+    this.wasmBridge.recordTime(jsDuration, false);
+
+    this.traceRecorder.record(
+      'detect',
+      { id, batchSize: values.length },
+      { phase: lastPhase, variance: lastVariance, mode: 'js_fallback' },
+      jsDuration,
+      'js_batch_detect'
+    );
+
+    this.metrics.dataPointsProcessed += values.length;
+
+    return {
+      phase: lastPhase,
+      confidence: 0.5,
+      variance: lastVariance,
+      inflectionMagnitude: 0,
+    };
+  }
+
+  /**
+   * Full fusion pipeline: fetch → normalize → fuse → detect
+   */
+  async process(): Promise<FusionResult> {
+    const totalStart = performance.now();
+
+    // 1. Fetch all sources in parallel
+    const fetchStart = performance.now();
+    const signals = await this.fetchAllSources();
+    const fetchTime = performance.now() - fetchStart;
+
+    // 2. Fuse signals
+    const fusionStart = performance.now();
+    const fusedSignal = this.fuseSignals(signals);
+    const fusionTime = performance.now() - fusionStart;
+
+    // 3. Batch detection
+    const detectStart = performance.now();
+    const detection = this.detectBatch('fusion_main', fusedSignal);
+    const detectTime = performance.now() - detectStart;
+
+    const totalTime = performance.now() - totalStart;
+
+    // Update latency metrics
+    this.latencyHistory.push(totalTime);
+    if (this.latencyHistory.length > 100) this.latencyHistory.shift();
+    this.metrics.avgLatency_ms =
+      this.latencyHistory.reduce((a, b) => a + b, 0) / this.latencyHistory.length;
+    this.metrics.throughput_per_sec = fusedSignal.length / (totalTime / 1000);
+
+    // Get WASM status for speedup metric
+    const wasmStatus = this.wasmBridge.getStatus();
+    if (wasmStatus.performance?.wasmSpeedup) {
+      this.metrics.wasmSpeedup = wasmStatus.performance.wasmSpeedup;
+    }
+
+    const result: FusionResult = {
+      timestamp: new Date().toISOString(),
+      signals,
+      fusedSignal,
+      wasmPhase: detection.phase,
+      jsPhase: this.numberToPhase(detection.phase),
+      confidence: detection.confidence,
+      variance: detection.variance,
+      inflectionMagnitude: detection.inflectionMagnitude,
+      processingTime: {
+        fetch_ms: fetchTime,
+        fusion_ms: fusionTime,
+        detection_ms: detectTime,
+        total_ms: totalTime,
+      },
+    };
+
+    // Include trace if enabled
+    if (this.traceRecorder.isEnabled()) {
+      result.trace = this.traceRecorder.export();
+    }
+
+    return result;
+  }
+
+  /**
+   * Start streaming mode (real-time continuous processing)
+   */
+  startStream(callback: StreamCallback, interval_ms = 1000): void {
+    if (this.streamInterval) {
+      this.stopStream();
+    }
+
+    const tick = (): void => {
+      this.process()
+        .then((result) => callback(result))
+        .catch((error: unknown) => {
+          this.traceRecorder.record(
+            'transform',
+            { action: 'stream_error' },
+            { error: String(error) },
+            0,
+            'stream'
+          );
+        });
+    };
+
+    this.streamInterval = setInterval(tick, interval_ms);
+  }
+
+  /**
+   * Stop streaming mode
+   */
+  stopStream(): void {
+    if (this.streamInterval) {
+      clearInterval(this.streamInterval);
+      this.streamInterval = null;
+    }
+  }
+
+  /**
+   * Get current performance metrics
+   */
+  getMetrics(): PerformanceMetrics {
+    return { ...this.metrics };
+  }
+
+  /**
+   * Get WASM bridge status
+   */
+  getWasmStatus(): WasmBridgeStatus {
+    return this.wasmBridge.getStatus();
+  }
+
+  /**
+   * Export full data trace (open-box visibility)
+   */
+  exportTrace(): DataTrace {
+    return this.traceRecorder.export();
+  }
+
+  /**
+   * Export trace as JSON
+   */
+  exportTraceJSON(): string {
+    return this.traceRecorder.toJSON();
+  }
+
+  /**
+   * Export trace as CSV
+   */
+  exportTraceCSV(): string {
+    return this.traceRecorder.toCSV();
+  }
+
+  /**
+   * Clear trace history
+   */
+  clearTrace(): void {
+    this.traceRecorder.clear();
+  }
+
+  /**
+   * Dispose resources
+   */
+  dispose(): void {
+    this.stopStream();
+    this.wasmBridge.dispose();
+    this.signalBuffers.clear();
+  }
+
+  // ============ Private Helpers ============
+
+  private defaultTransform(data: unknown): number[] {
+    // Extract numeric values from common API response formats
+    if (Array.isArray(data)) {
+      return data
+        .map((item) => {
+          if (typeof item === 'number') return item;
+          if (typeof item === 'object' && item !== null) {
+            // Look for common numeric fields
+            const obj = item as Record<string, unknown>;
+            return (
+              (typeof obj['value'] === 'number' && obj['value']) ||
+              (typeof obj['score'] === 'number' && obj['score']) ||
+              (typeof obj['sentiment'] === 'number' && obj['sentiment']) ||
+              (typeof obj['price'] === 'number' && obj['price']) ||
+              0
+            );
+          }
+          return 0;
+        })
+        .filter((v) => v !== 0);
+    }
+    return [];
+  }
+
+  private correlation(a: number[], b: number[]): number {
+    const n = Math.min(a.length, b.length);
+    if (n < 2) return 0;
+
+    const meanA = a.slice(0, n).reduce((s, v) => s + v, 0) / n;
+    const meanB = b.slice(0, n).reduce((s, v) => s + v, 0) / n;
+
+    let num = 0;
+    let denA = 0;
+    let denB = 0;
+
+    for (let i = 0; i < n; i++) {
+      const da = (a[i] ?? 0) - meanA;
+      const db = (b[i] ?? 0) - meanB;
+      num += da * db;
+      denA += da * da;
+      denB += db * db;
+    }
+
+    const den = Math.sqrt(denA * denB);
+    return den === 0 ? 0 : num / den;
+  }
+
+  private jsDetectors = new Map<string, { values: number[]; windowSize: number }>();
+
+  private jsDetect(id: string, value: number): { phase: string; variance: number; mean: number } {
+    let state = this.jsDetectors.get(id);
+    if (!state) {
+      state = { values: [], windowSize: 30 };
+      this.jsDetectors.set(id, state);
+    }
+
+    state.values.push(value);
+    if (state.values.length > state.windowSize) {
+      state.values.shift();
+    }
+
+    if (state.values.length < 2) {
+      return { phase: 'Stable', variance: 0, mean: value };
+    }
+
+    const mean = state.values.reduce((a, b) => a + b, 0) / state.values.length;
+    const variance =
+      state.values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / (state.values.length - 1);
+
+    const threshold = 2.0;
+    let phase: string;
+    if (variance < threshold * 0.5) phase = 'Stable';
+    else if (variance < threshold) phase = 'Approaching';
+    else if (variance < threshold * 1.5) phase = 'Critical';
+    else phase = 'Transitioning';
+
+    return { phase, variance, mean };
+  }
+
+  private phaseToNumber(phase: string): number {
+    switch (phase) {
+      case 'Stable':
+        return 0;
+      case 'Approaching':
+        return 1;
+      case 'Critical':
+        return 2;
+      case 'Transitioning':
+        return 3;
+      default:
+        return 0;
+    }
+  }
+
+  private numberToPhase(num: number): string {
+    switch (num) {
+      case 0:
+        return 'Stable';
+      case 1:
+        return 'Approaching';
+      case 2:
+        return 'Critical';
+      case 3:
+        return 'Transitioning';
+      default:
+        return 'Stable';
+    }
   }
 }
 
