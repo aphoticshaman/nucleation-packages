@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LatticeForgeIcon, LockIcon, ShieldIcon } from './Icons';
 import { auth, supabase } from '../lib/supabase';
 
@@ -16,6 +16,20 @@ export function AuthGate({ onAuthenticate }: AuthGateProps) {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Reset loading state on mount (handles return from failed OAuth redirect)
+  useEffect(() => {
+    setIsLoading(false);
+
+    // Check URL for OAuth error
+    const params = new URLSearchParams(window.location.search);
+    const errorParam = params.get('error_description') || params.get('error');
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam));
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
