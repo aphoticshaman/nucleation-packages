@@ -1,10 +1,12 @@
 import { LatticeForgeIcon } from './Icons';
+import type { User } from '@supabase/supabase-js';
 
 interface HeaderProps {
   onLogout: () => void;
+  user?: User | null;
 }
 
-export function Header({ onLogout }: HeaderProps) {
+export function Header({ onLogout, user }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-surface-800/80 backdrop-blur-xl border-b border-surface-600/50 z-50">
       <div className="flex items-center justify-between h-full px-6">
@@ -37,8 +39,12 @@ export function Header({ onLogout }: HeaderProps) {
         {/* Right - User */}
         <div className="flex items-center gap-4">
           <div className="text-right">
-            <p className="text-sm font-medium text-white">Enterprise</p>
-            <p className="text-[10px] text-lattice-400">Crystalline Labs LLC</p>
+            <p className="text-sm font-medium text-white">
+              {user?.email || 'API Access'}
+            </p>
+            <p className="text-[10px] text-lattice-400">
+              {user ? 'Authenticated User' : 'API Key'}
+            </p>
           </div>
           <button
             onClick={onLogout}
