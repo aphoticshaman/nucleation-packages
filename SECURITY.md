@@ -19,7 +19,7 @@ We take security seriously. If you discover a security vulnerability within nucl
 
 ### Do
 
-1. **Email us directly** at: security@nucleation.dev (or aphoticshaman@gmail.com if that's not set up yet)
+1. **Email us directly** at: aphotic.noise@gmail.com
 
 2. **Include the following information:**
    - Type of vulnerability (e.g., XSS, injection, authentication bypass)
