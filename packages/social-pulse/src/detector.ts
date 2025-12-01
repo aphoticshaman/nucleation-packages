@@ -23,8 +23,20 @@ import type {
   Platform,
 } from './types.js';
 
-// Import nucleation-wasm for phase transition detection
-import { NucleationDetector, Shepherd, Phase, type DetectorConfig } from 'nucleation-wasm';
+/**
+ * Phase states for detection
+ */
+type Phase = 'Stable' | 'Approaching' | 'Critical' | 'Transitioning';
+
+/**
+ * Internal detector state
+ */
+interface InternalDetectorState {
+  phase: Phase;
+  variance: number;
+  mean: number;
+  observations: number;
+}
 
 /**
  * SocialPulseDetector configuration
@@ -40,8 +52,6 @@ export interface SocialPulseConfig {
   sensitivity?: 'low' | 'medium' | 'high';
   /** Aggregate by region */
   aggregateByRegion?: boolean;
-  /** Custom WASM detector config */
-  detectorConfig?: DetectorConfig;
 }
 
 /**
@@ -61,7 +71,7 @@ interface EarningsEntry {
 interface EarningsSentiment {
   ticker: string;
   daysUntilReport: number;
-  sentimentTrend: number[]; // Last 30 days
+  sentimentTrend: number[];
   currentSentiment: number;
   sentimentVariance: number;
   phase: Phase;
@@ -70,13 +80,70 @@ interface EarningsSentiment {
 }
 
 /**
- * Sensitivity presets
+ * Sensitivity presets (variance thresholds)
  */
-const SENSITIVITY_PRESETS: Record<string, DetectorConfig> = {
-  low: { windowSize: 50, threshold: 2.5, minVarianceRatio: 1.8 },
-  medium: { windowSize: 30, threshold: 2.0, minVarianceRatio: 1.5 },
-  high: { windowSize: 20, threshold: 1.5, minVarianceRatio: 1.3 },
+const SENSITIVITY_THRESHOLDS = {
+  low: { threshold: 2.5, windowSize: 50 },
+  medium: { threshold: 2.0, windowSize: 30 },
+  high: { threshold: 1.5, windowSize: 20 },
 };
+
+/**
+ * Simple variance-based detector
+ */
+class SimpleVarianceDetector {
+  private values: number[] = [];
+  private windowSize: number;
+  private threshold: number;
+
+  constructor(windowSize = 30, threshold = 2.0) {
+    this.windowSize = windowSize;
+    this.threshold = threshold;
+  }
+
+  update(value: number): InternalDetectorState {
+    this.values.push(value);
+    if (this.values.length > this.windowSize) {
+      this.values.shift();
+    }
+    return this.current();
+  }
+
+  current(): InternalDetectorState {
+    if (this.values.length < 2) {
+      return {
+        phase: 'Stable',
+        variance: 0,
+        mean: this.values[0] ?? 0,
+        observations: this.values.length,
+      };
+    }
+
+    const mean = this.values.reduce((a, b) => a + b, 0) / this.values.length;
+    const variance =
+      this.values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / (this.values.length - 1);
+
+    const phase = this.varianceToPhase(variance);
+
+    return {
+      phase,
+      variance,
+      mean,
+      observations: this.values.length,
+    };
+  }
+
+  reset(): void {
+    this.values = [];
+  }
+
+  private varianceToPhase(variance: number): Phase {
+    if (variance < this.threshold * 0.5) return 'Stable';
+    if (variance < this.threshold) return 'Approaching';
+    if (variance < this.threshold * 1.5) return 'Critical';
+    return 'Transitioning';
+  }
+}
 
 export class SocialPulseDetector {
   private sources: DataSource[] = [];
@@ -84,8 +151,7 @@ export class SocialPulseDetector {
   private config: SocialPulseConfig;
 
   // Phase transition detectors by region/topic
-  private detectors = new Map<string, NucleationDetector>();
-  private shepherd: Shepherd | null = null;
+  private detectors = new Map<string, SimpleVarianceDetector>();
 
   // Sentiment history for variance tracking
   private sentimentHistory = new Map<string, number[]>();
@@ -117,12 +183,7 @@ export class SocialPulseDetector {
    * Initialize detector and all sources
    */
   async init(): Promise<void> {
-    // Initialize all sources
     await Promise.all(this.sources.map((s) => s.init()));
-
-    // Initialize shepherd for correlation
-    this.shepherd = new Shepherd();
-
     this.initialized = true;
   }
 
@@ -148,7 +209,6 @@ export class SocialPulseDetector {
 
     const allPosts: SocialPost[] = [];
 
-    // Fetch from all sources in parallel
     const results = await Promise.allSettled(this.sources.map((source) => source.fetch(params)));
 
     for (const result of results) {
@@ -157,7 +217,6 @@ export class SocialPulseDetector {
       }
     }
 
-    // Apply filters
     const filteredPosts: SocialPost[] = [];
     for (const post of allPosts) {
       let current: SocialPost | null = post;
@@ -185,30 +244,19 @@ export class SocialPulseDetector {
   }> {
     const posts = await this.fetch(params);
 
-    // Calculate sentiment for each post if not already done
     for (const post of posts) {
       if (post.sentimentScore === undefined) {
         post.sentimentScore = this.calculateSentiment(post.content);
       }
     }
 
-    // Aggregate by region
     const aggregates = this.aggregatePosts(posts);
 
-    // Update detectors with aggregated variance
     for (const agg of aggregates) {
       this.updateDetector(agg.id, agg.avgSentiment, agg.variance);
     }
 
-    // Calculate global state
     const state = this.calculateGlobalState(aggregates);
-
-    // Update shepherd for correlation
-    if (this.shepherd) {
-      for (const agg of aggregates) {
-        this.shepherd.addDetector(agg.id, this.getOrCreateDetector(agg.id));
-      }
-    }
 
     return { state, aggregates, posts };
   }
@@ -243,14 +291,13 @@ export class SocialPulseDetector {
       fiscalYear: reportDate.getFullYear(),
     });
 
-    // Initialize sentiment tracking
     this.earningsSentiment.set(ticker.toUpperCase(), {
       ticker: ticker.toUpperCase(),
       daysUntilReport: Math.ceil((reportDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
       sentimentTrend: [],
       currentSentiment: 0,
       sentimentVariance: 0,
-      phase: Phase.Calm,
+      phase: 'Stable',
       prediction: 'uncertain',
       confidence: 0,
     });
@@ -263,7 +310,6 @@ export class SocialPulseDetector {
     const entry = this.earningsSentiment.get(ticker.toUpperCase());
     if (!entry) return null;
 
-    // Fetch posts about this ticker
     const posts = await this.fetch({
       keywords: [ticker, `$${ticker}`],
       limit: 100,
@@ -271,7 +317,6 @@ export class SocialPulseDetector {
 
     if (posts.length === 0) return entry;
 
-    // Calculate average sentiment
     const sentiments = posts
       .map((p) => p.sentimentScore)
       .filter((s): s is number => s !== undefined);
@@ -281,7 +326,6 @@ export class SocialPulseDetector {
     const avgSentiment = sentiments.reduce((a, b) => a + b, 0) / sentiments.length;
     const variance = this.calculateVariance(sentiments);
 
-    // Update trend
     entry.sentimentTrend.push(avgSentiment);
     if (entry.sentimentTrend.length > 30) {
       entry.sentimentTrend.shift();
@@ -289,18 +333,16 @@ export class SocialPulseDetector {
 
     entry.currentSentiment = avgSentiment;
     entry.sentimentVariance = variance;
-    entry.daysUntilReport = Math.ceil(
-      (this.earningsCalendar.find((e) => e.ticker === ticker)?.reportDate.getTime() ??
-        Date.now() - Date.now()) /
-        (1000 * 60 * 60 * 24)
-    );
 
-    // Update phase from detector
+    const calendarEntry = this.earningsCalendar.find((e) => e.ticker === ticker.toUpperCase());
+    entry.daysUntilReport = calendarEntry
+      ? Math.ceil((calendarEntry.reportDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+      : 0;
+
     const detector = this.getOrCreateDetector(`earnings:${ticker}`);
     detector.update(avgSentiment);
     entry.phase = detector.current().phase;
 
-    // Simple prediction based on sentiment and variance
     entry.prediction = this.predictEarnings(entry);
     entry.confidence = this.calculatePredictionConfidence(entry);
 
@@ -314,18 +356,6 @@ export class SocialPulseDetector {
     return [...this.earningsSentiment.values()];
   }
 
-  /**
-   * Get detectors correlated with a specific region/topic
-   */
-  getCorrelatedSignals(id: string): Array<{ id: string; correlation: number }> {
-    if (!this.shepherd) return [];
-
-    const correlated = this.shepherd.getCorrelations(id);
-    return correlated
-      .filter((c) => c.correlation > 0.5)
-      .sort((a, b) => b.correlation - a.correlation);
-  }
-
   // ============ Private Methods ============
 
   private ensureInitialized(): void {
@@ -334,26 +364,25 @@ export class SocialPulseDetector {
     }
   }
 
-  private getOrCreateDetector(id: string): NucleationDetector {
-    if (!this.detectors.has(id)) {
-      const config =
-        this.config.detectorConfig ?? SENSITIVITY_PRESETS[this.config.sensitivity ?? 'medium'];
-      this.detectors.set(id, new NucleationDetector(config));
+  private getOrCreateDetector(id: string): SimpleVarianceDetector {
+    let detector = this.detectors.get(id);
+    if (!detector) {
+      const preset = SENSITIVITY_THRESHOLDS[this.config.sensitivity ?? 'medium'];
+      detector = new SimpleVarianceDetector(preset.windowSize, preset.threshold);
+      this.detectors.set(id, detector);
     }
-    return this.detectors.get(id)!;
+    return detector;
   }
 
   private updateDetector(id: string, sentiment: number, variance: number): void {
     const detector = this.getOrCreateDetector(id);
-
-    // Feed variance as the signal (variance spikes indicate phase transitions)
     detector.update(variance);
 
-    // Track sentiment history
-    if (!this.sentimentHistory.has(id)) {
-      this.sentimentHistory.set(id, []);
+    let history = this.sentimentHistory.get(id);
+    if (!history) {
+      history = [];
+      this.sentimentHistory.set(id, history);
     }
-    const history = this.sentimentHistory.get(id)!;
     history.push(sentiment);
     if (history.length > 100) {
       history.shift();
@@ -365,10 +394,12 @@ export class SocialPulseDetector {
 
     for (const post of posts) {
       const region = post.geo?.countryCode ?? 'global';
-      if (!byRegion.has(region)) {
-        byRegion.set(region, []);
+      let regionPosts = byRegion.get(region);
+      if (!regionPosts) {
+        regionPosts = [];
+        byRegion.set(region, regionPosts);
       }
-      byRegion.get(region)!.push(post);
+      regionPosts.push(post);
     }
 
     const aggregates: SentimentAggregate[] = [];
@@ -385,10 +416,8 @@ export class SocialPulseDetector {
       const negative = sentiments.filter((s) => s < 0).length;
       const botFiltered = posts.length - regionPosts.length;
 
-      // Extract top keywords
       const keywords = this.extractKeywords(regionPosts);
 
-      // Platform breakdown
       const platformCounts: Partial<Record<Platform, number>> = {};
       for (const post of regionPosts) {
         platformCounts[post.platform] = (platformCounts[post.platform] ?? 0) + 1;
@@ -398,9 +427,8 @@ export class SocialPulseDetector {
       const previousVariance =
         history && history.length >= 2 ? this.calculateVariance(history.slice(-10, -1)) : undefined;
 
-      aggregates.push({
+      const aggregate: SentimentAggregate = {
         id: region,
-        countryCode: region !== 'global' ? region : undefined,
         windowStart: new Date(Date.now() - 3600000).toISOString(),
         windowEnd: new Date().toISOString(),
         postCount: regionPosts.length,
@@ -408,12 +436,21 @@ export class SocialPulseDetector {
         avgSentiment,
         sentimentStdDev: Math.sqrt(variance),
         negativeRatio: negative / sentiments.length,
-        botFilteredRatio: botFiltered / posts.length,
+        botFilteredRatio: botFiltered / Math.max(posts.length, 1),
         topKeywords: keywords.slice(0, 10),
         platformBreakdown: platformCounts,
         variance,
-        previousVariance,
-      });
+      };
+
+      // Only add optional properties if they have values
+      if (region !== 'global') {
+        aggregate.countryCode = region;
+      }
+      if (previousVariance !== undefined) {
+        aggregate.previousVariance = previousVariance;
+      }
+
+      aggregates.push(aggregate);
     }
 
     return aggregates;
@@ -434,7 +471,6 @@ export class SocialPulseDetector {
       }
     }
 
-    // Sort hotspots by variance descending
     hotspots.sort((a, b) => b.variance - a.variance);
 
     const globalVariance = this.calculateGlobalVariance();
@@ -493,12 +529,11 @@ export class SocialPulseDetector {
       const level = this.phaseToLevel(state.phase);
 
       if (level !== 'calm') {
-        const keywords = this.extractKeywordsFromHistory(id);
         hotspots.push({
           countryCode: id,
           level,
           variance: state.variance,
-          topKeywords: keywords,
+          topKeywords: [],
         });
       }
     }
@@ -514,7 +549,7 @@ export class SocialPulseDetector {
   }
 
   private varianceToLevel(variance: number): UpheavalLevel {
-    const threshold = SENSITIVITY_PRESETS[this.config.sensitivity ?? 'medium'].threshold;
+    const threshold = SENSITIVITY_THRESHOLDS[this.config.sensitivity ?? 'medium'].threshold;
     if (variance < threshold * 0.5) return 'calm';
     if (variance < threshold) return 'stirring';
     if (variance < threshold * 1.5) return 'unrest';
@@ -534,13 +569,13 @@ export class SocialPulseDetector {
 
   private phaseToLevel(phase: Phase): UpheavalLevel {
     switch (phase) {
-      case Phase.Calm:
+      case 'Stable':
         return 'calm';
-      case Phase.PreTransition:
+      case 'Approaching':
         return 'stirring';
-      case Phase.Transition:
+      case 'Critical':
         return 'unrest';
-      case Phase.PostTransition:
+      case 'Transitioning':
         return 'volatile';
       default:
         return 'calm';
@@ -549,12 +584,10 @@ export class SocialPulseDetector {
 
   /**
    * Simple sentiment calculation
-   * In production, use a proper NLP model
    */
   private calculateSentiment(text: string): number {
     const lower = text.toLowerCase();
 
-    // Simple word lists (would use ML in production)
     const positiveWords = [
       'good',
       'great',
@@ -622,11 +655,10 @@ export class SocialPulseDetector {
       if (negativeWords.includes(word)) score -= 0.1;
     }
 
-    // Clamp to -1 to 1
     return Math.max(-1, Math.min(1, score));
   }
 
-  private extractKeywords(posts: SocialPost[]): Array<{ word: string; count: number }> {
+  private extractKeywords(posts: SocialPost[]): { word: string; count: number }[] {
     const wordCounts = new Map<string, number>();
     const stopwords = new Set([
       'the',
@@ -695,38 +727,29 @@ export class SocialPulseDetector {
       .sort((a, b) => b.count - a.count);
   }
 
-  private extractKeywordsFromHistory(_id: string): string[] {
-    // Would track keywords per region in production
-    return [];
-  }
-
   private predictEarnings(sentiment: EarningsSentiment): 'beat' | 'miss' | 'inline' | 'uncertain' {
     const trend = sentiment.sentimentTrend;
     if (trend.length < 5) return 'uncertain';
 
-    // Calculate trend direction
     const recentAvg = trend.slice(-5).reduce((a, b) => a + b, 0) / 5;
+    const olderSlice = trend.slice(-10, -5);
     const olderAvg =
-      trend.slice(-10, -5).reduce((a, b) => a + b, 0) / Math.min(5, trend.slice(-10, -5).length);
+      olderSlice.length > 0 ? olderSlice.reduce((a, b) => a + b, 0) / olderSlice.length : recentAvg;
 
     const trendDirection = recentAvg - olderAvg;
 
-    // High variance near report = uncertainty
-    if (sentiment.phase === Phase.Transition || sentiment.phase === Phase.PreTransition) {
+    if (sentiment.phase === 'Transitioning' || sentiment.phase === 'Approaching') {
       return 'uncertain';
     }
 
-    // Strong positive trend
     if (trendDirection > 0.2 && sentiment.currentSentiment > 0.3) {
       return 'beat';
     }
 
-    // Strong negative trend
     if (trendDirection < -0.2 && sentiment.currentSentiment < -0.3) {
       return 'miss';
     }
 
-    // Stable sentiment near zero
     if (Math.abs(sentiment.currentSentiment) < 0.2 && Math.abs(trendDirection) < 0.1) {
       return 'inline';
     }
@@ -735,22 +758,17 @@ export class SocialPulseDetector {
   }
 
   private calculatePredictionConfidence(sentiment: EarningsSentiment): number {
-    // Base confidence on data quality
     let confidence = 0.3;
 
-    // More data = higher confidence
     if (sentiment.sentimentTrend.length >= 20) confidence += 0.2;
     else if (sentiment.sentimentTrend.length >= 10) confidence += 0.1;
 
-    // Consistent trend = higher confidence
     const variance = this.calculateVariance(sentiment.sentimentTrend);
     if (variance < 0.1) confidence += 0.2;
     else if (variance < 0.2) confidence += 0.1;
 
-    // Far from report = lower confidence
     if (sentiment.daysUntilReport > 14) confidence -= 0.1;
 
-    // Uncertain prediction = lower confidence
     if (sentiment.prediction === 'uncertain') confidence -= 0.2;
 
     return Math.max(0, Math.min(1, confidence));

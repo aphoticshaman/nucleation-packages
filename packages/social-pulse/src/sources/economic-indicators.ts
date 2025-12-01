@@ -116,7 +116,9 @@ export class EconomicIndicatorsSource implements DataSource {
   private freedomData: FreedomDataPoint[] = [];
 
   constructor(config: { fredApiKey?: string } = {}) {
-    this.fredApiKey = config.fredApiKey;
+    if (config.fredApiKey) {
+      this.fredApiKey = config.fredApiKey;
+    }
   }
 
   async init(): Promise<void> {
@@ -176,7 +178,8 @@ export class EconomicIndicatorsSource implements DataSource {
 
     // Try FRED for US data
     if (countryCode === 'US' && this.fredApiKey) {
-      const fredSeries = Object.entries(FRED_SERIES).find(([_, type]) => type === indicator)?.[0];
+      const fredEntry = Object.entries(FRED_SERIES).find(([_, type]) => type === indicator);
+      const fredSeries = fredEntry?.[0];
       if (fredSeries) {
         observations = await this.fetchFred(fredSeries, indicator);
       }
@@ -184,9 +187,8 @@ export class EconomicIndicatorsSource implements DataSource {
 
     // Fall back to World Bank for international data
     if (observations.length === 0) {
-      const wbIndicator = Object.entries(WORLD_BANK_INDICATORS).find(
-        ([_, type]) => type === indicator
-      )?.[0];
+      const wbEntry = Object.entries(WORLD_BANK_INDICATORS).find(([_, type]) => type === indicator);
+      const wbIndicator = wbEntry?.[0];
       if (wbIndicator) {
         observations = await this.fetchWorldBank(wbIndicator, countryCode, indicator);
       }
@@ -209,15 +211,15 @@ export class EconomicIndicatorsSource implements DataSource {
     if (countryData.length < 3) return null;
 
     const values = countryData.map((d) => ({ date: `${d.year}-01-01`, value: d.score }));
-    const current = values[values.length - 1].value;
+    const current = values[values.length - 1]!.value;
 
     // Calculate velocity (rate of change)
     const recentChange =
-      values.length >= 2 ? values[values.length - 1].value - values[values.length - 2].value : 0;
+      values.length >= 2 ? values[values.length - 1]!.value - values[values.length - 2]!.value : 0;
 
     // Calculate acceleration (change in rate of change)
     const previousChange =
-      values.length >= 3 ? values[values.length - 2].value - values[values.length - 3].value : 0;
+      values.length >= 3 ? values[values.length - 2]!.value - values[values.length - 3]!.value : 0;
     const acceleration = recentChange - previousChange;
 
     // Simple linear prediction
@@ -263,15 +265,15 @@ export class EconomicIndicatorsSource implements DataSource {
     );
 
     const values = sorted.map((o) => ({ date: o.date, value: o.value }));
-    const current = values[values.length - 1].value;
+    const current = values[values.length - 1]!.value;
 
     // Calculate velocity
     const recentChange =
-      values.length >= 2 ? values[values.length - 1].value - values[values.length - 2].value : 0;
+      values.length >= 2 ? values[values.length - 1]!.value - values[values.length - 2]!.value : 0;
 
     // Calculate acceleration
     const previousChange =
-      values.length >= 3 ? values[values.length - 2].value - values[values.length - 3].value : 0;
+      values.length >= 3 ? values[values.length - 2]!.value - values[values.length - 3]!.value : 0;
     const acceleration = recentChange - previousChange;
 
     // Predict using simple momentum
@@ -308,9 +310,11 @@ export class EconomicIndicatorsSource implements DataSource {
       throw new Error(`FRED API error: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      observations?: Array<{ date: string; value: string }>;
+    };
 
-    return (data.observations ?? []).map((obs: { date: string; value: string }) => ({
+    return (data.observations ?? []).map((obs) => ({
       indicator: indicatorType,
       countryCode: 'US',
       value: parseFloat(obs.value) || 0,
@@ -331,19 +335,25 @@ export class EconomicIndicatorsSource implements DataSource {
       throw new Error(`World Bank API error: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as unknown;
 
     // World Bank returns [metadata, data] array
     if (!Array.isArray(data) || data.length < 2) {
       return [];
     }
 
-    return (data[1] ?? [])
-      .filter((d: { value: number | null }) => d.value !== null)
-      .map((d: { date: string; value: number; country: { id: string } }) => ({
+    const dataArray = data[1] as Array<{
+      date: string;
+      value: number | null;
+      country: { id: string };
+    }>;
+
+    return (dataArray ?? [])
+      .filter((d) => d.value !== null)
+      .map((d) => ({
         indicator: indicatorType,
         countryCode: d.country.id,
-        value: d.value,
+        value: d.value!,
         date: `${d.date}-01-01`,
         source: 'World Bank',
       }));
@@ -469,8 +479,8 @@ export class EconomicIndicatorsSource implements DataSource {
     for (const country of sampleCountries) {
       for (let i = 0; i < country.scores.length; i++) {
         const year = currentYear - country.scores.length + i + 1;
-        const score = country.scores[i];
-        const prevScore = i > 0 ? country.scores[i - 1] : score;
+        const score = country.scores[i]!;
+        const prevScore = i > 0 ? country.scores[i - 1]! : score;
 
         let trend: FreedomDataPoint['trend'] = 'stable';
         if (score - prevScore > 2) trend = 'improving';
