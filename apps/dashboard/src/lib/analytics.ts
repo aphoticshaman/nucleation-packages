@@ -99,7 +99,7 @@ class MemoryAdapter implements AnalyticsAdapter {
  * Mixpanel adapter
  */
 class MixpanelAdapter implements AnalyticsAdapter {
-  private mixpanel: { identify: Function; track: Function; reset: Function } | null = null;
+  private mixpanel: { identify: Function; track: Function; reset: Function; init?: Function; people?: { set: Function } } | null = null;
 
   constructor(token: string) {
     // @ts-ignore - Mixpanel global
@@ -135,7 +135,7 @@ class MixpanelAdapter implements AnalyticsAdapter {
  * PostHog adapter (open-source alternative)
  */
 class PostHogAdapter implements AnalyticsAdapter {
-  private posthog: { identify: Function; capture: Function; reset: Function } | null = null;
+  private posthog: { identify: Function; capture: Function; reset: Function; init?: Function } | null = null;
 
   constructor(apiKey: string, apiHost: string = 'https://app.posthog.com') {
     // @ts-ignore - PostHog global
