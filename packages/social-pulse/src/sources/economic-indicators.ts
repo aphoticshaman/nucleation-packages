@@ -11,11 +11,7 @@
  * All sources are public and free.
  */
 
-import type {
-  DataSource,
-  SearchParams,
-  SocialPost,
-} from '../types.js';
+import type { DataSource, SearchParams, SocialPost } from '../types.js';
 
 // FRED (Federal Reserve Economic Data) - free, no auth required
 const FRED_BASE = 'https://api.stlouisfed.org/fred';
@@ -216,14 +212,12 @@ export class EconomicIndicatorsSource implements DataSource {
     const current = values[values.length - 1].value;
 
     // Calculate velocity (rate of change)
-    const recentChange = values.length >= 2
-      ? values[values.length - 1].value - values[values.length - 2].value
-      : 0;
+    const recentChange =
+      values.length >= 2 ? values[values.length - 1].value - values[values.length - 2].value : 0;
 
     // Calculate acceleration (change in rate of change)
-    const previousChange = values.length >= 3
-      ? values[values.length - 2].value - values[values.length - 3].value
-      : 0;
+    const previousChange =
+      values.length >= 3 ? values[values.length - 2].value - values[values.length - 3].value : 0;
     const acceleration = recentChange - previousChange;
 
     // Simple linear prediction
@@ -272,14 +266,12 @@ export class EconomicIndicatorsSource implements DataSource {
     const current = values[values.length - 1].value;
 
     // Calculate velocity
-    const recentChange = values.length >= 2
-      ? values[values.length - 1].value - values[values.length - 2].value
-      : 0;
+    const recentChange =
+      values.length >= 2 ? values[values.length - 1].value - values[values.length - 2].value : 0;
 
     // Calculate acceleration
-    const previousChange = values.length >= 3
-      ? values[values.length - 2].value - values[values.length - 3].value
-      : 0;
+    const previousChange =
+      values.length >= 3 ? values[values.length - 2].value - values[values.length - 3].value : 0;
     const acceleration = recentChange - previousChange;
 
     // Predict using simple momentum
@@ -318,15 +310,13 @@ export class EconomicIndicatorsSource implements DataSource {
 
     const data = await response.json();
 
-    return (data.observations ?? []).map(
-      (obs: { date: string; value: string }) => ({
-        indicator: indicatorType,
-        countryCode: 'US',
-        value: parseFloat(obs.value) || 0,
-        date: obs.date,
-        source: 'FRED',
-      })
-    );
+    return (data.observations ?? []).map((obs: { date: string; value: string }) => ({
+      indicator: indicatorType,
+      countryCode: 'US',
+      value: parseFloat(obs.value) || 0,
+      date: obs.date,
+      source: 'FRED',
+    }));
   }
 
   private async fetchWorldBank(

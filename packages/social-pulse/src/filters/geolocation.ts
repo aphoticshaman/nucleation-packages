@@ -24,8 +24,29 @@ export interface GeolocationConfig {
  * Location keyword to country mapping
  */
 const LOCATION_KEYWORDS: Record<string, string[]> = {
-  US: ['usa', 'united states', 'america', 'new york', 'los angeles', 'chicago', 'texas', 'california', 'florida', 'washington dc'],
-  GB: ['uk', 'united kingdom', 'england', 'london', 'manchester', 'birmingham', 'scotland', 'wales', 'british'],
+  US: [
+    'usa',
+    'united states',
+    'america',
+    'new york',
+    'los angeles',
+    'chicago',
+    'texas',
+    'california',
+    'florida',
+    'washington dc',
+  ],
+  GB: [
+    'uk',
+    'united kingdom',
+    'england',
+    'london',
+    'manchester',
+    'birmingham',
+    'scotland',
+    'wales',
+    'british',
+  ],
   CA: ['canada', 'toronto', 'vancouver', 'montreal', 'ottawa', 'canadian'],
   AU: ['australia', 'sydney', 'melbourne', 'brisbane', 'perth', 'aussie', 'australian'],
   DE: ['germany', 'deutschland', 'berlin', 'munich', 'frankfurt', 'hamburg', 'german'],
@@ -137,7 +158,11 @@ export class GeolocationFilter implements PostFilter {
    * Infer geolocation from post data
    */
   infer(post: SocialPost): GeoInfo | null {
-    const candidates: Array<{ countryCode: string; confidence: number; source: GeoInfo['source'] }> = [];
+    const candidates: Array<{
+      countryCode: string;
+      confidence: number;
+      source: GeoInfo['source'];
+    }> = [];
 
     // 1. Check author profile location
     if (post.author.location) {
@@ -193,10 +218,7 @@ export class GeolocationFilter implements PostFilter {
     // If multiple candidates agree, boost confidence
     const countryVotes = new Map<string, number>();
     for (const c of candidates) {
-      countryVotes.set(
-        c.countryCode,
-        (countryVotes.get(c.countryCode) ?? 0) + c.confidence
-      );
+      countryVotes.set(c.countryCode, (countryVotes.get(c.countryCode) ?? 0) + c.confidence);
     }
 
     // Get highest voted country

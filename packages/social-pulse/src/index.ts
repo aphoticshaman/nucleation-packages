@@ -53,11 +53,7 @@ export type {
 } from './sources/index.js';
 
 // Filters
-export {
-  BotFilter,
-  LanguageDetector,
-  GeolocationFilter,
-} from './filters/index.js';
+export { BotFilter, LanguageDetector, GeolocationFilter } from './filters/index.js';
 
 export type {
   BotFilterConfig,
@@ -67,9 +63,7 @@ export type {
 } from './filters/index.js';
 
 // Validators
-export {
-  CrossReferencer,
-} from './validators/index.js';
+export { CrossReferencer } from './validators/index.js';
 
 export type {
   CrossReferencerConfig,

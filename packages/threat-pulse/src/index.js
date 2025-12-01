@@ -1,21 +1,21 @@
 /**
  * threat-pulse
- * 
+ *
  * Detect threat escalation before attacks materialize using behavioral
  * variance analysis. Built for SOC teams, SIEM integration, and proactive
  * threat hunting.
- * 
+ *
  * The core insight: attacker reconnaissance creates a characteristic
  * "quieting" pattern before major actions - reduced variance in probing
  * behavior as they zero in on targets.
- * 
+ *
  * @example
  * ```js
  * import { ThreatDetector } from 'threat-pulse';
- * 
+ *
  * const detector = new ThreatDetector();
  * await detector.init();
- * 
+ *
  * // Feed normalized event scores (0-1)
  * for (const event of securityEvents) {
  *   const state = detector.update(event.anomalyScore);
@@ -39,7 +39,7 @@ let initialized = false;
 export async function initialize() {
   if (!initialized) {
     nucleationModule = await import('nucleation-wasm');
-    
+
     if (typeof window === 'undefined') {
       const require = createRequire(import.meta.url);
       const wasmPath = require.resolve('nucleation-wasm/nucleation_bg.wasm');
@@ -48,7 +48,7 @@ export async function initialize() {
     } else {
       await nucleationModule.default();
     }
-    
+
     initialized = true;
   }
 }
@@ -66,22 +66,27 @@ export const ThreatLevel = {
   /** High probability of imminent threat */
   ORANGE: 'orange',
   /** Active threat escalation in progress */
-  RED: 'red'
+  RED: 'red',
 };
 
 /**
  * Map internal phase to threat level
- * @param {number} phase 
+ * @param {number} phase
  * @returns {string}
  */
 function phaseToThreatLevel(phase) {
   const Phase = nucleationModule.Phase;
   switch (phase) {
-    case Phase.Stable: return ThreatLevel.GREEN;
-    case Phase.Approaching: return ThreatLevel.YELLOW;
-    case Phase.Critical: return ThreatLevel.ORANGE;
-    case Phase.Transitioning: return ThreatLevel.RED;
-    default: return ThreatLevel.GREEN;
+    case Phase.Stable:
+      return ThreatLevel.GREEN;
+    case Phase.Approaching:
+      return ThreatLevel.YELLOW;
+    case Phase.Critical:
+      return ThreatLevel.ORANGE;
+    case Phase.Transitioning:
+      return ThreatLevel.RED;
+    default:
+      return ThreatLevel.GREEN;
   }
 }
 
@@ -107,18 +112,18 @@ function phaseToThreatLevel(phase) {
 
 /**
  * Threat escalation detector for security operations.
- * 
+ *
  * Monitors behavioral variance in security event streams to identify
  * the characteristic "quieting" that precedes major attacks. Based on
  * the same phase transition dynamics that predict other complex system
  * failures.
- * 
+ *
  * @example
  * ```js
  * // Monitor authentication anomaly scores
  * const detector = new ThreatDetector({ sensitivity: 'aggressive' });
  * await detector.init();
- * 
+ *
  * authEvents.forEach(event => {
  *   const state = detector.update(event.riskScore);
  *   if (state.threatLevel === 'orange' || state.threatLevel === 'red') {
@@ -140,7 +145,7 @@ export class ThreatDetector {
     this.#config = {
       sensitivity: config.sensitivity || 'balanced',
       windowSize: config.windowSize,
-      threshold: config.threshold
+      threshold: config.threshold,
     };
   }
 
@@ -150,10 +155,10 @@ export class ThreatDetector {
    */
   async init() {
     await initialize();
-    
+
     const { DetectorConfig, NucleationDetector } = nucleationModule;
     let detectorConfig;
-    
+
     switch (this.#config.sensitivity) {
       case 'conservative':
         detectorConfig = DetectorConfig.conservative();
@@ -189,19 +194,20 @@ export class ThreatDetector {
    */
   update(anomalyScore) {
     this.#ensureInit();
-    
+
     const phase = this.#detector.update(anomalyScore);
     const threatLevel = phaseToThreatLevel(phase);
     const Phase = nucleationModule.Phase;
-    
+
     return {
       threatLevel,
       escalating: phase === Phase.Transitioning,
-      elevated: phase === Phase.Approaching || phase === Phase.Critical || phase === Phase.Transitioning,
+      elevated:
+        phase === Phase.Approaching || phase === Phase.Critical || phase === Phase.Transitioning,
       confidence: this.#detector.confidence(),
       variance: this.#detector.currentVariance(),
       deviation: this.#detector.inflectionMagnitude(),
-      eventCount: this.#detector.count()
+      eventCount: this.#detector.count(),
     };
   }
 
@@ -212,20 +218,21 @@ export class ThreatDetector {
    */
   updateBatch(scores) {
     this.#ensureInit();
-    
+
     const arr = scores instanceof Float64Array ? scores : new Float64Array(scores);
     const phase = this.#detector.update_batch(arr);
     const threatLevel = phaseToThreatLevel(phase);
     const Phase = nucleationModule.Phase;
-    
+
     return {
       threatLevel,
       escalating: phase === Phase.Transitioning,
-      elevated: phase === Phase.Approaching || phase === Phase.Critical || phase === Phase.Transitioning,
+      elevated:
+        phase === Phase.Approaching || phase === Phase.Critical || phase === Phase.Transitioning,
       confidence: this.#detector.confidence(),
       variance: this.#detector.currentVariance(),
       deviation: this.#detector.inflectionMagnitude(),
-      eventCount: this.#detector.count()
+      eventCount: this.#detector.count(),
     };
   }
 
@@ -235,19 +242,20 @@ export class ThreatDetector {
    */
   current() {
     this.#ensureInit();
-    
+
     const phase = this.#detector.currentPhase();
     const threatLevel = phaseToThreatLevel(phase);
     const Phase = nucleationModule.Phase;
-    
+
     return {
       threatLevel,
       escalating: phase === Phase.Transitioning,
-      elevated: phase === Phase.Approaching || phase === Phase.Critical || phase === Phase.Transitioning,
+      elevated:
+        phase === Phase.Approaching || phase === Phase.Critical || phase === Phase.Transitioning,
       confidence: this.#detector.confidence(),
       variance: this.#detector.currentVariance(),
       deviation: this.#detector.inflectionMagnitude(),
-      eventCount: this.#detector.count()
+      eventCount: this.#detector.count(),
     };
   }
 
@@ -346,8 +354,8 @@ export class ThreatCorrelator {
   /**
    * Get threat correlation between two sources.
    * Higher values = more divergent behavior = potential threat.
-   * @param {string} sourceA 
-   * @param {string} sourceB 
+   * @param {string} sourceA
+   * @param {string} sourceB
    * @returns {number|undefined} Correlation score
    */
   getCorrelation(sourceA, sourceB) {
@@ -383,14 +391,14 @@ export class ThreatCorrelator {
 export async function assessThreat(anomalyScores, config = {}) {
   const detector = new ThreatDetector(config);
   await detector.init();
-  
+
   const state = detector.updateBatch(anomalyScores);
-  
+
   return {
     escalating: state.escalating,
     elevated: state.elevated,
     threatLevel: state.threatLevel,
-    confidence: state.confidence
+    confidence: state.confidence,
   };
 }
 

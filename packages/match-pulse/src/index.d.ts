@@ -34,7 +34,10 @@ export declare class MatchMonitor {
   static deserialize(json: string): Promise<MatchMonitor>;
 }
 
-export declare function assess(values: number[], config?: MatchMonitorConfig): Promise<{
+export declare function assess(
+  values: number[],
+  config?: MatchMonitorConfig
+): Promise<{
   tilted: boolean;
   elevated: boolean;
   level: string;

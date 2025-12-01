@@ -23,10 +23,23 @@ export const LEVELS: {
 };
 
 /** Supported domains */
-export type Domain = 
-  | 'finance' | 'security' | 'saas' | 'churn' | 'hr' | 'org'
-  | 'supply' | 'iot' | 'sensor' | 'social' | 'community'
-  | 'health' | 'patient' | 'gaming' | 'esports' | 'general';
+export type Domain =
+  | 'finance'
+  | 'security'
+  | 'saas'
+  | 'churn'
+  | 'hr'
+  | 'org'
+  | 'supply'
+  | 'iot'
+  | 'sensor'
+  | 'social'
+  | 'community'
+  | 'health'
+  | 'patient'
+  | 'gaming'
+  | 'esports'
+  | 'general';
 
 /** Sensitivity presets */
 export type Sensitivity = 'conservative' | 'balanced' | 'sensitive';
@@ -86,7 +99,7 @@ export interface MonitoredDetector {
 
 /**
  * Create a monitored detector for a domain
- * 
+ *
  * @example
  * const detector = await monitor('finance');
  * detector.on('warning', state => console.log('Alert:', state));
@@ -96,7 +109,7 @@ export function monitor(domain: Domain, options?: MonitorOptions): Promise<Monit
 
 /**
  * Create multiple monitors at once
- * 
+ *
  * @example
  * const monitors = await createMonitors({
  *   finance: { sensitivity: 'balanced' },
@@ -124,7 +137,7 @@ export interface WebhookProcessor {
 
 /**
  * Create a webhook processor
- * 
+ *
  * @example
  * const processor = createWebhookProcessor({
  *   domain: 'finance',
@@ -148,7 +161,7 @@ export interface PrometheusExporter {
 
 /**
  * Create a Prometheus metrics exporter
- * 
+ *
  * @example
  * const exporter = createPrometheusExporter(detector, {
  *   prefix: 'myapp_',

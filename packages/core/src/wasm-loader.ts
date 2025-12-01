@@ -129,9 +129,7 @@ export function isInitialized(): boolean {
  */
 export function getModule(): NucleationWasmModule {
   if (!initialized || !wasmModule) {
-    throw new Error(
-      'Nucleation WASM module not initialized. Call initialize() first.'
-    );
+    throw new Error('Nucleation WASM module not initialized. Call initialize() first.');
   }
   return wasmModule;
 }

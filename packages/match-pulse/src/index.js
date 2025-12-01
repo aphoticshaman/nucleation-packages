@@ -23,17 +23,22 @@ export const TiltLevel = {
   FOCUSED: 'focused',
   FRUSTRATED: 'frustrated',
   TILTED: 'tilted',
-  TOXIC: 'toxic'
+  TOXIC: 'toxic',
 };
 
 function phaseToLevel(phase) {
   const Phase = nucleationModule.Phase;
   switch (phase) {
-    case Phase.Stable: return TiltLevel.FOCUSED;
-    case Phase.Approaching: return TiltLevel.FRUSTRATED;
-    case Phase.Critical: return TiltLevel.TILTED;
-    case Phase.Transitioning: return TiltLevel.TOXIC;
-    default: return TiltLevel.FOCUSED;
+    case Phase.Stable:
+      return TiltLevel.FOCUSED;
+    case Phase.Approaching:
+      return TiltLevel.FRUSTRATED;
+    case Phase.Critical:
+      return TiltLevel.TILTED;
+    case Phase.Transitioning:
+      return TiltLevel.TOXIC;
+    default:
+      return TiltLevel.FOCUSED;
   }
 }
 
@@ -46,7 +51,7 @@ export class MatchMonitor {
     this.#config = {
       sensitivity: config.sensitivity || 'balanced',
       windowSize: config.windowSize || 15,
-      threshold: config.threshold
+      threshold: config.threshold,
     };
   }
 
@@ -55,9 +60,14 @@ export class MatchMonitor {
     const { DetectorConfig, NucleationDetector } = nucleationModule;
     let detectorConfig;
     switch (this.#config.sensitivity) {
-      case 'conservative': detectorConfig = DetectorConfig.conservative(); break;
-      case 'sensitive': detectorConfig = DetectorConfig.sensitive(); break;
-      default: detectorConfig = new DetectorConfig();
+      case 'conservative':
+        detectorConfig = DetectorConfig.conservative();
+        break;
+      case 'sensitive':
+        detectorConfig = DetectorConfig.sensitive();
+        break;
+      default:
+        detectorConfig = new DetectorConfig();
     }
     detectorConfig.window_size = this.#config.windowSize;
     if (this.#config.threshold) detectorConfig.threshold = this.#config.threshold;
@@ -81,7 +91,7 @@ export class MatchMonitor {
       confidence: this.#detector.confidence(),
       variance: this.#detector.currentVariance(),
       trend: this.#detector.inflectionMagnitude(),
-      dataPoints: this.#detector.count()
+      dataPoints: this.#detector.count(),
     };
   }
 
@@ -98,7 +108,7 @@ export class MatchMonitor {
       confidence: this.#detector.confidence(),
       variance: this.#detector.currentVariance(),
       trend: this.#detector.inflectionMagnitude(),
-      dataPoints: this.#detector.count()
+      dataPoints: this.#detector.count(),
     };
   }
 
@@ -114,13 +124,19 @@ export class MatchMonitor {
       confidence: this.#detector.confidence(),
       variance: this.#detector.currentVariance(),
       trend: this.#detector.inflectionMagnitude(),
-      dataPoints: this.#detector.count()
+      dataPoints: this.#detector.count(),
     };
   }
 
-  reset() { this.#ensureInit(); this.#detector.reset(); }
-  serialize() { this.#ensureInit(); return this.#detector.serialize(); }
-  
+  reset() {
+    this.#ensureInit();
+    this.#detector.reset();
+  }
+  serialize() {
+    this.#ensureInit();
+    return this.#detector.serialize();
+  }
+
   static async deserialize(json) {
     await initialize();
     const { NucleationDetector } = nucleationModule;
@@ -135,7 +151,12 @@ export async function assess(values, config = {}) {
   const detector = new MatchMonitor(config);
   await detector.init();
   const state = detector.updateBatch(values);
-  return { tilted: state.tilted, elevated: state.elevated, level: state.level, confidence: state.confidence };
+  return {
+    tilted: state.tilted,
+    elevated: state.elevated,
+    level: state.level,
+    confidence: state.confidence,
+  };
 }
 
 export default MatchMonitor;

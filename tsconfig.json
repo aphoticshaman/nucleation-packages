@@ -5,10 +5,7 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "references": [
-    { "path": "packages/core" },
-    { "path": "packages/social-pulse" }
-  ],
+  "references": [{ "path": "packages/core" }, { "path": "packages/social-pulse" }],
   "include": [],
   "exclude": ["node_modules", "dist", "coverage"]
 }

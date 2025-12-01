@@ -1,21 +1,21 @@
 /**
  * churn-harbinger
- * 
+ *
  * Predict customer churn before it happens using behavioral variance
  * analysis. Built for SaaS, subscription businesses, and product teams.
- * 
+ *
  * The core insight: users don't just stop using your product — they
  * disengage gradually. That disengagement has a signature: reduced
  * variance in behavior as they settle into minimal-use patterns before
  * churning.
- * 
+ *
  * @example
  * ```js
  * import { ChurnDetector } from 'churn-harbinger';
- * 
+ *
  * const detector = new ChurnDetector();
  * await detector.init();
- * 
+ *
  * // Feed daily engagement scores
  * for (const day of userActivity) {
  *   const state = detector.update(day.engagementScore);
@@ -39,7 +39,7 @@ let initialized = false;
 export async function initialize() {
   if (!initialized) {
     nucleationModule = await import('nucleation-wasm');
-    
+
     if (typeof window === 'undefined') {
       const require = createRequire(import.meta.url);
       const wasmPath = require.resolve('nucleation-wasm/nucleation_bg.wasm');
@@ -48,7 +48,7 @@ export async function initialize() {
     } else {
       await nucleationModule.default();
     }
-    
+
     initialized = true;
   }
 }
@@ -66,7 +66,7 @@ export const RiskLevel = {
   /** High churn probability, intervene now */
   AT_RISK: 'at-risk',
   /** Active disengagement pattern */
-  CHURNING: 'churning'
+  CHURNING: 'churning',
 };
 
 /**
@@ -75,11 +75,16 @@ export const RiskLevel = {
 function phaseToRiskLevel(phase) {
   const Phase = nucleationModule.Phase;
   switch (phase) {
-    case Phase.Stable: return RiskLevel.HEALTHY;
-    case Phase.Approaching: return RiskLevel.COOLING;
-    case Phase.Critical: return RiskLevel.AT_RISK;
-    case Phase.Transitioning: return RiskLevel.CHURNING;
-    default: return RiskLevel.HEALTHY;
+    case Phase.Stable:
+      return RiskLevel.HEALTHY;
+    case Phase.Approaching:
+      return RiskLevel.COOLING;
+    case Phase.Critical:
+      return RiskLevel.AT_RISK;
+    case Phase.Transitioning:
+      return RiskLevel.CHURNING;
+    default:
+      return RiskLevel.HEALTHY;
   }
 }
 
@@ -105,18 +110,18 @@ function phaseToRiskLevel(phase) {
 
 /**
  * Customer churn detector for SaaS and subscription products.
- * 
+ *
  * Monitors engagement variance to identify the characteristic
  * "settling" pattern that precedes churn. Users don't suddenly
  * leave — they gradually disengage, and that disengagement has
  * a measurable signature.
- * 
+ *
  * @example
  * ```js
  * // Track user engagement over time
  * const detector = new ChurnDetector({ sensitivity: 'sensitive' });
  * await detector.init();
- * 
+ *
  * userDailyActivity.forEach(day => {
  *   const state = detector.update(day.sessions * day.avgDuration);
  *   if (state.riskLevel === 'at-risk') {
@@ -138,7 +143,7 @@ export class ChurnDetector {
     this.#config = {
       sensitivity: config.sensitivity || 'balanced',
       windowSize: config.windowSize || 30,
-      threshold: config.threshold
+      threshold: config.threshold,
     };
   }
 
@@ -148,10 +153,10 @@ export class ChurnDetector {
    */
   async init() {
     await initialize();
-    
+
     const { DetectorConfig, NucleationDetector } = nucleationModule;
     let detectorConfig;
-    
+
     switch (this.#config.sensitivity) {
       case 'conservative':
         detectorConfig = DetectorConfig.conservative();
@@ -164,7 +169,7 @@ export class ChurnDetector {
     }
 
     detectorConfig.window_size = this.#config.windowSize;
-    
+
     if (this.#config.threshold) {
       detectorConfig.threshold = this.#config.threshold;
     }
@@ -186,11 +191,11 @@ export class ChurnDetector {
    */
   update(engagementScore) {
     this.#ensureInit();
-    
+
     const phase = this.#detector.update(engagementScore);
     const riskLevel = phaseToRiskLevel(phase);
     const Phase = nucleationModule.Phase;
-    
+
     return {
       riskLevel,
       atRisk: phase === Phase.Critical || phase === Phase.Transitioning,
@@ -198,7 +203,7 @@ export class ChurnDetector {
       confidence: this.#detector.confidence(),
       variance: this.#detector.currentVariance(),
       trend: this.#detector.inflectionMagnitude(),
-      dataPoints: this.#detector.count()
+      dataPoints: this.#detector.count(),
     };
   }
 
@@ -209,12 +214,12 @@ export class ChurnDetector {
    */
   updateBatch(scores) {
     this.#ensureInit();
-    
+
     const arr = scores instanceof Float64Array ? scores : new Float64Array(scores);
     const phase = this.#detector.update_batch(arr);
     const riskLevel = phaseToRiskLevel(phase);
     const Phase = nucleationModule.Phase;
-    
+
     return {
       riskLevel,
       atRisk: phase === Phase.Critical || phase === Phase.Transitioning,
@@ -222,7 +227,7 @@ export class ChurnDetector {
       confidence: this.#detector.confidence(),
       variance: this.#detector.currentVariance(),
       trend: this.#detector.inflectionMagnitude(),
-      dataPoints: this.#detector.count()
+      dataPoints: this.#detector.count(),
     };
   }
 
@@ -232,11 +237,11 @@ export class ChurnDetector {
    */
   current() {
     this.#ensureInit();
-    
+
     const phase = this.#detector.currentPhase();
     const riskLevel = phaseToRiskLevel(phase);
     const Phase = nucleationModule.Phase;
-    
+
     return {
       riskLevel,
       atRisk: phase === Phase.Critical || phase === Phase.Transitioning,
@@ -244,7 +249,7 @@ export class ChurnDetector {
       confidence: this.#detector.confidence(),
       variance: this.#detector.currentVariance(),
       trend: this.#detector.inflectionMagnitude(),
-      dataPoints: this.#detector.count()
+      dataPoints: this.#detector.count(),
     };
   }
 
@@ -386,14 +391,14 @@ export class CohortMonitor {
 export async function assessChurnRisk(engagementHistory, config = {}) {
   const detector = new ChurnDetector(config);
   await detector.init();
-  
+
   const state = detector.updateBatch(engagementHistory);
-  
+
   return {
     atRisk: state.atRisk,
     declining: state.declining,
     riskLevel: state.riskLevel,
-    confidence: state.confidence
+    confidence: state.confidence,
   };
 }
 

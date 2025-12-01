@@ -5,11 +5,7 @@
  * Excellent for detecting breakthrough research before mainstream awareness.
  */
 
-import type {
-  DataSource,
-  SearchParams,
-  SocialPost,
-} from '../types.js';
+import type { DataSource, SearchParams, SocialPost } from '../types.js';
 
 const ARXIV_API = 'https://export.arxiv.org/api/query';
 
@@ -62,18 +58,24 @@ export class ArxivSource implements DataSource {
   /**
    * Get trending categories by submission volume
    */
-  async getTrendingCategories(
-    days = 7
-  ): Promise<Map<string, number>> {
+  async getTrendingCategories(days = 7): Promise<Map<string, number>> {
     const categories = new Map<string, number>();
     const since = new Date();
     since.setDate(since.getDate() - days);
 
     // Sample major categories
     const majorCategories = [
-      'cs.AI', 'cs.LG', 'cs.CL', 'cs.CV', // AI/ML
-      'physics', 'math', 'q-bio', 'q-fin',
-      'cond-mat', 'hep-th', 'quant-ph',
+      'cs.AI',
+      'cs.LG',
+      'cs.CL',
+      'cs.CV', // AI/ML
+      'physics',
+      'math',
+      'q-bio',
+      'q-fin',
+      'cond-mat',
+      'hep-th',
+      'quant-ph',
     ];
 
     for (const cat of majorCategories) {
@@ -102,10 +104,7 @@ export class ArxivSource implements DataSource {
    * Find undercited papers that might be quiet breakthroughs
    * (papers with high update frequency but low external citations)
    */
-  async findQuietBreakthroughs(
-    category: string,
-    days = 30
-  ): Promise<SocialPost[]> {
+  async findQuietBreakthroughs(category: string, days = 30): Promise<SocialPost[]> {
     const since = new Date();
     since.setDate(since.getDate() - days);
 

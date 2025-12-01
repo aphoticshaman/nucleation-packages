@@ -11,11 +11,7 @@
  * - Public disclosure feeds
  */
 
-import type {
-  DataSource,
-  SearchParams,
-  SocialPost,
-} from '../types.js';
+import type { DataSource, SearchParams, SocialPost } from '../types.js';
 
 // SEC EDGAR API base
 const SEC_EDGAR_BASE = 'https://data.sec.gov';
@@ -121,9 +117,7 @@ export class InstitutionalFlowSource implements DataSource {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - days);
 
-    const recentTx = this.transactionCache.filter(
-      (tx) => new Date(tx.transactionDate) >= cutoff
-    );
+    const recentTx = this.transactionCache.filter((tx) => new Date(tx.transactionDate) >= cutoff);
 
     // Calculate sector flows
     const flows = this.calculateSectorFlows(recentTx);
@@ -314,12 +308,15 @@ export class InstitutionalFlowSource implements DataSource {
    * Calculate net flow by sector
    */
   private calculateSectorFlows(transactions: InstitutionalTransaction[]): SectorFlow[] {
-    const sectorData = new Map<string, {
-      netFlow: number;
-      count: number;
-      buyers: Map<string, number>;
-      sellers: Map<string, number>;
-    }>();
+    const sectorData = new Map<
+      string,
+      {
+        netFlow: number;
+        count: number;
+        buyers: Map<string, number>;
+        sellers: Map<string, number>;
+      }
+    >();
 
     for (const tx of transactions) {
       const sector = tx.sector ?? 'other';
@@ -376,7 +373,10 @@ export class InstitutionalFlowSource implements DataSource {
   /**
    * Detect unusual patterns
    */
-  private detectSignals(flows: SectorFlow[], _transactions: InstitutionalTransaction[]): FlowSignal[] {
+  private detectSignals(
+    flows: SectorFlow[],
+    _transactions: InstitutionalTransaction[]
+  ): FlowSignal[] {
     const signals: FlowSignal[] = [];
 
     // Check for sector rotation (one sector heavily sold, another heavily bought)
@@ -471,7 +471,10 @@ export class InstitutionalFlowSource implements DataSource {
     const result: typeof clusters = [];
 
     for (const cluster of sorted) {
-      const key = cluster.transactions.map((t) => t.id).sort().join(',');
+      const key = cluster.transactions
+        .map((t) => t.id)
+        .sort()
+        .join(',');
       if (!seen.has(key)) {
         seen.add(key);
         result.push(cluster);

@@ -167,10 +167,7 @@ export abstract class BaseDetector<
     // Validate all values
     for (let i = 0; i < arr.length; i++) {
       if (!Number.isFinite(arr[i])) {
-        throw new NucleationError(
-          `values[${i}] must be a finite number`,
-          'INVALID_VALUE'
-        );
+        throw new NucleationError(`values[${i}] must be a finite number`, 'INVALID_VALUE');
       }
     }
 

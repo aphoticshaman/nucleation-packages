@@ -6,12 +6,7 @@
  * Excellent for geopolitical sentiment and unrest detection.
  */
 
-import type {
-  DataSource,
-  SearchParams,
-  SocialPost,
-  GeoInfo,
-} from '../types.js';
+import type { DataSource, SearchParams, SocialPost, GeoInfo } from '../types.js';
 
 const GDELT_DOC_API = 'https://api.gdeltproject.org/api/v2/doc/doc';
 const GDELT_GEO_API = 'https://api.gdeltproject.org/api/v2/geo/geo';
@@ -85,10 +80,7 @@ export class GdeltSource implements DataSource {
   /**
    * Get geographic heatmap of activity for keywords
    */
-  async getGeoHeatmap(
-    keywords: string[],
-    timespan: string = '24h'
-  ): Promise<Map<string, number>> {
+  async getGeoHeatmap(keywords: string[], timespan: string = '24h'): Promise<Map<string, number>> {
     const url = new URL(GDELT_GEO_API);
     url.searchParams.set('query', keywords.join(' OR '));
     url.searchParams.set('mode', 'pointdata');

@@ -1,30 +1,30 @@
 /**
  * Nucleation - Early Warning Systems for Phase Transitions
- * 
+ *
  * Detect the calm before the storm.
- * 
+ *
  * @example Zero-config quickstart
  * ```javascript
  * import { monitor } from 'nucleation';
- * 
+ *
  * const detector = await monitor('finance');
  * detector.on('warning', state => console.log('Transition approaching:', state));
- * 
+ *
  * for (const price of priceStream) {
  *   detector.update(price);
  * }
  * ```
- * 
+ *
  * @example Full control
  * ```javascript
  * import { RegimeDetector } from 'nucleation';
- * 
- * const detector = new RegimeDetector({ 
+ *
+ * const detector = new RegimeDetector({
  *   sensitivity: 'sensitive',
- *   windowSize: 20 
+ *   windowSize: 20
  * });
  * await detector.init();
- * 
+ *
  * const state = detector.update(100.5);
  * if (state.transitioning) alert(state);
  * ```
@@ -79,11 +79,11 @@ class MonitoredDetector {
   #detector;
   #listeners = { warning: [], critical: [], transition: [], update: [] };
   #lastLevel = 0;
-  
+
   constructor(detector) {
     this.#detector = detector;
   }
-  
+
   /**
    * Register event listener
    * @param {'warning'|'critical'|'transition'|'update'} event
@@ -95,47 +95,47 @@ class MonitoredDetector {
     }
     return this;
   }
-  
+
   /**
    * Remove event listener
    */
   off(event, callback) {
     if (this.#listeners[event]) {
-      this.#listeners[event] = this.#listeners[event].filter(cb => cb !== callback);
+      this.#listeners[event] = this.#listeners[event].filter((cb) => cb !== callback);
     }
     return this;
   }
-  
+
   /**
    * Process new observation
    */
   update(value) {
     const state = this.#detector.update(value);
     const normalized = this.#normalizeState(state);
-    
+
     // Emit events
     this.#emit('update', normalized);
-    
+
     if (normalized.levelNumeric >= LEVELS.YELLOW && this.#lastLevel < LEVELS.YELLOW) {
       this.#emit('warning', normalized);
     }
-    
+
     if (normalized.levelNumeric >= LEVELS.RED && this.#lastLevel < LEVELS.RED) {
       this.#emit('critical', normalized);
     }
-    
+
     if (normalized.transitioning && !this.#lastTransitioning) {
       this.#emit('transition', normalized);
     }
-    
+
     this.#lastLevel = normalized.levelNumeric;
     this.#lastTransitioning = normalized.transitioning;
-    
+
     return normalized;
   }
-  
+
   #lastTransitioning = false;
-  
+
   /**
    * Batch update
    */
@@ -146,14 +146,14 @@ class MonitoredDetector {
     }
     return lastState;
   }
-  
+
   /**
    * Get current state without new data
    */
   current() {
     return this.#normalizeState(this.#detector.current());
   }
-  
+
   /**
    * Reset detector state
    */
@@ -162,19 +162,19 @@ class MonitoredDetector {
     this.#lastLevel = 0;
     this.#lastTransitioning = false;
   }
-  
+
   /**
    * Serialize for persistence (Lambda, Edge, etc.)
    */
   serialize() {
     return this.#detector.serialize();
   }
-  
+
   /**
    * Pipe output to another function or stream
    */
   pipe(destination) {
-    this.on('update', state => {
+    this.on('update', (state) => {
       if (typeof destination === 'function') {
         destination(state);
       } else if (destination.write) {
@@ -185,7 +185,7 @@ class MonitoredDetector {
     });
     return destination;
   }
-  
+
   /**
    * Filter updates
    */
@@ -194,7 +194,7 @@ class MonitoredDetector {
     this.pipe(filtered);
     return filtered;
   }
-  
+
   #emit(event, data) {
     for (const callback of this.#listeners[event] || []) {
       try {
@@ -204,52 +204,112 @@ class MonitoredDetector {
       }
     }
   }
-  
+
   #normalizeState(state) {
     // Map various detector outputs to standard shape
-    const level = state.regime || state.level || state.phase || state.health || 
-                  state.riskLevel || state.tensionLevel || state.alertLevel || 
-                  state.tiltLevel || 'unknown';
-    
+    const level =
+      state.regime ||
+      state.level ||
+      state.phase ||
+      state.health ||
+      state.riskLevel ||
+      state.tensionLevel ||
+      state.alertLevel ||
+      state.tiltLevel ||
+      'unknown';
+
     const levelNumeric = this.#levelToNumeric(level, state);
-    
+
     return {
       level,
       levelNumeric,
-      transitioning: state.isShifting || state.transitioning || state.failing || 
-                     state.atRisk || state.critical || state.volatile || 
-                     state.churning || state.tilted || false,
+      transitioning:
+        state.isShifting ||
+        state.transitioning ||
+        state.failing ||
+        state.atRisk ||
+        state.critical ||
+        state.volatile ||
+        state.churning ||
+        state.tilted ||
+        false,
       confidence: state.confidence ?? null,
       variance: state.variance ?? null,
       timestamp: Date.now(),
       raw: state,
     };
   }
-  
+
   #levelToNumeric(level, state) {
     // Handle boolean flags
-    if (state.isShifting || state.critical || state.failing || state.churning || state.volatile || state.tilted) {
+    if (
+      state.isShifting ||
+      state.critical ||
+      state.failing ||
+      state.churning ||
+      state.volatile ||
+      state.tilted
+    ) {
       return LEVELS.RED;
     }
-    if (state.isWarning || state.elevated || state.atRisk || state.stressed || state.heated || state.frustrated) {
+    if (
+      state.isWarning ||
+      state.elevated ||
+      state.atRisk ||
+      state.stressed ||
+      state.heated ||
+      state.frustrated
+    ) {
       return LEVELS.ORANGE;
     }
-    if (state.warming || state.cooling || state.strained || state.tense || state.watch || state.degrading) {
+    if (
+      state.warming ||
+      state.cooling ||
+      state.strained ||
+      state.tense ||
+      state.watch ||
+      state.degrading
+    ) {
       return LEVELS.YELLOW;
     }
-    
+
     // Handle string levels
     const lowerLevel = String(level).toLowerCase();
-    if (['critical', 'red', 'shifting', 'failing', 'churning', 'volatile', 'tilted', 'disrupted', 'toxic'].includes(lowerLevel)) {
+    if (
+      [
+        'critical',
+        'red',
+        'shifting',
+        'failing',
+        'churning',
+        'volatile',
+        'tilted',
+        'disrupted',
+        'toxic',
+      ].includes(lowerLevel)
+    ) {
       return LEVELS.RED;
     }
     if (['warning', 'orange', 'at-risk', 'atrisk', 'stressed', 'heated'].includes(lowerLevel)) {
       return LEVELS.ORANGE;
     }
-    if (['yellow', 'warming', 'cooling', 'strained', 'tense', 'watch', 'elevated', 'approaching', 'degrading', 'frustrated'].includes(lowerLevel)) {
+    if (
+      [
+        'yellow',
+        'warming',
+        'cooling',
+        'strained',
+        'tense',
+        'watch',
+        'elevated',
+        'approaching',
+        'degrading',
+        'frustrated',
+      ].includes(lowerLevel)
+    ) {
       return LEVELS.YELLOW;
     }
-    
+
     return LEVELS.GREEN;
   }
 }
@@ -260,18 +320,18 @@ class MonitoredDetector {
 class FilteredMonitor extends MonitoredDetector {
   #predicate;
   #listeners = { warning: [], critical: [], transition: [], update: [] };
-  
+
   constructor(predicate) {
     super({ update: () => ({}), current: () => ({}), reset: () => {}, serialize: () => '{}' });
     this.#predicate = predicate;
   }
-  
+
   write(state) {
     if (this.#predicate(state)) {
       for (const cb of this.#listeners.update) cb(state);
     }
   }
-  
+
   on(event, callback) {
     if (this.#listeners[event]) {
       this.#listeners[event].push(callback);
@@ -282,11 +342,11 @@ class FilteredMonitor extends MonitoredDetector {
 
 /**
  * Zero-config monitor factory
- * 
+ *
  * @param {string} domain - One of: finance, security, saas, hr, supply, iot, social, health, gaming, general
  * @param {object} options - Optional configuration
  * @returns {Promise<MonitoredDetector>}
- * 
+ *
  * @example
  * const detector = await monitor('finance');
  * detector.on('warning', console.log);
@@ -295,48 +355,48 @@ class FilteredMonitor extends MonitoredDetector {
 export async function monitor(domain, options = {}) {
   const domainKey = domain.toLowerCase();
   const DetectorClass = await DOMAIN_MAP[domainKey]?.();
-  
+
   if (!DetectorClass) {
     const available = Object.keys(DOMAIN_MAP).join(', ');
     throw new Error(`Unknown domain: "${domain}". Available: ${available}`);
   }
-  
+
   const detector = new DetectorClass({
     sensitivity: options.sensitivity || 'balanced',
     windowSize: options.windowSize,
     threshold: options.threshold,
   });
-  
+
   await detector.init();
-  
+
   return new MonitoredDetector(detector);
 }
 
 /**
  * Create multiple monitors at once
- * 
+ *
  * @example
  * const monitors = await createMonitors({
  *   finance: { sensitivity: 'balanced' },
  *   security: { sensitivity: 'sensitive' },
  * });
- * 
+ *
  * monitors.finance.on('warning', handleFinanceWarning);
  * monitors.security.on('critical', handleSecurityCritical);
  */
 export async function createMonitors(config) {
   const monitors = {};
-  
+
   for (const [domain, options] of Object.entries(config)) {
     monitors[domain] = await monitor(domain, options);
   }
-  
+
   return monitors;
 }
 
 /**
  * Webhook processor - receives data via HTTP, emits alerts
- * 
+ *
  * @example
  * const processor = createWebhookProcessor({
  *   domain: 'finance',
@@ -355,24 +415,24 @@ export function createWebhookProcessor(config) {
     async start() {
       const { createServer } = await import('http');
       const detector = await monitor(config.domain, config);
-      
+
       if (config.onWarning) detector.on('warning', config.onWarning);
       if (config.onCritical) detector.on('critical', config.onCritical);
       if (config.onAlert) {
         detector.on('warning', config.onAlert);
         detector.on('critical', config.onAlert);
       }
-      
+
       const server = createServer(async (req, res) => {
         if (req.method === 'POST') {
           let body = '';
           for await (const chunk of req) body += chunk;
-          
+
           try {
             const data = JSON.parse(body);
             const value = config.extract ? config.extract(data) : data.value;
             const state = detector.update(value);
-            
+
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(state));
           } catch (err) {
@@ -387,13 +447,13 @@ export function createWebhookProcessor(config) {
           res.end();
         }
       });
-      
+
       const port = config.port || 8080;
       server.listen(port);
       console.log(`Nucleation webhook processor listening on :${port}`);
-      
+
       return server;
-    }
+    },
   };
 }
 
@@ -403,9 +463,11 @@ export function createWebhookProcessor(config) {
 export function createPrometheusExporter(detector, options = {}) {
   const prefix = options.prefix || 'nucleation_';
   const labels = options.labels || {};
-  const labelStr = Object.entries(labels).map(([k, v]) => `${k}="${v}"`).join(',');
+  const labelStr = Object.entries(labels)
+    .map(([k, v]) => `${k}="${v}"`)
+    .join(',');
   const labelPart = labelStr ? `{${labelStr}}` : '';
-  
+
   return {
     metrics() {
       const state = detector.current();
@@ -423,7 +485,7 @@ export function createPrometheusExporter(detector, options = {}) {
         `# TYPE ${prefix}transitioning gauge`,
         `${prefix}transitioning${labelPart} ${state.transitioning ? 1 : 0}`,
       ].join('\n');
-    }
+    },
   };
 }
 

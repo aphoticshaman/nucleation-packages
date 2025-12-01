@@ -33,16 +33,10 @@ export abstract class BaseCorrelator<TMetadata = Record<string, unknown>> {
    */
   constructor(categories = 10) {
     if (!Number.isInteger(categories) || categories < 1) {
-      throw new NucleationError(
-        'categories must be a positive integer',
-        'INVALID_CONFIG'
-      );
+      throw new NucleationError('categories must be a positive integer', 'INVALID_CONFIG');
     }
     if (categories > 1000) {
-      throw new NucleationError(
-        'categories cannot exceed 1000',
-        'INVALID_CONFIG'
-      );
+      throw new NucleationError('categories cannot exceed 1000', 'INVALID_CONFIG');
     }
     this.categories = categories;
   }
@@ -107,11 +101,7 @@ export abstract class BaseCorrelator<TMetadata = Record<string, unknown>> {
    * @param timestamp - Optional timestamp (defaults to now)
    * @returns Any alerts triggered by this update
    */
-  updateEntity(
-    entityId: string,
-    observation: Float64Array,
-    timestamp = Date.now()
-  ): unknown[] {
+  updateEntity(entityId: string, observation: Float64Array, timestamp = Date.now()): unknown[] {
     this.ensureInit();
 
     if (!this.entities.has(entityId)) {
