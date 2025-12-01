@@ -1,15 +1,15 @@
 /**
  * regime-shift
- * 
+ *
  * Detect market regime changes before they happen using variance-based
  * phase transition detection. Built on nucleation-wasm.
- * 
+ *
  * @example
  * ```js
  * import { RegimeDetector } from 'regime-shift';
- * 
+ *
  * const detector = new RegimeDetector();
- * 
+ *
  * for (const price of priceHistory) {
  *   const regime = detector.update(price);
  *   if (regime.isShifting) {
@@ -36,7 +36,7 @@ export async function initialize() {
   if (!initialized) {
     // Import the module
     nucleationModule = await import('nucleation-wasm');
-    
+
     // In Node.js, we need to provide the WASM bytes directly
     if (typeof window === 'undefined') {
       const require = createRequire(import.meta.url);
@@ -46,7 +46,7 @@ export async function initialize() {
     } else {
       await nucleationModule.default();
     }
-    
+
     initialized = true;
   }
 }
@@ -59,17 +59,29 @@ function getExport(name) {
   return nucleationModule[name];
 }
 
-const NucleationDetector = { 
-  get new() { return getExport('NucleationDetector'); }
+const NucleationDetector = {
+  get new() {
+    return getExport('NucleationDetector');
+  },
 };
 const DetectorConfig = {
-  get new() { return getExport('DetectorConfig'); }  
+  get new() {
+    return getExport('DetectorConfig');
+  },
 };
 const Phase = {
-  get Stable() { return getExport('Phase').Stable; },
-  get Approaching() { return getExport('Phase').Approaching; },
-  get Critical() { return getExport('Phase').Critical; },
-  get Transitioning() { return getExport('Phase').Transitioning; }
+  get Stable() {
+    return getExport('Phase').Stable;
+  },
+  get Approaching() {
+    return getExport('Phase').Approaching;
+  },
+  get Critical() {
+    return getExport('Phase').Critical;
+  },
+  get Transitioning() {
+    return getExport('Phase').Transitioning;
+  },
 };
 
 /**
@@ -81,26 +93,31 @@ export const Regime = {
   /** Low volatility, stable trend */
   STABLE: 'stable',
   /** Volatility increasing, potential shift ahead */
-  WARMING: 'warming', 
+  WARMING: 'warming',
   /** High probability of imminent regime change */
   CRITICAL: 'critical',
   /** Regime change in progress */
-  SHIFTING: 'shifting'
+  SHIFTING: 'shifting',
 };
 
 /**
  * Map internal phase to market regime
- * @param {number} phase 
+ * @param {number} phase
  * @returns {string}
  */
 function phaseToRegime(phase) {
   const Phase = nucleationModule.Phase;
   switch (phase) {
-    case Phase.Stable: return Regime.STABLE;
-    case Phase.Approaching: return Regime.WARMING;
-    case Phase.Critical: return Regime.CRITICAL;
-    case Phase.Transitioning: return Regime.SHIFTING;
-    default: return Regime.STABLE;
+    case Phase.Stable:
+      return Regime.STABLE;
+    case Phase.Approaching:
+      return Regime.WARMING;
+    case Phase.Critical:
+      return Regime.CRITICAL;
+    case Phase.Transitioning:
+      return Regime.SHIFTING;
+    default:
+      return Regime.STABLE;
   }
 }
 
@@ -126,29 +143,29 @@ function phaseToRegime(phase) {
 
 /**
  * Market regime change detector.
- * 
+ *
  * Uses variance inflection detection to identify regime changes
  * before they fully manifest. The core insight: variance typically
  * *decreases* before major market transitions (the "calm before the storm").
- * 
+ *
  * @example
  * ```js
  * // Basic usage with price data
  * const detector = new RegimeDetector();
  * await detector.init();
- * 
+ *
  * prices.forEach(price => {
  *   const state = detector.update(price);
  *   console.log(`Regime: ${state.regime}, Confidence: ${state.confidence}`);
  * });
  * ```
- * 
+ *
  * @example
  * ```js
  * // Using returns instead of prices
  * const detector = new RegimeDetector({ sensitivity: 'sensitive' });
  * await detector.init();
- * 
+ *
  * returns.forEach(ret => {
  *   const state = detector.update(ret);
  *   if (state.isWarning) {
@@ -170,7 +187,7 @@ export class RegimeDetector {
     this.#config = {
       sensitivity: config.sensitivity || 'balanced',
       windowSize: config.windowSize,
-      threshold: config.threshold
+      threshold: config.threshold,
     };
   }
 
@@ -180,11 +197,11 @@ export class RegimeDetector {
    */
   async init() {
     await initialize();
-    
+
     const { DetectorConfig, NucleationDetector } = nucleationModule;
-    
+
     let detectorConfig;
-    
+
     switch (this.#config.sensitivity) {
       case 'conservative':
         detectorConfig = DetectorConfig.conservative();
@@ -224,10 +241,10 @@ export class RegimeDetector {
    */
   update(value) {
     this.#ensureInit();
-    
+
     const phase = this.#detector.update(value);
     const regime = phaseToRegime(phase);
-    
+
     return {
       regime,
       isShifting: phase === Phase.Transitioning,
@@ -235,7 +252,7 @@ export class RegimeDetector {
       confidence: this.#detector.confidence(),
       variance: this.#detector.currentVariance(),
       inflection: this.#detector.inflectionMagnitude(),
-      observations: this.#detector.count()
+      observations: this.#detector.count(),
     };
   }
 
@@ -246,11 +263,11 @@ export class RegimeDetector {
    */
   updateBatch(values) {
     this.#ensureInit();
-    
+
     const arr = values instanceof Float64Array ? values : new Float64Array(values);
     const phase = this.#detector.update_batch(arr);
     const regime = phaseToRegime(phase);
-    
+
     return {
       regime,
       isShifting: phase === Phase.Transitioning,
@@ -258,7 +275,7 @@ export class RegimeDetector {
       confidence: this.#detector.confidence(),
       variance: this.#detector.currentVariance(),
       inflection: this.#detector.inflectionMagnitude(),
-      observations: this.#detector.count()
+      observations: this.#detector.count(),
     };
   }
 
@@ -268,10 +285,10 @@ export class RegimeDetector {
    */
   current() {
     this.#ensureInit();
-    
+
     const phase = this.#detector.currentPhase();
     const regime = phaseToRegime(phase);
-    
+
     return {
       regime,
       isShifting: phase === Phase.Transitioning,
@@ -279,7 +296,7 @@ export class RegimeDetector {
       confidence: this.#detector.confidence(),
       variance: this.#detector.currentVariance(),
       inflection: this.#detector.inflectionMagnitude(),
-      observations: this.#detector.count()
+      observations: this.#detector.count(),
     };
   }
 
@@ -318,15 +335,15 @@ export class RegimeDetector {
 /**
  * Quick check if a price series shows regime shift signals.
  * Convenience function for one-off analysis.
- * 
+ *
  * @param {number[]} prices - Price series to analyze
  * @param {RegimeConfig} [config={}] - Detection configuration
  * @returns {Promise<{shifting: boolean, regime: string, confidence: number}>}
- * 
+ *
  * @example
  * ```js
  * import { detectRegimeShift } from 'regime-shift';
- * 
+ *
  * const result = await detectRegimeShift(closingPrices);
  * if (result.shifting) {
  *   console.log('Regime shift detected!');
@@ -336,14 +353,14 @@ export class RegimeDetector {
 export async function detectRegimeShift(prices, config = {}) {
   const detector = new RegimeDetector(config);
   await detector.init();
-  
+
   const state = detector.updateBatch(prices);
-  
+
   return {
     shifting: state.isShifting,
     warning: state.isWarning,
     regime: state.regime,
-    confidence: state.confidence
+    confidence: state.confidence,
   };
 }
 

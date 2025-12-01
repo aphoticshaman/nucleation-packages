@@ -34,7 +34,10 @@ export declare class CrowdMonitor {
   static deserialize(json: string): Promise<CrowdMonitor>;
 }
 
-export declare function assess(values: number[], config?: CrowdMonitorConfig): Promise<{
+export declare function assess(
+  values: number[],
+  config?: CrowdMonitorConfig
+): Promise<{
   volatile: boolean;
   elevated: boolean;
   level: string;

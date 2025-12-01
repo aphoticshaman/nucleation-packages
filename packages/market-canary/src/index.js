@@ -23,17 +23,22 @@ export const PhaseLevel = {
   STABLE: 'stable',
   APPROACHING: 'approaching',
   CRITICAL: 'critical',
-  TRANSITIONING: 'transitioning'
+  TRANSITIONING: 'transitioning',
 };
 
 function phaseToLevel(phase) {
   const Phase = nucleationModule.Phase;
   switch (phase) {
-    case Phase.Stable: return PhaseLevel.STABLE;
-    case Phase.Approaching: return PhaseLevel.APPROACHING;
-    case Phase.Critical: return PhaseLevel.CRITICAL;
-    case Phase.Transitioning: return PhaseLevel.TRANSITIONING;
-    default: return PhaseLevel.STABLE;
+    case Phase.Stable:
+      return PhaseLevel.STABLE;
+    case Phase.Approaching:
+      return PhaseLevel.APPROACHING;
+    case Phase.Critical:
+      return PhaseLevel.CRITICAL;
+    case Phase.Transitioning:
+      return PhaseLevel.TRANSITIONING;
+    default:
+      return PhaseLevel.STABLE;
   }
 }
 
@@ -46,7 +51,7 @@ export class TransitionDetector {
     this.#config = {
       sensitivity: config.sensitivity || 'balanced',
       windowSize: config.windowSize || 50,
-      threshold: config.threshold
+      threshold: config.threshold,
     };
   }
 
@@ -55,9 +60,14 @@ export class TransitionDetector {
     const { DetectorConfig, NucleationDetector } = nucleationModule;
     let detectorConfig;
     switch (this.#config.sensitivity) {
-      case 'conservative': detectorConfig = DetectorConfig.conservative(); break;
-      case 'sensitive': detectorConfig = DetectorConfig.sensitive(); break;
-      default: detectorConfig = new DetectorConfig();
+      case 'conservative':
+        detectorConfig = DetectorConfig.conservative();
+        break;
+      case 'sensitive':
+        detectorConfig = DetectorConfig.sensitive();
+        break;
+      default:
+        detectorConfig = new DetectorConfig();
     }
     detectorConfig.window_size = this.#config.windowSize;
     if (this.#config.threshold) detectorConfig.threshold = this.#config.threshold;
@@ -66,7 +76,8 @@ export class TransitionDetector {
   }
 
   #ensureInit() {
-    if (!this.#initialized) throw new Error('TransitionDetector not initialized. Call init() first.');
+    if (!this.#initialized)
+      throw new Error('TransitionDetector not initialized. Call init() first.');
   }
 
   update(value) {
@@ -81,7 +92,7 @@ export class TransitionDetector {
       confidence: this.#detector.confidence(),
       variance: this.#detector.currentVariance(),
       inflection: this.#detector.inflectionMagnitude(),
-      dataPoints: this.#detector.count()
+      dataPoints: this.#detector.count(),
     };
   }
 
@@ -98,7 +109,7 @@ export class TransitionDetector {
       confidence: this.#detector.confidence(),
       variance: this.#detector.currentVariance(),
       inflection: this.#detector.inflectionMagnitude(),
-      dataPoints: this.#detector.count()
+      dataPoints: this.#detector.count(),
     };
   }
 
@@ -114,13 +125,19 @@ export class TransitionDetector {
       confidence: this.#detector.confidence(),
       variance: this.#detector.currentVariance(),
       inflection: this.#detector.inflectionMagnitude(),
-      dataPoints: this.#detector.count()
+      dataPoints: this.#detector.count(),
     };
   }
 
-  reset() { this.#ensureInit(); this.#detector.reset(); }
-  serialize() { this.#ensureInit(); return this.#detector.serialize(); }
-  
+  reset() {
+    this.#ensureInit();
+    this.#detector.reset();
+  }
+  serialize() {
+    this.#ensureInit();
+    return this.#detector.serialize();
+  }
+
   static async deserialize(json) {
     await initialize();
     const { NucleationDetector } = nucleationModule;
@@ -135,7 +152,12 @@ export async function detectTransition(values, config = {}) {
   const detector = new TransitionDetector(config);
   await detector.init();
   const state = detector.updateBatch(values);
-  return { transitioning: state.transitioning, elevated: state.elevated, phase: state.phase, confidence: state.confidence };
+  return {
+    transitioning: state.transitioning,
+    elevated: state.elevated,
+    phase: state.phase,
+    confidence: state.confidence,
+  };
 }
 
 export default TransitionDetector;

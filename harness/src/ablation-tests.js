@@ -1,6 +1,6 @@
 /**
  * Ablation Tests for Nucleation Packages
- * 
+ *
  * Systematic testing of each detector with:
  * 1. Synthetic data with known phase transitions
  * 2. Sensitivity analysis
@@ -24,7 +24,7 @@ import SupplyMonitor from 'supply-sentinel';
  */
 function generateTestData(pattern, length = 100, transitionPoint = 50) {
   const data = [];
-  
+
   switch (pattern) {
     case 'calm-before-storm':
       // High variance -> Low variance -> High variance
@@ -41,7 +41,7 @@ function generateTestData(pattern, length = 100, transitionPoint = 50) {
         }
       }
       break;
-      
+
     case 'gradual-decline':
       // Gradual decline with decreasing variance
       for (let i = 0; i < length; i++) {
@@ -50,14 +50,14 @@ function generateTestData(pattern, length = 100, transitionPoint = 50) {
         data.push(80 * decay + (Math.random() - 0.5) * variance);
       }
       break;
-      
+
     case 'stable':
       // Consistently stable (no transition)
       for (let i = 0; i < length; i++) {
         data.push(50 + (Math.random() - 0.5) * 15);
       }
       break;
-      
+
     case 'sudden-spike':
       // Stable then sudden spike (no calm-before-storm)
       for (let i = 0; i < length; i++) {
@@ -68,7 +68,7 @@ function generateTestData(pattern, length = 100, transitionPoint = 50) {
         }
       }
       break;
-      
+
     case 'oscillating':
       // Regular oscillations (should be detected as stable)
       for (let i = 0; i < length; i++) {
@@ -76,7 +76,7 @@ function generateTestData(pattern, length = 100, transitionPoint = 50) {
       }
       break;
   }
-  
+
   return data;
 }
 
@@ -86,20 +86,28 @@ function generateTestData(pattern, length = 100, transitionPoint = 50) {
 async function testDetector(DetectorClass, pattern, config = {}) {
   const detector = new DetectorClass(config);
   await detector.init();
-  
+
   const data = generateTestData(pattern, 100, 50);
-  
+
   let firstAlert = null;
   let alertCount = 0;
-  
+
   for (let i = 0; i < data.length; i++) {
     const state = detector.update(data[i]);
-    
+
     // Check for elevated/alert state (different detectors use different fields)
-    const isAlert = state.elevated || state.atRisk || state.critical || 
-                    state.failing || state.stressed || state.transitioning ||
-                    state.isShifting || state.isWarning || state.tilted || state.volatile;
-    
+    const isAlert =
+      state.elevated ||
+      state.atRisk ||
+      state.critical ||
+      state.failing ||
+      state.stressed ||
+      state.transitioning ||
+      state.isShifting ||
+      state.isWarning ||
+      state.tilted ||
+      state.volatile;
+
     if (isAlert) {
       alertCount++;
       if (firstAlert === null) {
@@ -107,9 +115,9 @@ async function testDetector(DetectorClass, pattern, config = {}) {
       }
     }
   }
-  
+
   const finalState = detector.current();
-  
+
   return {
     pattern,
     firstAlertAt: firstAlert,
@@ -117,13 +125,20 @@ async function testDetector(DetectorClass, pattern, config = {}) {
     finalConfidence: finalState.confidence,
     finalVariance: finalState.variance,
     // For calm-before-storm, ideal detection is around index 35-50 (during calm period)
-    detectionQuality: pattern === 'calm-before-storm' ? 
-      (firstAlert !== null && firstAlert >= 35 && firstAlert <= 55 ? 'GOOD' : 
-       firstAlert !== null && firstAlert < 35 ? 'EARLY' : 
-       firstAlert !== null ? 'LATE' : 'MISSED') : 
-      pattern === 'stable' ? 
-      (alertCount < 5 ? 'GOOD' : 'FALSE_POSITIVES') :
-      'N/A'
+    detectionQuality:
+      pattern === 'calm-before-storm'
+        ? firstAlert !== null && firstAlert >= 35 && firstAlert <= 55
+          ? 'GOOD'
+          : firstAlert !== null && firstAlert < 35
+            ? 'EARLY'
+            : firstAlert !== null
+              ? 'LATE'
+              : 'MISSED'
+        : pattern === 'stable'
+          ? alertCount < 5
+            ? 'GOOD'
+            : 'FALSE_POSITIVES'
+          : 'N/A',
   };
 }
 
@@ -134,7 +149,7 @@ async function runAblationTests() {
   console.log('╔════════════════════════════════════════════════════════════════╗');
   console.log('║              NUCLEATION PACKAGES - ABLATION TESTS              ║');
   console.log('╚════════════════════════════════════════════════════════════════╝\n');
-  
+
   const detectors = [
     { name: 'RegimeDetector', class: RegimeDetector },
     { name: 'ThreatDetector', class: ThreatDetector },
@@ -145,47 +160,66 @@ async function runAblationTests() {
     { name: 'CrowdMonitor', class: CrowdMonitor },
     { name: 'PatientMonitor', class: PatientMonitor },
     { name: 'MatchMonitor', class: MatchMonitor },
-    { name: 'SupplyMonitor', class: SupplyMonitor }
+    { name: 'SupplyMonitor', class: SupplyMonitor },
   ];
-  
-  const patterns = ['calm-before-storm', 'gradual-decline', 'stable', 'sudden-spike', 'oscillating'];
+
+  const patterns = [
+    'calm-before-storm',
+    'gradual-decline',
+    'stable',
+    'sudden-spike',
+    'oscillating',
+  ];
   const sensitivities = ['conservative', 'balanced', 'sensitive'];
-  
+
   const results = {};
-  
+
   for (const detector of detectors) {
     console.log(`\n--- Testing ${detector.name} ---\n`);
     results[detector.name] = {};
-    
+
     for (const sensitivity of sensitivities) {
       results[detector.name][sensitivity] = {};
-      
+
       for (const pattern of patterns) {
         try {
           const result = await testDetector(detector.class, pattern, { sensitivity });
           results[detector.name][sensitivity][pattern] = result;
-          
-          const status = result.detectionQuality === 'GOOD' ? '✓' : 
-                        result.detectionQuality === 'MISSED' ? '✗' :
-                        result.detectionQuality === 'FALSE_POSITIVES' ? '⚠' : '○';
-          
-          console.log(`  ${status} ${sensitivity.padEnd(12)} | ${pattern.padEnd(18)} | First: ${String(result.firstAlertAt ?? 'none').padEnd(4)} | Alerts: ${result.totalAlerts}`);
+
+          const status =
+            result.detectionQuality === 'GOOD'
+              ? '✓'
+              : result.detectionQuality === 'MISSED'
+                ? '✗'
+                : result.detectionQuality === 'FALSE_POSITIVES'
+                  ? '⚠'
+                  : '○';
+
+          console.log(
+            `  ${status} ${sensitivity.padEnd(12)} | ${pattern.padEnd(18)} | First: ${String(result.firstAlertAt ?? 'none').padEnd(4)} | Alerts: ${result.totalAlerts}`
+          );
         } catch (error) {
-          console.log(`  ✗ ${sensitivity.padEnd(12)} | ${pattern.padEnd(18)} | ERROR: ${error.message}`);
+          console.log(
+            `  ✗ ${sensitivity.padEnd(12)} | ${pattern.padEnd(18)} | ERROR: ${error.message}`
+          );
           results[detector.name][sensitivity][pattern] = { error: error.message };
         }
       }
     }
   }
-  
+
   // Summary
   console.log('\n\n╔════════════════════════════════════════════════════════════════╗');
   console.log('║                         SUMMARY                                ║');
   console.log('╚════════════════════════════════════════════════════════════════╝\n');
-  
+
   // Count detection quality across all tests
-  let good = 0, early = 0, late = 0, missed = 0, falsePos = 0;
-  
+  let good = 0,
+    early = 0,
+    late = 0,
+    missed = 0,
+    falsePos = 0;
+
   for (const detector of Object.values(results)) {
     for (const sensitivity of Object.values(detector)) {
       for (const pattern of Object.values(sensitivity)) {
@@ -197,7 +231,7 @@ async function runAblationTests() {
       }
     }
   }
-  
+
   console.log('Detection Quality (calm-before-storm pattern):');
   console.log(`  ✓ GOOD (detected in calm window): ${good}`);
   console.log(`  ○ EARLY (detected before calm): ${early}`);
@@ -206,7 +240,7 @@ async function runAblationTests() {
   console.log(`\nFalse Positive Rate (stable pattern):`);
   console.log(`  ✓ GOOD (few false alerts): ${good}`);
   console.log(`  ⚠ FALSE_POSITIVES (many alerts on stable data): ${falsePos}`);
-  
+
   return results;
 }
 
@@ -217,16 +251,16 @@ async function sensitivityAnalysis() {
   console.log('\n\n╔════════════════════════════════════════════════════════════════╗');
   console.log('║                   SENSITIVITY ANALYSIS                         ║');
   console.log('╚════════════════════════════════════════════════════════════════╝\n');
-  
+
   const windowSizes = [10, 20, 30, 50, 75, 100];
   const data = generateTestData('calm-before-storm', 150, 75);
-  
+
   console.log('Window Size vs Detection Timing (calm-before-storm, transition at 75):\n');
-  
+
   for (const windowSize of windowSizes) {
     const detector = new TransitionDetector({ windowSize, sensitivity: 'balanced' });
     await detector.init();
-    
+
     let firstAlert = null;
     for (let i = 0; i < data.length; i++) {
       const state = detector.update(data[i]);
@@ -234,12 +268,13 @@ async function sensitivityAnalysis() {
         firstAlert = i;
       }
     }
-    
-    const timing = firstAlert === null ? 'NONE' :
-                   firstAlert < 60 ? 'EARLY' :
-                   firstAlert <= 80 ? 'GOOD' : 'LATE';
-    
-    console.log(`  Window ${String(windowSize).padStart(3)}: First alert at ${String(firstAlert ?? 'N/A').padStart(4)} [${timing}]`);
+
+    const timing =
+      firstAlert === null ? 'NONE' : firstAlert < 60 ? 'EARLY' : firstAlert <= 80 ? 'GOOD' : 'LATE';
+
+    console.log(
+      `  Window ${String(windowSize).padStart(3)}: First alert at ${String(firstAlert ?? 'N/A').padStart(4)} [${timing}]`
+    );
   }
 }
 

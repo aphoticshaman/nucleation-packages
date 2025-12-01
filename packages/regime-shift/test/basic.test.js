@@ -13,12 +13,12 @@ test('RegimeDetector initializes', async () => {
 test('RegimeDetector processes data', async () => {
   const detector = new RegimeDetector();
   await detector.init();
-  
+
   // Feed some data
   for (let i = 0; i < 100; i++) {
     detector.update(Math.random() * 100);
   }
-  
+
   const state = detector.current();
   assert.strictEqual(state.observations, 100);
   assert.ok(state.variance >= 0);
@@ -27,7 +27,7 @@ test('RegimeDetector processes data', async () => {
 test('detectRegimeShift batch function works', async () => {
   const prices = Array.from({ length: 50 }, () => Math.random() * 100);
   const result = await detectRegimeShift(prices);
-  
+
   assert.ok('shifting' in result);
   assert.ok('regime' in result);
   assert.ok('confidence' in result);
