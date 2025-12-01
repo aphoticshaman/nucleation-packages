@@ -2,18 +2,28 @@
   "name": "nucleation-packages",
   "version": "1.0.0",
   "private": true,
-  "description": "Domain-specific wrappers for nucleation-wasm phase transition detection",
+  "description": "Early warning systems for phase transitions. Detect the calm before the storm.",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "harness"
   ],
   "scripts": {
-    "test": "npm test --workspaces",
-    "publish:all": "npm publish --workspaces --access public"
+    "test": "npm test --workspaces --if-present",
+    "publish:all": "npm publish --workspaces --access public",
+    "monitor": "node harness/src/index.js",
+    "ablation": "node harness/src/ablation-tests.js"
   },
-  "author": "Ryan Cardwell <aphotic.noise@gmail.com>",
+  "author": "Ryan Cardwell <aphoticshaman@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/aphoticshaman/nucleation-packages"
-  }
+  },
+  "keywords": [
+    "early-warning",
+    "phase-transition",
+    "anomaly-detection",
+    "monitoring",
+    "wasm"
+  ]
 }
