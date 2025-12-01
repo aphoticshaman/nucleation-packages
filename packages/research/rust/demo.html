@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LatticeForge WASM Demo</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a2e;
+            color: #0f0;
+            padding: 20px;
+        }
+        canvas {
+            border: 1px solid #0f0;
+            background: #000;
+        }
+        #output {
+            white-space: pre;
+            padding: 10px;
+            background: #000;
+            border: 1px solid #333;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        button {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        button:hover { background: #0a0; }
+    </style>
+</head>
+<body>
+    <h1>LatticeForge Core - WASM Demo</h1>
+
+    <div>
+        <button onclick="runSwarm()">Run Particle Swarm</button>
+        <button onclick="runPersistence()">Compute Persistence</button>
+        <button onclick="runQMatrix()">Analyze Q-Matrix</button>
+    </div>
+
+    <canvas id="canvas" width="600" height="400"></canvas>
+
+    <h3>Output:</h3>
+    <div id="output">Loading WASM module...</div>
+
+    <script type="module">
+        import init, {
+            WasmSwarm,
+            wasm_compute_persistence,
+            wasm_persistent_entropy,
+            wasm_build_q_matrix,
+            wasm_analyze_q,
+            wasm_simulate_markov_chain
+        } from './pkg/latticeforge_core.js';
+
+        const output = document.getElementById('output');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        function log(msg) {
+            output.textContent += msg + '\n';
+            output.scrollTop = output.scrollHeight;
+        }
+
+        // Initialize WASM
+        await init();
+        output.textContent = 'WASM loaded successfully!\n\n';
+
+        // Make functions available globally
+        window.runSwarm = function() {
+            log('--- Particle Swarm Simulation ---');
+
+            const swarm = new WasmSwarm(
+                200,    // n_particles
+                0.05,   // dt
+                0.1,    // diffusion
+                2.0,    // interaction_strength
+                300,    // attractor_x (center of canvas)
+                200,    // attractor_y
+                0.5,    // attractor_strength
+                BigInt(Date.now())  // seed
+            );
+
+            // Clear canvas
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, 600, 400);
+
+            // Run and animate
+            let frame = 0;
+            function animate() {
+                swarm.step();
+
+                // Get positions
+                const positions = swarm.get_positions();
+
+                // Fade previous frame
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.fillRect(0, 0, 600, 400);
+
+                // Draw particles
+                ctx.fillStyle = '#0f0';
+                for (let i = 0; i < positions.length; i += 2) {
+                    const x = positions[i];
+                    const y = positions[i + 1];
+                    ctx.beginPath();
+                    ctx.arc(x, y, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Draw attractor
+                ctx.fillStyle = '#f00';
+                ctx.beginPath();
+                ctx.arc(300, 200, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                frame++;
+                if (frame < 500) {
+                    requestAnimationFrame(animate);
+                } else {
+                    const metrics = swarm.get_metrics();
+                    log(`Final metrics: ${JSON.stringify(metrics)}`);
+                    log(`Time: ${swarm.get_time().toFixed(2)}`);
+                }
+            }
+            animate();
+        };
+
+        window.runPersistence = function() {
+            log('--- Persistence Diagram ---');
+
+            // Generate random point cloud (two clusters)
+            const points = [];
+            for (let i = 0; i < 50; i++) {
+                // Cluster 1
+                points.push(-1 + Math.random() * 0.3);
+                points.push(Math.random() * 0.3);
+                // Cluster 2
+                points.push(1 + Math.random() * 0.3);
+                points.push(Math.random() * 0.3);
+            }
+
+            const pointsArray = new Float64Array(points);
+            const pd = wasm_compute_persistence(pointsArray, 100, 3.0);
+
+            log(`H0 features: ${pd.h0.length}`);
+            log(`H1 features: ${pd.h1.length}`);
+
+            // Compute entropy
+            if (pd.h0.length > 0) {
+                const births = new Float64Array(pd.h0.map(p => p.birth));
+                const deaths = new Float64Array(pd.h0.map(p => p.death));
+                const entropy = wasm_persistent_entropy(births, deaths);
+                log(`Persistent entropy (H0): ${entropy.toFixed(4)}`);
+            }
+
+            // Visualize
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, 600, 400);
+
+            // Draw points
+            ctx.fillStyle = '#0ff';
+            for (let i = 0; i < points.length; i += 2) {
+                const x = 300 + points[i] * 100;
+                const y = 200 + points[i + 1] * 100;
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            log('Points visualized on canvas');
+        };
+
+        window.runQMatrix = function() {
+            log('--- Q-Matrix Analysis ---');
+
+            // Build a 3-state Q-matrix
+            const rates = new Float64Array([
+                0.0, 0.1, 0.2,
+                0.15, 0.0, 0.1,
+                0.1, 0.15, 0.0
+            ]);
+
+            const q = wasm_build_q_matrix(rates, 3);
+            log(`Q-matrix built: [${q.map(x => x.toFixed(3)).join(', ')}]`);
+
+            const analysis = wasm_analyze_q(q, 3);
+            log(`Spectral gap: ${analysis.spectral_gap.toFixed(4)}`);
+            log(`Eigenvalues (real): [${analysis.eigenvalues_real.map(x => x.toFixed(3)).join(', ')}]`);
+
+            if (analysis.stationary) {
+                log(`Stationary dist: [${analysis.stationary.map(x => x.toFixed(3)).join(', ')}]`);
+            }
+
+            // Simulate Markov chain
+            const sim = wasm_simulate_markov_chain(q, 3, 0, 50.0, 0.1, BigInt(42));
+            log(`Simulated ${sim.times.length} steps`);
+
+            // Count time in each regime
+            const counts = [0, 0, 0];
+            sim.regimes.forEach(r => counts[r]++);
+            log(`Regime occupancy: [${counts.map(c => (c/sim.regimes.length*100).toFixed(1) + '%').join(', ')}]`);
+
+            // Visualize regime trajectory
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, 600, 400);
+
+            const colors = ['#f00', '#0f0', '#00f'];
+            ctx.beginPath();
+            ctx.moveTo(0, 200 - sim.regimes[0] * 80);
+            for (let i = 1; i < sim.regimes.length; i++) {
+                const x = (i / sim.regimes.length) * 600;
+                const y = 200 - sim.regimes[i] * 80;
+                ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = '#0f0';
+            ctx.stroke();
+
+            // Draw regime labels
+            ctx.fillStyle = '#fff';
+            ctx.fillText('Regime 0', 10, 210);
+            ctx.fillText('Regime 1', 10, 130);
+            ctx.fillText('Regime 2', 10, 50);
+        };
+
+        log('Click a button to run a demo!\n');
+    </script>
+</body>
+</html>
