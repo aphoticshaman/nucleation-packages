@@ -42,7 +42,7 @@
   },
   "homepage": "https://github.com/aphoticshaman/nucleation-packages#readme",
   "dependencies": {
-    "nucleation-wasm": "^0.1.0",
+    "nucleation-wasm": "^0.2.0",
     "regime-shift": "^1.0.0",
     "threat-pulse": "^1.0.0",
     "churn-harbinger": "^1.0.0",
