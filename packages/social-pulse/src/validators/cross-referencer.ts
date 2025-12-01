@@ -270,18 +270,22 @@ export class CrossReferencer {
       throw new Error(`Fact check API error: ${response.status}`);
     }
 
-    const data: GoogleFactCheckResponse = await response.json();
+    const data = (await response.json()) as GoogleFactCheckResponse;
     const results: FactCheckResult[] = [];
 
     for (const claim of data.claims ?? []) {
       for (const review of claim.claimReview ?? []) {
-        results.push({
+        const result: FactCheckResult = {
           source: review.publisher.name,
           url: review.url,
           rating: review.textualRating,
           claim: claim.text,
-          date: claim.claimDate,
-        });
+        };
+        // Only add date if it exists
+        if (claim.claimDate) {
+          result.date = claim.claimDate;
+        }
+        results.push(result);
       }
     }
 
@@ -415,6 +419,8 @@ export class CrossReferencer {
     for (let i = 0; i < sortedPosts.length - 1; i++) {
       const current = sortedPosts[i];
       const next = sortedPosts[i + 1];
+
+      if (!current || !next) continue;
 
       const timeDiff =
         (new Date(next.timestamp).getTime() - new Date(current.timestamp).getTime()) / 1000;

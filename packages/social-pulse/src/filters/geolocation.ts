@@ -140,8 +140,13 @@ export class GeolocationFilter implements PostFilter {
 
     const processedPost: SocialPost = {
       ...post,
-      geo: geo ?? post.geo,
     };
+
+    // Only set geo if it has a value
+    const newGeo = geo ?? post.geo;
+    if (newGeo) {
+      processedPost.geo = newGeo;
+    }
 
     // Filter by country if restrictions set
     if (this.allowedSet.size > 0) {
@@ -182,7 +187,7 @@ export class GeolocationFilter implements PostFilter {
       if (countriesForLang?.length) {
         // First country in list is most likely
         candidates.push({
-          countryCode: countriesForLang[0],
+          countryCode: countriesForLang[0]!,
           confidence: 0.4,
           source: 'language',
         });
@@ -223,15 +228,19 @@ export class GeolocationFilter implements PostFilter {
 
     // Get highest voted country
     const sorted = [...countryVotes.entries()].sort((a, b) => b[1] - a[1]);
-    const topCountry = sorted[0][0];
+    const topCountry = sorted[0]![0];
 
     // Find best candidate for this country
     const bestCandidate = candidates
       .filter((c) => c.countryCode === topCountry)
       .sort((a, b) => b.confidence - a.confidence)[0];
 
+    if (!bestCandidate) {
+      return null;
+    }
+
     // Boost confidence if multiple signals agree
-    const agreementBoost = sorted[0][1] > 1 ? 0.1 : 0;
+    const agreementBoost = sorted[0]![1] > 1 ? 0.1 : 0;
     const finalConfidence = Math.min(1, bestCandidate.confidence + agreementBoost);
 
     if (finalConfidence < this.config.minConfidence) {
@@ -261,7 +270,7 @@ export class GeolocationFilter implements PostFilter {
 
     // Check for ISO country codes directly
     const codeMatch = /\b([A-Z]{2})\b/.exec(location);
-    if (codeMatch && Object.keys(LOCATION_KEYWORDS).includes(codeMatch[1])) {
+    if (codeMatch && codeMatch[1] && Object.keys(LOCATION_KEYWORDS).includes(codeMatch[1])) {
       return codeMatch[1];
     }
 
@@ -283,10 +292,12 @@ export class GeolocationFilter implements PostFilter {
     for (const pattern of patterns) {
       const matches = content.matchAll(pattern);
       for (const match of matches) {
-        const location = match[1].trim();
-        const country = this.parseLocation(location);
-        if (country) {
-          return country;
+        const location = match[1]?.trim();
+        if (location) {
+          const country = this.parseLocation(location);
+          if (country) {
+            return country;
+          }
         }
       }
     }

@@ -158,7 +158,7 @@ export class BotFilter implements PostFilter {
     const authorHistory = this.postingHistory.get(post.author.id);
     if (authorHistory && authorHistory.length >= 10) {
       const recentPosts = authorHistory.slice(-10);
-      const timeSpan = recentPosts[recentPosts.length - 1] - recentPosts[0];
+      const timeSpan = recentPosts[recentPosts.length - 1]! - recentPosts[0]!;
       const postsPerHour = (10 / timeSpan) * 3600000;
       if (postsPerHour > 20) {
         signals.push('high_frequency');
@@ -198,7 +198,7 @@ export class BotFilter implements PostFilter {
     if (authorHistory && authorHistory.length >= 5) {
       const intervals: number[] = [];
       for (let i = 1; i < authorHistory.length; i++) {
-        intervals.push(authorHistory[i] - authorHistory[i - 1]);
+        intervals.push(authorHistory[i]! - authorHistory[i - 1]!);
       }
       const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
       const variance =

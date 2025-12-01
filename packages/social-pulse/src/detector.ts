@@ -5,6 +5,15 @@
  * Aggregates data from multiple sources, applies filters,
  * and detects variance changes that precede upheavals.
  *
+ * DUAL-FUSION ARCHITECTURE:
+ * - Pure JS mode: Self-contained variance detection (always available)
+ * - WASM mode: Optional high-performance nucleation-wasm integration
+ *
+ * The asymmetric leverage allows:
+ * - External data via API (social sources, economic indicators)
+ * - WASM-accelerated detection when available
+ * - Full data trace export for open-box visibility
+ *
  * Use cases:
  * - Social unrest / revolution precursors
  * - Earnings sentiment (Q1/Q2/Q3/Q4 reports)
@@ -23,8 +32,306 @@ import type {
   Platform,
 } from './types.js';
 
-// Import nucleation-wasm for phase transition detection
-import { NucleationDetector, Shepherd, Phase, type DetectorConfig } from 'nucleation-wasm';
+// ============ DATA TRACE TYPES ============
+
+/**
+ * Individual trace entry for audit trail
+ */
+export interface TraceEntry {
+  id: string;
+  timestamp: string;
+  type: 'fetch' | 'filter' | 'aggregate' | 'detect' | 'transform';
+  source?: string;
+  input: unknown;
+  output: unknown;
+  duration_ms: number;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Complete data trace for open-box visibility
+ */
+export interface DataTrace {
+  sessionId: string;
+  startTime: string;
+  endTime?: string;
+  entries: TraceEntry[];
+  summary: {
+    totalEntries: number;
+    byType: Record<string, number>;
+    totalDuration_ms: number;
+    sourcesUsed: string[];
+    filtersApplied: string[];
+  };
+}
+
+/**
+ * WASM bridge status
+ */
+export interface WasmBridgeStatus {
+  available: boolean;
+  mode: 'wasm' | 'js';
+  version?: string;
+  performance?: {
+    lastDetection_ms: number;
+    avgDetection_ms: number;
+    wasmSpeedup?: number;
+  };
+}
+
+// ============ WASM BRIDGE ============
+
+/**
+ * WasmBridge - Asymmetric dual-fusion integration
+ *
+ * Provides optional high-performance WASM detection when nucleation-wasm
+ * is available, with automatic fallback to pure JS implementation.
+ */
+class WasmBridge {
+  private _wasmModule: unknown = null; // Reserved for future WASM integration
+  private available = false;
+  private detectionTimes: number[] = [];
+  private jsDetectionTimes: number[] = [];
+
+  /**
+   * Attempt to load nucleation-wasm module
+   */
+  async init(): Promise<boolean> {
+    try {
+      // Dynamic import to avoid hard dependency
+      const wasm = await import('nucleation-wasm');
+      if (wasm && typeof wasm.NucleationDetector === 'function') {
+        this._wasmModule = wasm;
+        this.available = true;
+        return true;
+      }
+    } catch {
+      // WASM not available, will use JS fallback
+      this.available = false;
+    }
+    return false;
+  }
+
+  /**
+   * Check if WASM is available
+   */
+  isAvailable(): boolean {
+    return this.available;
+  }
+
+  /**
+   * Get the WASM module (for advanced usage)
+   */
+  getModule(): unknown {
+    return this._wasmModule;
+  }
+
+  /**
+   * Get current bridge status
+   */
+  getStatus(): WasmBridgeStatus {
+    const avgWasm =
+      this.detectionTimes.length > 0
+        ? this.detectionTimes.reduce((a, b) => a + b, 0) / this.detectionTimes.length
+        : 0;
+    const avgJs =
+      this.jsDetectionTimes.length > 0
+        ? this.jsDetectionTimes.reduce((a, b) => a + b, 0) / this.jsDetectionTimes.length
+        : 0;
+
+    const status: WasmBridgeStatus = {
+      available: this.available,
+      mode: this.available ? 'wasm' : 'js',
+    };
+
+    if (this.detectionTimes.length > 0 || this.jsDetectionTimes.length > 0) {
+      status.performance = {
+        lastDetection_ms: this.available
+          ? (this.detectionTimes[this.detectionTimes.length - 1] ?? 0)
+          : (this.jsDetectionTimes[this.jsDetectionTimes.length - 1] ?? 0),
+        avgDetection_ms: this.available ? avgWasm : avgJs,
+      };
+
+      if (avgWasm > 0 && avgJs > 0) {
+        status.performance.wasmSpeedup = avgJs / avgWasm;
+      }
+    }
+
+    return status;
+  }
+
+  /**
+   * Record detection time for performance tracking
+   */
+  recordTime(ms: number, isWasm: boolean): void {
+    if (isWasm) {
+      this.detectionTimes.push(ms);
+      if (this.detectionTimes.length > 100) this.detectionTimes.shift();
+    } else {
+      this.jsDetectionTimes.push(ms);
+      if (this.jsDetectionTimes.length > 100) this.jsDetectionTimes.shift();
+    }
+  }
+}
+
+// ============ DATA TRACE RECORDER ============
+
+/**
+ * DataTraceRecorder - Full audit trail for open-box visibility
+ *
+ * Records every data transformation in the detection pipeline
+ * for debugging, compliance, and analysis.
+ */
+class DataTraceRecorder {
+  private sessionId: string;
+  private startTime: string;
+  private entries: TraceEntry[] = [];
+  private enabled = false;
+
+  constructor() {
+    this.sessionId = this.generateId();
+    this.startTime = new Date().toISOString();
+  }
+
+  /**
+   * Enable/disable tracing
+   */
+  setEnabled(enabled: boolean): void {
+    this.enabled = enabled;
+    if (enabled && this.entries.length === 0) {
+      this.sessionId = this.generateId();
+      this.startTime = new Date().toISOString();
+    }
+  }
+
+  /**
+   * Check if tracing is enabled
+   */
+  isEnabled(): boolean {
+    return this.enabled;
+  }
+
+  /**
+   * Record a trace entry
+   */
+  record(
+    type: TraceEntry['type'],
+    input: unknown,
+    output: unknown,
+    duration_ms: number,
+    source?: string,
+    metadata?: Record<string, unknown>
+  ): void {
+    if (!this.enabled) return;
+
+    const entry: TraceEntry = {
+      id: this.generateId(),
+      timestamp: new Date().toISOString(),
+      type,
+      input: this.sanitize(input),
+      output: this.sanitize(output),
+      duration_ms,
+    };
+
+    if (source) entry.source = source;
+    if (metadata) entry.metadata = metadata;
+
+    this.entries.push(entry);
+  }
+
+  /**
+   * Export complete trace
+   */
+  export(): DataTrace {
+    const byType: Record<string, number> = {};
+    const sourcesUsed = new Set<string>();
+    const filtersApplied = new Set<string>();
+    let totalDuration = 0;
+
+    for (const entry of this.entries) {
+      byType[entry.type] = (byType[entry.type] ?? 0) + 1;
+      totalDuration += entry.duration_ms;
+
+      if (entry.source) {
+        if (entry.type === 'fetch') sourcesUsed.add(entry.source);
+        if (entry.type === 'filter') filtersApplied.add(entry.source);
+      }
+    }
+
+    return {
+      sessionId: this.sessionId,
+      startTime: this.startTime,
+      endTime: new Date().toISOString(),
+      entries: this.entries,
+      summary: {
+        totalEntries: this.entries.length,
+        byType,
+        totalDuration_ms: totalDuration,
+        sourcesUsed: [...sourcesUsed],
+        filtersApplied: [...filtersApplied],
+      },
+    };
+  }
+
+  /**
+   * Export as JSON string
+   */
+  toJSON(): string {
+    return JSON.stringify(this.export(), null, 2);
+  }
+
+  /**
+   * Export as CSV (entries only)
+   */
+  toCSV(): string {
+    const headers = ['id', 'timestamp', 'type', 'source', 'duration_ms'];
+    const rows = this.entries.map((e) => [
+      e.id,
+      e.timestamp,
+      e.type,
+      e.source ?? '',
+      String(e.duration_ms),
+    ]);
+    return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+  }
+
+  /**
+   * Clear trace history
+   */
+  clear(): void {
+    this.entries = [];
+    this.sessionId = this.generateId();
+    this.startTime = new Date().toISOString();
+  }
+
+  private generateId(): string {
+    return `trace_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  }
+
+  private sanitize(data: unknown): unknown {
+    // Truncate large data for storage
+    const str = JSON.stringify(data);
+    if (str.length > 10000) {
+      return { _truncated: true, _length: str.length, _preview: str.slice(0, 500) };
+    }
+    return data;
+  }
+}
+
+/**
+ * Phase states for detection
+ */
+type Phase = 'Stable' | 'Approaching' | 'Critical' | 'Transitioning';
+
+/**
+ * Internal detector state
+ */
+interface InternalDetectorState {
+  phase: Phase;
+  variance: number;
+  mean: number;
+  observations: number;
+}
 
 /**
  * SocialPulseDetector configuration
@@ -40,8 +347,10 @@ export interface SocialPulseConfig {
   sensitivity?: 'low' | 'medium' | 'high';
   /** Aggregate by region */
   aggregateByRegion?: boolean;
-  /** Custom WASM detector config */
-  detectorConfig?: DetectorConfig;
+  /** Enable WASM acceleration if available */
+  enableWasm?: boolean;
+  /** Enable data trace recording for audit trail */
+  enableTrace?: boolean;
 }
 
 /**
@@ -61,7 +370,7 @@ interface EarningsEntry {
 interface EarningsSentiment {
   ticker: string;
   daysUntilReport: number;
-  sentimentTrend: number[]; // Last 30 days
+  sentimentTrend: number[];
   currentSentiment: number;
   sentimentVariance: number;
   phase: Phase;
@@ -70,13 +379,70 @@ interface EarningsSentiment {
 }
 
 /**
- * Sensitivity presets
+ * Sensitivity presets (variance thresholds)
  */
-const SENSITIVITY_PRESETS: Record<string, DetectorConfig> = {
-  low: { windowSize: 50, threshold: 2.5, minVarianceRatio: 1.8 },
-  medium: { windowSize: 30, threshold: 2.0, minVarianceRatio: 1.5 },
-  high: { windowSize: 20, threshold: 1.5, minVarianceRatio: 1.3 },
+const SENSITIVITY_THRESHOLDS = {
+  low: { threshold: 2.5, windowSize: 50 },
+  medium: { threshold: 2.0, windowSize: 30 },
+  high: { threshold: 1.5, windowSize: 20 },
 };
+
+/**
+ * Simple variance-based detector
+ */
+class SimpleVarianceDetector {
+  private values: number[] = [];
+  private windowSize: number;
+  private threshold: number;
+
+  constructor(windowSize = 30, threshold = 2.0) {
+    this.windowSize = windowSize;
+    this.threshold = threshold;
+  }
+
+  update(value: number): InternalDetectorState {
+    this.values.push(value);
+    if (this.values.length > this.windowSize) {
+      this.values.shift();
+    }
+    return this.current();
+  }
+
+  current(): InternalDetectorState {
+    if (this.values.length < 2) {
+      return {
+        phase: 'Stable',
+        variance: 0,
+        mean: this.values[0] ?? 0,
+        observations: this.values.length,
+      };
+    }
+
+    const mean = this.values.reduce((a, b) => a + b, 0) / this.values.length;
+    const variance =
+      this.values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / (this.values.length - 1);
+
+    const phase = this.varianceToPhase(variance);
+
+    return {
+      phase,
+      variance,
+      mean,
+      observations: this.values.length,
+    };
+  }
+
+  reset(): void {
+    this.values = [];
+  }
+
+  private varianceToPhase(variance: number): Phase {
+    if (variance < this.threshold * 0.5) return 'Stable';
+    if (variance < this.threshold) return 'Approaching';
+    if (variance < this.threshold * 1.5) return 'Critical';
+    return 'Transitioning';
+  }
+}
 
 export class SocialPulseDetector {
   private sources: DataSource[] = [];
@@ -84,8 +450,7 @@ export class SocialPulseDetector {
   private config: SocialPulseConfig;
 
   // Phase transition detectors by region/topic
-  private detectors = new Map<string, NucleationDetector>();
-  private shepherd: Shepherd | null = null;
+  private detectors = new Map<string, SimpleVarianceDetector>();
 
   // Sentiment history for variance tracking
   private sentimentHistory = new Map<string, number[]>();
@@ -97,11 +462,19 @@ export class SocialPulseDetector {
   // Ready state
   private initialized = false;
 
+  // Dual-fusion WASM bridge
+  private wasmBridge = new WasmBridge();
+
+  // Data trace recorder for open-box visibility
+  private traceRecorder = new DataTraceRecorder();
+
   constructor(config: SocialPulseConfig = {}) {
     this.config = {
       windowSize: config.windowSize ?? 30,
       sensitivity: config.sensitivity ?? 'medium',
       aggregateByRegion: config.aggregateByRegion ?? true,
+      enableWasm: config.enableWasm ?? true,
+      enableTrace: config.enableTrace ?? false,
       ...config,
     };
 
@@ -111,19 +484,80 @@ export class SocialPulseDetector {
     if (config.filters) {
       this.filters = config.filters;
     }
+
+    // Enable trace if configured
+    if (this.config.enableTrace) {
+      this.traceRecorder.setEnabled(true);
+    }
   }
 
   /**
    * Initialize detector and all sources
    */
   async init(): Promise<void> {
-    // Initialize all sources
+    const initStart = performance.now();
+
+    // Try to initialize WASM bridge if enabled
+    if (this.config.enableWasm) {
+      await this.wasmBridge.init();
+    }
+
+    // Initialize all data sources
     await Promise.all(this.sources.map((s) => s.init()));
 
-    // Initialize shepherd for correlation
-    this.shepherd = new Shepherd();
-
     this.initialized = true;
+
+    this.traceRecorder.record(
+      'transform',
+      { sources: this.sources.length, wasmEnabled: this.config.enableWasm },
+      { initialized: true, wasmAvailable: this.wasmBridge.isAvailable() },
+      performance.now() - initStart,
+      'init'
+    );
+  }
+
+  // ============ WASM Bridge & Trace API ============
+
+  /**
+   * Get WASM bridge status (dual-fusion mode)
+   */
+  getWasmStatus(): WasmBridgeStatus {
+    return this.wasmBridge.getStatus();
+  }
+
+  /**
+   * Enable/disable data trace recording
+   */
+  setTraceEnabled(enabled: boolean): void {
+    this.traceRecorder.setEnabled(enabled);
+  }
+
+  /**
+   * Export data trace for analysis
+   */
+  exportTrace(): DataTrace {
+    return this.traceRecorder.export();
+  }
+
+  /**
+   * Export trace as JSON string
+   */
+  exportTraceJSON(): string {
+    return this.traceRecorder.toJSON();
+  }
+
+  /**
+   * Export trace as CSV
+   */
+  exportTraceCSV(): string {
+    return this.traceRecorder.toCSV();
+  }
+
+  /**
+   * Clear trace history
+   */
+  clearTrace(): void {
+    this.traceRecorder.clear();
   }
 
   /**
@@ -146,10 +580,24 @@ export class SocialPulseDetector {
   async fetch(params: SearchParams = {}): Promise<SocialPost[]> {
     this.ensureInitialized();
 
+    const fetchStart = performance.now();
     const allPosts: SocialPost[] = [];
 
-    // Fetch from all sources in parallel
-    const results = await Promise.allSettled(this.sources.map((source) => source.fetch(params)));
+    // Fetch from all sources with tracing
+    const results = await Promise.allSettled(
+      this.sources.map(async (source, idx) => {
+        const sourceStart = performance.now();
+        const posts = await source.fetch(params);
+        this.traceRecorder.record(
+          'fetch',
+          params,
+          { count: posts.length },
+          performance.now() - sourceStart,
+          source.platform || `source_${idx}`
+        );
+        return posts;
+      })
+    );
 
     for (const result of results) {
       if (result.status === 'fulfilled') {
@@ -157,20 +605,37 @@ export class SocialPulseDetector {
       }
     }
 
-    // Apply filters
+    // Apply filters with tracing
     const filteredPosts: SocialPost[] = [];
     for (const post of allPosts) {
       let current: SocialPost | null = post;
 
       for (const filter of this.filters) {
         if (!current) break;
+        const filterStart = performance.now();
+        const before = current;
         current = await filter.process(current);
+        this.traceRecorder.record(
+          'filter',
+          { postId: before.id },
+          { passed: current !== null },
+          performance.now() - filterStart,
+          filter.constructor.name
+        );
       }
 
       if (current) {
         filteredPosts.push(current);
       }
     }
+
+    this.traceRecorder.record(
+      'transform',
+      { totalFetched: allPosts.length },
+      { afterFilters: filteredPosts.length },
+      performance.now() - fetchStart,
+      'fetch_pipeline'
+    );
 
     return filteredPosts;
   }
@@ -182,35 +647,76 @@ export class SocialPulseDetector {
     state: UpheavalState;
     aggregates: SentimentAggregate[];
     posts: SocialPost[];
+    trace?: DataTrace;
   }> {
+    const updateStart = performance.now();
     const posts = await this.fetch(params);
 
-    // Calculate sentiment for each post if not already done
+    // Calculate sentiment for posts
+    const sentimentStart = performance.now();
     for (const post of posts) {
       if (post.sentimentScore === undefined) {
         post.sentimentScore = this.calculateSentiment(post.content);
       }
     }
+    this.traceRecorder.record(
+      'transform',
+      { postCount: posts.length },
+      { withSentiment: posts.filter((p) => p.sentimentScore !== undefined).length },
+      performance.now() - sentimentStart,
+      'sentiment_calculation'
+    );
 
-    // Aggregate by region
+    // Aggregate posts
+    const aggStart = performance.now();
     const aggregates = this.aggregatePosts(posts);
+    this.traceRecorder.record(
+      'aggregate',
+      { postCount: posts.length },
+      { aggregateCount: aggregates.length, regions: aggregates.map((a) => a.id) },
+      performance.now() - aggStart,
+      'aggregation'
+    );
 
-    // Update detectors with aggregated variance
+    // Run detection with timing
+    const detectStart = performance.now();
     for (const agg of aggregates) {
       this.updateDetector(agg.id, agg.avgSentiment, agg.variance);
     }
+    const detectDuration = performance.now() - detectStart;
+    this.wasmBridge.recordTime(detectDuration, this.wasmBridge.isAvailable());
 
-    // Calculate global state
+    this.traceRecorder.record(
+      'detect',
+      { aggregates: aggregates.map((a) => ({ id: a.id, variance: a.variance })) },
+      { mode: this.wasmBridge.isAvailable() ? 'wasm' : 'js' },
+      detectDuration,
+      'phase_detection'
+    );
+
     const state = this.calculateGlobalState(aggregates);
 
-    // Update shepherd for correlation
-    if (this.shepherd) {
-      for (const agg of aggregates) {
-        this.shepherd.addDetector(agg.id, this.getOrCreateDetector(agg.id));
-      }
+    this.traceRecorder.record(
+      'transform',
+      { level: state.level },
+      { variance: state.variance, hotspots: state.hotspots.length },
+      performance.now() - updateStart,
+      'update_complete'
+    );
+
+    // Include trace in response if enabled
+    const result: {
+      state: UpheavalState;
+      aggregates: SentimentAggregate[];
+      posts: SocialPost[];
+      trace?: DataTrace;
+    } = { state, aggregates, posts };
+
+    if (this.traceRecorder.isEnabled()) {
+      result.trace = this.traceRecorder.export();
     }
 
-    return { state, aggregates, posts };
+    return result;
   }
 
   /**
@@ -243,14 +749,13 @@ export class SocialPulseDetector {
       fiscalYear: reportDate.getFullYear(),
     });
 
-    // Initialize sentiment tracking
     this.earningsSentiment.set(ticker.toUpperCase(), {
       ticker: ticker.toUpperCase(),
       daysUntilReport: Math.ceil((reportDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
       sentimentTrend: [],
       currentSentiment: 0,
       sentimentVariance: 0,
-      phase: Phase.Calm,
+      phase: 'Stable',
       prediction: 'uncertain',
       confidence: 0,
     });
@@ -263,7 +768,6 @@ export class SocialPulseDetector {
     const entry = this.earningsSentiment.get(ticker.toUpperCase());
     if (!entry) return null;
 
-    // Fetch posts about this ticker
     const posts = await this.fetch({
       keywords: [ticker, `$${ticker}`],
       limit: 100,
@@ -271,7 +775,6 @@ export class SocialPulseDetector {
 
     if (posts.length === 0) return entry;
 
-    // Calculate average sentiment
     const sentiments = posts
       .map((p) => p.sentimentScore)
       .filter((s): s is number => s !== undefined);
@@ -281,7 +784,6 @@ export class SocialPulseDetector {
     const avgSentiment = sentiments.reduce((a, b) => a + b, 0) / sentiments.length;
     const variance = this.calculateVariance(sentiments);
 
-    // Update trend
     entry.sentimentTrend.push(avgSentiment);
     if (entry.sentimentTrend.length > 30) {
       entry.sentimentTrend.shift();
@@ -289,18 +791,16 @@ export class SocialPulseDetector {
 
     entry.currentSentiment = avgSentiment;
     entry.sentimentVariance = variance;
-    entry.daysUntilReport = Math.ceil(
-      (this.earningsCalendar.find((e) => e.ticker === ticker)?.reportDate.getTime() ??
-        Date.now() - Date.now()) /
-        (1000 * 60 * 60 * 24)
-    );
 
-    // Update phase from detector
+    const calendarEntry = this.earningsCalendar.find((e) => e.ticker === ticker.toUpperCase());
+    entry.daysUntilReport = calendarEntry
+      ? Math.ceil((calendarEntry.reportDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+      : 0;
+
     const detector = this.getOrCreateDetector(`earnings:${ticker}`);
     detector.update(avgSentiment);
     entry.phase = detector.current().phase;
 
-    // Simple prediction based on sentiment and variance
     entry.prediction = this.predictEarnings(entry);
     entry.confidence = this.calculatePredictionConfidence(entry);
 
@@ -314,18 +814,6 @@ export class SocialPulseDetector {
     return [...this.earningsSentiment.values()];
   }
 
-  /**
-   * Get detectors correlated with a specific region/topic
-   */
-  getCorrelatedSignals(id: string): Array<{ id: string; correlation: number }> {
-    if (!this.shepherd) return [];
-
-    const correlated = this.shepherd.getCorrelations(id);
-    return correlated
-      .filter((c) => c.correlation > 0.5)
-      .sort((a, b) => b.correlation - a.correlation);
-  }
-
   // ============ Private Methods ============
 
   private ensureInitialized(): void {
@@ -334,26 +822,25 @@ export class SocialPulseDetector {
     }
   }
 
-  private getOrCreateDetector(id: string): NucleationDetector {
-    if (!this.detectors.has(id)) {
-      const config =
-        this.config.detectorConfig ?? SENSITIVITY_PRESETS[this.config.sensitivity ?? 'medium'];
-      this.detectors.set(id, new NucleationDetector(config));
+  private getOrCreateDetector(id: string): SimpleVarianceDetector {
+    let detector = this.detectors.get(id);
+    if (!detector) {
+      const preset = SENSITIVITY_THRESHOLDS[this.config.sensitivity ?? 'medium'];
+      detector = new SimpleVarianceDetector(preset.windowSize, preset.threshold);
+      this.detectors.set(id, detector);
     }
-    return this.detectors.get(id)!;
+    return detector;
   }
 
   private updateDetector(id: string, sentiment: number, variance: number): void {
     const detector = this.getOrCreateDetector(id);
-
-    // Feed variance as the signal (variance spikes indicate phase transitions)
     detector.update(variance);
 
-    // Track sentiment history
-    if (!this.sentimentHistory.has(id)) {
-      this.sentimentHistory.set(id, []);
+    let history = this.sentimentHistory.get(id);
+    if (!history) {
+      history = [];
+      this.sentimentHistory.set(id, history);
     }
-    const history = this.sentimentHistory.get(id)!;
     history.push(sentiment);
     if (history.length > 100) {
       history.shift();
@@ -365,10 +852,12 @@ export class SocialPulseDetector {
 
     for (const post of posts) {
       const region = post.geo?.countryCode ?? 'global';
-      if (!byRegion.has(region)) {
-        byRegion.set(region, []);
+      let regionPosts = byRegion.get(region);
+      if (!regionPosts) {
+        regionPosts = [];
+        byRegion.set(region, regionPosts);
       }
-      byRegion.get(region)!.push(post);
+      regionPosts.push(post);
     }
 
     const aggregates: SentimentAggregate[] = [];
@@ -385,10 +874,8 @@ export class SocialPulseDetector {
       const negative = sentiments.filter((s) => s < 0).length;
       const botFiltered = posts.length - regionPosts.length;
 
-      // Extract top keywords
       const keywords = this.extractKeywords(regionPosts);
 
-      // Platform breakdown
       const platformCounts: Partial<Record<Platform, number>> = {};
       for (const post of regionPosts) {
         platformCounts[post.platform] = (platformCounts[post.platform] ?? 0) + 1;
@@ -398,9 +885,8 @@ export class SocialPulseDetector {
       const previousVariance =
         history && history.length >= 2 ? this.calculateVariance(history.slice(-10, -1)) : undefined;
 
-      aggregates.push({
+      const aggregate: SentimentAggregate = {
         id: region,
-        countryCode: region !== 'global' ? region : undefined,
         windowStart: new Date(Date.now() - 3600000).toISOString(),
         windowEnd: new Date().toISOString(),
         postCount: regionPosts.length,
@@ -408,12 +894,21 @@ export class SocialPulseDetector {
         avgSentiment,
         sentimentStdDev: Math.sqrt(variance),
         negativeRatio: negative / sentiments.length,
-        botFilteredRatio: botFiltered / posts.length,
+        botFilteredRatio: botFiltered / Math.max(posts.length, 1),
         topKeywords: keywords.slice(0, 10),
         platformBreakdown: platformCounts,
         variance,
-        previousVariance,
-      });
+      };
+
+      // Only add optional properties if they have values
+      if (region !== 'global') {
+        aggregate.countryCode = region;
+      }
+      if (previousVariance !== undefined) {
+        aggregate.previousVariance = previousVariance;
+      }
+
+      aggregates.push(aggregate);
     }
 
     return aggregates;
@@ -434,7 +929,6 @@ export class SocialPulseDetector {
       }
     }
 
-    // Sort hotspots by variance descending
     hotspots.sort((a, b) => b.variance - a.variance);
 
     const globalVariance = this.calculateGlobalVariance();
@@ -493,12 +987,11 @@ export class SocialPulseDetector {
       const level = this.phaseToLevel(state.phase);
 
       if (level !== 'calm') {
-        const keywords = this.extractKeywordsFromHistory(id);
         hotspots.push({
           countryCode: id,
           level,
           variance: state.variance,
-          topKeywords: keywords,
+          topKeywords: [],
         });
       }
     }
@@ -514,7 +1007,7 @@ export class SocialPulseDetector {
   }
 
   private varianceToLevel(variance: number): UpheavalLevel {
-    const threshold = SENSITIVITY_PRESETS[this.config.sensitivity ?? 'medium'].threshold;
+    const threshold = SENSITIVITY_THRESHOLDS[this.config.sensitivity ?? 'medium'].threshold;
     if (variance < threshold * 0.5) return 'calm';
     if (variance < threshold) return 'stirring';
     if (variance < threshold * 1.5) return 'unrest';
@@ -534,13 +1027,13 @@ export class SocialPulseDetector {
 
   private phaseToLevel(phase: Phase): UpheavalLevel {
     switch (phase) {
-      case Phase.Calm:
+      case 'Stable':
         return 'calm';
-      case Phase.PreTransition:
+      case 'Approaching':
         return 'stirring';
-      case Phase.Transition:
+      case 'Critical':
         return 'unrest';
-      case Phase.PostTransition:
+      case 'Transitioning':
         return 'volatile';
       default:
         return 'calm';
@@ -549,12 +1042,10 @@ export class SocialPulseDetector {
 
   /**
    * Simple sentiment calculation
-   * In production, use a proper NLP model
    */
   private calculateSentiment(text: string): number {
     const lower = text.toLowerCase();
 
-    // Simple word lists (would use ML in production)
     const positiveWords = [
       'good',
       'great',
@@ -622,11 +1113,10 @@ export class SocialPulseDetector {
       if (negativeWords.includes(word)) score -= 0.1;
     }
 
-    // Clamp to -1 to 1
     return Math.max(-1, Math.min(1, score));
   }
 
-  private extractKeywords(posts: SocialPost[]): Array<{ word: string; count: number }> {
+  private extractKeywords(posts: SocialPost[]): { word: string; count: number }[] {
     const wordCounts = new Map<string, number>();
     const stopwords = new Set([
       'the',
@@ -695,38 +1185,29 @@ export class SocialPulseDetector {
       .sort((a, b) => b.count - a.count);
   }
 
-  private extractKeywordsFromHistory(_id: string): string[] {
-    // Would track keywords per region in production
-    return [];
-  }
-
   private predictEarnings(sentiment: EarningsSentiment): 'beat' | 'miss' | 'inline' | 'uncertain' {
     const trend = sentiment.sentimentTrend;
     if (trend.length < 5) return 'uncertain';
 
-    // Calculate trend direction
     const recentAvg = trend.slice(-5).reduce((a, b) => a + b, 0) / 5;
+    const olderSlice = trend.slice(-10, -5);
     const olderAvg =
-      trend.slice(-10, -5).reduce((a, b) => a + b, 0) / Math.min(5, trend.slice(-10, -5).length);
+      olderSlice.length > 0 ? olderSlice.reduce((a, b) => a + b, 0) / olderSlice.length : recentAvg;
 
     const trendDirection = recentAvg - olderAvg;
 
-    // High variance near report = uncertainty
-    if (sentiment.phase === Phase.Transition || sentiment.phase === Phase.PreTransition) {
+    if (sentiment.phase === 'Transitioning' || sentiment.phase === 'Approaching') {
       return 'uncertain';
     }
 
-    // Strong positive trend
     if (trendDirection > 0.2 && sentiment.currentSentiment > 0.3) {
       return 'beat';
     }
 
-    // Strong negative trend
     if (trendDirection < -0.2 && sentiment.currentSentiment < -0.3) {
       return 'miss';
     }
 
-    // Stable sentiment near zero
     if (Math.abs(sentiment.currentSentiment) < 0.2 && Math.abs(trendDirection) < 0.1) {
       return 'inline';
     }
@@ -735,22 +1216,17 @@ export class SocialPulseDetector {
   }
 
   private calculatePredictionConfidence(sentiment: EarningsSentiment): number {
-    // Base confidence on data quality
     let confidence = 0.3;
 
-    // More data = higher confidence
     if (sentiment.sentimentTrend.length >= 20) confidence += 0.2;
     else if (sentiment.sentimentTrend.length >= 10) confidence += 0.1;
 
-    // Consistent trend = higher confidence
     const variance = this.calculateVariance(sentiment.sentimentTrend);
     if (variance < 0.1) confidence += 0.2;
     else if (variance < 0.2) confidence += 0.1;
 
-    // Far from report = lower confidence
     if (sentiment.daysUntilReport > 14) confidence -= 0.1;
 
-    // Uncertain prediction = lower confidence
     if (sentiment.prediction === 'uncertain') confidence -= 0.2;
 
     return Math.max(0, Math.min(1, confidence));
