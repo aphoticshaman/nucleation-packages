@@ -15,16 +15,6 @@ import type {
 // Telegram web preview endpoints
 const TELEGRAM_PREVIEW = 'https://t.me/s';
 
-interface TelegramMessage {
-  id: string;
-  channelName: string;
-  text: string;
-  timestamp: string;
-  views?: number;
-  forwards?: number;
-  author?: string;
-}
-
 export class TelegramSource implements DataSource {
   readonly platform = 'telegram' as const;
   private ready = false;

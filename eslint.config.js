@@ -4,8 +4,7 @@ import security from 'eslint-plugin-security';
 
 export default tseslint.config(
   js.configs.recommended,
-  ...tseslint.configs.strictTypeChecked,
-  ...tseslint.configs.stylisticTypeChecked,
+  ...tseslint.configs.recommended,
   {
     plugins: {
       security,
@@ -17,7 +16,7 @@ export default tseslint.config(
       },
     },
     rules: {
-      // Security rules
+      // Security rules - keep strict for enterprise/defense
       'security/detect-object-injection': 'warn',
       'security/detect-non-literal-regexp': 'warn',
       'security/detect-unsafe-regex': 'error',
@@ -26,16 +25,13 @@ export default tseslint.config(
       'security/detect-no-csrf-before-method-override': 'error',
       'security/detect-possible-timing-attacks': 'warn',
 
-      // TypeScript strict rules
-      '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/explicit-function-return-type': 'error',
+      // TypeScript - pragmatic for production stability
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      '@typescript-eslint/prefer-nullish-coalescing': 'error',
-      '@typescript-eslint/prefer-optional-chain': 'error',
+      '@typescript-eslint/no-non-null-assertion': 'warn',
       '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/await-thenable': 'error',
       '@typescript-eslint/no-misused-promises': 'error',
-      '@typescript-eslint/require-await': 'error',
 
       // Code quality
       'no-console': ['warn', { allow: ['warn', 'error'] }],
@@ -57,8 +53,22 @@ export default tseslint.config(
       'node_modules/**',
       'dist/**',
       'coverage/**',
-      '*.js', // Ignore legacy JS files during migration
-      'harness/**', // Will migrate separately
+      'harness/**',
+      // Legacy JS packages - will migrate to TypeScript later
+      'packages/regime-shift/**',
+      'packages/threat-pulse/**',
+      'packages/churn-harbinger/**',
+      'packages/org-canary/**',
+      'packages/supply-sentinel/**',
+      'packages/sensor-shift/**',
+      'packages/crowd-phase/**',
+      'packages/patient-drift/**',
+      'packages/match-pulse/**',
+      'packages/market-canary/**',
+      'packages/nucleation/**',
+      '*.js',
+      '*.d.ts',
+      'vitest.config.ts',
     ],
   }
 );

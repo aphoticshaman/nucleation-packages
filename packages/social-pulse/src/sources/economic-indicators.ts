@@ -431,10 +431,11 @@ export class EconomicIndicatorsSource implements DataSource {
         // GDP growth - assume value is % change
         return Math.max(-1, Math.min(1, obs.value / 10));
 
-      case 'inflation':
+      case 'inflation': {
         // Moderate inflation (2%) is neutral, extremes are negative
         const deviation = Math.abs(obs.value - 2);
         return Math.max(-1, 1 - deviation / 5);
+      }
 
       case 'freedom_index':
         // 0-100 scale to -1 to 1
