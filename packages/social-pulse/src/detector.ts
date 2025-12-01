@@ -534,7 +534,11 @@ class DataTraceRecorder {
   }
 
   private generateId(): string {
-    return `trace_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    // Use crypto-safe random for ID generation
+    const randomBytes = new Uint8Array(8);
+    crypto.getRandomValues(randomBytes);
+    const hex = Array.from(randomBytes, (b) => b.toString(16).padStart(2, '0')).join('');
+    return `trace_${Date.now()}_${hex}`;
   }
 
   private sanitize(data: unknown): unknown {
