@@ -34,7 +34,10 @@ export declare class TransitionDetector {
   static deserialize(json: string): Promise<TransitionDetector>;
 }
 
-export declare function detectTransition(values: number[], config?: TransitionDetectorConfig): Promise<{
+export declare function detectTransition(
+  values: number[],
+  config?: TransitionDetectorConfig
+): Promise<{
   transitioning: boolean;
   elevated: boolean;
   phase: string;

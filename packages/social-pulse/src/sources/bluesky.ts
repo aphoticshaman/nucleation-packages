@@ -58,7 +58,9 @@ export class BlueskySource implements DataSource {
   async init(): Promise<void> {
     // Test connectivity
     try {
-      const response = await fetch(`${this.endpoint}/xrpc/app.bsky.actor.searchActors?q=test&limit=1`);
+      const response = await fetch(
+        `${this.endpoint}/xrpc/app.bsky.actor.searchActors?q=test&limit=1`
+      );
       if (!response.ok && response.status !== 400) {
         throw new Error(`Bluesky API check failed: ${response.status}`);
       }

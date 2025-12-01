@@ -5,12 +5,7 @@
  * Requires no authentication for public data via web preview.
  */
 
-import type {
-  DataSource,
-  SearchParams,
-  SocialPost,
-  AuthorInfo,
-} from '../types.js';
+import type { DataSource, SearchParams, SocialPost, AuthorInfo } from '../types.js';
 
 // Telegram web preview endpoints
 const TELEGRAM_PREVIEW = 'https://t.me/s';
@@ -50,9 +45,8 @@ export class TelegramSource implements DataSource {
     }
 
     const posts: SocialPost[] = [];
-    const channelsToFetch = this.channels.length > 0
-      ? this.channels
-      : this.getDefaultChannels(params.countries);
+    const channelsToFetch =
+      this.channels.length > 0 ? this.channels : this.getDefaultChannels(params.countries);
 
     for (const channel of channelsToFetch.slice(0, 10)) {
       try {
@@ -91,7 +85,8 @@ export class TelegramSource implements DataSource {
 
     // Parse message blocks from Telegram web preview
     // Format: <div class="tgme_widget_message" data-post="channel/123">
-    const messageRegex = /class="tgme_widget_message[^"]*"[^>]*data-post="([^"]+)"[\s\S]*?<div class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/g;
+    const messageRegex =
+      /class="tgme_widget_message[^"]*"[^>]*data-post="([^"]+)"[\s\S]*?<div class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/g;
 
     let match;
     while ((match = messageRegex.exec(html)) !== null) {
@@ -157,9 +152,7 @@ export class TelegramSource implements DataSource {
       // Keyword filter
       if (params.keywords?.length) {
         const content = post.content.toLowerCase();
-        const hasKeyword = params.keywords.some((kw) =>
-          content.includes(kw.toLowerCase())
-        );
+        const hasKeyword = params.keywords.some((kw) => content.includes(kw.toLowerCase()));
         if (!hasKeyword) return false;
       }
 

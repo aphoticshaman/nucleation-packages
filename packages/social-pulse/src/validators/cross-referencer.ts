@@ -153,17 +153,13 @@ export class CrossReferencer {
     const corroboration: CorroborationResult[] = [];
 
     // Run all checks in parallel
-    const [
-      factCheckResults,
-      authorRedFlags,
-      contentRedFlags,
-      coordinationFlags,
-    ] = await Promise.all([
-      this.checkFactCheckDatabases(post.content),
-      this.analyzeAuthor(post.author, post),
-      this.analyzeContent(post.content),
-      this.detectCoordinatedBehavior(post),
-    ]);
+    const [factCheckResults, authorRedFlags, contentRedFlags, coordinationFlags] =
+      await Promise.all([
+        this.checkFactCheckDatabases(post.content),
+        this.analyzeAuthor(post.author, post),
+        this.analyzeContent(post.content),
+        this.detectCoordinatedBehavior(post),
+      ]);
 
     factChecks.push(...factCheckResults);
     redFlags.push(...authorRedFlags, ...contentRedFlags, ...coordinationFlags);
@@ -295,10 +291,7 @@ export class CrossReferencer {
   /**
    * Analyze author for red flags
    */
-  private async analyzeAuthor(
-    author: SocialPost['author'],
-    post: SocialPost
-  ): Promise<RedFlag[]> {
+  private async analyzeAuthor(author: SocialPost['author'], post: SocialPost): Promise<RedFlag[]> {
     const flags: RedFlag[] = [];
 
     // Check account age
@@ -484,9 +477,7 @@ export class CrossReferencer {
       /\b(breaking|confirmed|exclusive)\b/i,
     ];
 
-    return sentences
-      .filter((s) => claimIndicators.some((pattern) => pattern.test(s)))
-      .slice(0, 5);
+    return sentences.filter((s) => claimIndicators.some((pattern) => pattern.test(s))).slice(0, 5);
   }
 
   /**
@@ -554,14 +545,15 @@ export class CrossReferencer {
         f.type === 'manipulated_media'
     );
 
-    if (hasManipulation && redFlags.some((f) => f.severity === 'high' || f.severity === 'critical')) {
+    if (
+      hasManipulation &&
+      redFlags.some((f) => f.severity === 'high' || f.severity === 'critical')
+    ) {
       return 'manipulation_detected';
     }
 
     // Check fact check results
-    const hasFalseRating = factChecks.some((fc) =>
-      fc.rating.toLowerCase().includes('false')
-    );
+    const hasFalseRating = factChecks.some((fc) => fc.rating.toLowerCase().includes('false'));
 
     if (hasFalseRating) {
       return 'likely_false';

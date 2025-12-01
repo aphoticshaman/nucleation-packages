@@ -5,13 +5,46 @@
   "type": "module",
   "main": "src/index.js",
   "types": "src/index.d.ts",
-  "exports": { ".": { "import": "./src/index.js", "types": "./src/index.d.ts" } },
-  "files": ["src", "examples", "README.md"],
-  "scripts": { "test": "node --test 'test/*.test.js'" },
-  "keywords": ["supply-chain", "logistics", "disruption-prediction", "procurement", "inventory", "lead-time", "supplier-risk", "operations", "demand-forecasting", "bullwhip-effect", "resilience", "risk-management", "early-warning", "wasm"],
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "types": "./src/index.d.ts"
+    }
+  },
+  "files": [
+    "src",
+    "examples",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test 'test/*.test.js'"
+  },
+  "keywords": [
+    "supply-chain",
+    "logistics",
+    "disruption-prediction",
+    "procurement",
+    "inventory",
+    "lead-time",
+    "supplier-risk",
+    "operations",
+    "demand-forecasting",
+    "bullwhip-effect",
+    "resilience",
+    "risk-management",
+    "early-warning",
+    "wasm"
+  ],
   "author": "Ryan Cardwell <aphotic.noise@gmail.com>",
   "license": "MIT",
-  "repository": { "type": "git", "url": "https://github.com/aphoticshaman/nucleation-packages" },
-  "dependencies": { "nucleation-wasm": "^0.2.0" },
-  "engines": { "node": ">=18.0.0" }
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aphoticshaman/nucleation-packages"
+  },
+  "dependencies": {
+    "nucleation-wasm": "^0.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }

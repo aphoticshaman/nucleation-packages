@@ -117,21 +117,12 @@ class RateLimiter {
 /**
  * Verify HMAC signature
  */
-function verifyHmacSignature(
-  payload: string,
-  signature: string,
-  secret: string
-): boolean {
-  const expectedSignature = createHmac('sha256', secret)
-    .update(payload)
-    .digest('hex');
+function verifyHmacSignature(payload: string, signature: string, secret: string): boolean {
+  const expectedSignature = createHmac('sha256', secret).update(payload).digest('hex');
 
   // Use timing-safe comparison to prevent timing attacks
   try {
-    return timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expectedSignature)
-    );
+    return timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
   } catch {
     return false;
   }
@@ -176,7 +167,9 @@ function getClientIp(req: IncomingMessage): string {
  * await server.start();
  * ```
  */
-export function createSecureWebhookServer<TDetector extends { update: (value: number) => unknown; current: () => unknown }>(
+export function createSecureWebhookServer<
+  TDetector extends { update: (value: number) => unknown; current: () => unknown },
+>(
   detector: TDetector,
   config: WebhookServerConfig = {}
 ): {
@@ -189,9 +182,7 @@ export function createSecureWebhookServer<TDetector extends { update: (value: nu
   const timeout = config.timeout ?? 30000;
 
   const auth = config.auth ?? { type: 'none' };
-  const rateLimiter = config.rateLimit
-    ? new RateLimiter(config.rateLimit)
-    : null;
+  const rateLimiter = config.rateLimit ? new RateLimiter(config.rateLimit) : null;
 
   let server: Server | null = null;
   let cleanupInterval: NodeJS.Timeout | null = null;
@@ -212,10 +203,7 @@ export function createSecureWebhookServer<TDetector extends { update: (value: nu
       const token = authHeader.slice(7);
       // Use timing-safe comparison
       try {
-        return timingSafeEqual(
-          Buffer.from(token),
-          Buffer.from(auth.secret ?? '')
-        );
+        return timingSafeEqual(Buffer.from(token), Buffer.from(auth.secret ?? ''));
       } catch {
         return false;
       }
@@ -236,11 +224,7 @@ export function createSecureWebhookServer<TDetector extends { update: (value: nu
   /**
    * Send JSON response
    */
-  function sendJson(
-    res: ServerResponse,
-    statusCode: number,
-    data: unknown
-  ): void {
+  function sendJson(res: ServerResponse, statusCode: number, data: unknown): void {
     res.writeHead(statusCode, {
       'Content-Type': 'application/json',
       'X-Content-Type-Options': 'nosniff',
@@ -252,10 +236,7 @@ export function createSecureWebhookServer<TDetector extends { update: (value: nu
   /**
    * Handle incoming request
    */
-  async function handleRequest(
-    req: IncomingMessage,
-    res: ServerResponse
-  ): Promise<void> {
+  async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
     // Set timeout
     res.setTimeout(timeout, () => {
       sendJson(res, 408, { error: 'Request timeout' });
@@ -406,10 +387,7 @@ export function createSecureWebhookServer<TDetector extends { update: (value: nu
 
           // Start cleanup interval for rate limiter
           if (rateLimiter) {
-            cleanupInterval = setInterval(
-              () => rateLimiter.cleanup(),
-              60000
-            );
+            cleanupInterval = setInterval(() => rateLimiter.cleanup(), 60000);
           }
 
           resolve(server!);

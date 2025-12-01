@@ -1,21 +1,21 @@
 /**
  * org-canary
- * 
+ *
  * Detect organizational dysfunction before it surfaces. Culture clash
  * prediction, M&A integration risk, and team health monitoring.
- * 
+ *
  * The core insight: organizational conflict doesn't explode suddenly —
  * it builds through measurable tension patterns. Teams approaching
  * dysfunction show characteristic variance changes in communication,
  * collaboration, and sentiment metrics.
- * 
+ *
  * @example
  * ```js
  * import { TeamHealthMonitor } from 'org-canary';
- * 
+ *
  * const monitor = new TeamHealthMonitor();
  * await monitor.init();
- * 
+ *
  * // Feed weekly team metrics
  * for (const week of teamMetrics) {
  *   const state = monitor.update(week.healthScore);
@@ -35,7 +35,7 @@ let initialized = false;
 export async function initialize() {
   if (!initialized) {
     nucleationModule = await import('nucleation-wasm');
-    
+
     if (typeof window === 'undefined') {
       const require = createRequire(import.meta.url);
       const wasmPath = require.resolve('nucleation-wasm/nucleation_bg.wasm');
@@ -44,7 +44,7 @@ export async function initialize() {
     } else {
       await nucleationModule.default();
     }
-    
+
     initialized = true;
   }
 }
@@ -62,17 +62,22 @@ export const HealthLevel = {
   /** Significant dysfunction risk */
   STRESSED: 'stressed',
   /** Active dysfunction/conflict */
-  CRITICAL: 'critical'
+  CRITICAL: 'critical',
 };
 
 function phaseToHealthLevel(phase) {
   const Phase = nucleationModule.Phase;
   switch (phase) {
-    case Phase.Stable: return HealthLevel.THRIVING;
-    case Phase.Approaching: return HealthLevel.STRAINED;
-    case Phase.Critical: return HealthLevel.STRESSED;
-    case Phase.Transitioning: return HealthLevel.CRITICAL;
-    default: return HealthLevel.THRIVING;
+    case Phase.Stable:
+      return HealthLevel.THRIVING;
+    case Phase.Approaching:
+      return HealthLevel.STRAINED;
+    case Phase.Critical:
+      return HealthLevel.STRESSED;
+    case Phase.Transitioning:
+      return HealthLevel.CRITICAL;
+    default:
+      return HealthLevel.THRIVING;
   }
 }
 
@@ -106,16 +111,16 @@ export class TeamHealthMonitor {
     this.#config = {
       sensitivity: config.sensitivity || 'balanced',
       windowSize: config.windowSize || 12,
-      threshold: config.threshold
+      threshold: config.threshold,
     };
   }
 
   async init() {
     await initialize();
-    
+
     const { DetectorConfig, NucleationDetector } = nucleationModule;
     let detectorConfig;
-    
+
     switch (this.#config.sensitivity) {
       case 'conservative':
         detectorConfig = DetectorConfig.conservative();
@@ -149,11 +154,11 @@ export class TeamHealthMonitor {
    */
   update(healthScore) {
     this.#ensureInit();
-    
+
     const phase = this.#detector.update(healthScore);
     const healthLevel = phaseToHealthLevel(phase);
     const Phase = nucleationModule.Phase;
-    
+
     return {
       healthLevel,
       stressed: phase === Phase.Critical || phase === Phase.Transitioning,
@@ -161,7 +166,7 @@ export class TeamHealthMonitor {
       confidence: this.#detector.confidence(),
       variance: this.#detector.currentVariance(),
       trend: this.#detector.inflectionMagnitude(),
-      dataPoints: this.#detector.count()
+      dataPoints: this.#detector.count(),
     };
   }
 
@@ -171,7 +176,7 @@ export class TeamHealthMonitor {
     const phase = this.#detector.update_batch(arr);
     const healthLevel = phaseToHealthLevel(phase);
     const Phase = nucleationModule.Phase;
-    
+
     return {
       healthLevel,
       stressed: phase === Phase.Critical || phase === Phase.Transitioning,
@@ -179,7 +184,7 @@ export class TeamHealthMonitor {
       confidence: this.#detector.confidence(),
       variance: this.#detector.currentVariance(),
       trend: this.#detector.inflectionMagnitude(),
-      dataPoints: this.#detector.count()
+      dataPoints: this.#detector.count(),
     };
   }
 
@@ -188,7 +193,7 @@ export class TeamHealthMonitor {
     const phase = this.#detector.currentPhase();
     const healthLevel = phaseToHealthLevel(phase);
     const Phase = nucleationModule.Phase;
-    
+
     return {
       healthLevel,
       stressed: phase === Phase.Critical || phase === Phase.Transitioning,
@@ -196,7 +201,7 @@ export class TeamHealthMonitor {
       confidence: this.#detector.confidence(),
       variance: this.#detector.currentVariance(),
       trend: this.#detector.inflectionMagnitude(),
-      dataPoints: this.#detector.count()
+      dataPoints: this.#detector.count(),
     };
   }
 
@@ -312,12 +317,12 @@ export async function assessTeamHealth(healthScores, config = {}) {
   const monitor = new TeamHealthMonitor(config);
   await monitor.init();
   const state = monitor.updateBatch(healthScores);
-  
+
   return {
     stressed: state.stressed,
     declining: state.declining,
     healthLevel: state.healthLevel,
-    confidence: state.confidence
+    confidence: state.confidence,
   };
 }
 
