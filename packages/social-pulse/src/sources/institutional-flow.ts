@@ -19,8 +19,6 @@ import type {
 
 // SEC EDGAR API base
 const SEC_EDGAR_BASE = 'https://data.sec.gov';
-// House disclosure API (public data)
-const HOUSE_DISCLOSURE_API = 'https://disclosures-clerk.house.gov/public_disc/ptr-pdfs';
 
 /**
  * Tracked transaction record
@@ -170,7 +168,7 @@ export class InstitutionalFlowSource implements DataSource {
     }
 
     // Find clusters within time window
-    for (const [_, transactions] of byCompany) {
+    for (const transactions of byCompany.values()) {
       if (transactions.length < 3) continue;
 
       // Sort by date
@@ -378,7 +376,7 @@ export class InstitutionalFlowSource implements DataSource {
   /**
    * Detect unusual patterns
    */
-  private detectSignals(flows: SectorFlow[], transactions: InstitutionalTransaction[]): FlowSignal[] {
+  private detectSignals(flows: SectorFlow[], _transactions: InstitutionalTransaction[]): FlowSignal[] {
     const signals: FlowSignal[] = [];
 
     // Check for sector rotation (one sector heavily sold, another heavily bought)

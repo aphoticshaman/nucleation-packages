@@ -9,7 +9,7 @@
  * 4. Checking for coordinated inauthentic behavior patterns
  */
 
-import type { SocialPost, GeoInfo } from '../types.js';
+import type { SocialPost } from '../types.js';
 
 /**
  * Verification result for a piece of content

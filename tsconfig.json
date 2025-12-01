@@ -7,6 +7,7 @@
   },
   "references": [
     { "path": "packages/core" },
+    { "path": "packages/social-pulse" },
     { "path": "packages/nucleation" },
     { "path": "packages/regime-shift" },
     { "path": "packages/threat-pulse" },

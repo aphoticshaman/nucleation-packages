@@ -63,7 +63,7 @@ export class ArxivSource implements DataSource {
    * Get trending categories by submission volume
    */
   async getTrendingCategories(
-    days: number = 7
+    days = 7
   ): Promise<Map<string, number>> {
     const categories = new Map<string, number>();
     const since = new Date();
@@ -104,7 +104,7 @@ export class ArxivSource implements DataSource {
    */
   async findQuietBreakthroughs(
     category: string,
-    days: number = 30
+    days = 30
   ): Promise<SocialPost[]> {
     const since = new Date();
     since.setDate(since.getDate() - days);
@@ -183,11 +183,11 @@ export class ArxivSource implements DataSource {
       }
 
       // Parse links
-      const links: Array<{ href: string; type?: string }> = [];
-      const linkRegex = /<link[^>]*href="([^"]+)"[^>]*(?:type="([^"]+)")?/g;
+      const links: { href: string; type?: string }[] = [];
+      const linkRegex = /<link\s+[^>]*href="([^"]+)"[^>]*>/g;
       let linkMatch;
       while ((linkMatch = linkRegex.exec(entryXml)) !== null) {
-        links.push({ href: linkMatch[1], type: linkMatch[2] });
+        links.push({ href: linkMatch[1] });
       }
 
       entries.push({ id, title, summary, published, updated, authors, categories, links });

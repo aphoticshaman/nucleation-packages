@@ -202,7 +202,6 @@ export class GeolocationFilter implements PostFilter {
     // Get highest voted country
     const sorted = [...countryVotes.entries()].sort((a, b) => b[1] - a[1]);
     const topCountry = sorted[0][0];
-    const topVotes = sorted[0][1];
 
     // Find best candidate for this country
     const bestCandidate = candidates
