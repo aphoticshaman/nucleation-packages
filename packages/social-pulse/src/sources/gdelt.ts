@@ -73,7 +73,7 @@ export class GdeltSource implements DataSource {
       throw new Error(`GDELT query failed: ${response.status}`);
     }
 
-    const data: GdeltDocResponse = await response.json();
+    const data = (await response.json()) as GdeltDocResponse;
     return (data.articles ?? []).map((article) => this.transformArticle(article));
   }
 
@@ -92,7 +92,11 @@ export class GdeltSource implements DataSource {
       throw new Error(`GDELT geo query failed: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      features?: Array<{
+        properties?: { countrycode?: string; count?: number };
+      }>;
+    };
     const countryActivity = new Map<string, number>();
 
     for (const feature of data.features ?? []) {
@@ -126,8 +130,10 @@ export class GdeltSource implements DataSource {
       throw new Error(`GDELT tone query failed: ${response.status}`);
     }
 
-    const data = await response.json();
-    return (data.timeline ?? []).map((point: { date: string; value: number; count: number }) => ({
+    const data = (await response.json()) as {
+      timeline?: Array<{ date: string; value: number; count: number }>;
+    };
+    return (data.timeline ?? []).map((point) => ({
       date: point.date,
       tone: point.value,
       volume: point.count,
@@ -165,11 +171,12 @@ export class GdeltSource implements DataSource {
       geo = {
         countryCode: primaryLocation.countrycode,
         country: primaryLocation.fullname,
-        lat: primaryLocation.lat,
-        lon: primaryLocation.long,
         source: 'inferred',
         confidence: 0.7,
       };
+      // Only add lat/lon if they exist
+      if (primaryLocation.lat !== undefined) geo.lat = primaryLocation.lat;
+      if (primaryLocation.long !== undefined) geo.lon = primaryLocation.long;
     } else if (article.sourcecountry) {
       geo = {
         countryCode: article.sourcecountry.slice(0, 2).toUpperCase(),
@@ -181,7 +188,7 @@ export class GdeltSource implements DataSource {
     // Convert GDELT tone (-100 to +100) to our scale (-1 to +1)
     const sentimentScore = article.tone / 100;
 
-    return {
+    const socialPost: SocialPost = {
       id: article.url,
       platform: 'gdelt',
       content: article.title,
@@ -192,10 +199,16 @@ export class GdeltSource implements DataSource {
       },
       engagement: {},
       language: article.language,
-      geo,
       sentimentScore,
       raw: article,
     };
+
+    // Only add geo if it exists
+    if (geo) {
+      socialPost.geo = geo;
+    }
+
+    return socialPost;
   }
 
   private parseGdeltDate(dateStr: string): string {

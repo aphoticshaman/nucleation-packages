@@ -51,7 +51,9 @@ export default tseslint.config(
   {
     ignores: [
       'node_modules/**',
+      '**/node_modules/**',
       'dist/**',
+      '**/dist/**',
       'coverage/**',
       'harness/**',
       // Legacy JS packages - will migrate to TypeScript later
