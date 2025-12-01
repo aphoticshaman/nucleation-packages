@@ -1,0 +1,26 @@
+{
+  "name": "@nucleation/harness",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Unified world trajectory monitoring system integrating all nucleation packages with real-time data feeds",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "monitor": "node src/index.js",
+    "test": "node src/ablation-tests.js",
+    "fetch-data": "node src/data-fetcher.js",
+    "report": "node src/report-generator.js"
+  },
+  "dependencies": {
+    "regime-shift": "file:../packages/regime-shift",
+    "threat-pulse": "file:../packages/threat-pulse",
+    "churn-harbinger": "file:../packages/churn-harbinger",
+    "org-canary": "file:../packages/org-canary",
+    "supply-sentinel": "file:../packages/supply-sentinel",
+    "sensor-shift": "file:../packages/sensor-shift",
+    "crowd-phase": "file:../packages/crowd-phase",
+    "patient-drift": "file:../packages/patient-drift",
+    "match-pulse": "file:../packages/match-pulse",
+    "market-canary": "file:../packages/market-canary"
+  }
+}
