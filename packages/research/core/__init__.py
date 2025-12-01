@@ -66,6 +66,22 @@ from .geometry import (
     possibility_space_metric,
 )
 
+from .fep_agent import (
+    FEPAgentConfig,
+    FEPAgent,
+)
+
+from .mckean_vlasov import (
+    MVConfig,
+    McKeanVlasovEnsemble,
+)
+
+from .great_attractor_sim import (
+    GreatAttractorConfig,
+    GreatAttractorHistory,
+    GreatAttractorSimulator,
+)
+
 __all__ = [
     # Types
     "RegimeState",
@@ -123,4 +139,14 @@ __all__ = [
     "ManifoldGeometryAnalyzer",
     "great_attractor_curvature",
     "possibility_space_metric",
+    # FEP Active Inference Agent
+    "FEPAgentConfig",
+    "FEPAgent",
+    # McKean-Vlasov Ensemble
+    "MVConfig",
+    "McKeanVlasovEnsemble",
+    # Great Attractor Simulator
+    "GreatAttractorConfig",
+    "GreatAttractorHistory",
+    "GreatAttractorSimulator",
 ]
