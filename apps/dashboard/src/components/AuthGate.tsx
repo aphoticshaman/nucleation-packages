@@ -6,13 +6,12 @@ interface AuthGateProps {
   onAuthenticate: () => void;
 }
 
-type AuthMode = 'login' | 'signup' | 'forgot' | 'api_key';
+type AuthMode = 'login' | 'signup' | 'forgot';
 
 export function AuthGate({ onAuthenticate }: AuthGateProps) {
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [apiKey, setApiKey] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -76,24 +75,6 @@ export function AuthGate({ onAuthenticate }: AuthGateProps) {
     }
   };
 
-  const handleApiKeyAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsLoading(true);
-
-    // Validate API key format
-    if (!apiKey.match(/^lf_(live|test)_[A-Za-z0-9_-]{20,64}$/)) {
-      setError('Invalid API key format. Keys start with lf_live_ or lf_test_');
-      setIsLoading(false);
-      return;
-    }
-
-    // Store API key and authenticate
-    localStorage.setItem('lf_api_key', apiKey);
-    onAuthenticate();
-    setIsLoading(false);
-  };
-
   return (
     <div className="min-h-screen bg-surface-900 bg-grid flex items-center justify-center p-4">
       {/* Background effects */}
@@ -122,7 +103,6 @@ export function AuthGate({ onAuthenticate }: AuthGateProps) {
               {mode === 'login' && 'Sign In'}
               {mode === 'signup' && 'Create Account'}
               {mode === 'forgot' && 'Reset Password'}
-              {mode === 'api_key' && 'API Key Access'}
             </h2>
           </div>
 
@@ -148,16 +128,6 @@ export function AuthGate({ onAuthenticate }: AuthGateProps) {
                 }`}
               >
                 Sign Up
-              </button>
-              <button
-                onClick={() => { setMode('api_key'); setError(null); setMessage(null); }}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                  mode === 'api_key'
-                    ? 'bg-lattice-500/20 text-lattice-400 border border-lattice-500/30'
-                    : 'text-surface-400 hover:text-white hover:bg-surface-700/50'
-                }`}
-              >
-                API Key
               </button>
             </div>
           )}
@@ -203,111 +173,72 @@ export function AuthGate({ onAuthenticate }: AuthGateProps) {
           )}
 
           {/* Email/Password form */}
-          {(mode === 'login' || mode === 'signup' || mode === 'forgot') && (
-            <form onSubmit={handleEmailAuth}>
-              <div className="space-y-4">
+          <form onSubmit={handleEmailAuth}>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-lattice-300 mb-2">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  className="input-field"
+                  required
+                />
+              </div>
+
+              {(mode === 'login' || mode === 'signup') && (
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-lattice-300 mb-2">
-                    Email
+                  <label htmlFor="password" className="block text-sm font-medium text-lattice-300 mb-2">
+                    Password
                   </label>
                   <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@company.com"
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••••••"
                     className="input-field"
+                    minLength={8}
                     required
                   />
                 </div>
+              )}
 
-                {(mode === 'login' || mode === 'signup') && (
-                  <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-lattice-300 mb-2">
-                      Password
-                    </label>
-                    <input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••••••"
-                      className="input-field"
-                      minLength={8}
-                      required
-                    />
-                  </div>
-                )}
-
-                {error && (
-                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-                    {error}
-                  </div>
-                )}
-
-                {message && (
-                  <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
-                    {message}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      {mode === 'login' ? 'Signing in...' : mode === 'signup' ? 'Creating account...' : 'Sending...'}
-                    </span>
-                  ) : (
-                    mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Link'
-                  )}
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* API Key form */}
-          {mode === 'api_key' && (
-            <form onSubmit={handleApiKeyAuth}>
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="apiKey" className="block text-sm font-medium text-lattice-300 mb-2">
-                    API Key
-                  </label>
-                  <input
-                    id="apiKey"
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="lf_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                    className="input-field font-mono text-sm"
-                    autoComplete="off"
-                    spellCheck={false}
-                  />
+              {error && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                  {error}
                 </div>
+              )}
 
-                {error && (
-                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-                    {error}
-                  </div>
+              {message && (
+                <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
+                  {message}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    {mode === 'login' ? 'Signing in...' : mode === 'signup' ? 'Creating account...' : 'Sending...'}
+                  </span>
+                ) : (
+                  mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Link'
                 )}
-
-                <button
-                  type="submit"
-                  disabled={isLoading || !apiKey}
-                  className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? 'Authenticating...' : 'Access Dashboard'}
-                </button>
-              </div>
-            </form>
-          )}
+              </button>
+            </div>
+          </form>
 
           {/* Forgot password link */}
           {mode === 'login' && (

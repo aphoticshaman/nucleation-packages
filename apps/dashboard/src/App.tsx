@@ -11,15 +11,8 @@ import type { Session } from '@supabase/supabase-js';
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [apiKey, setApiKey] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check for stored API key
-    const storedKey = localStorage.getItem('lf_api_key');
-    if (storedKey) {
-      setApiKey(storedKey);
-    }
-
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -30,11 +23,6 @@ export default function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
-        if (!session) {
-          // Clear API key on logout
-          localStorage.removeItem('lf_api_key');
-          setApiKey(null);
-        }
       }
     );
 
@@ -42,11 +30,6 @@ export default function App() {
   }, []);
 
   const handleAuthenticate = () => {
-    // Re-check session or API key
-    const storedKey = localStorage.getItem('lf_api_key');
-    if (storedKey) {
-      setApiKey(storedKey);
-    }
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
@@ -55,7 +38,6 @@ export default function App() {
   const handleLogout = async () => {
     await auth.signOut();
     setSession(null);
-    setApiKey(null);
   };
 
   // Show loading state
@@ -73,22 +55,20 @@ export default function App() {
   }
 
   // Show auth gate if not authenticated
-  const isAuthenticated = session || apiKey;
-
-  if (!isAuthenticated) {
+  if (!session) {
     return <AuthGate onAuthenticate={handleAuthenticate} />;
   }
 
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-surface-900 bg-grid">
-        <Header onLogout={handleLogout} user={session?.user} />
+        <Header onLogout={handleLogout} user={session.user} />
         <div className="flex">
           <Sidebar />
           <main className="flex-1 p-6 ml-64 mt-16">
             <Routes>
-              <Route path="/" element={<Dashboard apiKey={apiKey} session={session} />} />
-              <Route path="/settings" element={<Settings session={session} apiKey={apiKey} />} />
+              <Route path="/" element={<Dashboard session={session} />} />
+              <Route path="/settings" element={<Settings session={session} />} />
               <Route path="/signals" element={<ComingSoon title="Signals" description="Real-time signal monitoring and analysis" />} />
               <Route path="/sources" element={<ComingSoon title="Data Sources" description="Configure and manage your data integrations" />} />
               <Route path="/detection" element={<ComingSoon title="Anomaly Detection" description="AI-powered anomaly detection and alerts" />} />

@@ -14,8 +14,7 @@ import { SignalsIcon, AlertIcon, CheckIcon } from '../components/Icons';
 import type { Session } from '@supabase/supabase-js';
 
 interface DashboardProps {
-  apiKey: string | null;
-  session: Session | null;
+  session: Session;
 }
 
 // Mock data generator
@@ -36,7 +35,7 @@ function generateSignalData(points: number) {
 
 const mockSignalData = generateSignalData(24);
 
-export function Dashboard({ apiKey, session }: DashboardProps) {
+export function Dashboard({ session }: DashboardProps) {
   const [currentPhase, setCurrentPhase] = useState(0.23);
   const [lastUpdate, setLastUpdate] = useState(new Date());
 
@@ -77,7 +76,7 @@ export function Dashboard({ apiKey, session }: DashboardProps) {
         <div className="text-right text-xs text-surface-500">
           <p>Last updated: {lastUpdate.toLocaleTimeString()}</p>
           <p className="font-mono text-[10px] text-surface-600 mt-0.5">
-            {apiKey ? `${apiKey.slice(0, 15)}...` : session?.user?.email || 'Authenticated'}
+            {session.user.email}
           </p>
         </div>
       </div>

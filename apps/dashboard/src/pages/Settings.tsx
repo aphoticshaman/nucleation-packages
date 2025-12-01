@@ -4,8 +4,7 @@ import type { Session } from '@supabase/supabase-js';
 import { SettingsIcon, CheckIcon, AlertIcon } from '../components/Icons';
 
 interface SettingsProps {
-  session: Session | null;
-  apiKey: string | null;
+  session: Session;
 }
 
 const TIERS = {
@@ -29,41 +28,58 @@ const TIERS = {
 // Stripe not yet configured - set to true when products are created
 const STRIPE_CONFIGURED = false;
 
-export function Settings({ session, apiKey }: SettingsProps) {
-  const [currentTier, setCurrentTier] = useState<'free' | 'pro' | 'enterprise'>('enterprise'); // Default to enterprise for admin
+// Sample countries for tracking
+const AVAILABLE_COUNTRIES = [
+  { code: 'US', name: 'United States' },
+  { code: 'CN', name: 'China' },
+  { code: 'RU', name: 'Russia' },
+  { code: 'GB', name: 'United Kingdom' },
+  { code: 'DE', name: 'Germany' },
+  { code: 'JP', name: 'Japan' },
+  { code: 'FR', name: 'France' },
+  { code: 'IN', name: 'India' },
+  { code: 'BR', name: 'Brazil' },
+  { code: 'AU', name: 'Australia' },
+  { code: 'CA', name: 'Canada' },
+  { code: 'KR', name: 'South Korea' },
+];
+
+export function Settings({ session }: SettingsProps) {
+  const [currentTier, setCurrentTier] = useState<'free' | 'pro' | 'enterprise'>('enterprise');
   const [currentRole, setCurrentRole] = useState<'admin' | 'support' | 'user'>('admin');
+  const [trackedCountries, setTrackedCountries] = useState<string[]>(['US', 'CN', 'RU']);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Fetch current tier and role from database
     const fetchUserData = async () => {
-      if (!session) return;
-
       const { data } = await supabase
         .from('clients')
-        .select('tier, role')
+        .select('tier, role, tracked_countries')
         .eq('user_id', session.user.id)
         .single();
 
-      if (data?.tier) {
-        setCurrentTier(data.tier);
-      }
-      if (data?.role) {
-        setCurrentRole(data.role);
-      }
+      if (data?.tier) setCurrentTier(data.tier);
+      if (data?.role) setCurrentRole(data.role);
+      if (data?.tracked_countries) setTrackedCountries(data.tracked_countries);
     };
 
     fetchUserData();
   }, [session]);
 
+  const toggleCountry = async (code: string) => {
+    const newCountries = trackedCountries.includes(code)
+      ? trackedCountries.filter(c => c !== code)
+      : [...trackedCountries, code];
+
+    setTrackedCountries(newCountries);
+
+    // Save to database (stubbed for now)
+    // await supabase.from('clients').update({ tracked_countries: newCountries }).eq('user_id', session.user.id);
+  };
+
   const handleUpgrade = async (tier: 'pro' | 'enterprise') => {
     if (!STRIPE_CONFIGURED) {
       alert('Billing not yet configured. Stripe products need to be created first.');
-      return;
-    }
-
-    if (!session) {
-      alert('Please sign in with email to manage billing');
       return;
     }
 
@@ -85,7 +101,6 @@ export function Settings({ session, apiKey }: SettingsProps) {
       });
 
       const data = await response.json();
-
       if (data.url) {
         window.location.href = data.url;
       } else {
@@ -105,11 +120,6 @@ export function Settings({ session, apiKey }: SettingsProps) {
       return;
     }
 
-    if (!session) {
-      alert('Please sign in with email to manage billing');
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -126,7 +136,6 @@ export function Settings({ session, apiKey }: SettingsProps) {
       });
 
       const data = await response.json();
-
       if (data.url) {
         window.location.href = data.url;
       } else {
@@ -140,6 +149,8 @@ export function Settings({ session, apiKey }: SettingsProps) {
     }
   };
 
+  const isAdmin = currentRole === 'admin';
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -147,10 +158,33 @@ export function Settings({ session, apiKey }: SettingsProps) {
         <div>
           <h1 className="text-2xl font-bold text-white">Settings</h1>
           <p className="text-sm text-lattice-400 mt-1">
-            Manage your account and subscription
+            Manage your account, preferences, and subscription
           </p>
         </div>
       </div>
+
+      {/* Admin Quick Links */}
+      {isAdmin && (
+        <div className="glass-card p-4 border-red-500/30 bg-red-500/5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="px-2 py-0.5 rounded text-xs font-semibold bg-red-500/20 text-red-400">Admin</span>
+              <span className="text-sm text-surface-300">Preview user experience by tier:</span>
+            </div>
+            <div className="flex gap-2">
+              <button className="px-3 py-1.5 text-xs rounded-lg bg-surface-700 text-surface-300 hover:bg-surface-600 transition-colors">
+                View as Free User
+              </button>
+              <button className="px-3 py-1.5 text-xs rounded-lg bg-lattice-500/20 text-lattice-400 hover:bg-lattice-500/30 transition-colors">
+                View as Pro User
+              </button>
+              <button className="px-3 py-1.5 text-xs rounded-lg bg-crystal-500/20 text-crystal-400 hover:bg-crystal-500/30 transition-colors">
+                View as Enterprise User
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Billing Notice */}
       {!STRIPE_CONFIGURED && (
@@ -161,7 +195,7 @@ export function Settings({ session, apiKey }: SettingsProps) {
               <p className="text-sm text-amber-300 font-medium">Billing Not Yet Configured</p>
               <p className="text-xs text-surface-400 mt-1">
                 Stripe products and prices need to be created before upgrades work.
-                You currently have admin access with all Enterprise features enabled.
+                {isAdmin && ' You currently have admin access with all Enterprise features enabled.'}
               </p>
             </div>
           </div>
@@ -177,7 +211,7 @@ export function Settings({ session, apiKey }: SettingsProps) {
         <div className="space-y-3">
           <div className="flex justify-between py-2 border-b border-surface-700">
             <span className="text-surface-400">Email</span>
-            <span className="text-white">{session?.user?.email || 'API Key Access'}</span>
+            <span className="text-white">{session.user.email}</span>
           </div>
           <div className="flex justify-between py-2 border-b border-surface-700">
             <span className="text-surface-400">Role</span>
@@ -189,7 +223,7 @@ export function Settings({ session, apiKey }: SettingsProps) {
               {currentRole.charAt(0).toUpperCase() + currentRole.slice(1)}
             </span>
           </div>
-          <div className="flex justify-between py-2 border-b border-surface-700">
+          <div className="flex justify-between py-2">
             <span className="text-surface-400">Current Plan</span>
             <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
               currentTier === 'enterprise' ? 'bg-crystal-500/20 text-crystal-400' :
@@ -199,15 +233,9 @@ export function Settings({ session, apiKey }: SettingsProps) {
               {TIERS[currentTier].name}
             </span>
           </div>
-          <div className="flex justify-between py-2">
-            <span className="text-surface-400">API Key</span>
-            <span className="text-white font-mono text-sm">
-              {apiKey ? `${apiKey.slice(0, 15)}...` : 'Using session auth'}
-            </span>
-          </div>
         </div>
 
-        {session && currentTier !== 'free' && STRIPE_CONFIGURED && (
+        {currentTier !== 'free' && STRIPE_CONFIGURED && (
           <button
             onClick={handleManageBilling}
             disabled={isLoading}
@@ -218,30 +246,57 @@ export function Settings({ session, apiKey }: SettingsProps) {
         )}
       </div>
 
-      {/* Roles Info */}
+      {/* Country Tracking Preferences */}
       <div className="glass-card p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">User Roles</h2>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="p-4 rounded-lg bg-surface-800/50 border border-surface-700">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="px-2 py-0.5 rounded text-xs font-semibold bg-red-500/20 text-red-400">Admin</span>
+        <h2 className="text-lg font-semibold text-white mb-2">Dashboard Preferences</h2>
+        <p className="text-sm text-surface-400 mb-4">Select countries to track on your dashboard homepage</p>
+        <div className="grid grid-cols-4 gap-2">
+          {AVAILABLE_COUNTRIES.map((country) => (
+            <button
+              key={country.code}
+              onClick={() => toggleCountry(country.code)}
+              className={`p-3 rounded-lg text-sm font-medium transition-colors ${
+                trackedCountries.includes(country.code)
+                  ? 'bg-lattice-500/20 text-lattice-300 border border-lattice-500/30'
+                  : 'bg-surface-800/50 text-surface-400 border border-surface-700 hover:border-surface-600'
+              }`}
+            >
+              <span className="block text-lg mb-1">{country.code === 'US' ? '🇺🇸' : country.code === 'CN' ? '🇨🇳' : country.code === 'RU' ? '🇷🇺' : country.code === 'GB' ? '🇬🇧' : country.code === 'DE' ? '🇩🇪' : country.code === 'JP' ? '🇯🇵' : country.code === 'FR' ? '🇫🇷' : country.code === 'IN' ? '🇮🇳' : country.code === 'BR' ? '🇧🇷' : country.code === 'AU' ? '🇦🇺' : country.code === 'CA' ? '🇨🇦' : '🇰🇷'}</span>
+              {country.name}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-surface-500 mt-3">
+          {trackedCountries.length} countries selected • Changes save automatically
+        </p>
+      </div>
+
+      {/* Roles Info (Admin only) */}
+      {isAdmin && (
+        <div className="glass-card p-6">
+          <h2 className="text-lg font-semibold text-white mb-4">User Roles</h2>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="p-4 rounded-lg bg-surface-800/50 border border-surface-700">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-2 py-0.5 rounded text-xs font-semibold bg-red-500/20 text-red-400">Admin</span>
+              </div>
+              <p className="text-xs text-surface-400">Full access to all features, billing, user management, and system settings.</p>
             </div>
-            <p className="text-xs text-surface-400">Full access to all features, billing, user management, and system settings.</p>
-          </div>
-          <div className="p-4 rounded-lg bg-surface-800/50 border border-surface-700">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="px-2 py-0.5 rounded text-xs font-semibold bg-amber-500/20 text-amber-400">Support</span>
+            <div className="p-4 rounded-lg bg-surface-800/50 border border-surface-700">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-2 py-0.5 rounded text-xs font-semibold bg-amber-500/20 text-amber-400">Support</span>
+              </div>
+              <p className="text-xs text-surface-400">CSA access to view and assist users. Cannot modify billing or system settings.</p>
             </div>
-            <p className="text-xs text-surface-400">CSA access to view and assist users. Cannot modify billing or system settings.</p>
-          </div>
-          <div className="p-4 rounded-lg bg-surface-800/50 border border-surface-700">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="px-2 py-0.5 rounded text-xs font-semibold bg-surface-600/50 text-surface-300">User</span>
+            <div className="p-4 rounded-lg bg-surface-800/50 border border-surface-700">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-2 py-0.5 rounded text-xs font-semibold bg-surface-600/50 text-surface-300">User</span>
+              </div>
+              <p className="text-xs text-surface-400">Standard customer access based on subscription tier (Free, Pro, or Enterprise).</p>
             </div>
-            <p className="text-xs text-surface-400">Standard customer access based on subscription tier (Free, Pro, or Enterprise).</p>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Pricing */}
       <div>
@@ -274,7 +329,7 @@ export function Settings({ session, apiKey }: SettingsProps) {
                 ))}
               </ul>
 
-              {key !== 'free' && currentTier === 'free' && session && (
+              {key !== 'free' && currentTier === 'free' && (
                 <button
                   onClick={() => handleUpgrade(key as 'pro' | 'enterprise')}
                   disabled={isLoading || !STRIPE_CONFIGURED}
@@ -282,12 +337,6 @@ export function Settings({ session, apiKey }: SettingsProps) {
                 >
                   {!STRIPE_CONFIGURED ? 'Coming Soon' : isLoading ? 'Loading...' : `Upgrade to ${tier.name}`}
                 </button>
-              )}
-
-              {key !== 'free' && !session && (
-                <p className="mt-6 text-xs text-surface-500 text-center">
-                  Sign in with email to upgrade
-                </p>
               )}
             </div>
           ))}
