@@ -214,27 +214,32 @@ async function handleWebhook(req: Request, stripe: Stripe, supabase: any) {
 
   console.log('Stripe webhook:', event.type)
 
+  // Handle thin payloads - fetch full objects from Stripe API
   switch (event.type) {
     case 'checkout.session.completed': {
-      const session = event.data.object as Stripe.Checkout.Session
+      const sessionId = (event.data.object as any).id
+      const session = await stripe.checkout.sessions.retrieve(sessionId)
       await handleCheckoutComplete(session, stripe, supabase)
       break
     }
 
     case 'customer.subscription.updated': {
-      const subscription = event.data.object as Stripe.Subscription
+      const subId = (event.data.object as any).id
+      const subscription = await stripe.subscriptions.retrieve(subId)
       await handleSubscriptionUpdate(subscription, supabase)
       break
     }
 
     case 'customer.subscription.deleted': {
-      const subscription = event.data.object as Stripe.Subscription
+      const subId = (event.data.object as any).id
+      const subscription = await stripe.subscriptions.retrieve(subId)
       await handleSubscriptionCancel(subscription, supabase)
       break
     }
 
     case 'invoice.payment_failed': {
-      const invoice = event.data.object as Stripe.Invoice
+      const invoiceId = (event.data.object as any).id
+      const invoice = await stripe.invoices.retrieve(invoiceId)
       await handlePaymentFailed(invoice, supabase)
       break
     }
