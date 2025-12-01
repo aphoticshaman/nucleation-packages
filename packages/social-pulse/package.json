@@ -1,0 +1,67 @@
+{
+  "name": "social-pulse",
+  "version": "1.0.0",
+  "description": "Social media sentiment aggregator for detecting social upheaval and revolution precursors. Multi-platform: Bluesky, Telegram, X, TikTok, VK, regional apps.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./sources": {
+      "import": "./dist/sources/index.js",
+      "types": "./dist/sources/index.d.ts"
+    },
+    "./filters": {
+      "import": "./dist/filters/index.js",
+      "types": "./dist/filters/index.d.ts"
+    },
+    "./validators": {
+      "import": "./dist/validators/index.js",
+      "types": "./dist/validators/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "social-media",
+    "sentiment-analysis",
+    "revolution-detection",
+    "upheaval",
+    "geopolitical",
+    "bluesky",
+    "telegram",
+    "tiktok",
+    "twitter",
+    "vk",
+    "weibo",
+    "phase-transition",
+    "early-warning",
+    "bot-detection",
+    "language-detection",
+    "gdelt"
+  ],
+  "author": "Ryan Cardwell <aphoticshaman@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aphoticshaman/nucleation-packages.git",
+    "directory": "packages/social-pulse"
+  },
+  "dependencies": {
+    "nucleation-wasm": "^0.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
