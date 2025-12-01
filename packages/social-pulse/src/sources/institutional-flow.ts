@@ -172,7 +172,7 @@ export class InstitutionalFlowSource implements DataSource {
 
       // Sliding window
       for (let i = 0; i < sorted.length; i++) {
-        const windowStart = new Date(sorted[i].transactionDate).getTime();
+        const windowStart = new Date(sorted[i]!.transactionDate).getTime();
         const windowEnd = windowStart + windowMs;
 
         const inWindow = sorted.filter((tx) => {
@@ -254,23 +254,24 @@ export class InstitutionalFlowSource implements DataSource {
     let match;
     while ((match = entryRegex.exec(xml)) !== null) {
       const entry = match[1];
+      if (!entry) continue;
 
       const getId = (tag: string): string => {
         const m = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`).exec(entry);
-        return m ? m[1].trim() : '';
+        return m && m[1] ? m[1].trim() : '';
       };
 
       const title = getId('title');
       const updated = getId('updated');
-      const link = /<link[^>]*href="([^"]+)"/.exec(entry)?.[1] ?? '';
+      const linkMatch = /<link[^>]*href="([^"]+)"/.exec(entry);
+      const link = (linkMatch && linkMatch[1]) || '';
 
       // Parse title for transaction info
       // Format: "4 - Company Name (0001234567) (Filer Name)"
       const titleMatch = /4\s*-\s*(.+?)\s*\((\d+)\)\s*\((.+?)\)/.exec(title);
-      if (titleMatch) {
-        const companyName = titleMatch[1];
-        const filer = titleMatch[3];
-
+      const companyName = titleMatch?.[1];
+      const filer = titleMatch?.[3];
+      if (companyName && filer) {
         transactions.push({
           id: link,
           filer,
