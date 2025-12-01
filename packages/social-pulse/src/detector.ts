@@ -82,14 +82,71 @@ export interface WasmBridgeStatus {
 // ============ WASM BRIDGE ============
 
 /**
+ * nucleation-wasm types (dynamic import)
+ */
+interface WasmModule {
+  NucleationDetector: {
+    with_defaults(): WasmDetector;
+    new (config: unknown): WasmDetector;
+  };
+  DetectorConfig: {
+    new (): WasmConfig;
+    conservative(): WasmConfig;
+    sensitive(): WasmConfig;
+  };
+  Shepherd: {
+    new (n_categories: number): WasmShepherd;
+  };
+  Phase: {
+    Stable: number;
+    Approaching: number;
+    Critical: number;
+    Transitioning: number;
+  };
+  version(): string;
+}
+
+interface WasmDetector {
+  update(value: number): number;
+  update_batch(values: Float64Array): number;
+  currentPhase(): number;
+  confidence(): number;
+  currentVariance(): number;
+  inflectionMagnitude(): number;
+  count(): number;
+  reset(): void;
+  serialize(): string;
+  free(): void;
+}
+
+interface WasmConfig {
+  window_size: number;
+  threshold: number;
+  smoothing_window: number;
+}
+
+interface WasmShepherd {
+  registerActor(actor_id: string, distribution?: Float64Array): void;
+  updateActor(actor_id: string, observation: Float64Array, timestamp: number): unknown[];
+  conflictPotential(a: string, b: string): number | undefined;
+  checkAllDyads(timestamp: number): unknown[];
+  actors(): unknown[];
+  free(): void;
+}
+
+/**
  * WasmBridge - Asymmetric dual-fusion integration
  *
- * Provides optional high-performance WASM detection when nucleation-wasm
- * is available, with automatic fallback to pure JS implementation.
+ * Provides high-performance WASM detection when nucleation-wasm is available.
+ * Uses NucleationDetector for variance inflection (10-100x faster than JS).
+ * Falls back to pure JS implementation when WASM unavailable.
  */
 class WasmBridge {
-  private _wasmModule: unknown = null; // Reserved for future WASM integration
+  private wasmModule: WasmModule | null = null;
   private available = false;
+  private wasmVersion: string | null = null;
+  private detectors = new Map<string, WasmDetector>();
+  private shepherd: WasmShepherd | null = null;
   private detectionTimes: number[] = [];
   private jsDetectionTimes: number[] = [];
 
@@ -99,10 +156,11 @@ class WasmBridge {
   async init(): Promise<boolean> {
     try {
       // Dynamic import to avoid hard dependency
-      const wasm = await import('nucleation-wasm');
-      if (wasm && typeof wasm.NucleationDetector === 'function') {
-        this._wasmModule = wasm;
+      const wasm = (await import('nucleation-wasm')) as WasmModule;
+      if (wasm && typeof wasm.NucleationDetector?.with_defaults === 'function') {
+        this.wasmModule = wasm;
         this.available = true;
+        this.wasmVersion = wasm.version?.() ?? 'unknown';
         return true;
       }
     } catch {
@@ -120,10 +178,111 @@ class WasmBridge {
   }
 
   /**
-   * Get the WASM module (for advanced usage)
+   * Get or create a WASM detector for a region/topic
    */
-  getModule(): unknown {
-    return this._wasmModule;
+  getDetector(id: string): WasmDetector | null {
+    if (!this.available || !this.wasmModule) return null;
+
+    let detector = this.detectors.get(id);
+    if (!detector) {
+      detector = this.wasmModule.NucleationDetector.with_defaults();
+      this.detectors.set(id, detector);
+    }
+    return detector;
+  }
+
+  /**
+   * Update detector with new value (returns WASM Phase enum value)
+   */
+  update(id: string, value: number): number | null {
+    const detector = this.getDetector(id);
+    if (!detector) return null;
+    return detector.update(value);
+  }
+
+  /**
+   * Get current phase from WASM detector
+   */
+  getPhase(id: string): number | null {
+    const detector = this.detectors.get(id);
+    if (!detector) return null;
+    return detector.currentPhase();
+  }
+
+  /**
+   * Get confidence from WASM detector
+   */
+  getConfidence(id: string): number | null {
+    const detector = this.detectors.get(id);
+    if (!detector) return null;
+    return detector.confidence();
+  }
+
+  /**
+   * Get current variance from WASM detector
+   */
+  getVariance(id: string): number | null {
+    const detector = this.detectors.get(id);
+    if (!detector) return null;
+    return detector.currentVariance();
+  }
+
+  /**
+   * Get inflection magnitude (z-score) from WASM detector
+   */
+  getInflectionMagnitude(id: string): number | null {
+    const detector = this.detectors.get(id);
+    if (!detector) return null;
+    return detector.inflectionMagnitude();
+  }
+
+  /**
+   * Initialize Shepherd for multi-actor conflict monitoring
+   */
+  initShepherd(n_categories: number = 50): boolean {
+    if (!this.available || !this.wasmModule) return false;
+    this.shepherd = new this.wasmModule.Shepherd(n_categories);
+    return true;
+  }
+
+  /**
+   * Register an actor (region/entity) with Shepherd
+   */
+  registerActor(actorId: string): boolean {
+    if (!this.shepherd) return false;
+    this.shepherd.registerActor(actorId);
+    return true;
+  }
+
+  /**
+   * Update actor and check for nucleation alerts
+   */
+  updateActor(actorId: string, observation: Float64Array, timestamp: number): unknown[] {
+    if (!this.shepherd) return [];
+    return this.shepherd.updateActor(actorId, observation, timestamp);
+  }
+
+  /**
+   * Get conflict potential between two actors (KL-divergence based)
+   */
+  getConflictPotential(a: string, b: string): number | undefined {
+    if (!this.shepherd) return undefined;
+    return this.shepherd.conflictPotential(a, b);
+  }
+
+  /**
+   * Check all actor pairs for nucleation alerts
+   */
+  checkAllDyads(timestamp: number): unknown[] {
+    if (!this.shepherd) return [];
+    return this.shepherd.checkAllDyads(timestamp);
+  }
+
+  /**
+   * Get the raw WASM module (for advanced usage)
+   */
+  getModule(): WasmModule | null {
+    return this.wasmModule;
   }
 
   /**
@@ -143,6 +302,10 @@ class WasmBridge {
       available: this.available,
       mode: this.available ? 'wasm' : 'js',
     };
+
+    if (this.wasmVersion) {
+      status.version = this.wasmVersion;
+    }
 
     if (this.detectionTimes.length > 0 || this.jsDetectionTimes.length > 0) {
       status.performance = {
@@ -170,6 +333,20 @@ class WasmBridge {
     } else {
       this.jsDetectionTimes.push(ms);
       if (this.jsDetectionTimes.length > 100) this.jsDetectionTimes.shift();
+    }
+  }
+
+  /**
+   * Free all WASM resources
+   */
+  dispose(): void {
+    for (const detector of this.detectors.values()) {
+      detector.free();
+    }
+    this.detectors.clear();
+    if (this.shepherd) {
+      this.shepherd.free();
+      this.shepherd = null;
     }
   }
 }
