@@ -89,7 +89,7 @@ export class ArxivSource implements DataSource {
 
         // Extract total results from opensearch:totalResults
         const match = /<opensearch:totalResults[^>]*>(\d+)</.exec(xml);
-        if (match) {
+        if (match && match[1]) {
           categories.set(cat, parseInt(match[1], 10));
         }
       } catch {
@@ -152,11 +152,12 @@ export class ArxivSource implements DataSource {
     let match;
 
     while ((match = entryRegex.exec(xml)) !== null) {
+      if (!match[1]) continue;
       const entryXml = match[1];
 
       const getId = (tag: string): string => {
         const m = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`).exec(entryXml);
-        return m ? m[1].trim() : '';
+        return m && m[1] ? m[1].trim() : '';
       };
 
       const id = getId('id');
@@ -170,7 +171,10 @@ export class ArxivSource implements DataSource {
       const authorRegex = /<author>[\s\S]*?<name>([^<]+)<\/name>[\s\S]*?<\/author>/g;
       let authorMatch;
       while ((authorMatch = authorRegex.exec(entryXml)) !== null) {
-        authors.push({ name: authorMatch[1].trim() });
+        const authorName = authorMatch[1];
+        if (authorName) {
+          authors.push({ name: authorName.trim() });
+        }
       }
 
       // Parse categories
@@ -178,7 +182,10 @@ export class ArxivSource implements DataSource {
       const catRegex = /<category[^>]*term="([^"]+)"/g;
       let catMatch;
       while ((catMatch = catRegex.exec(entryXml)) !== null) {
-        categories.push(catMatch[1]);
+        const catTerm = catMatch[1];
+        if (catTerm) {
+          categories.push(catTerm);
+        }
       }
 
       // Parse links
@@ -186,7 +193,10 @@ export class ArxivSource implements DataSource {
       const linkRegex = /<link\s+[^>]*href="([^"]+)"[^>]*>/g;
       let linkMatch;
       while ((linkMatch = linkRegex.exec(entryXml)) !== null) {
-        links.push({ href: linkMatch[1] });
+        const href = linkMatch[1];
+        if (href) {
+          links.push({ href });
+        }
       }
 
       entries.push({ id, title, summary, published, updated, authors, categories, links });

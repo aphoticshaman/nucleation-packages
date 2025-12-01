@@ -95,7 +95,7 @@ export class BlueskySource implements DataSource {
     if (params.until) {
       url.searchParams.set('until', params.until.toISOString());
     }
-    if (params.languages?.length) {
+    if (params.languages?.length && params.languages[0]) {
       url.searchParams.set('lang', params.languages[0]);
     }
 
@@ -104,7 +104,7 @@ export class BlueskySource implements DataSource {
       throw new Error(`Bluesky search failed: ${response.status}`);
     }
 
-    const data: BskySearchResponse = await response.json();
+    const data = (await response.json()) as BskySearchResponse;
     return data.posts.map((post) => this.transformPost(post));
   }
 
@@ -169,13 +169,15 @@ export class BlueskySource implements DataSource {
     const author: AuthorInfo = {
       id: post.author.did,
       name: post.author.handle,
-      createdAt: post.author.createdAt,
-      followers: post.author.followersCount,
-      following: post.author.followsCount,
-      postCount: post.author.postsCount,
-      bio: post.author.description,
       verified: false, // Bluesky doesn't have verification yet
     };
+
+    // Only add optional properties if they exist
+    if (post.author.createdAt) author.createdAt = post.author.createdAt;
+    if (post.author.followersCount !== undefined) author.followers = post.author.followersCount;
+    if (post.author.followsCount !== undefined) author.following = post.author.followsCount;
+    if (post.author.postsCount !== undefined) author.postCount = post.author.postsCount;
+    if (post.author.description) author.bio = post.author.description;
 
     const engagement: EngagementMetrics = {
       likes: post.likeCount ?? 0,
@@ -183,15 +185,21 @@ export class BlueskySource implements DataSource {
       replies: post.replyCount ?? 0,
     };
 
-    return {
+    const socialPost: SocialPost = {
       id: post.uri,
       platform: 'bluesky',
       content: post.record.text,
       timestamp: post.record.createdAt,
       author,
       engagement,
-      language: post.record.langs?.[0],
       raw: post,
     };
+
+    // Only add language if it exists
+    if (post.record.langs?.[0]) {
+      socialPost.language = post.record.langs[0];
+    }
+
+    return socialPost;
   }
 }
