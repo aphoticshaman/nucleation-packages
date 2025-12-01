@@ -92,10 +92,12 @@ export async function initialize(): Promise<void> {
 async function doInitialize(): Promise<void> {
   try {
     // Dynamic import of the WASM module
-    wasmModule = (await import('nucleation-wasm')) as NucleationWasmModule;
+    const imported = await import('nucleation-wasm');
+    wasmModule = imported as unknown as NucleationWasmModule;
 
     // Node.js environment - load WASM bytes directly
-    if (typeof window === 'undefined' && typeof globalThis.Deno === 'undefined') {
+    const g = globalThis as { window?: unknown; Deno?: unknown };
+    if (typeof g.window === 'undefined' && typeof g.Deno === 'undefined') {
       const require = createRequire(import.meta.url);
       const wasmPath = require.resolve('nucleation-wasm/nucleation_bg.wasm');
       const wasmBytes = await readFile(wasmPath);
