@@ -113,6 +113,64 @@ from .regime.msvar import (
     MarkovSwitchingVAR,
 )
 
+from .core.great_attractor import (
+    AttractorBasin,
+    IntentionalityField,
+    GreatAttractorState,
+    compute_intentionality_field,
+    compute_basin_curvature,
+    compute_causal_mass,
+    compute_attractor_dominance,
+    compute_predictive_gain_psi,
+    compute_downward_causal_power_delta,
+    compute_phase_transition_probability,
+    GreatAttractorAnalyzer,
+)
+
+from .core.quantum_info import (
+    DensityOperator,
+    SystemState,
+    von_neumann_entropy,
+    mutual_information_quantum,
+    awareness_functional,
+    coherent_causal_capacity,
+    QuantumInfoAnalyzer,
+)
+
+from .core.geometry import (
+    RiemannianMetric,
+    AttractorBasinGeometry,
+    FreeEnergyLandscape,
+    ManifoldGeometryAnalyzer,
+    great_attractor_curvature,
+    possibility_space_metric,
+)
+
+from .engine.outcome_steering import (
+    SteeringMode,
+    SteeringObjective,
+    SteeringAction,
+    Phase,
+    Roadmap,
+    SteeringResult,
+    OGSEConfig,
+    OutcomeGradientSteeringEngine,
+    OGSEngine,
+    compute_outcome_gradient,
+    evaluate_steering_effectiveness,
+)
+
+from .copula.gaussian_copula import (
+    GaussianCopula,
+    TailDependenceAnalyzer,
+    CopulaConfig,
+    compute_kendall_tau,
+    compute_spearman_rho,
+    fit_gaussian_copula,
+    simulate_from_copula,
+    compute_tail_dependence,
+)
+
 __version__ = "0.1.0"
 
 __all__ = [
@@ -171,4 +229,52 @@ __all__ = [
     # Regime
     "MSVARConfig",
     "MarkovSwitchingVAR",
+    # Great Attractor (NOVEL - PATENTABLE)
+    "AttractorBasin",
+    "IntentionalityField",
+    "GreatAttractorState",
+    "compute_intentionality_field",
+    "compute_basin_curvature",
+    "compute_causal_mass",
+    "compute_attractor_dominance",
+    "compute_predictive_gain_psi",
+    "compute_downward_causal_power_delta",
+    "compute_phase_transition_probability",
+    "GreatAttractorAnalyzer",
+    # Quantum Information Layer
+    "DensityOperator",
+    "SystemState",
+    "von_neumann_entropy",
+    "mutual_information_quantum",
+    "awareness_functional",
+    "coherent_causal_capacity",
+    "QuantumInfoAnalyzer",
+    # Manifold Geometry Layer
+    "RiemannianMetric",
+    "AttractorBasinGeometry",
+    "FreeEnergyLandscape",
+    "ManifoldGeometryAnalyzer",
+    "great_attractor_curvature",
+    "possibility_space_metric",
+    # Outcome Gradient Steering Engine (OGSE)
+    "SteeringMode",
+    "SteeringObjective",
+    "SteeringAction",
+    "Phase",
+    "Roadmap",
+    "SteeringResult",
+    "OGSEConfig",
+    "OutcomeGradientSteeringEngine",
+    "OGSEngine",
+    "compute_outcome_gradient",
+    "evaluate_steering_effectiveness",
+    # Gaussian Copula (S&P Patent)
+    "GaussianCopula",
+    "TailDependenceAnalyzer",
+    "CopulaConfig",
+    "compute_kendall_tau",
+    "compute_spearman_rho",
+    "fit_gaussian_copula",
+    "simulate_from_copula",
+    "compute_tail_dependence",
 ]
