@@ -171,6 +171,22 @@ from .copula.gaussian_copula import (
     compute_tail_dependence,
 )
 
+from .core.fep_agent import (
+    FEPAgentConfig,
+    FEPAgent,
+)
+
+from .core.mckean_vlasov import (
+    MVConfig,
+    McKeanVlasovEnsemble,
+)
+
+from .core.great_attractor_sim import (
+    GreatAttractorConfig,
+    GreatAttractorHistory,
+    GreatAttractorSimulator,
+)
+
 __version__ = "0.1.0"
 
 __all__ = [
@@ -277,4 +293,14 @@ __all__ = [
     "fit_gaussian_copula",
     "simulate_from_copula",
     "compute_tail_dependence",
+    # FEP Active Inference Agent
+    "FEPAgentConfig",
+    "FEPAgent",
+    # McKean-Vlasov Ensemble
+    "MVConfig",
+    "McKeanVlasovEnsemble",
+    # Great Attractor Simulator
+    "GreatAttractorConfig",
+    "GreatAttractorHistory",
+    "GreatAttractorSimulator",
 ]
