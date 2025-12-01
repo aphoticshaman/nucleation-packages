@@ -1,0 +1,17 @@
+{
+  "name": "crowd-phase",
+  "version": "1.0.0",
+  "description": "Detect community conflict before it escalates. Toxicity prediction, brigading detection, and moderation early warning.",
+  "type": "module",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "exports": { ".": { "import": "./src/index.js", "types": "./src/index.d.ts" } },
+  "files": ["src", "examples", "README.md"],
+  "scripts": { "test": "node --test 'test/*.test.js'" },
+  "keywords": ["content-moderation", "toxicity-detection", "community-health", "brigading", "harassment-detection", "social-media", "platform-safety", "trust-safety", "conflict-detection", "sentiment-analysis", "user-behavior", "moderation-tools", "early-warning", "wasm"],
+  "author": "Ryan Cardwell <aphotic.noise@gmail.com>",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/aphoticshaman/nucleation-packages" },
+  "dependencies": { "nucleation-wasm": "^0.2.0" },
+  "engines": { "node": ">=18.0.0" }
+}

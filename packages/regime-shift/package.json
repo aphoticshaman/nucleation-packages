@@ -1,0 +1,62 @@
+{
+  "name": "regime-shift",
+  "version": "1.0.0",
+  "description": "Detect market regime changes before they happen. Variance-based phase transition detection for trading signals, volatility clustering, and risk management.",
+  "type": "module",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "types": "./src/index.d.ts"
+    }
+  },
+  "files": [
+    "src",
+    "examples",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test 'test/*.test.js'",
+    "example": "node examples/stock-regime.js"
+  },
+  "keywords": [
+    "regime-detection",
+    "regime-change",
+    "market-regime",
+    "volatility",
+    "volatility-clustering",
+    "trading",
+    "trading-signals",
+    "quant",
+    "quantitative-finance",
+    "risk-management",
+    "time-series",
+    "anomaly-detection",
+    "phase-transition",
+    "early-warning",
+    "mean-reversion",
+    "trend-detection",
+    "market-analysis",
+    "financial-analysis",
+    "algorithmic-trading",
+    "wasm",
+    "webassembly"
+  ],
+  "author": "Ryan Cardwell <aphotic.noise@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aphoticshaman/regime-shift"
+  },
+  "bugs": {
+    "url": "https://github.com/aphoticshaman/regime-shift/issues"
+  },
+  "homepage": "https://github.com/aphoticshaman/regime-shift#readme",
+  "dependencies": {
+    "nucleation-wasm": "^0.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

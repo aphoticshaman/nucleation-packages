@@ -1,0 +1,17 @@
+{
+  "name": "market-canary",
+  "version": "1.0.0",
+  "description": "General-purpose phase transition detection for any time series. Leading indicator discovery and trend reversal prediction.",
+  "type": "module",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "exports": { ".": { "import": "./src/index.js", "types": "./src/index.d.ts" } },
+  "files": ["src", "examples", "README.md"],
+  "scripts": { "test": "node --test 'test/*.test.js'" },
+  "keywords": ["time-series", "phase-transition", "leading-indicators", "trend-detection", "anomaly-detection", "change-point-detection", "signal-processing", "early-warning", "variance-analysis", "forecasting", "analytics", "data-science", "wasm"],
+  "author": "Ryan Cardwell <aphotic.noise@gmail.com>",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/aphoticshaman/nucleation-packages" },
+  "dependencies": { "nucleation-wasm": "^0.2.0" },
+  "engines": { "node": ">=18.0.0" }
+}

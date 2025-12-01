@@ -1,0 +1,19 @@
+{
+  "name": "nucleation-packages",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Domain-specific wrappers for nucleation-wasm phase transition detection",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "npm test --workspaces",
+    "publish:all": "npm publish --workspaces --access public"
+  },
+  "author": "Ryan Cardwell <aphotic.noise@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aphoticshaman/nucleation-packages"
+  }
+}

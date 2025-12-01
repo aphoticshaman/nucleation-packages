@@ -1,0 +1,64 @@
+{
+  "name": "churn-harbinger",
+  "version": "1.0.0",
+  "description": "Predict customer churn before it happens. Behavioral disengagement detection for SaaS, subscription businesses, and product teams.",
+  "type": "module",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "types": "./src/index.d.ts"
+    }
+  },
+  "files": [
+    "src",
+    "examples",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test 'test/*.test.js'",
+    "example": "node examples/saas-churn.js"
+  },
+  "keywords": [
+    "churn-prediction",
+    "churn-detection",
+    "customer-churn",
+    "user-retention",
+    "engagement",
+    "disengagement",
+    "saas",
+    "subscription",
+    "product-analytics",
+    "user-behavior",
+    "behavioral-analytics",
+    "customer-success",
+    "retention",
+    "ltv",
+    "customer-lifetime-value",
+    "cohort-analysis",
+    "early-warning",
+    "risk-scoring",
+    "product-led-growth",
+    "plg",
+    "user-analytics",
+    "wasm",
+    "webassembly"
+  ],
+  "author": "Ryan Cardwell <aphotic.noise@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aphoticshaman/nucleation-packages"
+  },
+  "bugs": {
+    "url": "https://github.com/aphoticshaman/nucleation-packages/issues"
+  },
+  "homepage": "https://github.com/aphoticshaman/nucleation-packages/tree/main/packages/churn-harbinger#readme",
+  "dependencies": {
+    "nucleation-wasm": "^0.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

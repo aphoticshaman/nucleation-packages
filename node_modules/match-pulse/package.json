@@ -1,0 +1,17 @@
+{
+  "name": "match-pulse",
+  "version": "1.0.0",
+  "description": "Player tilt detection and match quality prediction for games and esports. Behavioral variance analysis for competitive balance.",
+  "type": "module",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "exports": { ".": { "import": "./src/index.js", "types": "./src/index.d.ts" } },
+  "files": ["src", "examples", "README.md"],
+  "scripts": { "test": "node --test 'test/*.test.js'" },
+  "keywords": ["esports", "gaming", "tilt-detection", "player-behavior", "matchmaking", "competitive-gaming", "game-analytics", "player-psychology", "match-quality", "toxicity-detection", "performance-analysis", "sbmm", "skill-based-matchmaking", "wasm"],
+  "author": "Ryan Cardwell <aphotic.noise@gmail.com>",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/aphoticshaman/nucleation-packages" },
+  "dependencies": { "nucleation-wasm": "^0.2.0" },
+  "engines": { "node": ">=18.0.0" }
+}
