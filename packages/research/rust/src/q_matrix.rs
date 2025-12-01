@@ -253,7 +253,7 @@ pub fn simulate_markov_chain(
     let mut rng = ChaCha8Rng::seed_from_u64(seed);
 
     // Build transition matrix P ≈ I + Q*dt
-    let mut p = Array2::eye(n);
+    let mut p: Array2<f64> = Array2::eye(n);
     for i in 0..n {
         for j in 0..n {
             p[[i, j]] += q[[i, j]] * dt;
