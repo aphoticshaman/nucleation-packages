@@ -3,10 +3,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     // Only test TypeScript files in packages with TypeScript
-    include: [
-      'packages/core/**/*.test.ts',
-      'packages/social-pulse/**/*.test.ts',
-    ],
+    include: ['packages/core/**/*.test.ts', 'packages/social-pulse/**/*.test.ts'],
     // Exclude legacy JS packages - they use Node.js test runner
     exclude: [
       'node_modules/**',

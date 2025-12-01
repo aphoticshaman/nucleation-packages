@@ -34,7 +34,10 @@ export declare class PatientMonitor {
   static deserialize(json: string): Promise<PatientMonitor>;
 }
 
-export declare function assess(values: number[], config?: PatientMonitorConfig): Promise<{
+export declare function assess(
+  values: number[],
+  config?: PatientMonitorConfig
+): Promise<{
   critical: boolean;
   elevated: boolean;
   level: string;

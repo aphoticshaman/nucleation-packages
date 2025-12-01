@@ -9,7 +9,5 @@
   },
   "include": ["src-ts/**/*"],
   "exclude": ["node_modules", "dist", "test", "src"],
-  "references": [
-    { "path": "../core" }
-  ]
+  "references": [{ "path": "../core" }]
 }

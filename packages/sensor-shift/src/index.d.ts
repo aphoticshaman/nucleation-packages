@@ -34,7 +34,10 @@ export declare class SensorMonitor {
   static deserialize(json: string): Promise<SensorMonitor>;
 }
 
-export declare function assess(values: number[], config?: SensorMonitorConfig): Promise<{
+export declare function assess(
+  values: number[],
+  config?: SensorMonitorConfig
+): Promise<{
   failing: boolean;
   elevated: boolean;
   level: string;

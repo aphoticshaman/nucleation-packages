@@ -24,12 +24,7 @@ import type {
 } from './types.js';
 
 // Import nucleation-wasm for phase transition detection
-import {
-  NucleationDetector,
-  Shepherd,
-  Phase,
-  type DetectorConfig,
-} from 'nucleation-wasm';
+import { NucleationDetector, Shepherd, Phase, type DetectorConfig } from 'nucleation-wasm';
 
 /**
  * SocialPulseDetector configuration
@@ -154,9 +149,7 @@ export class SocialPulseDetector {
     const allPosts: SocialPost[] = [];
 
     // Fetch from all sources in parallel
-    const results = await Promise.allSettled(
-      this.sources.map((source) => source.fetch(params))
-    );
+    const results = await Promise.allSettled(this.sources.map((source) => source.fetch(params)));
 
     for (const result of results) {
       if (result.status === 'fulfilled') {
@@ -297,7 +290,8 @@ export class SocialPulseDetector {
     entry.currentSentiment = avgSentiment;
     entry.sentimentVariance = variance;
     entry.daysUntilReport = Math.ceil(
-      (this.earningsCalendar.find((e) => e.ticker === ticker)?.reportDate.getTime() ?? Date.now() - Date.now()) /
+      (this.earningsCalendar.find((e) => e.ticker === ticker)?.reportDate.getTime() ??
+        Date.now() - Date.now()) /
         (1000 * 60 * 60 * 24)
     );
 
@@ -342,8 +336,8 @@ export class SocialPulseDetector {
 
   private getOrCreateDetector(id: string): NucleationDetector {
     if (!this.detectors.has(id)) {
-      const config = this.config.detectorConfig ??
-        SENSITIVITY_PRESETS[this.config.sensitivity ?? 'medium'];
+      const config =
+        this.config.detectorConfig ?? SENSITIVITY_PRESETS[this.config.sensitivity ?? 'medium'];
       this.detectors.set(id, new NucleationDetector(config));
     }
     return this.detectors.get(id)!;
@@ -401,9 +395,8 @@ export class SocialPulseDetector {
       }
 
       const history = this.sentimentHistory.get(region);
-      const previousVariance = history && history.length >= 2
-        ? this.calculateVariance(history.slice(-10, -1))
-        : undefined;
+      const previousVariance =
+        history && history.length >= 2 ? this.calculateVariance(history.slice(-10, -1)) : undefined;
 
       aggregates.push({
         id: region,
@@ -563,16 +556,62 @@ export class SocialPulseDetector {
 
     // Simple word lists (would use ML in production)
     const positiveWords = [
-      'good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'love',
-      'happy', 'joy', 'success', 'win', 'best', 'awesome', 'perfect', 'beautiful',
-      'hope', 'bullish', 'growth', 'profit', 'gain', 'rally', 'surge', 'boom',
+      'good',
+      'great',
+      'excellent',
+      'amazing',
+      'wonderful',
+      'fantastic',
+      'love',
+      'happy',
+      'joy',
+      'success',
+      'win',
+      'best',
+      'awesome',
+      'perfect',
+      'beautiful',
+      'hope',
+      'bullish',
+      'growth',
+      'profit',
+      'gain',
+      'rally',
+      'surge',
+      'boom',
     ];
 
     const negativeWords = [
-      'bad', 'terrible', 'awful', 'horrible', 'hate', 'sad', 'angry', 'fear',
-      'fail', 'loss', 'worst', 'poor', 'ugly', 'disaster', 'crisis', 'crash',
-      'bearish', 'decline', 'drop', 'plunge', 'collapse', 'recession', 'war',
-      'protest', 'riot', 'unrest', 'violence', 'conflict', 'death', 'kill',
+      'bad',
+      'terrible',
+      'awful',
+      'horrible',
+      'hate',
+      'sad',
+      'angry',
+      'fear',
+      'fail',
+      'loss',
+      'worst',
+      'poor',
+      'ugly',
+      'disaster',
+      'crisis',
+      'crash',
+      'bearish',
+      'decline',
+      'drop',
+      'plunge',
+      'collapse',
+      'recession',
+      'war',
+      'protest',
+      'riot',
+      'unrest',
+      'violence',
+      'conflict',
+      'death',
+      'kill',
     ];
 
     let score = 0;
@@ -590,11 +629,53 @@ export class SocialPulseDetector {
   private extractKeywords(posts: SocialPost[]): Array<{ word: string; count: number }> {
     const wordCounts = new Map<string, number>();
     const stopwords = new Set([
-      'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
-      'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
-      'should', 'may', 'might', 'must', 'and', 'or', 'but', 'if', 'then',
-      'than', 'so', 'as', 'of', 'at', 'by', 'for', 'with', 'about', 'to',
-      'from', 'in', 'on', 'it', 'its', 'this', 'that', 'these', 'those',
+      'the',
+      'a',
+      'an',
+      'is',
+      'are',
+      'was',
+      'were',
+      'be',
+      'been',
+      'being',
+      'have',
+      'has',
+      'had',
+      'do',
+      'does',
+      'did',
+      'will',
+      'would',
+      'could',
+      'should',
+      'may',
+      'might',
+      'must',
+      'and',
+      'or',
+      'but',
+      'if',
+      'then',
+      'than',
+      'so',
+      'as',
+      'of',
+      'at',
+      'by',
+      'for',
+      'with',
+      'about',
+      'to',
+      'from',
+      'in',
+      'on',
+      'it',
+      'its',
+      'this',
+      'that',
+      'these',
+      'those',
     ]);
 
     for (const post of posts) {
@@ -625,7 +706,8 @@ export class SocialPulseDetector {
 
     // Calculate trend direction
     const recentAvg = trend.slice(-5).reduce((a, b) => a + b, 0) / 5;
-    const olderAvg = trend.slice(-10, -5).reduce((a, b) => a + b, 0) / Math.min(5, trend.slice(-10, -5).length);
+    const olderAvg =
+      trend.slice(-10, -5).reduce((a, b) => a + b, 0) / Math.min(5, trend.slice(-10, -5).length);
 
     const trendDirection = recentAvg - olderAvg;
 

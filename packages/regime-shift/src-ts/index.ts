@@ -131,8 +131,7 @@ export class RegimeDetector extends BaseDetector<RegimeLevel, RegimeState> {
 
     const detector = new RegimeDetector();
     // Access the protected property using type assertion
-    (detector as unknown as { detector: unknown }).detector =
-      NucleationDetector.deserialize(json);
+    (detector as unknown as { detector: unknown }).detector = NucleationDetector.deserialize(json);
     (detector as unknown as { initialized: boolean }).initialized = true;
 
     return detector;

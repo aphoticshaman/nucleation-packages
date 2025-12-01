@@ -34,7 +34,10 @@ export declare class SupplyMonitor {
   static deserialize(json: string): Promise<SupplyMonitor>;
 }
 
-export declare function assess(values: number[], config?: SupplyMonitorConfig): Promise<{
+export declare function assess(
+  values: number[],
+  config?: SupplyMonitorConfig
+): Promise<{
   atRisk: boolean;
   elevated: boolean;
   level: string;

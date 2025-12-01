@@ -31,17 +31,11 @@ export class NucleationError extends Error {
  */
 export function validateNumber(value: unknown, name = 'value'): number {
   if (typeof value !== 'number') {
-    throw new NucleationError(
-      `${name} must be a number, got ${typeof value}`,
-      'INVALID_TYPE'
-    );
+    throw new NucleationError(`${name} must be a number, got ${typeof value}`, 'INVALID_TYPE');
   }
 
   if (!Number.isFinite(value)) {
-    throw new NucleationError(
-      `${name} must be a finite number, got ${value}`,
-      'INVALID_VALUE'
-    );
+    throw new NucleationError(`${name} must be a finite number, got ${value}`, 'INVALID_VALUE');
   }
 
   return value;
@@ -54,15 +48,9 @@ export function validateNumber(value: unknown, name = 'value'): number {
  * @param name - Name of the parameter for error messages
  * @throws NucleationError if validation fails
  */
-export function validateNumberArray(
-  values: unknown,
-  name = 'values'
-): number[] {
+export function validateNumberArray(values: unknown, name = 'values'): number[] {
   if (!Array.isArray(values) && !(values instanceof Float64Array)) {
-    throw new NucleationError(
-      `${name} must be an array or Float64Array`,
-      'INVALID_TYPE'
-    );
+    throw new NucleationError(`${name} must be an array or Float64Array`, 'INVALID_TYPE');
   }
 
   if (values.length === 0) {
@@ -84,11 +72,7 @@ export function validateNumberArray(
   return arr;
 }
 
-const VALID_SENSITIVITIES: Sensitivity[] = [
-  'conservative',
-  'balanced',
-  'sensitive',
-];
+const VALID_SENSITIVITIES: Sensitivity[] = ['conservative', 'balanced', 'sensitive'];
 
 /**
  * Validate detector configuration
@@ -100,10 +84,7 @@ const VALID_SENSITIVITIES: Sensitivity[] = [
 export function validateConfig(config: DetectorConfig): DetectorConfig {
   const validated: DetectorConfig = { ...config };
 
-  if (
-    config.sensitivity !== undefined &&
-    !VALID_SENSITIVITIES.includes(config.sensitivity)
-  ) {
+  if (config.sensitivity !== undefined && !VALID_SENSITIVITIES.includes(config.sensitivity)) {
     throw new NucleationError(
       `sensitivity must be one of: ${VALID_SENSITIVITIES.join(', ')}`,
       'INVALID_CONFIG'
@@ -111,41 +92,23 @@ export function validateConfig(config: DetectorConfig): DetectorConfig {
   }
 
   if (config.windowSize !== undefined) {
-    if (
-      typeof config.windowSize !== 'number' ||
-      !Number.isInteger(config.windowSize)
-    ) {
-      throw new NucleationError(
-        'windowSize must be an integer',
-        'INVALID_CONFIG'
-      );
+    if (typeof config.windowSize !== 'number' || !Number.isInteger(config.windowSize)) {
+      throw new NucleationError('windowSize must be an integer', 'INVALID_CONFIG');
     }
     if (config.windowSize < 2) {
-      throw new NucleationError(
-        'windowSize must be at least 2',
-        'INVALID_CONFIG'
-      );
+      throw new NucleationError('windowSize must be at least 2', 'INVALID_CONFIG');
     }
     if (config.windowSize > 10000) {
-      throw new NucleationError(
-        'windowSize cannot exceed 10000',
-        'INVALID_CONFIG'
-      );
+      throw new NucleationError('windowSize cannot exceed 10000', 'INVALID_CONFIG');
     }
   }
 
   if (config.threshold !== undefined) {
     if (typeof config.threshold !== 'number' || !Number.isFinite(config.threshold)) {
-      throw new NucleationError(
-        'threshold must be a finite number',
-        'INVALID_CONFIG'
-      );
+      throw new NucleationError('threshold must be a finite number', 'INVALID_CONFIG');
     }
     if (config.threshold <= 0) {
-      throw new NucleationError(
-        'threshold must be positive',
-        'INVALID_CONFIG'
-      );
+      throw new NucleationError('threshold must be positive', 'INVALID_CONFIG');
     }
   }
 
