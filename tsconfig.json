@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "references": [
+    { "path": "packages/core" },
+    { "path": "packages/nucleation" },
+    { "path": "packages/regime-shift" },
+    { "path": "packages/threat-pulse" },
+    { "path": "packages/churn-harbinger" },
+    { "path": "packages/org-canary" },
+    { "path": "packages/supply-sentinel" },
+    { "path": "packages/sensor-shift" },
+    { "path": "packages/crowd-phase" },
+    { "path": "packages/patient-drift" },
+    { "path": "packages/match-pulse" },
+    { "path": "packages/market-canary" }
+  ],
+  "include": [],
+  "exclude": ["node_modules", "dist", "coverage"]
+}
