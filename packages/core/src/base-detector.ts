@@ -9,7 +9,6 @@ import { initialize, getModule, type NucleationDetectorInstance } from './wasm-l
 import {
   type DetectorConfig,
   type DetectorState,
-  type Sensitivity,
   DEFAULT_CONFIG,
   PHASE_TO_NUMERIC,
 } from './types.js';
