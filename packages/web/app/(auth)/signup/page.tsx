@@ -54,16 +54,18 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">LatticeForge</h1>
-          <p className="text-slate-400 mt-2">Create your account</p>
-        </div>
+    <div className="min-h-screen bg-slate-950 flex">
+      {/* Left side - Form */}
+      <div className="flex-1 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-white">LatticeForge</h1>
+            <p className="text-slate-400 mt-2">Create your account</p>
+          </div>
 
-        {/* Form */}
-        <div className="bg-slate-900 rounded-xl border border-slate-800 p-8">
+          {/* Form */}
+          <div className="bg-slate-900 rounded-xl border border-slate-800 p-8">
           {error && (
             <div className="mb-6 p-4 bg-red-900/20 border border-red-800 rounded-lg text-red-400 text-sm">
               {error}
@@ -169,13 +171,31 @@ export default function SignupPage() {
           </form>
         </div>
 
-        {/* Sign in link */}
-        <p className="text-center text-slate-400 mt-6">
-          Already have an account?{' '}
-          <Link href="/login" className="text-blue-400 hover:text-blue-300">
-            Sign in
-          </Link>
-        </p>
+          {/* Sign in link */}
+          <p className="text-center text-slate-400 mt-6">
+            Already have an account?{' '}
+            <Link href="/login" className="text-blue-400 hover:text-blue-300">
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </div>
+
+      {/* Right side - Hero image (hidden on mobile) */}
+      <div className="hidden lg:flex flex-1 items-center justify-center p-12 bg-gradient-to-br from-slate-900 to-slate-950 border-l border-slate-800">
+        <div className="max-w-lg text-center">
+          <img
+            src="/images/hero/simulation-globe.png"
+            alt="Global simulation visualization"
+            className="w-full h-auto rounded-2xl shadow-2xl shadow-cyan-500/20 mb-8"
+          />
+          <h2 className="text-2xl font-bold text-white mb-3">
+            Early warning for phase transitions
+          </h2>
+          <p className="text-slate-400">
+            Detect the calm before the storm. Our attractor dynamics model predicts geopolitical shifts with 72% accuracy at a 30-day horizon.
+          </p>
+        </div>
       </div>
     </div>
   );
