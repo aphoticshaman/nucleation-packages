@@ -37,9 +37,9 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  // Protected routes
+  // Protected routes (including home page)
   const protectedPaths = ['/admin', '/dashboard', '/app'];
-  const isProtected = protectedPaths.some((p) => path.startsWith(p));
+  const isProtected = protectedPaths.some((p) => path.startsWith(p)) || path === '/';
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone();
@@ -79,6 +79,8 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    // Home page
+    '/',
     // Protected routes
     '/admin/:path*',
     '/dashboard/:path*',
