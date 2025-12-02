@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useWasm } from '@/hooks/useWasm';
 import { useSupabaseNations } from '@/hooks/useSupabaseNations';
+import { useIntelBriefing, getRiskBadgeStyle } from '@/hooks/useIntelBriefing';
 
 // Dynamic import for map (client-side only)
 const AttractorMap = dynamic(() => import('@/components/AttractorMap'), {
@@ -205,6 +206,7 @@ export default function ConsumerDashboard() {
   const { wasm, loading: wasmLoading } = useWasm();
   const { nations: allNations, edges: allEdges, loading: dataLoading } = useSupabaseNations();
   const [selectedPreset, setSelectedPreset] = useState('global');
+  const { briefings, metadata, loading: intelLoading } = useIntelBriefing(selectedPreset);
   const [selectedLayer, setSelectedLayer] = useState<'basin' | 'risk' | 'regime'>('basin');
   const [skillLevel, setSkillLevel] = useState<SkillLevel>('standard');
   const [isSimulating, setIsSimulating] = useState(false);
@@ -351,166 +353,327 @@ export default function ConsumerDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-4 md:gap-6 2xl:gap-8">
         {/* Flashpoint Summary Panel - Left sidebar on desktop */}
         <div className="lg:col-span-2 xl:col-span-2 2xl:col-span-2 order-2 lg:order-1">
-          <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 lg:p-5 space-y-4 lg:sticky lg:top-20">
+          <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 lg:p-5 space-y-4 lg:sticky lg:top-20 max-h-[calc(100vh-6rem)] overflow-y-auto">
             <div className="flex items-center justify-between">
               <h2 className="text-base lg:text-lg font-semibold text-white flex items-center gap-2">
                 <span>📡</span>
                 <span>Intel Briefing</span>
               </h2>
-              <span className="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded">Live</span>
+              {metadata && (
+                <span
+                  className={`text-xs px-2 py-1 rounded border ${getRiskBadgeStyle(metadata.overallRisk)}`}
+                >
+                  {metadata.overallRisk.toUpperCase()}
+                </span>
+              )}
             </div>
 
             {/* Location-based context */}
             <div className="text-xs text-slate-400 border-b border-slate-800 pb-3">
-              <span className="text-blue-400">Based on your region</span> • Updated 2h ago
+              <span className="text-blue-400">{metadata?.region || 'Global'}</span> •{' '}
+              {intelLoading ? (
+                <span className="animate-pulse">Analyzing...</span>
+              ) : (
+                `Updated ${metadata?.timestamp ? new Date(metadata.timestamp).toLocaleTimeString() : 'now'}`
+              )}
             </div>
 
-            {/* Political */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-amber-400 flex items-center gap-2">
-                <span>🏛️</span> Political
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ante ipsum
-                primis in faucibus orci luctus.
-              </p>
-            </div>
+            {intelLoading ? (
+              <div className="space-y-4">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="space-y-2 animate-pulse">
+                    <div className="h-4 bg-slate-800 rounded w-24" />
+                    <div className="h-3 bg-slate-800 rounded w-full" />
+                    <div className="h-3 bg-slate-800 rounded w-3/4" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                {/* Political */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-amber-400 flex items-center gap-2">
+                    <span>🏛️</span> Political
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.political || 'No data available'}
+                  </p>
+                </div>
 
-            {/* Economic & Trade */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-green-400 flex items-center gap-2">
-                <span>📈</span> Economic & Trade
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium
-                doloremque laudantium.
-              </p>
-            </div>
+                {/* Economic & Trade */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-green-400 flex items-center gap-2">
+                    <span>📈</span> Economic & Trade
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.economic || 'No data available'}
+                  </p>
+                </div>
 
-            {/* Security & Diplomacy */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-red-400 flex items-center gap-2">
-                <span>⚔️</span> Security & Diplomacy
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia
-                consequuntur.
-              </p>
-            </div>
+                {/* Security & Diplomacy */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-red-400 flex items-center gap-2">
+                    <span>⚔️</span> Security & Diplomacy
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.security || 'No data available'}
+                  </p>
+                </div>
 
-            {/* Financial */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-blue-400 flex items-center gap-2">
-                <span>💰</span> Financial
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit
-                laboriosam.
-              </p>
-            </div>
+                {/* Financial */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-blue-400 flex items-center gap-2">
+                    <span>💰</span> Financial
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.financial || 'No data available'}
+                  </p>
+                </div>
 
-            {/* Health */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-pink-400 flex items-center gap-2">
-                <span>🏥</span> Health
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil
-                molestiae.
-              </p>
-            </div>
+                {/* Health */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-pink-400 flex items-center gap-2">
+                    <span>🏥</span> Health
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.health || 'No data available'}
+                  </p>
+                </div>
 
-            {/* Science & Tech */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-cyan-400 flex items-center gap-2">
-                <span>🔬</span> Science & Tech
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis
-                praesentium.
-              </p>
-            </div>
+                {/* Science & Tech */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-cyan-400 flex items-center gap-2">
+                    <span>🔬</span> Science & Tech
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.scitech || 'No data available'}
+                  </p>
+                </div>
 
-            {/* Natural Resources */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-emerald-400 flex items-center gap-2">
-                <span>🌿</span> Natural Resources
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo
-                minus.
-              </p>
-            </div>
+                {/* Natural Resources */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-emerald-400 flex items-center gap-2">
+                    <span>🌿</span> Natural Resources
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.resources || 'No data available'}
+                  </p>
+                </div>
 
-            {/* Crime & Drugs */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-orange-400 flex items-center gap-2">
-                <span>🚨</span> Crime & Drugs
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe
-                eveniet.
-              </p>
-            </div>
+                {/* Crime & Drugs */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-orange-400 flex items-center gap-2">
+                    <span>🚨</span> Crime & Drugs
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.crime || 'No data available'}
+                  </p>
+                </div>
 
-            {/* Cyber Threats */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-violet-400 flex items-center gap-2">
-                <span>💻</span> Cyber Threats
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus
-                maiores.
-              </p>
-            </div>
+                {/* Cyber Threats */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-violet-400 flex items-center gap-2">
+                    <span>💻</span> Cyber Threats
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.cyber || 'No data available'}
+                  </p>
+                </div>
 
-            {/* Terrorism & Extremism */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-rose-400 flex items-center gap-2">
-                <span>⚡</span> Terrorism & Extremism
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore soluta.
-              </p>
-            </div>
+                {/* Terrorism & Extremism */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-rose-400 flex items-center gap-2">
+                    <span>⚡</span> Terrorism & Extremism
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.terrorism || 'No data available'}
+                  </p>
+                </div>
 
-            {/* Domestic Instability */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-yellow-400 flex items-center gap-2">
-                <span>🔥</span> Domestic Instability
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam.
-              </p>
-            </div>
+                {/* Domestic Instability */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-yellow-400 flex items-center gap-2">
+                    <span>🔥</span> Domestic Instability
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.domestic || 'No data available'}
+                  </p>
+                </div>
 
-            {/* Border & Incursions */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                <span>🗺️</span> Border & Incursions
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium
-                doloremque.
-              </p>
-            </div>
+                {/* Border & Incursions */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                    <span>🗺️</span> Border & Incursions
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.borders || 'No data available'}
+                  </p>
+                </div>
 
-            {/* Media & Info Ops */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-indigo-400 flex items-center gap-2">
-                <span>📺</span> Media & Info Ops
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit
-                consequuntur.
-              </p>
-            </div>
+                {/* Media & Info Ops */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-indigo-400 flex items-center gap-2">
+                    <span>📺</span> Media & Info Ops
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.infoops || 'No data available'}
+                  </p>
+                </div>
+
+                {/* Military */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-stone-400 flex items-center gap-2">
+                    <span>🎖️</span> Military
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.military || 'No data available'}
+                  </p>
+                </div>
+
+                {/* Space */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-purple-400 flex items-center gap-2">
+                    <span>🛰️</span> Space
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.space || 'No data available'}
+                  </p>
+                </div>
+
+                {/* Industry & Manufacturing */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-zinc-400 flex items-center gap-2">
+                    <span>🏭</span> Industry
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.industry || 'No data available'}
+                  </p>
+                </div>
+
+                {/* Logistics */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-amber-500 flex items-center gap-2">
+                    <span>🚢</span> Logistics
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.logistics || 'No data available'}
+                  </p>
+                </div>
+
+                {/* Minerals */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-teal-400 flex items-center gap-2">
+                    <span>⛏️</span> Minerals
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.minerals || 'No data available'}
+                  </p>
+                </div>
+
+                {/* Energy & Petrochemicals */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-lime-400 flex items-center gap-2">
+                    <span>⚡</span> Energy
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.energy || 'No data available'}
+                  </p>
+                </div>
+
+                {/* Markets & Exchanges */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-sky-400 flex items-center gap-2">
+                    <span>📊</span> Markets
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.markets || 'No data available'}
+                  </p>
+                </div>
+
+                {/* Religious & Ideological */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-fuchsia-400 flex items-center gap-2">
+                    <span>🕊️</span> Religious & Ideological
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.religious || 'No data available'}
+                  </p>
+                </div>
+
+                {/* Education */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-blue-300 flex items-center gap-2">
+                    <span>🎓</span> Education
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.education || 'No data available'}
+                  </p>
+                </div>
+
+                {/* Employment */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-green-300 flex items-center gap-2">
+                    <span>💼</span> Employment
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.employment || 'No data available'}
+                  </p>
+                </div>
+
+                {/* Housing */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-orange-300 flex items-center gap-2">
+                    <span>🏠</span> Housing
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.housing || 'No data available'}
+                  </p>
+                </div>
+
+                {/* Crypto */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-yellow-300 flex items-center gap-2">
+                    <span>₿</span> Crypto
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {briefings?.crypto || 'No data available'}
+                  </p>
+                </div>
+
+                {/* Emerging Trends */}
+                <div className="space-y-2 pt-3 border-t border-slate-800/50">
+                  <h3 className="text-sm font-medium text-white flex items-center gap-2">
+                    <span>🔮</span> Emerging Trends
+                  </h3>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    {briefings?.emerging || 'No data available'}
+                  </p>
+                </div>
+
+                {/* Next Strategic Move */}
+                {briefings?.nsm && (
+                  <div className="space-y-2 pt-3 border-t border-blue-800/50 bg-blue-950/30 -mx-4 px-4 py-3 rounded-lg">
+                    <h3 className="text-sm font-medium text-blue-300 flex items-center gap-2">
+                      <span>🎯</span> Next Strategic Move
+                    </h3>
+                    <p className="text-xs text-blue-200 leading-relaxed">{briefings.nsm}</p>
+                  </div>
+                )}
+
+                {/* Summary */}
+                {briefings?.summary && (
+                  <div className="mt-4 pt-4 border-t border-slate-800">
+                    <p className="text-xs text-slate-300 italic">{briefings.summary}</p>
+                  </div>
+                )}
+              </>
+            )}
 
             {/* Subscription upsell */}
             <div className="mt-4 pt-4 border-t border-slate-800">
               <p className="text-xs text-slate-500 text-center">
                 <span className="text-blue-400 cursor-pointer hover:underline">Upgrade to Pro</span>{' '}
-                for real-time alerts
+                for real-time alerts & deeper analysis
               </p>
             </div>
           </div>
