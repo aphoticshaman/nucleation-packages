@@ -1,15 +1,29 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy initialization to avoid build-time errors
+let supabase: SupabaseClient | null = null;
+let anthropic: Anthropic | null = null;
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-});
+function getSupabase() {
+  if (!supabase) {
+    supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return supabase;
+}
+
+function getAnthropic() {
+  if (!anthropic) {
+    anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY!,
+    });
+  }
+  return anthropic;
+}
 
 // RSS feeds by domain
 const RSS_SOURCES: Record<string, { url: string; domain: string }[]> = {
@@ -148,7 +162,7 @@ Respond in this exact JSON format:
 Only output the JSON, nothing else.`;
 
   try {
-    const response = await anthropic.messages.create({
+    const response = await getAnthropic().messages.create({
       model: 'claude-3-haiku-20240307',
       max_tokens: 1024,
       messages: [{ role: 'user', content: prompt }],
@@ -216,7 +230,7 @@ export async function GET(request: Request) {
       results.generated++;
 
       // Store in Supabase
-      const { error } = await supabase.from('training_examples').insert({
+      const { error } = await getSupabase().from('training_examples').insert({
         instruction: example.instruction,
         input: example.input,
         output: example.output,
@@ -243,7 +257,7 @@ export async function GET(request: Request) {
   }
 
   // Get total count
-  const { count } = await supabase
+  const { count } = await getSupabase()
     .from('training_examples')
     .select('*', { count: 'exact', head: true });
 
@@ -259,7 +273,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const { format = 'alpaca', mark_exported = false } = await request.json();
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('training_examples')
     .select('id, instruction, input, output')
     .eq('exported', false)
@@ -272,7 +286,7 @@ export async function POST(request: Request) {
 
   if (mark_exported && data.length > 0) {
     const ids = data.map(d => d.id);
-    await supabase
+    await getSupabase()
       .from('training_examples')
       .update({ exported: true })
       .in('id', ids);
