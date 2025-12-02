@@ -56,14 +56,21 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  // Protected routes (including home page)
+  // Protected routes
   const protectedPaths = ['/admin', '/dashboard', '/app'];
   const isProtected = protectedPaths.some((p) => path.startsWith(p)) || path === '/';
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
-    url.searchParams.set('redirect', path);
+    url.searchParams.set('redirect', path === '/' ? '/app' : path);
+    return NextResponse.redirect(url);
+  }
+
+  // Redirect logged-in users from home to /app
+  if (path === '/' && user) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/app';
     return NextResponse.redirect(url);
   }
 
