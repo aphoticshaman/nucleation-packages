@@ -82,7 +82,7 @@ async function exportTrainingData() {
     if (!signalsByDomain[event.domain]) {
       signalsByDomain[event.domain] = [];
     }
-    signalsByDomain[event.domain].push(event);
+    signalsByDomain[event.domain]!.push(event);
   }
 
   // Generate synthetic causal reasoning examples
