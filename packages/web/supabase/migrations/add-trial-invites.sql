@@ -5,7 +5,7 @@
 -- TRIAL INVITES TABLE
 -- ============================================
 
-CREATE TABLE trial_invites (
+CREATE TABLE IF NOT EXISTS trial_invites (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
     -- Invite details
@@ -28,8 +28,8 @@ CREATE TABLE trial_invites (
 );
 
 -- Index for token lookups
-CREATE INDEX idx_trial_invites_token ON trial_invites(token);
-CREATE INDEX idx_trial_invites_email ON trial_invites(email);
+CREATE INDEX IF NOT EXISTS idx_trial_invites_token ON trial_invites(token);
+CREATE INDEX IF NOT EXISTS idx_trial_invites_email ON trial_invites(email);
 
 -- ============================================
 -- ROW LEVEL SECURITY
@@ -38,6 +38,7 @@ CREATE INDEX idx_trial_invites_email ON trial_invites(email);
 ALTER TABLE trial_invites ENABLE ROW LEVEL SECURITY;
 
 -- Admins can manage all invites
+DROP POLICY IF EXISTS "Admins can manage trial invites" ON trial_invites;
 CREATE POLICY "Admins can manage trial invites"
     ON trial_invites FOR ALL
     USING (
