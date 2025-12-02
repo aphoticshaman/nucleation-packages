@@ -55,8 +55,9 @@ export const PLANS = {
   },
   starter: {
     name: 'Starter',
-    price: 49,
+    price: 19,
     interval: 'month' as const,
+    popular: true,
     features: [
       '1,000 API calls/month',
       '3 team seats',
@@ -73,9 +74,8 @@ export const PLANS = {
   },
   pro: {
     name: 'Pro',
-    price: 199,
+    price: 49,
     interval: 'month' as const,
-    popular: true,
     features: [
       '10,000 API calls/month',
       '10 team seats',
@@ -83,7 +83,6 @@ export const PLANS = {
       'Real-time streaming',
       'Advanced webhooks',
       'Priority support',
-      'Executive reports',
     ],
     limits: {
       simulations_per_day: -1,
@@ -94,10 +93,10 @@ export const PLANS = {
   },
   enterprise: {
     name: 'Enterprise',
-    price: 499,
+    price: null, // Custom pricing
     interval: 'month' as const,
     features: [
-      '100,000+ API calls/month',
+      'Unlimited API calls',
       'Unlimited team seats',
       'Full API suite',
       'Custom integrations',
@@ -108,7 +107,7 @@ export const PLANS = {
     limits: {
       simulations_per_day: -1,
       saved_simulations: -1,
-      api_calls: 100000,
+      api_calls: -1,
       team_seats: -1,
     },
   },

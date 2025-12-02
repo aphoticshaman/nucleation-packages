@@ -2,33 +2,99 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PLANS, PlanId } from '@/lib/stripe';
 
-const PLAN_ORDER: PlanId[] = ['free', 'starter', 'pro', 'enterprise'];
+// Plans shown to users - only show prices for self-serve tiers
+const VISIBLE_PLANS = [
+  {
+    id: 'free',
+    name: 'Free',
+    price: 0,
+    priceLabel: '$0',
+    interval: 'forever',
+    features: [
+      '10 simulations per day',
+      '5 saved simulations',
+      'Basic visualizations',
+      'Community support',
+    ],
+    cta: 'Get Started',
+    href: '/signup',
+  },
+  {
+    id: 'starter',
+    name: 'Starter',
+    price: 19,
+    priceLabel: '$19',
+    interval: 'month',
+    features: [
+      '1,000 API calls/month',
+      '3 team seats',
+      'REST API access',
+      'Basic webhooks',
+      'Email support',
+    ],
+    cta: 'Subscribe',
+    popular: true,
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    price: 49,
+    priceLabel: '$49',
+    interval: 'month',
+    features: [
+      '10,000 API calls/month',
+      '10 team seats',
+      'REST + WebSocket APIs',
+      'Real-time streaming',
+      'Advanced webhooks',
+      'Priority support',
+    ],
+    cta: 'Subscribe',
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    price: null, // Hidden
+    priceLabel: 'Custom',
+    interval: null,
+    features: [
+      'Unlimited API calls',
+      'Unlimited team seats',
+      'Full API suite',
+      'Custom integrations',
+      'SLA guarantee',
+      'Dedicated support',
+      'On-premise option',
+    ],
+    cta: 'Contact Sales',
+    href: 'mailto:contact@crystallinelabs.io?subject=LatticeForge%20Enterprise%20Inquiry',
+  },
+];
 
 export default function PricingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const handleSelectPlan = async (planId: PlanId) => {
-    if (planId === 'free') {
-      router.push('/signup');
+  const handleSelectPlan = async (plan: typeof VISIBLE_PLANS[0]) => {
+    // Direct link (free or enterprise)
+    if (plan.href) {
+      if (plan.href.startsWith('mailto:')) {
+        window.location.href = plan.href;
+      } else {
+        router.push(plan.href);
+      }
       return;
     }
 
-    if (planId === 'enterprise') {
-      // Contact sales for enterprise
-      window.location.href = 'mailto:sales@latticeforge.io?subject=Enterprise%20Inquiry';
-      return;
-    }
-
-    setLoading(planId);
+    // Stripe checkout for paid plans
+    setLoading(plan.id);
 
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId }),
+        body: JSON.stringify({ planId: plan.id }),
       });
 
       const { url, error } = await res.json();
@@ -41,7 +107,7 @@ export default function PricingPage() {
       if (url) {
         window.location.href = url;
       }
-    } catch (err) {
+    } catch {
       alert('Failed to create checkout session');
     } finally {
       setLoading(null);
@@ -50,7 +116,7 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 py-20 px-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-white mb-4">
@@ -62,79 +128,68 @@ export default function PricingPage() {
         </div>
 
         {/* Plans grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {PLAN_ORDER.map((planId) => {
-            const plan = PLANS[planId];
-            const isPopular = 'popular' in plan && plan.popular;
-
-            return (
-              <div
-                key={planId}
-                className={`relative bg-slate-900 rounded-2xl border ${
-                  isPopular ? 'border-blue-500' : 'border-slate-800'
-                } p-8 flex flex-col`}
-              >
-                {isPopular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded-full">
-                    Most Popular
-                  </div>
-                )}
-
-                <div className="mb-6">
-                  <h3 className="text-xl font-bold text-white">{plan.name}</h3>
-                  <div className="mt-4">
-                    <span className="text-4xl font-bold text-white">
-                      ${plan.price}
-                    </span>
-                    {plan.price > 0 && (
-                      <span className="text-slate-400">/{plan.interval}</span>
-                    )}
-                  </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {VISIBLE_PLANS.map((plan) => (
+            <div
+              key={plan.id}
+              className={`relative bg-slate-900 rounded-2xl border ${
+                plan.popular ? 'border-blue-500' : 'border-slate-800'
+              } p-6 flex flex-col`}
+            >
+              {plan.popular && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded-full">
+                  Most Popular
                 </div>
+              )}
 
-                <ul className="space-y-4 mb-8 flex-1">
-                  {plan.features.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <svg
-                        className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      <span className="text-slate-300 text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  onClick={() => handleSelectPlan(planId)}
-                  disabled={loading === planId}
-                  className={`w-full py-3 rounded-lg font-medium transition-colors ${
-                    isPopular
-                      ? 'bg-blue-600 text-white hover:bg-blue-500'
-                      : planId === 'enterprise'
-                      ? 'bg-slate-800 text-white hover:bg-slate-700 border border-slate-700'
-                      : 'bg-slate-800 text-white hover:bg-slate-700'
-                  } ${loading === planId ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {loading === planId
-                    ? 'Loading...'
-                    : planId === 'free'
-                    ? 'Get Started'
-                    : planId === 'enterprise'
-                    ? 'Contact Sales'
-                    : 'Subscribe'}
-                </button>
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-white">{plan.name}</h3>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold text-white">
+                    {plan.priceLabel}
+                  </span>
+                  {plan.interval && (
+                    <span className="text-slate-400">/{plan.interval}</span>
+                  )}
+                </div>
               </div>
-            );
-          })}
+
+              <ul className="space-y-3 mb-8 flex-1">
+                {plan.features.map((feature, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <svg
+                      className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span className="text-slate-300 text-sm">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                onClick={() => handleSelectPlan(plan)}
+                disabled={loading === plan.id}
+                className={`w-full py-3 rounded-lg font-medium transition-colors ${
+                  plan.popular
+                    ? 'bg-blue-600 text-white hover:bg-blue-500'
+                    : plan.id === 'enterprise'
+                    ? 'bg-gradient-to-r from-slate-800 to-slate-700 text-white hover:from-slate-700 hover:to-slate-600 border border-slate-600'
+                    : 'bg-slate-800 text-white hover:bg-slate-700'
+                } ${loading === plan.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {loading === plan.id ? 'Loading...' : plan.cta}
+              </button>
+            </div>
+          ))}
         </div>
 
         {/* FAQ */}
@@ -191,7 +246,7 @@ export default function PricingPage() {
             Need a custom plan for your organization?
           </p>
           <a
-            href="mailto:sales@latticeforge.io"
+            href="mailto:contact@crystallinelabs.io?subject=LatticeForge%20Custom%20Plan"
             className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300"
           >
             Contact our sales team

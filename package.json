@@ -19,7 +19,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "prepare": "husky",
+    "prepare": "husky || true",
     "publish:all": "npm publish --workspaces --access public",
     "monitor": "node harness/src/index.js",
     "ablation": "node harness/src/ablation-tests.js"
