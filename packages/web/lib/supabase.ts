@@ -1,9 +1,80 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Lazy-initialized Supabase client (avoids build-time env var access)
+let _supabase: SupabaseClient | null = null;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Check if we're in a browser environment
+const isBrowser = typeof window !== 'undefined';
+
+// Mock handler for build-time/SSR when env vars aren't available
+const mockHandler: ProxyHandler<object> = {
+  get(target, prop) {
+    // Return mock implementations for common patterns
+    if (prop === 'auth') {
+      return new Proxy({}, mockHandler);
+    }
+    if (prop === 'from') {
+      return () => new Proxy({}, mockHandler);
+    }
+    if (prop === 'channel') {
+      return () => new Proxy({}, mockHandler);
+    }
+    if (prop === 'removeChannel') {
+      return () => Promise.resolve();
+    }
+    // For method chains like .select(), .eq(), etc.
+    if (typeof prop === 'string') {
+      return (..._args: unknown[]) => new Proxy({}, {
+        get(_, p) {
+          if (p === 'then') return undefined; // Not a promise
+          if (p === 'data') return null;
+          if (p === 'error') return null;
+          return () => new Proxy({}, mockHandler);
+        }
+      });
+    }
+    return undefined;
+  },
+};
+
+function getSupabase(): SupabaseClient {
+  // Return cached client if available
+  if (_supabase) {
+    return _supabase;
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // During build/SSR without env vars, return a mock that won't throw
+  if (!supabaseUrl || !supabaseAnonKey) {
+    if (!isBrowser) {
+      // During SSR/build, return a mock that doesn't throw
+      return new Proxy({}, mockHandler) as unknown as SupabaseClient;
+    }
+    // On client without env vars (shouldn't happen in production)
+    console.error('Supabase environment variables not configured');
+    return new Proxy({}, mockHandler) as unknown as SupabaseClient;
+  }
+
+  _supabase = createClient(supabaseUrl, supabaseAnonKey);
+  return _supabase;
+}
+
+// Export the getter directly
+export { getSupabase };
+
+// For backwards compatibility, export a lazy accessor
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_, prop) {
+    const client = getSupabase();
+    const value = (client as unknown as Record<string, unknown>)[prop as string];
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+    return value;
+  },
+});
 
 // Types for database tables
 export interface Database {

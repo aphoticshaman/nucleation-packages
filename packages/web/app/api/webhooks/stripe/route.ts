@@ -2,13 +2,20 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { stripe, PLANS, PlanId } from '@/lib/stripe';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Create admin Supabase client for webhook
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy-initialized Supabase admin client (avoids build-time env var access)
+let _supabaseAdmin: SupabaseClient | null = null;
+
+function getSupabaseAdmin(): SupabaseClient {
+  if (!_supabaseAdmin) {
+    _supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabaseAdmin;
+}
 
 export async function POST(req: Request) {
   const body = await req.text();
@@ -85,7 +92,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
   }
 
   // Update organization with Stripe customer ID
-  await supabaseAdmin
+  await getSupabaseAdmin()
     .from('organizations')
     .update({
       stripe_customer_id: session.customer as string,
@@ -109,7 +116,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   const planLimits = PLANS[plan as PlanId]?.limits;
 
   // Update organization
-  await supabaseAdmin
+  await getSupabaseAdmin()
     .from('organizations')
     .update({
       plan,
@@ -120,7 +127,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     .eq('id', organizationId);
 
   // Update user role to enterprise
-  await supabaseAdmin
+  await getSupabaseAdmin()
     .from('profiles')
     .update({ role: 'enterprise' })
     .eq('organization_id', organizationId);
@@ -137,7 +144,7 @@ async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
   }
 
   // Downgrade to free
-  await supabaseAdmin
+  await getSupabaseAdmin()
     .from('organizations')
     .update({
       plan: 'free',
@@ -148,7 +155,7 @@ async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
     .eq('id', organizationId);
 
   // Downgrade users to consumer
-  await supabaseAdmin
+  await getSupabaseAdmin()
     .from('profiles')
     .update({ role: 'consumer' })
     .eq('organization_id', organizationId);
@@ -160,7 +167,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   const customerId = invoice.customer as string;
 
   // Get organization by customer ID
-  const { data: org } = await supabaseAdmin
+  const { data: org } = await getSupabaseAdmin()
     .from('organizations')
     .select('id')
     .eq('stripe_customer_id', customerId)
@@ -168,7 +175,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 
   if (org) {
     // Reset API usage for the new billing period
-    await supabaseAdmin
+    await getSupabaseAdmin()
       .from('organizations')
       .update({ api_calls_used: 0 })
       .eq('id', org.id);
@@ -181,7 +188,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   const customerId = invoice.customer as string;
 
   // Get organization by customer ID
-  const { data: org } = await supabaseAdmin
+  const { data: org } = await getSupabaseAdmin()
     .from('organizations')
     .select('id, name')
     .eq('stripe_customer_id', customerId)
@@ -189,7 +196,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 
   if (org) {
     // Update status to past_due
-    await supabaseAdmin
+    await getSupabaseAdmin()
       .from('organizations')
       .update({ plan_status: 'past_due' })
       .eq('id', org.id);
