@@ -87,7 +87,7 @@ async function exportTrainingData() {
 
   // Generate synthetic causal reasoning examples
   for (const [domain, events] of Object.entries(signalsByDomain)) {
-    if (events.length < 5) continue;
+    if (!events || events.length < 5) continue;
 
     const recentEvents = events.slice(0, 5);
     const signals = recentEvents.map(e => {
