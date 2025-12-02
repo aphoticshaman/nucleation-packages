@@ -30,8 +30,8 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-# WASM (copied from research/rust/pkg)
-lib/wasm/
+# WASM - committed for Vercel (no Rust on Vercel)
+# lib/wasm/
 
 # TypeScript
 *.tsbuildinfo
