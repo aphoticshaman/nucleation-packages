@@ -4,10 +4,16 @@ import { NextResponse, type NextRequest } from 'next/server';
 // Use Node.js runtime instead of Edge (Supabase SSR uses Node.js APIs)
 export const runtime = 'nodejs';
 
+// Cookie domain for cross-subdomain auth (auth.latticeforge.ai ↔ latticeforge.ai)
+const COOKIE_DOMAIN = '.latticeforge.ai';
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
+
+  // Check if we're on latticeforge.ai (not localhost)
+  const isProduction = request.nextUrl.hostname.includes('latticeforge.ai');
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,14 +28,24 @@ export async function middleware(request: NextRequest) {
           supabaseResponse = NextResponse.next({
             request,
           });
-          supabaseResponse.cookies.set(name, value, options);
+          // Set cookie with cross-subdomain domain in production
+          const cookieOptions = {
+            ...options,
+            ...(isProduction && { domain: COOKIE_DOMAIN }),
+          };
+          supabaseResponse.cookies.set(name, value, cookieOptions);
         },
         remove(name: string, options: Record<string, unknown>) {
           request.cookies.set(name, '');
           supabaseResponse = NextResponse.next({
             request,
           });
-          supabaseResponse.cookies.set(name, '', options);
+          // Remove cookie with cross-subdomain domain in production
+          const cookieOptions = {
+            ...options,
+            ...(isProduction && { domain: COOKIE_DOMAIN }),
+          };
+          supabaseResponse.cookies.set(name, '', cookieOptions);
         },
       },
     }
