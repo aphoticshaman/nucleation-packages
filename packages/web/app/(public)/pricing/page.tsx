@@ -2,11 +2,24 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import TierBadge, { TierType } from '@/components/TierBadge';
 
 // Plans shown to users - only show prices for self-serve tiers
-const VISIBLE_PLANS = [
+const VISIBLE_PLANS: {
+  id: string;
+  tier: TierType;
+  name: string;
+  price: number | null;
+  priceLabel: string;
+  interval: string | null;
+  features: string[];
+  cta: string;
+  popular?: boolean;
+  href?: string;
+}[] = [
   {
     id: 'free',
+    tier: 'trial',
     name: 'Free',
     price: 0,
     priceLabel: '$0',
@@ -22,6 +35,7 @@ const VISIBLE_PLANS = [
   },
   {
     id: 'starter',
+    tier: 'starter',
     name: 'Starter',
     price: 19,
     priceLabel: '$19',
@@ -38,6 +52,7 @@ const VISIBLE_PLANS = [
   },
   {
     id: 'pro',
+    tier: 'pro',
     name: 'Pro',
     price: 49,
     priceLabel: '$49',
@@ -54,6 +69,7 @@ const VISIBLE_PLANS = [
   },
   {
     id: 'enterprise',
+    tier: 'enterprise',
     name: 'Enterprise',
     price: null, // Hidden
     priceLabel: 'Custom',
@@ -142,7 +158,12 @@ export default function PricingPage() {
                 </div>
               )}
 
-              <div className="mb-6">
+              {/* Tier Badge */}
+              <div className="flex justify-center mb-4">
+                <TierBadge tier={plan.tier} size="lg" />
+              </div>
+
+              <div className="mb-6 text-center">
                 <h3 className="text-xl font-bold text-white">{plan.name}</h3>
                 <div className="mt-4">
                   <span className="text-4xl font-bold text-white">
