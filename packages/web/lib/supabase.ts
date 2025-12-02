@@ -1,4 +1,5 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 // Lazy-initialized Supabase client (avoids build-time env var access)
 let _supabase: SupabaseClient | null = null;
@@ -6,13 +7,8 @@ let _supabase: SupabaseClient | null = null;
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
 
-// Cookie options for cross-subdomain auth (auth.latticeforge.ai ↔ latticeforge.ai)
-const cookieOptions = {
-  domain: '.latticeforge.ai',
-  path: '/',
-  sameSite: 'lax' as const,
-  secure: true,
-};
+// Cookie domain for cross-subdomain auth (auth.latticeforge.ai ↔ latticeforge.ai)
+const COOKIE_DOMAIN = '.latticeforge.ai';
 
 // Mock handler for build-time/SSR when env vars aren't available
 const mockHandler: ProxyHandler<object> = {
@@ -65,29 +61,18 @@ function getSupabase(): SupabaseClient {
     return new Proxy({}, mockHandler) as unknown as SupabaseClient;
   }
 
-  // Create client with cookie options for cross-subdomain auth
-  _supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      flowType: 'pkce',
-      // Only set cookie domain in production (not localhost)
-      ...(isBrowser && window.location.hostname.includes('latticeforge.ai') && {
-        storage: {
-          getItem: (key: string) => {
-            if (typeof document === 'undefined') return null;
-            const match = document.cookie.match(new RegExp('(^| )' + key + '=([^;]+)'));
-            return match ? decodeURIComponent(match[2]) : null;
-          },
-          setItem: (key: string, value: string) => {
-            if (typeof document === 'undefined') return;
-            document.cookie = `${key}=${encodeURIComponent(value)}; domain=${cookieOptions.domain}; path=${cookieOptions.path}; SameSite=${cookieOptions.sameSite}; ${cookieOptions.secure ? 'Secure' : ''}; max-age=31536000`;
-          },
-          removeItem: (key: string) => {
-            if (typeof document === 'undefined') return;
-            document.cookie = `${key}=; domain=${cookieOptions.domain}; path=${cookieOptions.path}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-          },
-        },
-      }),
-    },
+  // Check if we're in production (latticeforge.ai)
+  const isProduction = isBrowser && window.location.hostname.includes('latticeforge.ai');
+
+  // Create browser client from @supabase/ssr - this syncs auth to cookies
+  // so middleware can read the session server-side
+  _supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+    cookieOptions: isProduction ? {
+      domain: COOKIE_DOMAIN,
+      path: '/',
+      sameSite: 'lax',
+      secure: true,
+    } : undefined,
   });
   return _supabase;
 }
