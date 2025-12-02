@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useWasm } from '@/hooks/useWasm';
 import { useSupabaseNations } from '@/hooks/useSupabaseNations';
 import ControlPanel from '@/components/ControlPanel';
 import AlertBanner from '@/components/AlertBanner';
+import type { WasmGeospatialSystem } from '@/lib/wasm';
 
 // Dynamic import for Google Maps (no SSR)
 const AttractorMap = dynamic(() => import('@/components/AttractorMap'), {
@@ -15,30 +16,75 @@ const AttractorMap = dynamic(() => import('@/components/AttractorMap'), {
 
 export default function Home() {
   const { wasm, loading: wasmLoading, error: wasmError } = useWasm();
-  const { nations, edges, loading: dataLoading, refetch } = useSupabaseNations();
+  const { nations, edges, loading: dataLoading } = useSupabaseNations();
   const [layer, setLayer] = useState<'basin' | 'risk' | 'influence' | 'regime'>('basin');
   const [alertLevel, setAlertLevel] = useState<string>('normal');
   const [isSimulating, setIsSimulating] = useState(false);
+  const geoSystemRef = useRef<WasmGeospatialSystem | null>(null);
+
+  // Initialize geospatial system when WASM and nations are ready
+  useEffect(() => {
+    if (!wasm || nations.length === 0 || geoSystemRef.current) return;
+
+    try {
+      // Create geospatial system with 3 dimensions for attractor space
+      const geoSystem = new wasm.WasmGeospatialSystem(3);
+
+      // Add nations to the system
+      nations.forEach((nation) => {
+        const pos = new Float64Array(nation.position ?? [0, 0, 0]);
+        geoSystem.add_nation(
+          nation.code,
+          nation.name,
+          nation.lat,
+          nation.lon,
+          pos,
+          nation.regime ?? 0
+        );
+      });
+
+      // Add edges (esteem relationships)
+      edges.forEach((edge) => {
+        geoSystem.set_esteem(edge.source_code, edge.target_code, edge.esteem);
+      });
+
+      geoSystemRef.current = geoSystem;
+    } catch (err) {
+      console.error('Failed to initialize geospatial system:', err);
+    }
+  }, [wasm, nations, edges]);
 
   // Run simulation step
   const runStep = async () => {
-    if (!wasm) return;
+    const geoSystem = geoSystemRef.current;
+    if (!geoSystem) return;
 
     setIsSimulating(true);
     try {
-      // Call WASM geospatial step
-      const result = wasm.geospatial_step(nations);
+      // Run one step of the simulation
+      geoSystem.step();
 
-      // Update alert level based on TDA
-      if (result.max_transition_risk > 0.75) {
+      // Get GeoJSON for risk assessment
+      const riskJson = geoSystem.to_geojson('risk');
+      const riskData = JSON.parse(riskJson);
+
+      // Calculate max transition risk from features
+      const maxRisk = riskData.features?.reduce((max: number, f: { properties?: { risk?: number } }) => {
+        return Math.max(max, f.properties?.risk ?? 0);
+      }, 0) ?? 0;
+
+      // Update alert level based on risk
+      if (maxRisk > 0.75) {
         setAlertLevel('critical');
-      } else if (result.max_transition_risk > 0.5) {
+      } else if (maxRisk > 0.5) {
         setAlertLevel('warning');
-      } else if (result.max_transition_risk > 0.25) {
+      } else if (maxRisk > 0.25) {
         setAlertLevel('elevated');
       } else {
         setAlertLevel('normal');
       }
+    } catch (err) {
+      console.error('Simulation step failed:', err);
     } finally {
       setIsSimulating(false);
     }

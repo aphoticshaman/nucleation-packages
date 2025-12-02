@@ -63,18 +63,15 @@ export async function loadWasm(): Promise<WasmCore> {
 
       // For wasm-bindgen generated modules, we need to load the JS glue
       // and initialize it with the WASM bytes
-      const init = (await import(
-        /* webpackIgnore: true */
-        '/wasm/latticeforge_core.js'
-      )).default;
+      // @ts-expect-error - Runtime import from public folder, no types available
+      const initModule = await import(/* webpackIgnore: true */ '/wasm/latticeforge_core.js');
+      const init = initModule.default;
 
       await init(wasmBytes);
 
       // Re-import to get the exports after init
-      const wasm = await import(
-        /* webpackIgnore: true */
-        '/wasm/latticeforge_core.js'
-      );
+      // @ts-expect-error - Runtime import from public folder, no types available
+      const wasm = await import(/* webpackIgnore: true */ '/wasm/latticeforge_core.js');
 
       wasmModule = wasm as unknown as WasmCore;
       return wasmModule;

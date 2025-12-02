@@ -1,10 +1,27 @@
 import Stripe from 'stripe';
 
-// Initialize Stripe
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
-  typescript: true,
-});
+// Lazy-initialized Stripe client (avoids build-time env var access)
+let _stripe: Stripe | null = null;
+
+function getStripe(): Stripe {
+  if (!_stripe) {
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: '2023-10-16',
+      typescript: true,
+    });
+  }
+  return _stripe;
+}
+
+// Exported for compatibility with existing code
+export const stripe = {
+  get webhooks() { return getStripe().webhooks; },
+  get checkout() { return getStripe().checkout; },
+  get billingPortal() { return getStripe().billingPortal; },
+  get subscriptions() { return getStripe().subscriptions; },
+  get customers() { return getStripe().customers; },
+  get subscriptionItems() { return getStripe().subscriptionItems; },
+};
 
 // ============================================
 // STRIPE PRODUCTS TO CREATE IN DASHBOARD
