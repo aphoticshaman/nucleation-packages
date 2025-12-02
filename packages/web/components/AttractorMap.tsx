@@ -61,6 +61,8 @@ export default function AttractorMap({
       const mapInstance = new google.maps.Map(mapRef.current, {
         center: { lat: 20, lng: 0 },
         zoom: 2,
+        minZoom: 2,
+        maxZoom: 10,
         mapId: 'latticeforge-dark',
         styles: [
           { elementType: 'geometry', stylers: [{ color: '#1e293b' }] },
@@ -77,10 +79,20 @@ export default function AttractorMap({
             stylers: [{ color: '#475569' }],
           },
         ],
+        restriction: {
+          latLngBounds: {
+            north: 85,
+            south: -85,
+            west: -180,
+            east: 180,
+          },
+          strictBounds: true,
+        },
         disableDefaultUI: true,
         zoomControl: true,
         mapTypeControl: false,
         streetViewControl: false,
+        backgroundColor: '#0f172a',
       });
 
       setMap(mapInstance);
