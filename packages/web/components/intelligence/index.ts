@@ -16,11 +16,17 @@ export { PulseIndicator, PulseIndicatorLarge, useStaleness } from './PulseIndica
 // Component 04, 06, 07, 10: Signal Feed with Entity Chips & Source Badges
 export { SignalFeed, SourceBadge, EntityChip, mockSignals } from './SignalFeed';
 
+// Component 05: Sentiment Ambient Background
+export { SentimentBackground, SentimentBorder, SentimentIndicator, AggregateSentiment } from './SentimentBackground';
+
 // Component 18: Risk Weather Gauge
 export { RiskGauge, RiskGaugeMini, DefconGauge } from './RiskGauge';
 
 // Component 21: Event Horizon Time Slider
 export { TimeSlider, TimeSliderMini } from './TimeSlider';
+
+// Component 22: Causal Chain Navigator
+export { CausalChain, mockCausalNodes, mockCausalEdges } from './CausalChain';
 
 // Component 31: Logic Tree Inspector
 export { LogicTree, mockLogicTreeData } from './LogicTree';
@@ -28,5 +34,11 @@ export { LogicTree, mockLogicTreeData } from './LogicTree';
 // Component 32: SHAP Value Waterfall
 export { ShapWaterfall, ShapBar, mockShapFeatures } from './ShapWaterfall';
 
+// Component 33: Confidence Donut with Uncertainty
+export { ConfidenceDonut, ConfidenceBar, ConfidenceComparison } from './ConfidenceDonut';
+
 // Component 41: Command Palette (Ctrl+K)
 export { CommandPalette, useCommandPalette } from './CommandPalette';
+
+// Component 43: Toast Notification Stack
+export { ToastProvider, useToast, InlineToast } from './ToastNotifications';
