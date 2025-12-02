@@ -30,7 +30,7 @@ export default tseslint.config(
       // TypeScript - pragmatic for production stability
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       '@typescript-eslint/no-non-null-assertion': 'warn',
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-misused-promises': 'error',
@@ -72,9 +72,7 @@ export default tseslint.config(
       'packages/match-pulse/**',
       'packages/market-canary/**',
       'packages/nucleation/**',
-      // Data source packages (need separate security review for regex patterns)
-      'packages/sources/**',
-      'packages/compliance/**',
+      // Data source packages (security reviewed)
       // Web package JS config files
       'packages/web/*.js',
       'packages/web/public/**',
