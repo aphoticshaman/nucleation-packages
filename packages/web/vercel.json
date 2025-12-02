@@ -17,6 +17,10 @@
     {
       "path": "/api/ingest/sentiment",
       "schedule": "0 */2 * * *"
+    },
+    {
+      "path": "/api/compute/nation-risk",
+      "schedule": "30 */4 * * *"
     }
   ]
 }
