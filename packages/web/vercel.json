@@ -29,6 +29,10 @@
     {
       "path": "/api/analyze/cascades",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/flywheel/auto-score",
+      "schedule": "0 */6 * * *"
     }
   ]
 }
