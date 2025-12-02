@@ -1,6 +1,9 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+// Use Node.js runtime instead of Edge (Supabase SSR uses Node.js APIs)
+export const runtime = 'nodejs';
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
