@@ -1,0 +1,28 @@
+{
+  "name": "@latticeforge/source-cdc",
+  "version": "0.1.0",
+  "description": "CDC disease surveillance data source for LatticeForge",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "UNLICENSED",
+  "private": true,
+  "author": "Crystalline Labs LLC",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@latticeforge/compliance": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  },
+  "keywords": [
+    "cdc",
+    "disease-surveillance",
+    "public-health",
+    "epidemiology",
+    "healthcare"
+  ]
+}

@@ -19,6 +19,19 @@
 // Main detector
 export { SocialPulseDetector, type SocialPulseConfig } from './detector.js';
 
+// Dual-Fusion Engine (asymmetric leverage)
+export { DualFusionEngine } from './detector.js';
+
+export type {
+  ExternalAPIConfig,
+  FusionResult,
+  StreamCallback,
+  PerformanceMetrics,
+  TraceEntry,
+  DataTrace,
+  WasmBridgeStatus,
+} from './detector.js';
+
 // Types
 export type {
   SocialPost,

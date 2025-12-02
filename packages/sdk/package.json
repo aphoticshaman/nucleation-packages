@@ -1,0 +1,25 @@
+{
+  "name": "@latticeforge/sdk",
+  "version": "0.1.0",
+  "description": "LatticeForge SDK - 3 lines to signal intelligence",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "UNLICENSED",
+  "private": true,
+  "author": "Crystalline Labs LLC",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "keywords": [
+    "latticeforge",
+    "signal-intelligence",
+    "sdk"
+  ]
+}
