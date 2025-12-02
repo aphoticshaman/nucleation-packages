@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Disable built-in ESLint during builds - we use our own flat config at root
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   // Enable WASM support
   webpack: (config, { isServer }) => {
     // WASM support
