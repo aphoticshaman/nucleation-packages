@@ -25,6 +25,10 @@
     {
       "path": "/api/generate/training-data",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/analyze/cascades",
+      "schedule": "0 0 * * *"
     }
   ]
 }
