@@ -22,6 +22,11 @@ const COOKIE_DOMAIN = '.latticeforge.ai';
 export async function createClient() {
   const cookieStore = await cookies();
 
+  // Check if we're on latticeforge.ai (not localhost) by looking at the Supabase URL
+  // In production, NEXT_PUBLIC_SUPABASE_URL will contain latticeforge
+  const isProduction = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('latticeforge') ||
+    process.env.VERCEL_ENV === 'production';
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -32,16 +37,28 @@ export async function createClient() {
         },
         set(name: string, value: string, options: Record<string, unknown>) {
           try {
-            // Set cookie with cross-subdomain domain
-            cookieStore.set({ name, value, ...options, domain: COOKIE_DOMAIN });
+            // Set cookie with cross-subdomain domain only in production
+            const cookieOptions = {
+              name,
+              value,
+              ...options,
+              ...(isProduction && { domain: COOKIE_DOMAIN }),
+            };
+            cookieStore.set(cookieOptions);
           } catch {
             // Called from Server Component - can't set cookies
           }
         },
         remove(name: string, options: Record<string, unknown>) {
           try {
-            // Remove cookie with cross-subdomain domain
-            cookieStore.set({ name, value: '', ...options, domain: COOKIE_DOMAIN });
+            // Remove cookie with cross-subdomain domain only in production
+            const cookieOptions = {
+              name,
+              value: '',
+              ...options,
+              ...(isProduction && { domain: COOKIE_DOMAIN }),
+            };
+            cookieStore.set(cookieOptions);
           } catch {
             // Called from Server Component - can't set cookies
           }
