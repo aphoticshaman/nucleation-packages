@@ -199,7 +199,7 @@ export class HPCP {
       const profile = this.analyze(signals[i]);
 
       // Estimate instantaneous frequency from phase derivative
-      const phaseDiff = this.unwrapPhase(profile.phase - lastPhase);
+      this.unwrapPhase(profile.phase - lastPhase);
       const estFreq = HPCP.CYCLE_BINS[profile.dominant] ?? 1;
 
       // Check if "locked" (stable frequency)

@@ -32,7 +32,7 @@ export function useWasm(): UseWasmResult {
       }
     }
 
-    init();
+    void init();
 
     return () => {
       mounted = false;

@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { FFT, fft } from '../core/fft';
+import { FFT } from '../core/fft';
 import { HPCP, detectPhaseChange } from '../core/hpcp';
 import { Statistics } from '../core/statistics';
 import { TimeSeries } from '../core/timeseries';

@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     }
 
     // Get or create organization for user
-    let { data: profile } = await supabase
+    const { data: profile } = await supabase
       .from('profiles')
       .select('organization_id, full_name')
       .eq('id', user.id)

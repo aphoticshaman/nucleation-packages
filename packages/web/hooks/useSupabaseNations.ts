@@ -74,7 +74,7 @@ export function useSupabaseNations(): UseSupabaseNationsResult {
   }, []);
 
   useEffect(() => {
-    fetchNations();
+    void fetchNations();
 
     // Subscribe to realtime changes
     const channel = supabase
@@ -83,13 +83,13 @@ export function useSupabaseNations(): UseSupabaseNationsResult {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'nations' },
         () => {
-          fetchNations();
+          void fetchNations();
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [fetchNations]);
 

@@ -393,7 +393,7 @@ export class SentimentHarmonic {
   private classifyRegime(
     composite: number,
     vectors: Map<string, SentimentVector>,
-    harmonics: HarmonicDecomposition
+    _harmonics: HarmonicDecomposition
   ): 'euphoric' | 'optimistic' | 'neutral' | 'fearful' | 'panic' {
     // Adjust composite by momentum consensus
     let momentumAdjustment = 0;

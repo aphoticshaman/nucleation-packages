@@ -309,7 +309,7 @@ export class FusionEngine {
     const fusedSignal = this.fuseSignals(signals);
 
     // Detect phase
-    const { phase, usedWasm } = this.detect(fusedSignal);
+    const { phase } = this.detect(fusedSignal);
 
     return {
       phase,

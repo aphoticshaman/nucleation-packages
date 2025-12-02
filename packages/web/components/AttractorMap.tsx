@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
 import { Nation, InfluenceEdge, MapLayer, REGIMES } from '@/types';
 
@@ -55,7 +55,7 @@ export default function AttractorMap({
       libraries: ['marker'],
     });
 
-    loader.load().then(() => {
+    void loader.load().then(() => {
       if (!mapRef.current) return;
 
       const mapInstance = new google.maps.Map(mapRef.current, {
