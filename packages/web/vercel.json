@@ -21,6 +21,10 @@
     {
       "path": "/api/compute/nation-risk",
       "schedule": "30 */4 * * *"
+    },
+    {
+      "path": "/api/generate/training-data",
+      "schedule": "*/15 * * * *"
     }
   ]
 }
