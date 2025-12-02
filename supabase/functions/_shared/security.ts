@@ -2,26 +2,26 @@
 // Centralized security: auth, feature gating, input sanitization
 // NO BYPASS POSSIBLE - all checks happen server-side
 
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // ============================================
 // TYPES
 // ============================================
 
 export interface AuthContext {
-  client_id: string
-  client_tier: 'free' | 'pro' | 'enterprise'
-  key_id: string
-  user_id?: string
-  is_valid: boolean
+  client_id: string;
+  client_tier: 'free' | 'pro' | 'enterprise';
+  key_id: string;
+  user_id?: string;
+  is_valid: boolean;
 }
 
 export interface TierLimits {
-  max_signal_tokens: number
-  max_fusion_tokens: number
-  max_analysis_tokens: number
-  max_total_tokens: number
-  max_api_keys: number
+  max_signal_tokens: number;
+  max_fusion_tokens: number;
+  max_analysis_tokens: number;
+  max_total_tokens: number;
+  max_api_keys: number;
 }
 
 export type Feature =
@@ -34,20 +34,14 @@ export type Feature =
   | 'data.realtime'
   | 'analysis.fusion'
   | 'analysis.anomaly'
-  | 'analysis.predictive'
+  | 'analysis.predictive';
 
 // ============================================
 // FEATURE GATES - HARDCODED, NOT CONFIGURABLE
 // ============================================
 
 const FEATURE_ACCESS: Record<string, Feature[]> = {
-  free: [
-    'brief.quick',
-    'data.worldbank',
-    'data.factbook',
-    'analysis.fusion',
-    'analysis.anomaly',
-  ],
+  free: ['brief.quick', 'data.worldbank', 'data.factbook', 'analysis.fusion', 'analysis.anomaly'],
   pro: [
     'brief.quick',
     'brief.us_deep_dive',
@@ -69,7 +63,7 @@ const FEATURE_ACCESS: Record<string, Feature[]> = {
     'analysis.anomaly',
     'analysis.predictive',
   ],
-} as const
+} as const;
 
 // Rate limits per tier (per hour)
 const RATE_LIMITS: Record<string, Record<string, number>> = {
@@ -88,7 +82,7 @@ const RATE_LIMITS: Record<string, Record<string, number>> = {
     'brief.intel': 10,
     'analysis.fusion': 1000,
   },
-}
+};
 
 // ============================================
 // AUTHENTICATION
@@ -98,26 +92,26 @@ export async function authenticate(
   request: Request,
   supabase: SupabaseClient
 ): Promise<AuthContext | null> {
-  const authHeader = request.headers.get('Authorization')
+  const authHeader = request.headers.get('Authorization');
 
   if (!authHeader?.startsWith('Bearer ')) {
-    return null
+    return null;
   }
 
-  const token = authHeader.slice(7) // Remove 'Bearer '
+  const token = authHeader.slice(7); // Remove 'Bearer '
 
   // Validate API key via database function (server-side only)
-  const { data, error } = await supabase.rpc('validate_api_key', { p_key: token })
+  const { data, error } = await supabase.rpc('validate_api_key', { p_key: token });
 
   if (error || !data?.length) {
-    return null
+    return null;
   }
 
-  const auth = data[0]
+  const auth = data[0];
 
   // Verify tier is valid
   if (!['free', 'pro', 'enterprise'].includes(auth.client_tier)) {
-    return null
+    return null;
   }
 
   return {
@@ -125,7 +119,7 @@ export async function authenticate(
     client_tier: auth.client_tier as AuthContext['client_tier'],
     key_id: auth.key_id,
     is_valid: true,
-  }
+  };
 }
 
 // ============================================
@@ -133,9 +127,9 @@ export async function authenticate(
 // ============================================
 
 export function hasFeatureAccess(tier: string, feature: Feature): boolean {
-  const allowed = FEATURE_ACCESS[tier]
-  if (!allowed) return false
-  return allowed.includes(feature)
+  const allowed = FEATURE_ACCESS[tier];
+  if (!allowed) return false;
+  return allowed.includes(feature);
 }
 
 export function requireFeature(
@@ -143,7 +137,7 @@ export function requireFeature(
   feature: Feature
 ): { allowed: true } | { allowed: false; error: string; status: number } {
   if (!auth.is_valid) {
-    return { allowed: false, error: 'Invalid authentication', status: 401 }
+    return { allowed: false, error: 'Invalid authentication', status: 401 };
   }
 
   if (!hasFeatureAccess(auth.client_tier, feature)) {
@@ -151,16 +145,16 @@ export function requireFeature(
       allowed: false,
       error: `Feature '${feature}' requires ${getRequiredTier(feature)} tier or higher`,
       status: 403,
-    }
+    };
   }
 
-  return { allowed: true }
+  return { allowed: true };
 }
 
 function getRequiredTier(feature: Feature): string {
-  if (FEATURE_ACCESS.free.includes(feature)) return 'free'
-  if (FEATURE_ACCESS.pro.includes(feature)) return 'pro'
-  return 'enterprise'
+  if (FEATURE_ACCESS.free.includes(feature)) return 'free';
+  if (FEATURE_ACCESS.pro.includes(feature)) return 'pro';
+  return 'enterprise';
 }
 
 // ============================================
@@ -172,14 +166,14 @@ export async function checkRateLimit(
   auth: AuthContext,
   feature: Feature
 ): Promise<{ allowed: boolean; remaining?: number; reset?: Date }> {
-  const limit = RATE_LIMITS[auth.client_tier]?.[feature]
+  const limit = RATE_LIMITS[auth.client_tier]?.[feature];
 
   if (!limit) {
     // No rate limit for this feature/tier combination
-    return { allowed: true }
+    return { allowed: true };
   }
 
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
   // Count recent usage
   const { count } = await supabase
@@ -187,20 +181,20 @@ export async function checkRateLimit(
     .select('*', { count: 'exact', head: true })
     .eq('client_id', auth.client_id)
     .eq('operation', feature)
-    .gte('created_at', oneHourAgo)
+    .gte('created_at', oneHourAgo);
 
-  const used = count || 0
-  const remaining = limit - used
+  const used = count || 0;
+  const remaining = limit - used;
 
   if (remaining <= 0) {
     return {
       allowed: false,
       remaining: 0,
       reset: new Date(Date.now() + 60 * 60 * 1000),
-    }
+    };
   }
 
-  return { allowed: true, remaining }
+  return { allowed: true, remaining };
 }
 
 // ============================================
@@ -226,28 +220,28 @@ const INJECTION_PATTERNS = [
   /jailbreak/i,
   /DAN\s+mode/i,
   /bypass\s+(safety|filter|restriction)/i,
-]
+];
 
 // Characters that could be used for injection
-const DANGEROUS_CHARS = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g
+const DANGEROUS_CHARS = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g;
 
 export interface SanitizeResult {
-  safe: boolean
-  sanitized: string
-  blocked_reason?: string
+  safe: boolean;
+  sanitized: string;
+  blocked_reason?: string;
 }
 
 export function sanitizeUserInput(input: string, maxLength = 10000): SanitizeResult {
   if (!input || typeof input !== 'string') {
-    return { safe: true, sanitized: '' }
+    return { safe: true, sanitized: '' };
   }
 
   // Remove dangerous control characters
-  let sanitized = input.replace(DANGEROUS_CHARS, '')
+  let sanitized = input.replace(DANGEROUS_CHARS, '');
 
   // Truncate to max length
   if (sanitized.length > maxLength) {
-    sanitized = sanitized.slice(0, maxLength)
+    sanitized = sanitized.slice(0, maxLength);
   }
 
   // Check for injection patterns
@@ -257,7 +251,7 @@ export function sanitizeUserInput(input: string, maxLength = 10000): SanitizeRes
         safe: false,
         sanitized: '',
         blocked_reason: 'Input contains disallowed patterns',
-      }
+      };
     }
   }
 
@@ -266,37 +260,40 @@ export function sanitizeUserInput(input: string, maxLength = 10000): SanitizeRes
     .replace(/```/g, '`​`​`') // Zero-width space in code blocks
     .replace(/###/g, '#​#​#')
     .replace(/<\|/g, '< |')
-    .replace(/\|>/g, '| >')
+    .replace(/\|>/g, '| >');
 
-  return { safe: true, sanitized }
+  return { safe: true, sanitized };
 }
 
-export function sanitizeObject(obj: Record<string, unknown>, maxDepth = 3): Record<string, unknown> {
-  if (maxDepth <= 0) return {}
+export function sanitizeObject(
+  obj: Record<string, unknown>,
+  maxDepth = 3
+): Record<string, unknown> {
+  if (maxDepth <= 0) return {};
 
-  const result: Record<string, unknown> = {}
+  const result: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(obj)) {
     // Sanitize key
-    const sanitizedKey = key.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 100)
+    const sanitizedKey = key.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 100);
 
     if (typeof value === 'string') {
-      const { safe, sanitized } = sanitizeUserInput(value)
+      const { safe, sanitized } = sanitizeUserInput(value);
       if (safe) {
-        result[sanitizedKey] = sanitized
+        result[sanitizedKey] = sanitized;
       }
     } else if (typeof value === 'number' || typeof value === 'boolean') {
-      result[sanitizedKey] = value
+      result[sanitizedKey] = value;
     } else if (Array.isArray(value)) {
-      result[sanitizedKey] = value.slice(0, 100).map((v) =>
-        typeof v === 'string' ? sanitizeUserInput(v).sanitized : v
-      )
+      result[sanitizedKey] = value
+        .slice(0, 100)
+        .map((v) => (typeof v === 'string' ? sanitizeUserInput(v).sanitized : v));
     } else if (value && typeof value === 'object') {
-      result[sanitizedKey] = sanitizeObject(value as Record<string, unknown>, maxDepth - 1)
+      result[sanitizedKey] = sanitizeObject(value as Record<string, unknown>, maxDepth - 1);
     }
   }
 
-  return result
+  return result;
 }
 
 // ============================================
@@ -316,7 +313,7 @@ export async function recordUsage(
     p_signal_tokens: tokens.signal || 0,
     p_fusion_tokens: tokens.fusion || 0,
     p_analysis_tokens: tokens.analysis || 0,
-  })
+  });
 }
 
 // ============================================
@@ -324,14 +321,14 @@ export async function recordUsage(
 // ============================================
 
 export function createSecureClient(): SupabaseClient {
-  const url = Deno.env.get('SUPABASE_URL')
-  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  const url = Deno.env.get('SUPABASE_URL');
+  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
   if (!url || !key) {
-    throw new Error('Missing Supabase configuration')
+    throw new Error('Missing Supabase configuration');
   }
 
-  return createClient(url, key)
+  return createClient(url, key);
 }
 
 // ============================================
@@ -342,11 +339,11 @@ export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-}
+};
 
 export function jsonResponse(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  })
+  });
 }

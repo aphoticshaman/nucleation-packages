@@ -33,13 +33,13 @@ export async function POST() {
   try {
     // Get the authenticated user
     const userClient = await createUserClient();
-    const { data: { user }, error: authError } = await userClient.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await userClient.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     // Use admin client to check/create profile (bypasses RLS)
@@ -85,9 +85,6 @@ export async function POST() {
     return NextResponse.json({ status: 'created', profile: createdProfile });
   } catch (error) {
     console.error('Ensure profile error:', error);
-    return NextResponse.json(
-      { error: 'Internal error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }

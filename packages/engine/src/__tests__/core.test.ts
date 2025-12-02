@@ -25,9 +25,9 @@ describe('FFT', () => {
   it('should detect dominant frequency', () => {
     // Generate a pure sinusoid at frequency 2
     const n = 64;
-    const signal = Array(n).fill(0).map((_, i) =>
-      Math.sin(2 * Math.PI * 2 * i / n)
-    );
+    const signal = Array(n)
+      .fill(0)
+      .map((_, i) => Math.sin((2 * Math.PI * 2 * i) / n));
 
     const fftObj = new FFT(n);
     const spectrum = fftObj.forward(signal);
@@ -53,9 +53,11 @@ describe('FFT', () => {
 describe('HPCP', () => {
   it('should analyze signal harmonics', () => {
     const hpcp = new HPCP(64);
-    const signal = Array(64).fill(0).map((_, i) =>
-      Math.sin(2 * Math.PI * 4 * i / 64) + 0.5 * Math.sin(2 * Math.PI * 8 * i / 64)
-    );
+    const signal = Array(64)
+      .fill(0)
+      .map(
+        (_, i) => Math.sin((2 * Math.PI * 4 * i) / 64) + 0.5 * Math.sin((2 * Math.PI * 8 * i) / 64)
+      );
 
     const profile = hpcp.analyze(signal);
 
@@ -66,8 +68,12 @@ describe('HPCP', () => {
 
   it('should detect phase change', () => {
     // Create signal with regime change
-    const before = Array(32).fill(0).map((_, i) => Math.sin(2 * Math.PI * 2 * i / 32));
-    const after = Array(32).fill(0).map((_, i) => Math.sin(2 * Math.PI * 8 * i / 32));
+    const before = Array(32)
+      .fill(0)
+      .map((_, i) => Math.sin((2 * Math.PI * 2 * i) / 32));
+    const after = Array(32)
+      .fill(0)
+      .map((_, i) => Math.sin((2 * Math.PI * 8 * i) / 32));
     const signal = [...before, ...after];
 
     const result = detectPhaseChange(signal, 0.3);
@@ -161,7 +167,9 @@ describe('TimeSeries', () => {
 
   it('should detrend data', () => {
     // Linear trend: y = 2x + noise
-    const data = Array(100).fill(0).map((_, i) => 2 * i + Math.random() * 0.1);
+    const data = Array(100)
+      .fill(0)
+      .map((_, i) => 2 * i + Math.random() * 0.1);
     const detrended = TimeSeries.detrend(data);
 
     // Detrended should be near zero
@@ -170,7 +178,9 @@ describe('TimeSeries', () => {
   });
 
   it('should calculate RSI', () => {
-    const prices = Array(50).fill(100).map((_, i) => 100 + i + Math.random() * 5);
+    const prices = Array(50)
+      .fill(100)
+      .map((_, i) => 100 + i + Math.random() * 5);
     const rsi = TimeSeries.rsi(prices, 14);
 
     expect(rsi.length).toBeGreaterThan(0);
@@ -203,14 +213,16 @@ describe('Wavelets', () => {
 
   it('should denoise a signal', () => {
     // Create signal with noise
-    const clean = Array(64).fill(0).map((_, i) => Math.sin(2 * Math.PI * i / 16));
-    const noisy = clean.map(v => v + (Math.random() - 0.5) * 0.5);
+    const clean = Array(64)
+      .fill(0)
+      .map((_, i) => Math.sin((2 * Math.PI * i) / 16));
+    const noisy = clean.map((v) => v + (Math.random() - 0.5) * 0.5);
 
     const denoised = Wavelets.denoise(noisy);
 
     // Should return same length
     expect(denoised).toHaveLength(64);
     // Should not throw
-    expect(denoised.every(v => typeof v === 'number')).toBe(true);
+    expect(denoised.every((v) => typeof v === 'number')).toBe(true);
   });
 });

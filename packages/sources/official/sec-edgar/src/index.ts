@@ -89,7 +89,7 @@ export class SecEdgarSource {
       throw new Error(`SEC EDGAR error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json() as {
+    const data = (await response.json()) as {
       filings: {
         recent: {
           accessionNumber: string[];

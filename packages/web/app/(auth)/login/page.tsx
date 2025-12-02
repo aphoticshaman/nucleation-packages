@@ -214,7 +214,8 @@ export default function LoginPage() {
             Early warning for phase transitions
           </h2>
           <p className="text-slate-400">
-            Detect the calm before the storm. Our attractor dynamics model predicts geopolitical shifts with 72% accuracy at a 30-day horizon.
+            Detect the calm before the storm. Our attractor dynamics model predicts geopolitical
+            shifts with 72% accuracy at a 30-day horizon.
           </p>
         </div>
       </div>

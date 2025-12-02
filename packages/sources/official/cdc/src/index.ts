@@ -156,27 +156,32 @@ export class CDCSource {
   /**
    * Get COVID-19 surveillance data
    */
-  async getCovidData(options: {
-    state?: string;
-    startDate?: Date;
-    limit?: number;
-  } = {}): Promise<DiseaseDataPoint[]> {
+  async getCovidData(
+    options: {
+      state?: string;
+      startDate?: Date;
+      limit?: number;
+    } = {}
+  ): Promise<DiseaseDataPoint[]> {
     await this.rateLimiter.waitForSlot('cdc');
 
     const params = new URLSearchParams();
     if (options.state) params.set('state', options.state);
-    if (options.startDate) params.set('$where', `date > '${options.startDate.toISOString().split('T')[0]}'`);
+    if (options.startDate)
+      params.set('$where', `date > '${options.startDate.toISOString().split('T')[0]}'`);
     params.set('$limit', String(options.limit ?? 1000));
     params.set('$order', 'date DESC');
 
     const url = `${CDC_ENDPOINTS.covid}?${params}`;
-    const data = await this.fetchWithCache<Array<{
-      date: string;
-      state: string;
-      new_cases?: string;
-      new_deaths?: string;
-      [key: string]: unknown;
-    }>>(url);
+    const data = await this.fetchWithCache<
+      Array<{
+        date: string;
+        state: string;
+        new_cases?: string;
+        new_deaths?: string;
+        [key: string]: unknown;
+      }>
+    >(url);
 
     this.attribution.recordUsage('cdc', data.length);
 
@@ -193,10 +198,12 @@ export class CDCSource {
   /**
    * Get influenza surveillance data from FluView
    */
-  async getFluData(options: {
-    season?: string;
-    region?: string;
-  } = {}): Promise<DiseaseDataPoint[]> {
+  async getFluData(
+    options: {
+      season?: string;
+      region?: string;
+    } = {}
+  ): Promise<DiseaseDataPoint[]> {
     await this.rateLimiter.waitForSlot('cdc');
 
     // FluView uses a different API format
@@ -208,14 +215,16 @@ export class CDCSource {
     const url = `${CDC_ENDPOINTS.fluview}?${params}`;
 
     try {
-      const data = await this.fetchWithCache<Array<{
-        WEEK: string;
-        YEAR: string;
-        REGION: string;
-        ILITOTAL?: string;
-        'NUM OF PROVIDERS'?: string;
-        [key: string]: unknown;
-      }>>(url);
+      const data = await this.fetchWithCache<
+        Array<{
+          WEEK: string;
+          YEAR: string;
+          REGION: string;
+          ILITOTAL?: string;
+          'NUM OF PROVIDERS'?: string;
+          [key: string]: unknown;
+        }>
+      >(url);
 
       this.attribution.recordUsage('cdc', data.length);
 
@@ -235,18 +244,22 @@ export class CDCSource {
   /**
    * Get wastewater surveillance data (early warning indicator)
    */
-  async getWastewaterData(options: {
-    state?: string;
-    limit?: number;
-  } = {}): Promise<Array<{
-    date: Date;
-    state: string;
-    county?: string;
-    pathogen: string;
-    concentration: number;
-    percentChange: number;
-    trend: 'increasing' | 'stable' | 'decreasing';
-  }>> {
+  async getWastewaterData(
+    options: {
+      state?: string;
+      limit?: number;
+    } = {}
+  ): Promise<
+    Array<{
+      date: Date;
+      state: string;
+      county?: string;
+      pathogen: string;
+      concentration: number;
+      percentChange: number;
+      trend: 'increasing' | 'stable' | 'decreasing';
+    }>
+  > {
     if (!this.config.wastewaterEnabled) return [];
 
     await this.rateLimiter.waitForSlot('cdc');
@@ -259,13 +272,15 @@ export class CDCSource {
     const url = `${CDC_ENDPOINTS.wastewater}?${params}`;
 
     try {
-      const data = await this.fetchWithCache<Array<{
-        date_end: string;
-        state: string;
-        county?: string;
-        ptc_15d?: string;
-        [key: string]: unknown;
-      }>>(url);
+      const data = await this.fetchWithCache<
+        Array<{
+          date_end: string;
+          state: string;
+          county?: string;
+          ptc_15d?: string;
+          [key: string]: unknown;
+        }>
+      >(url);
 
       this.attribution.recordUsage('cdc', data.length);
 
@@ -289,16 +304,20 @@ export class CDCSource {
   /**
    * Get NHSN hospital capacity data
    */
-  async getHospitalData(options: {
-    state?: string;
-    limit?: number;
-  } = {}): Promise<Array<{
-    date: Date;
-    state: string;
-    hospitalizations: number;
-    icuOccupancy: number;
-    bedUtilization: number;
-  }>> {
+  async getHospitalData(
+    options: {
+      state?: string;
+      limit?: number;
+    } = {}
+  ): Promise<
+    Array<{
+      date: Date;
+      state: string;
+      hospitalizations: number;
+      icuOccupancy: number;
+      bedUtilization: number;
+    }>
+  > {
     await this.rateLimiter.waitForSlot('cdc');
 
     const params = new URLSearchParams();
@@ -309,13 +328,15 @@ export class CDCSource {
     const url = `${CDC_ENDPOINTS.nhsn}?${params}`;
 
     try {
-      const data = await this.fetchWithCache<Array<{
-        collection_week: string;
-        state: string;
-        total_patients_hospitalized_confirmed_influenza_and_covid?: string;
-        inpatient_bed_covid_utilization?: string;
-        [key: string]: unknown;
-      }>>(url);
+      const data = await this.fetchWithCache<
+        Array<{
+          collection_week: string;
+          state: string;
+          total_patients_hospitalized_confirmed_influenza_and_covid?: string;
+          inpatient_bed_covid_utilization?: string;
+          [key: string]: unknown;
+        }>
+      >(url);
 
       this.attribution.recordUsage('cdc', data.length);
 
@@ -354,13 +375,12 @@ export class CDCSource {
 
     // Wastewater trend (leading indicator)
     const wastewaterIncreasing = wastewaterData.filter((d) => d.trend === 'increasing').length;
-    const wastewaterSeverity = wastewaterData.length > 0
-      ? wastewaterIncreasing / wastewaterData.length
-      : 0;
+    const wastewaterSeverity =
+      wastewaterData.length > 0 ? wastewaterIncreasing / wastewaterData.length : 0;
 
     // Hospital utilization
-    const avgUtilization = hospitalData.reduce((sum, d) => sum + d.bedUtilization, 0) /
-      (hospitalData.length || 1);
+    const avgUtilization =
+      hospitalData.reduce((sum, d) => sum + d.bedUtilization, 0) / (hospitalData.length || 1);
     const hospitalSeverity = avgUtilization;
 
     // Composite severity (weighted)
@@ -374,11 +394,9 @@ export class CDCSource {
     // Regional breakdown
     const regionalMap = new Map<string, number>();
     for (const region of CDCSource.REGIONS) {
-      const regionData = covidData.filter((d) =>
-        this.stateToRegion(d.region) === region
-      );
-      const regionSeverity = regionData.reduce((sum, d) => sum + d.cases, 0) /
-        (regionData.length || 1) / 10000;
+      const regionData = covidData.filter((d) => this.stateToRegion(d.region) === region);
+      const regionSeverity =
+        regionData.reduce((sum, d) => sum + d.cases, 0) / (regionData.length || 1) / 10000;
       regionalMap.set(region, Math.min(1, regionSeverity));
     }
 
@@ -422,7 +440,12 @@ export class CDCSource {
         metric: 'composite-severity',
         currentValue: healthSignal.severity,
         threshold: 0.7,
-        trend: healthSignal.momentum > 0.1 ? 'increasing' : healthSignal.momentum < -0.1 ? 'decreasing' : 'stable',
+        trend:
+          healthSignal.momentum > 0.1
+            ? 'increasing'
+            : healthSignal.momentum < -0.1
+              ? 'decreasing'
+              : 'stable',
         weekOverWeekChange: healthSignal.momentum * 100,
       });
     }
@@ -478,7 +501,7 @@ export class CDCSource {
     }
 
     const headers: Record<string, string> = {
-      'Accept': 'application/json',
+      Accept: 'application/json',
     };
 
     if (this.config.appToken) {
@@ -506,10 +529,10 @@ export class CDCSource {
   private stateToRegion(state: string): string {
     // Simplified mapping - would need full lookup table
     const regionMap: Record<string, string> = {
-      'CA': 'Region 9',
-      'TX': 'Region 6',
-      'FL': 'Region 4',
-      'NY': 'Region 2',
+      CA: 'Region 9',
+      TX: 'Region 6',
+      FL: 'Region 4',
+      NY: 'Region 2',
       // ... would include all states
     };
     return regionMap[state] ?? 'Region 1';

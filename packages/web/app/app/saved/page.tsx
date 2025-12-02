@@ -49,9 +49,7 @@ export default async function SavedSimulationsPage() {
               <div className="p-4">
                 <h3 className="font-medium text-white">{sim.name}</h3>
                 {sim.description && (
-                  <p className="text-sm text-slate-400 mt-1 line-clamp-2">
-                    {sim.description}
-                  </p>
+                  <p className="text-sm text-slate-400 mt-1 line-clamp-2">{sim.description}</p>
                 )}
                 <div className="flex items-center justify-between mt-4">
                   <span className="text-xs text-slate-500">
@@ -78,10 +76,7 @@ export default async function SavedSimulationsPage() {
             >
               <div className="text-center">
                 <p className="text-slate-500">Empty slot</p>
-                <a
-                  href="/app"
-                  className="text-sm text-blue-400 hover:text-blue-300 mt-2 block"
-                >
+                <a href="/app" className="text-sm text-blue-400 hover:text-blue-300 mt-2 block">
                   Create simulation
                 </a>
               </div>
@@ -92,9 +87,7 @@ export default async function SavedSimulationsPage() {
         <div className="bg-slate-900 rounded-xl border border-slate-800 p-12 text-center">
           <span className="text-4xl">📭</span>
           <h3 className="text-lg font-medium text-white mt-4">No saved simulations</h3>
-          <p className="text-slate-400 mt-2">
-            Run a simulation and save it to access it later
-          </p>
+          <p className="text-slate-400 mt-2">Run a simulation and save it to access it later</p>
           <a
             href="/app"
             className="inline-block mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500"

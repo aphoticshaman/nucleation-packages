@@ -220,13 +220,8 @@ export class CascadePredictor {
   /**
    * Run SIR simulation forward
    */
-  simulateSir(
-    initialInfected: number,
-    steps: number,
-    transmissionMod = 1
-  ): number[] {
-    const { baseTransmission, recoveryRate, networkDensity } =
-      CascadePredictor.SIR_PARAMS;
+  simulateSir(initialInfected: number, steps: number, transmissionMod = 1): number[] {
+    const { baseTransmission, recoveryRate, networkDensity } = CascadePredictor.SIR_PARAMS;
 
     let S = 1 - initialInfected; // Susceptible
     let I = initialInfected; // Infected (active spreaders)
@@ -395,9 +390,7 @@ export class CascadePredictor {
   /**
    * Check early warning indicators
    */
-  private checkEarlyWarnings(
-    signals: Map<string, number[]>
-  ): Map<string, boolean> {
+  private checkEarlyWarnings(signals: Map<string, number[]>): Map<string, boolean> {
     const warnings = new Map<string, boolean>();
 
     // Velocity spike
@@ -405,8 +398,7 @@ export class CascadePredictor {
       const velocities = this.history.slice(-20).map((h) => h.velocity);
       const mean = velocities.reduce((a, b) => a + b, 0) / velocities.length;
       const std = Math.sqrt(
-        velocities.reduce((sum, v) => sum + (v - mean) ** 2, 0) /
-          velocities.length
+        velocities.reduce((sum, v) => sum + (v - mean) ** 2, 0) / velocities.length
       );
       const current = this.history[this.history.length - 1]?.velocity ?? 0;
 
@@ -423,10 +415,7 @@ export class CascadePredictor {
       let pairs = 0;
       for (let i = 0; i < domains.length; i++) {
         for (let j = i + 1; j < domains.length; j++) {
-          const corr = this.correlation(
-            signals.get(domains[i])!,
-            signals.get(domains[j])!
-          );
+          const corr = this.correlation(signals.get(domains[i])!, signals.get(domains[j])!);
           totalCorr += Math.abs(corr);
           pairs++;
         }
@@ -465,8 +454,7 @@ export class CascadePredictor {
     const decaySlice = intensities.slice(maxIdx);
     const decayRate =
       decaySlice.length > 1
-        ? Math.abs(decaySlice[decaySlice.length - 1] - decaySlice[0]) /
-          decaySlice.length
+        ? Math.abs(decaySlice[decaySlice.length - 1] - decaySlice[0]) / decaySlice.length
         : 0;
 
     // Match against signatures
@@ -493,10 +481,7 @@ export class CascadePredictor {
   /**
    * Calculate cascade probability
    */
-  private calculateCascadeProbability(
-    state: CascadeState,
-    warnings: Map<string, boolean>
-  ): number {
+  private calculateCascadeProbability(state: CascadeState, warnings: Map<string, boolean>): number {
     let probability = 0;
 
     // Base probability from state
@@ -534,10 +519,7 @@ export class CascadePredictor {
   /**
    * Estimate peak timing
    */
-  private estimatePeakTiming(
-    state: CascadeState,
-    signature: CascadeSignature | null
-  ): Date {
+  private estimatePeakTiming(state: CascadeState, signature: CascadeSignature | null): Date {
     const now = new Date();
 
     if (state.phase === 'peak') {
@@ -563,10 +545,7 @@ export class CascadePredictor {
   /**
    * Estimate cascade intensity
    */
-  private estimateIntensity(
-    state: CascadeState,
-    signature: CascadeSignature | null
-  ): number {
+  private estimateIntensity(state: CascadeState, signature: CascadeSignature | null): number {
     if (signature) {
       return signature.peakIntensity;
     }
@@ -672,7 +651,9 @@ export class CascadePredictor {
     const meanX = xSlice.reduce((a, b) => a + b, 0) / n;
     const meanY = ySlice.reduce((a, b) => a + b, 0) / n;
 
-    let num = 0, denX = 0, denY = 0;
+    let num = 0,
+      denX = 0,
+      denY = 0;
     for (let i = 0; i < n; i++) {
       const dx = xSlice[i] - meanX;
       const dy = ySlice[i] - meanY;

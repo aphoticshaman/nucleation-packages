@@ -23,15 +23,25 @@ body {
 }
 
 /* Alert levels */
-.alert-normal { @apply text-green-400; }
-.alert-elevated { @apply text-yellow-400; }
-.alert-warning { @apply text-orange-400; }
-.alert-critical { @apply text-red-400 animate-pulse; }
+.alert-normal {
+  @apply text-green-400;
+}
+.alert-elevated {
+  @apply text-yellow-400;
+}
+.alert-warning {
+  @apply text-orange-400;
+}
+.alert-critical {
+  @apply text-red-400 animate-pulse;
+}
 
 /* Nation marker */
 .nation-marker {
   @apply w-4 h-4 rounded-full border-2 border-white shadow-lg cursor-pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .nation-marker:hover {

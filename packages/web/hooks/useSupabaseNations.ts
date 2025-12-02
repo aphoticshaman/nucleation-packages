@@ -34,11 +34,13 @@ export function useSupabaseNations(): UseSupabaseNationsResult {
       // Fetch edges with nation codes
       const { data: edgesData, error: edgesError } = await supabase
         .from('influence_edges')
-        .select(`
+        .select(
+          `
           *,
           source:nations!source_id(code),
           target:nations!target_id(code)
-        `)
+        `
+        )
         .gt('strength', 0.1);
 
       if (edgesError) throw edgesError;
@@ -61,17 +63,12 @@ export function useSupabaseNations(): UseSupabaseNationsResult {
 
   const updateNation = useCallback(async (code: string, updates: Partial<Nation>) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any)
-      .from('nations')
-      .update(updates)
-      .eq('code', code);
+    const { error } = await (supabase as any).from('nations').update(updates).eq('code', code);
 
     if (error) throw error;
 
     // Optimistic update
-    setNations((prev) =>
-      prev.map((n) => (n.code === code ? { ...n, ...updates } : n))
-    );
+    setNations((prev) => prev.map((n) => (n.code === code ? { ...n, ...updates } : n)));
   }, []);
 
   useEffect(() => {
@@ -80,13 +77,9 @@ export function useSupabaseNations(): UseSupabaseNationsResult {
     // Subscribe to realtime changes
     const channel = supabase
       .channel('nations-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'nations' },
-        () => {
-          void fetchNations();
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'nations' }, () => {
+        void fetchNations();
+      })
       .subscribe();
 
     return () => {

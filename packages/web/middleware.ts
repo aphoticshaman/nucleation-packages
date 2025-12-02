@@ -52,7 +52,9 @@ export async function middleware(request: NextRequest) {
   );
 
   // Refresh session if expired
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
 

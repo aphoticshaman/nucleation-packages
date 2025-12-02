@@ -75,9 +75,7 @@ export function Dashboard({ session }: DashboardProps) {
         </div>
         <div className="text-right text-xs text-surface-500">
           <p>Last updated: {lastUpdate.toLocaleTimeString()}</p>
-          <p className="font-mono text-[10px] text-surface-600 mt-0.5">
-            {session.user.email}
-          </p>
+          <p className="font-mono text-[10px] text-surface-600 mt-0.5">{session.user.email}</p>
         </div>
       </div>
 
@@ -208,12 +206,7 @@ export function Dashboard({ session }: DashboardProps) {
                     <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#0ea5e9"
-                  fill="url(#phaseGradient)"
-                />
+                <Area type="monotone" dataKey="value" stroke="#0ea5e9" fill="url(#phaseGradient)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -239,40 +232,70 @@ export function Dashboard({ session }: DashboardProps) {
           <tbody>
             <tr>
               <td className="font-medium text-white">SEC EDGAR</td>
-              <td><span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-xs">Official</span></td>
-              <td><span className="status-indicator status-healthy inline-block mr-2" /> Healthy</td>
+              <td>
+                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-xs">
+                  Official
+                </span>
+              </td>
+              <td>
+                <span className="status-indicator status-healthy inline-block mr-2" /> Healthy
+              </td>
               <td className="text-surface-400 mono">12s ago</td>
               <td className="text-emerald-400 mono">45ms</td>
               <td className="text-surface-400">10/sec</td>
             </tr>
             <tr>
               <td className="font-medium text-white">FRED</td>
-              <td><span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-xs">Official</span></td>
-              <td><span className="status-indicator status-healthy inline-block mr-2" /> Healthy</td>
+              <td>
+                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-xs">
+                  Official
+                </span>
+              </td>
+              <td>
+                <span className="status-indicator status-healthy inline-block mr-2" /> Healthy
+              </td>
               <td className="text-surface-400 mono">1m ago</td>
               <td className="text-emerald-400 mono">89ms</td>
               <td className="text-surface-400">120/min</td>
             </tr>
             <tr>
               <td className="font-medium text-white">The Guardian</td>
-              <td><span className="px-2 py-0.5 rounded bg-lattice-500/10 text-lattice-400 text-xs">News</span></td>
-              <td><span className="status-indicator status-healthy inline-block mr-2" /> Healthy</td>
+              <td>
+                <span className="px-2 py-0.5 rounded bg-lattice-500/10 text-lattice-400 text-xs">
+                  News
+                </span>
+              </td>
+              <td>
+                <span className="status-indicator status-healthy inline-block mr-2" /> Healthy
+              </td>
               <td className="text-surface-400 mono">5m ago</td>
               <td className="text-amber-400 mono">234ms</td>
               <td className="text-surface-400">12/sec</td>
             </tr>
             <tr>
               <td className="font-medium text-white">Reddit</td>
-              <td><span className="px-2 py-0.5 rounded bg-crystal-500/10 text-crystal-400 text-xs">Social</span></td>
-              <td><span className="status-indicator status-warning inline-block mr-2" /> Degraded</td>
+              <td>
+                <span className="px-2 py-0.5 rounded bg-crystal-500/10 text-crystal-400 text-xs">
+                  Social
+                </span>
+              </td>
+              <td>
+                <span className="status-indicator status-warning inline-block mr-2" /> Degraded
+              </td>
               <td className="text-surface-400 mono">2m ago</td>
               <td className="text-amber-400 mono">512ms</td>
               <td className="text-surface-400">100/min</td>
             </tr>
             <tr>
               <td className="font-medium text-white">Bluesky</td>
-              <td><span className="px-2 py-0.5 rounded bg-crystal-500/10 text-crystal-400 text-xs">Social</span></td>
-              <td><span className="status-indicator status-healthy inline-block mr-2" /> Healthy</td>
+              <td>
+                <span className="px-2 py-0.5 rounded bg-crystal-500/10 text-crystal-400 text-xs">
+                  Social
+                </span>
+              </td>
+              <td>
+                <span className="status-indicator status-healthy inline-block mr-2" /> Healthy
+              </td>
               <td className="text-surface-400 mono">30s ago</td>
               <td className="text-emerald-400 mono">67ms</td>
               <td className="text-surface-400">Unlimited</td>
@@ -283,7 +306,10 @@ export function Dashboard({ session }: DashboardProps) {
 
       {/* Footer Attribution */}
       <div className="text-center text-xs text-surface-600 pt-4">
-        <p>Data sources: SEC EDGAR (Public Domain) • FRED, Federal Reserve Bank of St. Louis • Powered by Guardian Open Platform</p>
+        <p>
+          Data sources: SEC EDGAR (Public Domain) • FRED, Federal Reserve Bank of St. Louis •
+          Powered by Guardian Open Platform
+        </p>
         <p className="mt-1">LatticeForge v1.0.0 • Crystalline Labs LLC © 2025</p>
       </div>
     </div>

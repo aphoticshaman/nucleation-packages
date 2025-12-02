@@ -96,10 +96,7 @@ export class QuantumInspiredOptimizer {
   /**
    * Solve optimization problem using quantum-inspired methods
    */
-  solve(
-    problem: OptimizationProblem,
-    config?: Partial<AnnealingConfig>
-  ): OptimizationResult {
+  solve(problem: OptimizationProblem, config?: Partial<AnnealingConfig>): OptimizationResult {
     const annealConfig = { ...QuantumInspiredOptimizer.DEFAULT_ANNEALING, ...config };
 
     if (problem.discrete) {
@@ -159,8 +156,7 @@ export class QuantumInspiredOptimizer {
         ...(targetVolatility
           ? [
               (weights: number[]) =>
-                Math.sqrt(this.calculatePortfolioVariance(weights, covariance)) -
-                targetVolatility,
+                Math.sqrt(this.calculatePortfolioVariance(weights, covariance)) - targetVolatility,
             ]
           : []),
       ],
@@ -180,15 +176,12 @@ export class QuantumInspiredOptimizer {
     }
 
     const portReturn = assets.reduce(
-      (sum, asset) =>
-        sum + (weights.get(asset) ?? 0) * (expectedReturns.get(asset) ?? 0),
+      (sum, asset) => sum + (weights.get(asset) ?? 0) * (expectedReturns.get(asset) ?? 0),
       0
     );
 
     const normalizedWeights = assets.map((a) => weights.get(a) ?? 0);
-    const portVol = Math.sqrt(
-      this.calculatePortfolioVariance(normalizedWeights, covariance)
-    );
+    const portVol = Math.sqrt(this.calculatePortfolioVariance(normalizedWeights, covariance));
 
     return {
       weights,
@@ -408,9 +401,7 @@ export class QuantumInspiredOptimizer {
         const template = marked[Math.floor(Math.random() * marked.length)].solution;
 
         // Apply small perturbation (diffusion analog)
-        const sample = template.map((bit) =>
-          Math.random() < 0.1 ? 1 - bit : bit
-        );
+        const sample = template.map((bit) => (Math.random() < 0.1 ? 1 - bit : bit));
 
         newSamples.push(sample);
       }
@@ -440,11 +431,7 @@ export class QuantumInspiredOptimizer {
   /**
    * QAOA-inspired mixing operator
    */
-  private qaoaMix(
-    current: number[],
-    problem: OptimizationProblem,
-    temp: number
-  ): number[] {
+  private qaoaMix(current: number[], problem: OptimizationProblem, temp: number): number[] {
     const result = [...current];
     const mixingAngle = QuantumInspiredOptimizer.MIXING_STRENGTH * (temp / 100);
 
@@ -453,8 +440,7 @@ export class QuantumInspiredOptimizer {
 
     for (let i = 0; i < result.length; i++) {
       // Quantum-inspired rotation
-      result[i] = current[i] * Math.cos(mixingAngle) +
-        randomDir[i] * Math.sin(mixingAngle);
+      result[i] = current[i] * Math.cos(mixingAngle) + randomDir[i] * Math.sin(mixingAngle);
 
       // Add small noise (quantum fluctuation analog)
       result[i] += (Math.random() - 0.5) * temp * 0.01;
@@ -467,18 +453,14 @@ export class QuantumInspiredOptimizer {
    * Quantum-inspired acceptance probability
    * Includes "tunneling" through barriers
    */
-  private quantumAccept(
-    currentValue: number,
-    newValue: number,
-    temp: number
-  ): boolean {
+  private quantumAccept(currentValue: number, newValue: number, temp: number): boolean {
     if (newValue < currentValue) return true;
 
     const delta = newValue - currentValue;
 
     // Standard Boltzmann + tunneling factor
     const boltzmann = Math.exp(-delta / temp);
-    const tunneling = Math.exp(-delta * delta / (temp * temp)); // Gaussian tunneling
+    const tunneling = Math.exp((-delta * delta) / (temp * temp)); // Gaussian tunneling
 
     const acceptProb = 0.7 * boltzmann + 0.3 * tunneling;
 
@@ -488,11 +470,7 @@ export class QuantumInspiredOptimizer {
   /**
    * Adaptive temperature update
    */
-  private adaptiveTemp(
-    temp: number,
-    stagnation: number,
-    config: AnnealingConfig
-  ): number {
+  private adaptiveTemp(temp: number, stagnation: number, config: AnnealingConfig): number {
     // Faster cooling when stagnant, slower when finding improvements
     const adaptiveFactor = stagnation > 50 ? 0.99 : stagnation > 20 ? 0.97 : 0.95;
     return Math.max(config.finalTemp, temp * adaptiveFactor);
@@ -504,7 +482,11 @@ export class QuantumInspiredOptimizer {
   private updateTemp(temp: number, config: AnnealingConfig): number {
     switch (config.schedule) {
       case 'linear':
-        return temp - (config.initialTemp - config.finalTemp) / (config.maxIterations / config.iterationsPerTemp);
+        return (
+          temp -
+          (config.initialTemp - config.finalTemp) /
+            (config.maxIterations / config.iterationsPerTemp)
+        );
       case 'exponential':
         return temp * 0.95;
       case 'logarithmic':
@@ -557,10 +539,7 @@ export class QuantumInspiredOptimizer {
   /**
    * Calculate portfolio variance
    */
-  private calculatePortfolioVariance(
-    weights: number[],
-    covariance: number[][]
-  ): number {
+  private calculatePortfolioVariance(weights: number[], covariance: number[][]): number {
     let variance = 0;
     for (let i = 0; i < weights.length; i++) {
       for (let j = 0; j < weights.length; j++) {
@@ -573,10 +552,7 @@ export class QuantumInspiredOptimizer {
   /**
    * Calculate covariance matrix from returns
    */
-  private calculateCovariance(
-    assets: string[],
-    returns: Map<string, number[]>
-  ): number[][] {
+  private calculateCovariance(assets: string[], returns: Map<string, number[]>): number[][] {
     const n = assets.length;
     const cov: number[][] = Array(n)
       .fill(null)

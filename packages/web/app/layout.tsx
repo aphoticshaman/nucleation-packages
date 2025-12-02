@@ -7,7 +7,8 @@ export const metadata: Metadata = {
   description: 'Real-time visualization of nation-level attractor basins and phase transitions',
   openGraph: {
     title: 'LatticeForge - Geopolitical Intelligence Platform',
-    description: 'Real-time simulation and analysis of global political dynamics, regime stability, and phase transitions.',
+    description:
+      'Real-time simulation and analysis of global political dynamics, regime stability, and phase transitions.',
     images: [
       {
         url: '/images/og/og-image.png',
@@ -26,16 +27,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-slate-950 text-white antialiased">
-        {children}
-      </body>
+      <body className="min-h-screen bg-slate-950 text-white antialiased">{children}</body>
     </html>
   );
 }

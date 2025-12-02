@@ -31,7 +31,10 @@ export function securityHeaders() {
     c.header('Pragma', 'no-cache');
     c.header('X-Permitted-Cross-Domain-Policies', 'none');
     c.header('Referrer-Policy', 'no-referrer');
-    c.header('Permissions-Policy', 'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()');
+    c.header(
+      'Permissions-Policy',
+      'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()'
+    );
 
     // Remove server identification
     c.header('Server', 'LatticeForge');
@@ -68,7 +71,10 @@ export function corsMiddleware(allowedOrigins: string[] = []) {
     }
 
     c.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    c.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Request-ID, X-API-Key');
+    c.header(
+      'Access-Control-Allow-Headers',
+      'Authorization, Content-Type, X-Request-ID, X-API-Key'
+    );
     c.header('Access-Control-Max-Age', '86400');
     c.header('Access-Control-Allow-Credentials', 'true');
 

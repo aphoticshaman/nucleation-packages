@@ -15,12 +15,24 @@ function getStripe(): Stripe {
 
 // Exported for compatibility with existing code
 export const stripe = {
-  get webhooks() { return getStripe().webhooks; },
-  get checkout() { return getStripe().checkout; },
-  get billingPortal() { return getStripe().billingPortal; },
-  get subscriptions() { return getStripe().subscriptions; },
-  get customers() { return getStripe().customers; },
-  get subscriptionItems() { return getStripe().subscriptionItems; },
+  get webhooks() {
+    return getStripe().webhooks;
+  },
+  get checkout() {
+    return getStripe().checkout;
+  },
+  get billingPortal() {
+    return getStripe().billingPortal;
+  },
+  get subscriptions() {
+    return getStripe().subscriptions;
+  },
+  get customers() {
+    return getStripe().customers;
+  },
+  get subscriptionItems() {
+    return getStripe().subscriptionItems;
+  },
 };
 
 // ============================================
@@ -58,8 +70,8 @@ export const PLANS = {
     price: 0,
     interval: 'month' as const,
     trialDays: 7,
-    requiresCard: true,  // CC required for trial
-    convertsTo: 'starter',  // Auto-converts to Starter after trial
+    requiresCard: true, // CC required for trial
+    convertsTo: 'starter', // Auto-converts to Starter after trial
     features: [
       '7-day free trial of Starter plan',
       'Full Starter features during trial',
@@ -302,14 +314,11 @@ export async function reportUsage({
   subscriptionItemId: string;
   quantity: number;
 }) {
-  const usageRecord = await stripe.subscriptionItems.createUsageRecord(
-    subscriptionItemId,
-    {
-      quantity,
-      timestamp: Math.floor(Date.now() / 1000),
-      action: 'increment',
-    }
-  );
+  const usageRecord = await stripe.subscriptionItems.createUsageRecord(subscriptionItemId, {
+    quantity,
+    timestamp: Math.floor(Date.now() / 1000),
+    action: 'increment',
+  });
 
   return usageRecord;
 }

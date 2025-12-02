@@ -114,7 +114,10 @@ export class TimeSeries {
     if (data.length < 2) return data;
 
     const n = data.length;
-    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+    let sumX = 0,
+      sumY = 0,
+      sumXY = 0,
+      sumX2 = 0;
 
     for (let i = 0; i < n; i++) {
       sumX += i;
@@ -327,10 +330,7 @@ export class TimeSeries {
   /**
    * Detect outliers using IQR method
    */
-  static detectOutliers(
-    data: number[],
-    threshold = 1.5
-  ): { indices: number[]; values: number[] } {
+  static detectOutliers(data: number[], threshold = 1.5): { indices: number[]; values: number[] } {
     const q1 = Statistics.percentile(data, 25);
     const q3 = Statistics.percentile(data, 75);
     const iqr = q3 - q1;
@@ -376,8 +376,7 @@ export class TimeSeries {
 
     if (df <= 0 || ssrUnrestricted === 0) return 0;
 
-    return ((ssrRestricted - ssrUnrestricted) / numRestrictions) /
-      (ssrUnrestricted / df);
+    return (ssrRestricted - ssrUnrestricted) / numRestrictions / (ssrUnrestricted / df);
   }
 
   private static calculateSSR(y: number[], x: number[]): number {
@@ -385,7 +384,8 @@ export class TimeSeries {
     const meanX = Statistics.mean(x);
     const meanY = Statistics.mean(y);
 
-    let ssXY = 0, ssXX = 0;
+    let ssXY = 0,
+      ssXX = 0;
     for (let i = 0; i < n; i++) {
       ssXY += (x[i] - meanX) * (y[i] - meanY);
       ssXX += (x[i] - meanX) ** 2;

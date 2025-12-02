@@ -50,9 +50,7 @@ export function Sidebar() {
               >
                 <item.icon className="w-5 h-5" />
                 {item.name}
-                {isActive && (
-                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-lattice-400" />
-                )}
+                {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-lattice-400" />}
               </Link>
             );
           })}
@@ -83,9 +81,7 @@ export function Sidebar() {
               >
                 <item.icon className="w-5 h-5" />
                 {item.name}
-                {isActive && (
-                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-lattice-400" />
-                )}
+                {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-lattice-400" />}
               </Link>
             );
           })}

@@ -13,19 +13,19 @@ interface AttractorMapProps {
 
 // Color scales for different layers
 const BASIN_COLORS = [
-  { threshold: 0.2, color: '#EF4444' },  // Low stability - red
-  { threshold: 0.4, color: '#F59E0B' },  // Medium-low - orange
-  { threshold: 0.6, color: '#FBBF24' },  // Medium - yellow
-  { threshold: 0.8, color: '#84CC16' },  // Medium-high - lime
-  { threshold: 1.0, color: '#10B981' },  // High stability - green
+  { threshold: 0.2, color: '#EF4444' }, // Low stability - red
+  { threshold: 0.4, color: '#F59E0B' }, // Medium-low - orange
+  { threshold: 0.6, color: '#FBBF24' }, // Medium - yellow
+  { threshold: 0.8, color: '#84CC16' }, // Medium-high - lime
+  { threshold: 1.0, color: '#10B981' }, // High stability - green
 ];
 
 const RISK_COLORS = [
-  { threshold: 0.2, color: '#10B981' },  // Low risk - green
+  { threshold: 0.2, color: '#10B981' }, // Low risk - green
   { threshold: 0.4, color: '#84CC16' },
   { threshold: 0.6, color: '#FBBF24' },
   { threshold: 0.8, color: '#F59E0B' },
-  { threshold: 1.0, color: '#EF4444' },  // High risk - red
+  { threshold: 1.0, color: '#EF4444' }, // High risk - red
 ];
 
 function getColorForValue(value: number, scale: typeof BASIN_COLORS): string {
@@ -35,12 +35,7 @@ function getColorForValue(value: number, scale: typeof BASIN_COLORS): string {
   return scale[scale.length - 1].color;
 }
 
-export default function AttractorMap({
-  nations,
-  edges,
-  layer,
-  onNationSelect,
-}: AttractorMapProps) {
+export default function AttractorMap({ nations, edges, layer, onNationSelect }: AttractorMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [markers, setMarkers] = useState<google.maps.marker.AdvancedMarkerElement[]>([]);
@@ -225,7 +220,5 @@ export default function AttractorMap({
     }
   }, [layer]);
 
-  return (
-    <div ref={mapRef} className="map-container w-full h-full" />
-  );
+  return <div ref={mapRef} className="map-container w-full h-full" />;
 }

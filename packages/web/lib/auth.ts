@@ -24,7 +24,8 @@ export async function createClient() {
 
   // Check if we're on latticeforge.ai (not localhost) by looking at the Supabase URL
   // In production, NEXT_PUBLIC_SUPABASE_URL will contain latticeforge
-  const isProduction = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('latticeforge') ||
+  const isProduction =
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('latticeforge') ||
     process.env.VERCEL_ENV === 'production';
 
   return createServerClient(
@@ -73,7 +74,10 @@ export async function createClient() {
 export async function getUser(): Promise<UserProfile | null> {
   const supabase = await createClient();
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
 
   if (authError) {
     console.error('Auth error in getUser:', authError);
@@ -192,7 +196,9 @@ export async function requireConsumer(): Promise<UserProfile> {
 // Log user activity
 export async function logActivity(action: string, details: Record<string, unknown> = {}) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (user) {
     await supabase.from('user_activity').insert({

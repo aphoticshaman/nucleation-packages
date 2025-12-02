@@ -125,10 +125,7 @@ export class HPCP {
   /**
    * Detect phase change in signal
    */
-  detectPhaseChange(
-    signal: number[],
-    sensitivity = 0.5
-  ): PhaseChangeResult {
+  detectPhaseChange(signal: number[], sensitivity = 0.5): PhaseChangeResult {
     const halfLen = Math.floor(signal.length / 2);
 
     // Analyze before and after segments
@@ -146,10 +143,7 @@ export class HPCP {
     const harmonicityChange = Math.abs(after.harmonicity - before.harmonicity);
 
     // Combined change magnitude
-    const magnitude =
-      chromaDistance * 0.4 +
-      normalizedPhaseShift * 0.3 +
-      harmonicityChange * 0.3;
+    const magnitude = chromaDistance * 0.4 + normalizedPhaseShift * 0.3 + harmonicityChange * 0.3;
 
     // Determine if significant
     const threshold = 0.3 * (1 - sensitivity);
@@ -358,9 +352,7 @@ export class HPCP {
     }
 
     // Check transition sharpness
-    const midProfile = this.analyze(
-      signal.slice(signal.length / 4, (3 * signal.length) / 4)
-    );
+    const midProfile = this.analyze(signal.slice(signal.length / 4, (3 * signal.length) / 4));
     const midDist = this.euclideanDistance(before.chroma, midProfile.chroma);
     const fullDist = this.euclideanDistance(before.chroma, after.chroma);
 
@@ -412,10 +404,7 @@ export class HPCP {
 /**
  * Convenient function for phase change detection
  */
-export function detectPhaseChange(
-  signal: number[],
-  sensitivity = 0.5
-): PhaseChangeResult {
+export function detectPhaseChange(signal: number[], sensitivity = 0.5): PhaseChangeResult {
   const hpcp = new HPCP(Math.min(256, signal.length));
   return hpcp.detectPhaseChange(signal, sensitivity);
 }

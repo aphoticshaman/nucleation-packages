@@ -2,7 +2,13 @@
 
 import Image from 'next/image';
 
-export type FeatureIconType = 'analytics' | 'export' | 'security' | 'simulation' | 'team' | 'webhook';
+export type FeatureIconType =
+  | 'analytics'
+  | 'export'
+  | 'security'
+  | 'simulation'
+  | 'team'
+  | 'webhook';
 
 interface FeatureIconProps {
   icon: FeatureIconType;
@@ -22,7 +28,7 @@ export default function FeatureIcon({
   icon,
   size = 'md',
   className = '',
-  glow = true
+  glow = true,
 }: FeatureIconProps) {
   const dimension = SIZES[size];
 

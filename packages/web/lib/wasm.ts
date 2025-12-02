@@ -18,7 +18,11 @@ export interface WasmCore {
   ) => WasmSwarm;
 
   // Persistence
-  wasm_compute_persistence: (points_flat: Float64Array, n_points: number, max_edge: number) => WasmPersistence;
+  wasm_compute_persistence: (
+    points_flat: Float64Array,
+    n_points: number,
+    max_edge: number
+  ) => WasmPersistence;
 
   // Q-matrix
   wasm_build_q_matrix: (rates_flat: Float64Array, n: number) => Float64Array;
@@ -28,10 +32,22 @@ export interface WasmCore {
   wasm_distance_matrix: (points_flat: Float64Array, n_points: number) => Float64Array;
 
   // Geodesic integration
-  wasm_integrate_geodesic_fisher: (x0: Float64Array, v0: Float64Array, dt: number, n_steps: number) => unknown;
+  wasm_integrate_geodesic_fisher: (
+    x0: Float64Array,
+    v0: Float64Array,
+    dt: number,
+    n_steps: number
+  ) => unknown;
 
   // Markov chain simulation
-  wasm_simulate_markov_chain: (q_flat: Float64Array, n: number, r0: number, total_time: number, dt: number, seed: bigint) => unknown;
+  wasm_simulate_markov_chain: (
+    q_flat: Float64Array,
+    n: number,
+    r0: number,
+    total_time: number,
+    dt: number,
+    seed: bigint
+  ) => unknown;
 
   // Persistent entropy
   wasm_persistent_entropy: (births: Float64Array, deaths: Float64Array) => number;

@@ -226,7 +226,10 @@ export class AnomalyFingerprintDetector {
     const recent = values.slice(-n);
 
     // Fit line: y = ax + b
-    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+    let sumX = 0,
+      sumY = 0,
+      sumXY = 0,
+      sumX2 = 0;
     for (let i = 0; i < recent.length; i++) {
       sumX += i;
       sumY += recent[i];
@@ -247,9 +250,7 @@ export class AnomalyFingerprintDetector {
   /**
    * Calculate mutual information between signal pairs
    */
-  private calculateMutualInformation(
-    signals: Map<string, number[]>
-  ): Map<string, number> {
+  private calculateMutualInformation(signals: Map<string, number[]>): Map<string, number> {
     const mi = new Map<string, number>();
     const entries = Array.from(signals.entries());
 
@@ -332,9 +333,9 @@ export class AnomalyFingerprintDetector {
       const currentEntropy = Math.log(this.variance(recent) + 1e-10);
 
       // Predicted entropy (residual variance after linear prediction)
-      const predictions = recent.slice(0, -1).map((_, i) =>
-        this.linearPredict(recent.slice(0, i + 1))
-      );
+      const predictions = recent
+        .slice(0, -1)
+        .map((_, i) => this.linearPredict(recent.slice(0, i + 1)));
       const residuals = recent.slice(1).map((v, i) => v - predictions[i]);
       const predictedEntropy = Math.log(this.variance(residuals) + 1e-10);
 
@@ -493,11 +494,7 @@ export class AnomalyFingerprintDetector {
   /**
    * Generate hash for fingerprint
    */
-  private generateHash(
-    temporal: string,
-    spatial: string,
-    phi: number
-  ): string {
+  private generateHash(temporal: string, spatial: string, phi: number): string {
     const phiBucket = Math.floor(phi * 10);
     return `${temporal[0]}${spatial[0]}${phiBucket}`;
   }
@@ -564,13 +561,10 @@ export class AnomalyFingerprintDetector {
     severity: number,
     affected: string[]
   ): string {
-    const severityLabel =
-      severity > 0.8 ? 'Critical' : severity > 0.5 ? 'Significant' : 'Moderate';
+    const severityLabel = severity > 0.8 ? 'Critical' : severity > 0.5 ? 'Significant' : 'Moderate';
 
     const patternMatch = AnomalyFingerprintDetector.KNOWN_PATTERNS.find(
-      (p) =>
-        p.temporal === fingerprint.temporalPattern &&
-        p.spatial === fingerprint.spatialPattern
+      (p) => p.temporal === fingerprint.temporalPattern && p.spatial === fingerprint.spatialPattern
     );
 
     let explanation = `${severityLabel} ${fingerprint.temporalPattern} anomaly `;
@@ -639,7 +633,9 @@ export class AnomalyFingerprintDetector {
     const meanX = xSlice.reduce((a, b) => a + b, 0) / n;
     const meanY = ySlice.reduce((a, b) => a + b, 0) / n;
 
-    let num = 0, denX = 0, denY = 0;
+    let num = 0,
+      denX = 0,
+      denY = 0;
     for (let i = 0; i < n; i++) {
       const dx = xSlice[i] - meanX;
       const dy = ySlice[i] - meanY;
@@ -667,7 +663,10 @@ export class AnomalyFingerprintDetector {
     const n = values.length;
     if (n < 2) return 0;
 
-    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+    let sumX = 0,
+      sumY = 0,
+      sumXY = 0,
+      sumX2 = 0;
     for (let i = 0; i < n; i++) {
       sumX += i;
       sumY += values[i];

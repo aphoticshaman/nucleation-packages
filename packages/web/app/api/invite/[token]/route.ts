@@ -2,10 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 // Validate an invite token (public endpoint)
-export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ token: string }> }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ token: string }> }) {
   try {
     const { token } = await params;
 
@@ -36,10 +33,7 @@ export async function GET(
 
     // Check if expired
     if (new Date(invite.expires_at) < new Date()) {
-      await supabaseAdmin
-        .from('trial_invites')
-        .update({ status: 'expired' })
-        .eq('token', token);
+      await supabaseAdmin.from('trial_invites').update({ status: 'expired' }).eq('token', token);
 
       return NextResponse.json({ valid: false, error: 'Invite has expired' });
     }

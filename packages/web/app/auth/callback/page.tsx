@@ -38,7 +38,9 @@ function AuthCallbackHandler() {
 
         // First, check if we already have a session (Supabase might have handled the exchange)
         setStatus('Checking authentication...');
-        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        const {
+          data: { session: existingSession },
+        } = await supabase.auth.getSession();
 
         if (existingSession) {
           // Session already exists - just ensure profile and redirect
@@ -59,8 +61,13 @@ function AuthCallbackHandler() {
             // If exchange fails (e.g., verifier missing), check session again
             // The session might have been established via cookies from Supabase auth server
             if (exchangeError) {
-              console.warn('Code exchange failed, checking for existing session:', exchangeError.message);
-              const { data: { session: retrySession } } = await supabase.auth.getSession();
+              console.warn(
+                'Code exchange failed, checking for existing session:',
+                exchangeError.message
+              );
+              const {
+                data: { session: retrySession },
+              } = await supabase.auth.getSession();
               if (retrySession) {
                 await ensureProfileAndRedirect();
                 return;
@@ -68,7 +75,9 @@ function AuthCallbackHandler() {
             }
           } catch (err) {
             console.warn('Code exchange threw, checking session:', err);
-            const { data: { session: fallbackSession } } = await supabase.auth.getSession();
+            const {
+              data: { session: fallbackSession },
+            } = await supabase.auth.getSession();
             if (fallbackSession) {
               await ensureProfileAndRedirect();
               return;
@@ -80,8 +89,10 @@ function AuthCallbackHandler() {
         if (window.location.hash) {
           setStatus('Processing authentication...');
           // Give Supabase time to process the hash
-          await new Promise(resolve => setTimeout(resolve, 500));
-          const { data: { session: hashSession } } = await supabase.auth.getSession();
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          const {
+            data: { session: hashSession },
+          } = await supabase.auth.getSession();
           if (hashSession) {
             await ensureProfileAndRedirect();
             return;
@@ -90,7 +101,9 @@ function AuthCallbackHandler() {
 
         // Last resort: listen for auth state change
         setStatus('Waiting for authentication...');
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        const {
+          data: { subscription },
+        } = supabase.auth.onAuthStateChange(async (event, session) => {
           if (event === 'SIGNED_IN' && session) {
             subscription.unsubscribe();
             await ensureProfileAndRedirect();

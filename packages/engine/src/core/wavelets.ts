@@ -104,7 +104,8 @@ export class Wavelets {
       const detail: number[] = [];
 
       for (let i = 0; i < n; i += 2) {
-        let low = 0, high = 0;
+        let low = 0,
+          high = 0;
         for (let j = 0; j < 4; j++) {
           const idx = (i + j) % n;
           low += lowPass[j] * current[idx];
@@ -128,11 +129,7 @@ export class Wavelets {
   /**
    * Wavelet denoising using soft thresholding
    */
-  static denoise(
-    data: number[],
-    threshold?: number,
-    wavelet: 'haar' | 'db4' = 'haar'
-  ): number[] {
+  static denoise(data: number[], threshold?: number, wavelet: 'haar' | 'db4' = 'haar'): number[] {
     // Transform
     const coeffs = wavelet === 'haar' ? Wavelets.haar(data) : Wavelets.db4(data);
 
@@ -153,9 +150,7 @@ export class Wavelets {
     }
 
     // Inverse transform
-    return wavelet === 'haar'
-      ? Wavelets.inverseHaar(coeffs)
-      : Wavelets.inverseDb4(coeffs);
+    return wavelet === 'haar' ? Wavelets.inverseHaar(coeffs) : Wavelets.inverseDb4(coeffs);
   }
 
   /**
@@ -199,9 +194,7 @@ export class Wavelets {
     const energies: number[] = [];
 
     // Approximation energy
-    energies.push(
-      coefficients.approximation.reduce((sum, c) => sum + c * c, 0)
-    );
+    energies.push(coefficients.approximation.reduce((sum, c) => sum + c * c, 0));
 
     // Detail energies at each level
     for (const detail of coefficients.details) {

@@ -1,11 +1,7 @@
 import { requireEnterprise, createClient } from '@/lib/auth';
 import EnterpriseNav from './components/EnterpriseNav';
 
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await requireEnterprise();
   const supabase = await createClient();
 

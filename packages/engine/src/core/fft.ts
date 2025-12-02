@@ -225,11 +225,7 @@ export function psd(signal: number[], windowSize = 256): number[] {
 /**
  * Cross-spectral density between two signals
  */
-export function csd(
-  signal1: number[],
-  signal2: number[],
-  windowSize = 256
-): Complex[] {
+export function csd(signal1: number[], signal2: number[], windowSize = 256): Complex[] {
   const fftObj = new FFT(windowSize);
   const numSegments = Math.min(
     Math.floor(signal1.length / windowSize),
@@ -245,12 +241,8 @@ export function csd(
     const seg2 = signal2.slice(seg * windowSize, (seg + 1) * windowSize);
 
     // Apply Hann window
-    const win1 = seg1.map(
-      (v, i) => v * 0.5 * (1 - Math.cos((2 * Math.PI * i) / windowSize))
-    );
-    const win2 = seg2.map(
-      (v, i) => v * 0.5 * (1 - Math.cos((2 * Math.PI * i) / windowSize))
-    );
+    const win1 = seg1.map((v, i) => v * 0.5 * (1 - Math.cos((2 * Math.PI * i) / windowSize)));
+    const win2 = seg2.map((v, i) => v * 0.5 * (1 - Math.cos((2 * Math.PI * i) / windowSize)));
 
     const spec1 = fftObj.forward(win1);
     const spec2 = fftObj.forward(win2);

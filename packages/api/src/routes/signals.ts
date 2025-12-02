@@ -247,8 +247,27 @@ function getTierSources(tier: string): string[] {
   const sources: Record<string, string[]> = {
     free: ['sec-edgar', 'fred'],
     pro: ['sec-edgar', 'fred', 'guardian', 'newsapi', 'reddit', 'bluesky'],
-    enterprise: ['sec-edgar', 'fred', 'guardian', 'newsapi', 'reddit', 'bluesky', 'discord', 'alpha-vantage'],
-    government: ['sec-edgar', 'fred', 'guardian', 'newsapi', 'reddit', 'bluesky', 'discord', 'alpha-vantage', 'classified'],
+    enterprise: [
+      'sec-edgar',
+      'fred',
+      'guardian',
+      'newsapi',
+      'reddit',
+      'bluesky',
+      'discord',
+      'alpha-vantage',
+    ],
+    government: [
+      'sec-edgar',
+      'fred',
+      'guardian',
+      'newsapi',
+      'reddit',
+      'bluesky',
+      'discord',
+      'alpha-vantage',
+      'classified',
+    ],
   };
   return sources[tier] ?? sources.free;
 }

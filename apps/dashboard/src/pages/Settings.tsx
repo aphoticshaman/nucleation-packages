@@ -11,17 +11,35 @@ const TIERS = {
   free: {
     name: 'Free',
     price: '$0/month',
-    features: ['5,000 API calls/month', 'World Bank + CIA Factbook data', 'Quick briefs (Haiku)', 'Basic anomaly detection'],
+    features: [
+      '5,000 API calls/month',
+      'World Bank + CIA Factbook data',
+      'Quick briefs (Haiku)',
+      'Basic anomaly detection',
+    ],
   },
   pro: {
     name: 'Pro',
     price: '$49/month',
-    features: ['50,000 API calls/month', 'All Free features', 'FRED economic data', 'US deep dive briefs (Sonnet)', 'Priority email support'],
+    features: [
+      '50,000 API calls/month',
+      'All Free features',
+      'FRED economic data',
+      'US deep dive briefs (Sonnet)',
+      'Priority email support',
+    ],
   },
   enterprise: {
     name: 'Enterprise',
     price: '$299/month',
-    features: ['Unlimited API calls', 'All Pro features', 'Intel-style predictive briefs (Opus)', 'Real-time data feeds', 'Custom integrations', 'Dedicated support + SLA'],
+    features: [
+      'Unlimited API calls',
+      'All Pro features',
+      'Intel-style predictive briefs (Opus)',
+      'Real-time data feeds',
+      'Custom integrations',
+      'Dedicated support + SLA',
+    ],
   },
 };
 
@@ -68,7 +86,7 @@ export function Settings({ session }: SettingsProps) {
 
   const toggleCountry = async (code: string) => {
     const newCountries = trackedCountries.includes(code)
-      ? trackedCountries.filter(c => c !== code)
+      ? trackedCountries.filter((c) => c !== code)
       : [...trackedCountries, code];
 
     setTrackedCountries(newCountries);
@@ -91,7 +109,7 @@ export function Settings({ session }: SettingsProps) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           price_id: `${tier}_monthly`,
@@ -128,7 +146,7 @@ export function Settings({ session }: SettingsProps) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           return_url: `${window.location.origin}/settings`,
@@ -168,7 +186,9 @@ export function Settings({ session }: SettingsProps) {
         <div className="glass-card p-4 border-red-500/30 bg-red-500/5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="px-2 py-0.5 rounded text-xs font-semibold bg-red-500/20 text-red-400">Admin</span>
+              <span className="px-2 py-0.5 rounded text-xs font-semibold bg-red-500/20 text-red-400">
+                Admin
+              </span>
               <span className="text-sm text-surface-300">Preview user experience by tier:</span>
             </div>
             <div className="flex gap-2">
@@ -195,7 +215,8 @@ export function Settings({ session }: SettingsProps) {
               <p className="text-sm text-amber-300 font-medium">Billing Not Yet Configured</p>
               <p className="text-xs text-surface-400 mt-1">
                 Stripe products and prices need to be created before upgrades work.
-                {isAdmin && ' You currently have admin access with all Enterprise features enabled.'}
+                {isAdmin &&
+                  ' You currently have admin access with all Enterprise features enabled.'}
               </p>
             </div>
           </div>
@@ -215,21 +236,29 @@ export function Settings({ session }: SettingsProps) {
           </div>
           <div className="flex justify-between py-2 border-b border-surface-700">
             <span className="text-surface-400">Role</span>
-            <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-              currentRole === 'admin' ? 'bg-red-500/20 text-red-400' :
-              currentRole === 'support' ? 'bg-amber-500/20 text-amber-400' :
-              'bg-surface-600/50 text-surface-300'
-            }`}>
+            <span
+              className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                currentRole === 'admin'
+                  ? 'bg-red-500/20 text-red-400'
+                  : currentRole === 'support'
+                    ? 'bg-amber-500/20 text-amber-400'
+                    : 'bg-surface-600/50 text-surface-300'
+              }`}
+            >
               {currentRole.charAt(0).toUpperCase() + currentRole.slice(1)}
             </span>
           </div>
           <div className="flex justify-between py-2">
             <span className="text-surface-400">Current Plan</span>
-            <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-              currentTier === 'enterprise' ? 'bg-crystal-500/20 text-crystal-400' :
-              currentTier === 'pro' ? 'bg-lattice-500/20 text-lattice-400' :
-              'bg-surface-600/50 text-surface-300'
-            }`}>
+            <span
+              className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                currentTier === 'enterprise'
+                  ? 'bg-crystal-500/20 text-crystal-400'
+                  : currentTier === 'pro'
+                    ? 'bg-lattice-500/20 text-lattice-400'
+                    : 'bg-surface-600/50 text-surface-300'
+              }`}
+            >
               {TIERS[currentTier].name}
             </span>
           </div>
@@ -249,7 +278,9 @@ export function Settings({ session }: SettingsProps) {
       {/* Country Tracking Preferences */}
       <div className="glass-card p-6">
         <h2 className="text-lg font-semibold text-white mb-2">Dashboard Preferences</h2>
-        <p className="text-sm text-surface-400 mb-4">Select countries to track on your dashboard homepage</p>
+        <p className="text-sm text-surface-400 mb-4">
+          Select countries to track on your dashboard homepage
+        </p>
         <div className="grid grid-cols-4 gap-2">
           {AVAILABLE_COUNTRIES.map((country) => (
             <button
@@ -261,7 +292,31 @@ export function Settings({ session }: SettingsProps) {
                   : 'bg-surface-800/50 text-surface-400 border border-surface-700 hover:border-surface-600'
               }`}
             >
-              <span className="block text-lg mb-1">{country.code === 'US' ? '🇺🇸' : country.code === 'CN' ? '🇨🇳' : country.code === 'RU' ? '🇷🇺' : country.code === 'GB' ? '🇬🇧' : country.code === 'DE' ? '🇩🇪' : country.code === 'JP' ? '🇯🇵' : country.code === 'FR' ? '🇫🇷' : country.code === 'IN' ? '🇮🇳' : country.code === 'BR' ? '🇧🇷' : country.code === 'AU' ? '🇦🇺' : country.code === 'CA' ? '🇨🇦' : '🇰🇷'}</span>
+              <span className="block text-lg mb-1">
+                {country.code === 'US'
+                  ? '🇺🇸'
+                  : country.code === 'CN'
+                    ? '🇨🇳'
+                    : country.code === 'RU'
+                      ? '🇷🇺'
+                      : country.code === 'GB'
+                        ? '🇬🇧'
+                        : country.code === 'DE'
+                          ? '🇩🇪'
+                          : country.code === 'JP'
+                            ? '🇯🇵'
+                            : country.code === 'FR'
+                              ? '🇫🇷'
+                              : country.code === 'IN'
+                                ? '🇮🇳'
+                                : country.code === 'BR'
+                                  ? '🇧🇷'
+                                  : country.code === 'AU'
+                                    ? '🇦🇺'
+                                    : country.code === 'CA'
+                                      ? '🇨🇦'
+                                      : '🇰🇷'}
+              </span>
               {country.name}
             </button>
           ))}
@@ -278,21 +333,33 @@ export function Settings({ session }: SettingsProps) {
           <div className="grid grid-cols-3 gap-4">
             <div className="p-4 rounded-lg bg-surface-800/50 border border-surface-700">
               <div className="flex items-center gap-2 mb-2">
-                <span className="px-2 py-0.5 rounded text-xs font-semibold bg-red-500/20 text-red-400">Admin</span>
+                <span className="px-2 py-0.5 rounded text-xs font-semibold bg-red-500/20 text-red-400">
+                  Admin
+                </span>
               </div>
-              <p className="text-xs text-surface-400">Full access to all features, billing, user management, and system settings.</p>
+              <p className="text-xs text-surface-400">
+                Full access to all features, billing, user management, and system settings.
+              </p>
             </div>
             <div className="p-4 rounded-lg bg-surface-800/50 border border-surface-700">
               <div className="flex items-center gap-2 mb-2">
-                <span className="px-2 py-0.5 rounded text-xs font-semibold bg-amber-500/20 text-amber-400">Support</span>
+                <span className="px-2 py-0.5 rounded text-xs font-semibold bg-amber-500/20 text-amber-400">
+                  Support
+                </span>
               </div>
-              <p className="text-xs text-surface-400">CSA access to view and assist users. Cannot modify billing or system settings.</p>
+              <p className="text-xs text-surface-400">
+                CSA access to view and assist users. Cannot modify billing or system settings.
+              </p>
             </div>
             <div className="p-4 rounded-lg bg-surface-800/50 border border-surface-700">
               <div className="flex items-center gap-2 mb-2">
-                <span className="px-2 py-0.5 rounded text-xs font-semibold bg-surface-600/50 text-surface-300">User</span>
+                <span className="px-2 py-0.5 rounded text-xs font-semibold bg-surface-600/50 text-surface-300">
+                  User
+                </span>
               </div>
-              <p className="text-xs text-surface-400">Standard customer access based on subscription tier (Free, Pro, or Enterprise).</p>
+              <p className="text-xs text-surface-400">
+                Standard customer access based on subscription tier (Free, Pro, or Enterprise).
+              </p>
             </div>
           </div>
         </div>
@@ -302,44 +369,50 @@ export function Settings({ session }: SettingsProps) {
       <div>
         <h2 className="text-lg font-semibold text-white mb-4">Plans & Pricing</h2>
         <div className="grid grid-cols-3 gap-4">
-          {(Object.entries(TIERS) as [keyof typeof TIERS, typeof TIERS.free][]).map(([key, tier]) => (
-            <div
-              key={key}
-              className={`glass-card p-6 relative ${
-                currentTier === key ? 'border-lattice-500/50' : ''
-              }`}
-            >
-              {currentTier === key && (
-                <div className="absolute top-4 right-4">
-                  <span className="px-2 py-0.5 rounded text-xs font-semibold bg-lattice-500/20 text-lattice-400">
-                    Current
-                  </span>
-                </div>
-              )}
+          {(Object.entries(TIERS) as [keyof typeof TIERS, typeof TIERS.free][]).map(
+            ([key, tier]) => (
+              <div
+                key={key}
+                className={`glass-card p-6 relative ${
+                  currentTier === key ? 'border-lattice-500/50' : ''
+                }`}
+              >
+                {currentTier === key && (
+                  <div className="absolute top-4 right-4">
+                    <span className="px-2 py-0.5 rounded text-xs font-semibold bg-lattice-500/20 text-lattice-400">
+                      Current
+                    </span>
+                  </div>
+                )}
 
-              <h3 className="text-xl font-bold text-white">{tier.name}</h3>
-              <p className="text-2xl font-bold text-lattice-400 mt-2">{tier.price}</p>
+                <h3 className="text-xl font-bold text-white">{tier.name}</h3>
+                <p className="text-2xl font-bold text-lattice-400 mt-2">{tier.price}</p>
 
-              <ul className="mt-4 space-y-2">
-                {tier.features.map((feature, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-surface-300">
-                    <CheckIcon className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
+                <ul className="mt-4 space-y-2">
+                  {tier.features.map((feature, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-surface-300">
+                      <CheckIcon className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
 
-              {key !== 'free' && currentTier === 'free' && (
-                <button
-                  onClick={() => handleUpgrade(key as 'pro' | 'enterprise')}
-                  disabled={isLoading || !STRIPE_CONFIGURED}
-                  className="w-full mt-6 btn-primary disabled:opacity-50"
-                >
-                  {!STRIPE_CONFIGURED ? 'Coming Soon' : isLoading ? 'Loading...' : `Upgrade to ${tier.name}`}
-                </button>
-              )}
-            </div>
-          ))}
+                {key !== 'free' && currentTier === 'free' && (
+                  <button
+                    onClick={() => handleUpgrade(key as 'pro' | 'enterprise')}
+                    disabled={isLoading || !STRIPE_CONFIGURED}
+                    className="w-full mt-6 btn-primary disabled:opacity-50"
+                  >
+                    {!STRIPE_CONFIGURED
+                      ? 'Coming Soon'
+                      : isLoading
+                        ? 'Loading...'
+                        : `Upgrade to ${tier.name}`}
+                  </button>
+                )}
+              </div>
+            )
+          )}
         </div>
       </div>
     </div>

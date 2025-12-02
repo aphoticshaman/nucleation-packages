@@ -15,31 +15,32 @@ export default function TermsPage() {
         <h1 className="text-4xl font-bold text-white mb-8">Terms of Service</h1>
 
         <div className="prose prose-invert prose-slate max-w-none">
-          <p className="text-slate-300 text-lg mb-6">
-            Last updated: December 2024
-          </p>
+          <p className="text-slate-300 text-lg mb-6">Last updated: December 2024</p>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-white mb-4">1. Acceptance of Terms</h2>
             <p className="text-slate-400">
-              By accessing or using LatticeForge (&quot;the Service&quot;), you agree to be bound by these Terms of Service.
-              If you do not agree to these terms, please do not use the Service.
+              By accessing or using LatticeForge (&quot;the Service&quot;), you agree to be bound by
+              these Terms of Service. If you do not agree to these terms, please do not use the
+              Service.
             </p>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-white mb-4">2. Description of Service</h2>
             <p className="text-slate-400">
-              LatticeForge provides geopolitical analysis, simulation tools, and intelligence dashboards
-              for research and educational purposes. The Service is provided &quot;as is&quot; without warranties of any kind.
+              LatticeForge provides geopolitical analysis, simulation tools, and intelligence
+              dashboards for research and educational purposes. The Service is provided &quot;as
+              is&quot; without warranties of any kind.
             </p>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-white mb-4">3. User Accounts</h2>
             <p className="text-slate-400">
-              You are responsible for maintaining the confidentiality of your account credentials and for all
-              activities that occur under your account. You must notify us immediately of any unauthorized use.
+              You are responsible for maintaining the confidentiality of your account credentials
+              and for all activities that occur under your account. You must notify us immediately
+              of any unauthorized use.
             </p>
           </section>
 
@@ -58,33 +59,34 @@ export default function TermsPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-white mb-4">5. Intellectual Property</h2>
             <p className="text-slate-400">
-              All content, features, and functionality of the Service are owned by LatticeForge and are
-              protected by international copyright, trademark, and other intellectual property laws.
+              All content, features, and functionality of the Service are owned by LatticeForge and
+              are protected by international copyright, trademark, and other intellectual property
+              laws.
             </p>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-white mb-4">6. Disclaimer</h2>
             <p className="text-slate-400">
-              The analyses and simulations provided by LatticeForge are for informational and educational
-              purposes only. They should not be construed as professional advice or used as the sole basis
-              for any decision-making.
+              The analyses and simulations provided by LatticeForge are for informational and
+              educational purposes only. They should not be construed as professional advice or used
+              as the sole basis for any decision-making.
             </p>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-white mb-4">7. Limitation of Liability</h2>
             <p className="text-slate-400">
-              LatticeForge shall not be liable for any indirect, incidental, special, consequential, or
-              punitive damages resulting from your use of the Service.
+              LatticeForge shall not be liable for any indirect, incidental, special, consequential,
+              or punitive damages resulting from your use of the Service.
             </p>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-white mb-4">8. Changes to Terms</h2>
             <p className="text-slate-400">
-              We reserve the right to modify these terms at any time. Continued use of the Service after
-              changes constitutes acceptance of the new terms.
+              We reserve the right to modify these terms at any time. Continued use of the Service
+              after changes constitutes acceptance of the new terms.
             </p>
           </section>
 

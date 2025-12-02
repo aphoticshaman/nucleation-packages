@@ -67,10 +67,7 @@ export default function ConsumerSettingsPage() {
               <p className="text-white">Auto-save simulations</p>
               <p className="text-sm text-slate-400">Save after each run</p>
             </div>
-            <button
-              className="w-12 h-6 bg-slate-700 rounded-full relative"
-              onClick={() => {}}
-            >
+            <button className="w-12 h-6 bg-slate-700 rounded-full relative" onClick={() => {}}>
               <span className="absolute left-1 top-1 w-4 h-4 bg-slate-400 rounded-full transition-transform" />
             </button>
           </div>
@@ -80,10 +77,7 @@ export default function ConsumerSettingsPage() {
               <p className="text-white">Email notifications</p>
               <p className="text-sm text-slate-400">Updates and announcements</p>
             </div>
-            <button
-              className="w-12 h-6 bg-blue-600 rounded-full relative"
-              onClick={() => {}}
-            >
+            <button className="w-12 h-6 bg-blue-600 rounded-full relative" onClick={() => {}}>
               <span className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full transition-transform" />
             </button>
           </div>
@@ -128,9 +122,7 @@ export default function ConsumerSettingsPage() {
                 Current
               </span>
             </div>
-            <p className="text-slate-400 mt-1">
-              10 simulations/day, 5 save slots
-            </p>
+            <p className="text-slate-400 mt-1">10 simulations/day, 5 save slots</p>
           </div>
           <a
             href="/pricing"
@@ -148,9 +140,7 @@ export default function ConsumerSettingsPage() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-white">Delete account</p>
-            <p className="text-sm text-slate-400">
-              Permanently delete your account and all data
-            </p>
+            <p className="text-sm text-slate-400">Permanently delete your account and all data</p>
           </div>
           <button className="px-4 py-2 border border-red-600 text-red-400 rounded-lg hover:bg-red-900/20">
             Delete
@@ -164,9 +154,7 @@ export default function ConsumerSettingsPage() {
           onClick={() => void handleSave()}
           disabled={saving}
           className={`px-6 py-2 rounded-lg font-medium ${
-            saving
-              ? 'bg-slate-700 text-slate-400'
-              : 'bg-blue-600 text-white hover:bg-blue-500'
+            saving ? 'bg-slate-700 text-slate-400' : 'bg-blue-600 text-white hover:bg-blue-500'
           }`}
         >
           {saving ? 'Saving...' : 'Save Changes'}

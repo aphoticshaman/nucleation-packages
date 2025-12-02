@@ -86,10 +86,7 @@ export class WasmBridge {
   /**
    * Batch detect phases using WASM (with JS fallback)
    */
-  detectPhaseBatch(
-    data: number[],
-    windowSize: number
-  ): { phases: number[]; usedWasm: boolean } {
+  detectPhaseBatch(data: number[], windowSize: number): { phases: number[]; usedWasm: boolean } {
     if (this.wasmModule) {
       try {
         const arr = new Float64Array(data);
@@ -112,8 +109,7 @@ export class WasmBridge {
     if (data.length < 2) return 0;
 
     const mean = data.reduce((a, b) => a + b, 0) / data.length;
-    const variance =
-      data.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / data.length;
+    const variance = data.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / data.length;
 
     // Simple variance-based phase detection
     // Higher variance = higher phase (more instability)
