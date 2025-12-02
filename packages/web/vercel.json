@@ -1,4 +1,22 @@
 {
   "framework": "nextjs",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "crons": [
+    {
+      "path": "/api/ingest/gdelt",
+      "schedule": "0 */4 * * *"
+    },
+    {
+      "path": "/api/ingest/worldbank",
+      "schedule": "0 6 * * 0"
+    },
+    {
+      "path": "/api/ingest/usgs",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/ingest/sentiment",
+      "schedule": "0 */2 * * *"
+    }
+  ]
 }
