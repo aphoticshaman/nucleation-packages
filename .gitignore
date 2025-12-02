@@ -40,3 +40,5 @@ temp/
 
 # Husky
 .husky/_/
+.vercel
+.env*.local
