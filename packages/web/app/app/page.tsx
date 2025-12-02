@@ -347,10 +347,177 @@ export default function ConsumerDashboard() {
         </div>
       </div>
 
-      {/* Main content grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 2xl:grid-cols-6 gap-4 md:gap-6 2xl:gap-8">
+      {/* Main content grid - 3 columns on desktop: Summary | Map | Controls */}
+      <div className="grid grid-cols-1 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-4 md:gap-6 2xl:gap-8">
+        {/* Flashpoint Summary Panel - Left sidebar on desktop */}
+        <div className="lg:col-span-2 xl:col-span-2 2xl:col-span-2 order-2 lg:order-1">
+          <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 lg:p-5 space-y-4 lg:sticky lg:top-20">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base lg:text-lg font-semibold text-white flex items-center gap-2">
+                <span>📡</span>
+                <span>Intel Briefing</span>
+              </h2>
+              <span className="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded">Live</span>
+            </div>
+
+            {/* Location-based context */}
+            <div className="text-xs text-slate-400 border-b border-slate-800 pb-3">
+              <span className="text-blue-400">Based on your region</span> • Updated 2h ago
+            </div>
+
+            {/* Political */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-amber-400 flex items-center gap-2">
+                <span>🏛️</span> Political
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ante ipsum
+                primis in faucibus orci luctus.
+              </p>
+            </div>
+
+            {/* Economic & Trade */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-green-400 flex items-center gap-2">
+                <span>📈</span> Economic & Trade
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium
+                doloremque laudantium.
+              </p>
+            </div>
+
+            {/* Security & Diplomacy */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-red-400 flex items-center gap-2">
+                <span>⚔️</span> Security & Diplomacy
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia
+                consequuntur.
+              </p>
+            </div>
+
+            {/* Financial */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-blue-400 flex items-center gap-2">
+                <span>💰</span> Financial
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit
+                laboriosam.
+              </p>
+            </div>
+
+            {/* Health */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-pink-400 flex items-center gap-2">
+                <span>🏥</span> Health
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil
+                molestiae.
+              </p>
+            </div>
+
+            {/* Science & Tech */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-cyan-400 flex items-center gap-2">
+                <span>🔬</span> Science & Tech
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis
+                praesentium.
+              </p>
+            </div>
+
+            {/* Natural Resources */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-emerald-400 flex items-center gap-2">
+                <span>🌿</span> Natural Resources
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo
+                minus.
+              </p>
+            </div>
+
+            {/* Crime & Drugs */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-orange-400 flex items-center gap-2">
+                <span>🚨</span> Crime & Drugs
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe
+                eveniet.
+              </p>
+            </div>
+
+            {/* Cyber Threats */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-violet-400 flex items-center gap-2">
+                <span>💻</span> Cyber Threats
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus
+                maiores.
+              </p>
+            </div>
+
+            {/* Terrorism & Extremism */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-rose-400 flex items-center gap-2">
+                <span>⚡</span> Terrorism & Extremism
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore soluta.
+              </p>
+            </div>
+
+            {/* Domestic Instability */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-yellow-400 flex items-center gap-2">
+                <span>🔥</span> Domestic Instability
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam.
+              </p>
+            </div>
+
+            {/* Border & Incursions */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                <span>🗺️</span> Border & Incursions
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium
+                doloremque.
+              </p>
+            </div>
+
+            {/* Media & Info Ops */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-indigo-400 flex items-center gap-2">
+                <span>📺</span> Media & Info Ops
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit
+                consequuntur.
+              </p>
+            </div>
+
+            {/* Subscription upsell */}
+            <div className="mt-4 pt-4 border-t border-slate-800">
+              <p className="text-xs text-slate-500 text-center">
+                <span className="text-blue-400 cursor-pointer hover:underline">Upgrade to Pro</span>{' '}
+                for real-time alerts
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Map */}
-        <div className="lg:col-span-3 2xl:col-span-5 order-1">
+        <div className="lg:col-span-3 xl:col-span-4 2xl:col-span-5 order-1 lg:order-2">
           <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
             {/* Map header with current view info */}
             <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
@@ -393,7 +560,7 @@ export default function ConsumerDashboard() {
         {/* Controls sidebar */}
         <div
           className={`
-          order-2 space-y-4 md:space-y-5
+          order-3 space-y-4 md:space-y-5
           lg:relative lg:block lg:col-span-1
           ${
             controlsOpen
