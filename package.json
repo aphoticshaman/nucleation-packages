@@ -19,7 +19,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "prepare": "husky",
+    "prepare": "test -d .git && npx husky || true",
     "publish:all": "npm publish --workspaces --access public",
     "monitor": "node harness/src/index.js",
     "ablation": "node harness/src/ablation-tests.js"
@@ -47,7 +47,7 @@
     ]
   },
   "author": "Ryan Cardwell <aphoticshaman@gmail.com>",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/aphoticshaman/nucleation-packages"
@@ -60,6 +60,9 @@
     "wasm"
   ],
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
+  },
+  "overrides": {
+    "esbuild": ">=0.25.0"
   }
 }

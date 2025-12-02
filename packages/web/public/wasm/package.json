@@ -1,0 +1,30 @@
+{
+  "name": "latticeforge-core",
+  "type": "module",
+  "collaborators": [
+    "LatticeForge Team"
+  ],
+  "description": "High-performance core for Great Attractor dynamics and intelligence fusion",
+  "version": "0.1.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/latticeforge/research"
+  },
+  "files": [
+    "latticeforge_core_bg.wasm",
+    "latticeforge_core.js",
+    "latticeforge_core.d.ts"
+  ],
+  "main": "latticeforge_core.js",
+  "types": "latticeforge_core.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ],
+  "keywords": [
+    "simulation",
+    "wasm",
+    "intelligence-fusion",
+    "active-inference"
+  ]
+}

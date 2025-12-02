@@ -1,0 +1,130 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "latticeforge-research"
+version = "0.1.0"
+description = "Mathematical frameworks for multi-source intelligence fusion, anomaly detection, and Great Attractor dynamics"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "LatticeForge Team" }
+]
+keywords = [
+    "intelligence-fusion",
+    "anomaly-detection",
+    "great-attractor",
+    "active-inference",
+    "free-energy-principle",
+    "causal-emergence",
+    "topological-data-analysis",
+    "regime-switching",
+    "information-geometry",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+
+dependencies = [
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "matplotlib>=3.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-xdist>=3.0.0",
+    "mypy>=1.0.0",
+    "ruff>=0.1.0",
+]
+gpu = [
+    "jax[cuda]>=0.4.0",
+    "torch>=2.0.0",
+]
+tda = [
+    "ripser>=0.6.0",
+    "persim>=0.3.0",
+    "giotto-tda>=0.6.0",
+]
+all = [
+    "latticeforge-research[dev,tda]",
+]
+
+[project.urls]
+Homepage = "https://github.com/latticeforge/research"
+Documentation = "https://latticeforge.readthedocs.io"
+Repository = "https://github.com/latticeforge/research"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = [
+    "-ra",
+    "-q",
+    "--strict-markers",
+    "--tb=short",
+]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "gpu: marks tests requiring GPU",
+    "integration: marks integration tests",
+]
+
+[tool.coverage.run]
+source = ["."]
+omit = ["tests/*", "*/__pycache__/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "B008",  # do not perform function calls in argument defaults
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["research"]

@@ -1,0 +1,50 @@
+{
+  "name": "@latticeforge/engine",
+  "version": "0.1.0",
+  "description": "LatticeForge signal intelligence engine - fusion, detection, and analysis",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "private": true,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
+    },
+    "./formulas": {
+      "types": "./dist/formulas/index.d.ts",
+      "import": "./dist/formulas/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0",
+    "@vitest/coverage-v8": "^1.0.0"
+  },
+  "keywords": [
+    "latticeforge",
+    "signal-intelligence",
+    "phase-transition",
+    "anomaly-detection",
+    "fusion",
+    "quantitative-finance"
+  ],
+  "license": "UNLICENSED",
+  "author": "Crystalline Labs LLC",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
