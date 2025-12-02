@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import Anthropic from '@anthropic-ai/sdk';
+import {
+  getReasoningOrchestrator,
+  getSecurityGuardian,
+  getLearningCollector,
+  type ReasoningResult,
+} from '@/lib/reasoning';
 
 // Vercel Edge Runtime for low latency
 export const runtime = 'edge';
@@ -359,6 +365,9 @@ Generate a JSON response with this structure:
 }
 
 export async function POST(req: Request) {
+  const startTime = Date.now();
+  let sessionHash = 'anonymous';
+
   try {
     // Get user context
     const cookieStore = await cookies();
@@ -384,6 +393,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Create anonymized session hash for learning
+    sessionHash = await hashForLearning(user.id);
+
     // Get user profile for tier
     const { data: profile } = await supabase
       .from('profiles')
@@ -395,6 +407,29 @@ export async function POST(req: Request) {
 
     // Parse request
     const { preset = 'global', region } = await req.json();
+
+    // ============================================================
+    // SECURITY LAYER - Validate input and check rate limits
+    // ============================================================
+    const security = getSecurityGuardian();
+
+    // Check rate limits
+    const rateLimit = await security.checkRateLimit(user.id, userTier);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded',
+          resetAt: rateLimit.resetAt,
+        },
+        { status: 429 }
+      );
+    }
+
+    // Validate preset input (prevent injection)
+    const validPresets = ['global', 'nato', 'brics', 'conflict'];
+    if (!validPresets.includes(preset)) {
+      return NextResponse.json({ error: 'Invalid preset' }, { status: 400 });
+    }
 
     // Get user's approximate region from request headers (Vercel provides this)
     const userRegion = region || req.headers.get('x-vercel-ip-country') || 'Global';
@@ -510,6 +545,66 @@ export async function POST(req: Request) {
     };
 
     // ============================================================
+    // REASONING ORCHESTRATOR - Enhanced analysis with multiple engines
+    // ============================================================
+    const orchestrator = getReasoningOrchestrator();
+    let reasoningResult: ReasoningResult | null = null;
+
+    try {
+      // Run the reasoning orchestrator with computed metrics as context
+      const avgBasinStrength =
+        nationData.length > 0
+          ? nationData.reduce((sum, n) => sum + (n.basin_strength || 0.5), 0) / nationData.length
+          : 0.5;
+      const avgTransitionRisk =
+        nationData.length > 0
+          ? nationData.reduce((sum, n) => sum + (n.transition_risk || 0.3), 0) / nationData.length
+          : 0.3;
+
+      // Count high-risk connected nations for cascade detection
+      const highRiskNations = nationData.filter((n) => n.transition_risk > 0.6);
+
+      reasoningResult = await orchestrator.reason({
+        intent: 'analyze',
+        domain: preset === 'conflict' ? 'conflict' : preset === 'brics' ? 'economic' : 'political',
+        context: {
+          basin_strength: avgBasinStrength,
+          transition_risk: avgTransitionRisk,
+          connected_high_risk_nations: highRiskNations.length,
+          nation_count: nationData.length,
+          preset,
+          // Add category-level signals for abductive reasoning
+          domestic_unrest:
+            computedMetrics.categories.domestic.riskLevel > 65
+              ? computedMetrics.categories.domestic.riskLevel / 100
+              : 0,
+          economic_stress:
+            computedMetrics.categories.economic.riskLevel > 65
+              ? computedMetrics.categories.economic.riskLevel / 100
+              : 0,
+          leadership_instability:
+            computedMetrics.categories.political.riskLevel > 65
+              ? computedMetrics.categories.political.riskLevel / 100
+              : 0,
+          sanctions:
+            computedMetrics.categories.financial.riskLevel > 65
+              ? computedMetrics.categories.financial.riskLevel / 100
+              : 0,
+          military_threat:
+            computedMetrics.categories.military.riskLevel > 65
+              ? computedMetrics.categories.military.riskLevel / 100
+              : 0,
+        },
+        userTier: userTier as 'consumer' | 'pro' | 'enterprise',
+        userId: sessionHash,
+        sessionId: sessionHash,
+      });
+    } catch (reasoningError) {
+      console.error('Reasoning orchestrator error (non-fatal):', reasoningError);
+      // Continue without reasoning enhancement
+    }
+
+    // ============================================================
     // LLM CALL - Claude narrates the pre-computed intelligence
     // ============================================================
 
@@ -517,6 +612,17 @@ export async function POST(req: Request) {
       apiKey: process.env.ANTHROPIC_API_KEY!,
     });
 
+    // Enhance prompt with reasoning insights if available
+    let enhancedPrompt = buildUserPrompt(computedMetrics);
+    if (reasoningResult) {
+      enhancedPrompt += `\n\nAdditional reasoning insights (confidence: ${(reasoningResult.confidence * 100).toFixed(0)}%):
+- Primary conclusion: ${reasoningResult.conclusion}
+- Historical parallels: ${reasoningResult.analogies.map((a) => a.description).join('; ') || 'None identified'}
+- Key causal factors: ${reasoningResult.causal_factors.map((f) => `${f.factor} (${f.contribution > 0 ? '+' : ''}${(f.contribution * 100).toFixed(0)}%)`).join(', ')}
+- Uncertainty range: ${(reasoningResult.uncertainty.lower * 100).toFixed(0)}%-${(reasoningResult.uncertainty.upper * 100).toFixed(0)}%`;
+    }
+
+    const llmStartTime = Date.now();
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2048,
@@ -524,10 +630,11 @@ export async function POST(req: Request) {
       messages: [
         {
           role: 'user',
-          content: buildUserPrompt(computedMetrics),
+          content: enhancedPrompt,
         },
       ],
     });
+    const llmLatency = Date.now() - llmStartTime;
 
     // Extract text response
     const textContent = message.content.find((c) => c.type === 'text');
@@ -543,6 +650,51 @@ export async function POST(req: Request) {
 
     const briefings = JSON.parse(jsonMatch[0]);
 
+    // ============================================================
+    // LEARNING COLLECTOR - Capture for future model training
+    // ============================================================
+    const learner = getLearningCollector();
+
+    // Log the LLM interaction (anonymized)
+    void learner.logLLMInteraction(sessionHash, userTier, preset, {
+      promptTemplate: 'intel_briefing_v2',
+      inputTokens: message.usage?.input_tokens || 0,
+      outputTokens: message.usage?.output_tokens || 0,
+      latencyMs: llmLatency,
+      model: 'claude-sonnet-4-20250514',
+      success: true,
+    });
+
+    // Log reasoning trace if we got one
+    if (reasoningResult) {
+      void learner.logReasoningTrace(sessionHash, userTier, preset, {
+        engines: reasoningResult.metadata.engines_used,
+        confidence: reasoningResult.confidence,
+        conclusionType:
+          computedMetrics.overallRisk === 'critical' || computedMetrics.overallRisk === 'high'
+            ? 'high_risk'
+            : computedMetrics.overallRisk === 'elevated'
+              ? 'moderate_risk'
+              : 'stable',
+        inputFeatures: {
+          avg_basin_strength:
+            nationData.length > 0
+              ? nationData.reduce((sum, n) => sum + (n.basin_strength || 0.5), 0) /
+                nationData.length
+              : 0.5,
+          avg_transition_risk:
+            nationData.length > 0
+              ? nationData.reduce((sum, n) => sum + (n.transition_risk || 0.3), 0) /
+                nationData.length
+              : 0.3,
+          nation_count: nationData.length,
+          high_risk_count: nationData.filter((n) => n.transition_risk > 0.6).length,
+        },
+      });
+    }
+
+    const totalLatency = Date.now() - startTime;
+
     return NextResponse.json({
       briefings,
       metadata: {
@@ -550,10 +702,40 @@ export async function POST(req: Request) {
         preset: computedMetrics.preset,
         timestamp: computedMetrics.timestamp,
         overallRisk: computedMetrics.overallRisk,
+        // Include reasoning metadata for transparency
+        reasoning: reasoningResult
+          ? {
+              confidence: reasoningResult.confidence,
+              engines: reasoningResult.metadata.engines_used,
+              conclusion: reasoningResult.conclusion,
+              computeTimeMs: reasoningResult.metadata.compute_time_ms,
+            }
+          : null,
+        performance: {
+          totalLatencyMs: totalLatency,
+          llmLatencyMs: llmLatency,
+        },
+        rateLimitRemaining: rateLimit.remaining,
       },
     });
   } catch (error) {
     console.error('Intel briefing error:', error);
+
+    // Log failures for learning
+    try {
+      const learner = getLearningCollector();
+      void learner.logLLMInteraction(sessionHash, 'consumer', 'error', {
+        promptTemplate: 'intel_briefing_v2',
+        inputTokens: 0,
+        outputTokens: 0,
+        latencyMs: Date.now() - startTime,
+        model: 'claude-sonnet-4-20250514',
+        success: false,
+      });
+    } catch {
+      // Silent fail for logging
+    }
+
     return NextResponse.json({ error: 'Failed to generate briefing' }, { status: 500 });
   }
 }
@@ -601,4 +783,17 @@ function computeOverallRisk(nations: NationData[]): ComputedMetrics['overallRisk
   if (avgRisk < 0.5) return 'elevated';
   if (avgRisk < 0.7) return 'high';
   return 'critical';
+}
+
+// Create anonymized hash for learning data collection
+async function hashForLearning(userId: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const salt = process.env.ANONYMIZATION_SALT || 'lattice-default-salt';
+  const data = encoder.encode(userId + salt);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+    .slice(0, 16);
 }
