@@ -830,6 +830,355 @@ From billion-dollar military methodology to a self-serve SaaS:
 
 ---
 
-*Document Version 1.1 | Added Operational Experience Design Principles*
+## OSINT SWEEP: OPEN-SOURCE OPERATIONAL INTELLIGENCE
+
+What follows is aggregated from open-source materials: veteran forums, podcasts, military lessons-learned databases, congressional testimony, and operator communities. None of this is classified, but the volume of doctrinal leakage on the open web creates its own security - adversaries and competitors struggle to determine ground truth amid the noise.
+
+**Assessment Confidence:** MODERATE. Sources are unvetted, uncorroborated in many cases. Treat as directional, not definitive.
+
+---
+
+### DCGS-A: A CASE STUDY IN HOW NOT TO BUILD INTEL TOOLS
+
+The Distributed Common Ground System-Army (DCGS-A) is the $2.3B cautionary tale for anyone building intelligence software.
+
+**What Operators Actually Said:**
+
+| Source | Quote |
+|--------|-------|
+| Intelligence Officer | "Slow-loading trash that's not easy to use." |
+| Ground Commanders | "Unwieldy and unreliable, hard to learn and difficult to use." |
+| Army Evaluation Office | "Not operationally effective, not operationally suitable, and not operationally survivable against cyber threats." |
+| Congressional Testimony | "Unable to perform simple analytical tasks" and does not "provide intuitive capabilities to see relationships between disparate data sets." |
+| Congressman Duncan Hunter | "DCGS-A is making Palantir integrate into their shitty system... This is like Google having to integrate into Microsoft Access." |
+
+**Failure Modes:**
+
+1. **Training Atrophy**: Two weeks to become "certified" but skills atrophy rapidly. No structure to maintain competency. Result: less than 10% of MI soldiers could operate their primary weapon system.
+
+2. **Reliability**: 2011 exercise simulating North Korea attack - 10 of 96 hours spent rebooting or locked up. Average reboot required every 8 hours.
+
+3. **Kluge Architecture**: Cobbled together from multiple vendors (IBM i2 Analyst Notebook, ESRI maps, etc.) without unified UX.
+
+4. **Contractor Dependency**: System unusable without contractors present to operate it.
+
+**What Operators Wanted Instead:**
+> SOF gave Palantir high marks over DCGS. The Special Operations community requested Palantir directly, noting that relying on DCGS-A "translates into operational opportunities missed and unnecessary risk to the force."
+
+**LatticeForge Lesson:**
+- Day-1 usability is non-negotiable
+- Self-service beats contractor dependency
+- Unified UX beats feature integration via API kluge
+- If 90% of your users can't use the tool, you don't have a tool
+
+**Sources:** [Defense One](https://www.defenseone.com/technology/2016/07/war-over-soon-be-outdated-army-intelligence-systems/129640/), [Small Wars Journal](https://smallwarsjournal.com/2017/03/15/growing-up-with-dcgs-a/), [New Republic](https://newrepublic.com/article/113484/how-pentagon-boondoggle-putting-soldiers-danger)
+
+---
+
+### TEAM OF TEAMS: MCCHRYSTAL'S INTELLIGENCE SHARING REVOLUTION
+
+General Stanley McChrystal transformed JSOC from a hierarchical organization into a networked "team of teams" - and the lessons are directly applicable to intelligence tooling.
+
+**The Problem:**
+Despite superior resources, Al Qaeda's loose network of cells was winning because they shared knowledge faster via high-tech communications.
+
+**The Solution: Shared Consciousness + Empowered Execution**
+
+| Concept | Definition | LatticeForge Implication |
+|---------|------------|-------------------------|
+| **Shared Consciousness** | Transparent information sharing across the entire organization | Same intel, multiple formats. No silos. |
+| **Empowered Execution** | Push decision-making authority to the edges | Let analysts customize, drill down, act without waiting for approval |
+| **O&I Forum** | Daily video conference - 60 seconds update, remainder open discussion | Real-time collaborative annotation, live dashboards |
+| **Leader as Gardener** | Create ecosystem where others operate effectively | Platform thinking - enable users, don't dictate workflow |
+
+**Key Implementation: The O&I (Operations & Intelligence) Briefing**
+
+McChrystal instituted a daily video conference with ALL team members, six days a week, never canceled. The format:
+- 60 seconds: Update
+- Remaining time: Open-ended conversation
+- Everyone sees problems being solved in real time
+
+**Result:**
+> "They were winning the fight against AQI because they were learning and adapting more quickly than the enemy, striking unpredictably, day and night, more quickly than AQI could regroup—enabled by the networking and trust between analysts and field operators."
+
+**LatticeForge Lesson:**
+- "Need-to-know" is the enemy of speed
+- Transparency enables faster decision-making
+- Networks beat hierarchies
+- Tools should enable "shared consciousness" - same picture, tailored to role
+
+**Sources:** [Team of Teams (Amazon)](https://www.amazon.com/Team-Teams-Rules-Engagement-Complex/dp/1591847486), [Medium - 7 Key Lessons](https://medium.com/leadership-and-agility/7-key-lessons-for-agile-leaders-from-mcchrystals-team-of-teams-book-a0e0eb4be9bf), [McChrystal Group](https://www.mcchrystalgroup.com/capabilities/communications-collaboration/fusion-cells)
+
+---
+
+### F3EAD: THE SOF TARGETING CYCLE
+
+Find, Fix, Finish, Exploit, Analyze, Disseminate - the targeting methodology that enabled JSOC's high-tempo operations.
+
+**Critical Insight:** In F3EAD, the main effort is NOT the "Finish" phase. It's "Exploit-Analyze-Disseminate."
+
+```
+Traditional Targeting:        F3EAD:
+
+  Find → Fix → FINISH         Find → Fix → Finish → EXPLOIT → ANALYZE → DISSEMINATE
+           ↓                                              ↓
+        (done)                                    (this is where the work starts)
+```
+
+**Why This Matters:**
+
+> "For many of the warfighters in the process, the Finish phase was only the beginning of their work."
+
+The goal: Get inside the enemy's decision cycle. When you can plan and execute faster than the enemy can react, you dictate operational tempo.
+
+**Key Success Factor: Ops/Intel Fusion**
+
+> "In SOF units effectively utilizing F3EAD, operational leaders at all levels took responsibility for the intelligence effort, developing lines of communication and direct contact with intelligence personnel supporting them at all levels throughout the intelligence community."
+
+**LatticeForge Lesson:**
+- Analysis and dissemination are as critical as detection
+- Speed of the cycle is the competitive advantage
+- Build for continuous refinement, not one-shot analysis
+- Operators and analysts need shared tooling
+
+**Sources:** [Small Wars Journal](https://archive.smallwarsjournal.com/jrnl/art/f3ead-opsintel-fusion-"feeds"-the-sof-targeting-process), [Havok Journal](https://havokjournal.com/culture/tier-one-targeting-special-operations-and-the-f3ead-process/)
+
+---
+
+### MISSION COMMAND: DOCTRINE FOR OPERATING UNDER CHAOS
+
+The US military philosophy that enables interoperability under true disorganization.
+
+**Core Principle:**
+> "Subordinates, understanding the commander's intentions, their own missions, and the context of those missions, are told what effect they are to achieve and the reason it needs to be achieved. Subordinates then decide within their delegated freedom of action how best to achieve their missions."
+
+**The Six Principles of Mission Command:**
+
+1. Build cohesive teams through mutual trust
+2. Create shared understanding
+3. Provide clear commander's intent
+4. Exercise disciplined initiative
+5. Use mission orders (what to achieve, not how)
+6. Accept prudent risk
+
+**Why This Matters for Intelligence Tools:**
+
+The doctrine exists so that ANY trained service member can operate with ANY other trained service member under ANY conditions, provided they share:
+- Common doctrine
+- Commander's intent
+- Mutual trust
+
+**LatticeForge Lesson:**
+- Tools should enable "commander's intent" - clear objectives without prescribing method
+- Users need shared understanding of the analytical framework
+- Trust is built through transparency and track record
+- Empower initiative, don't constrain it with rigid workflows
+
+**Sources:** [Wikipedia - Mission Command](https://en.wikipedia.org/wiki/Mission_command), [Army.mil](https://www.army.mil/article/106872/understanding_mission_command), [JCS Mission Command Focus Paper](https://www.jcs.mil/Portals/36/Documents/Doctrine/fp/mission_comm_fp.pdf)
+
+---
+
+### HYPER ENABLED OPERATOR: COGNITIVE OVERMATCH
+
+SOCOM's next-generation concept focuses on cognitive enhancement, not physical.
+
+**The Shift:**
+> "If we are able to make decisions faster and better, then our chances of success go up."
+
+**Core Problem with Current Intel Delivery:**
+> "Currently, data the operator collects is transmitted back to analysts, who then analyze it and disseminate it back to the operator. But that method is not fast enough or unique enough to build the cognitive overmatch. If they get the data at all, they still have to do some level of their own analysis."
+
+**HEO Design Principles:**
+
+| Principle | Description |
+|-----------|-------------|
+| Right info, right person, right time | Without overloading them |
+| Reduce cognitive load | Automation and applied AI |
+| Humans > Hardware | "The only way we have HEO is if we can reduce the cognitive load" |
+| MVP → Feedback → Iterate | "Get prototype in operator's hand ASAP to learn whether we're going in the right direction, need to pivot, or need to kill something" |
+
+**Key Quote:**
+> "One thing to remember is that humans are more important than hardware."
+
+**LatticeForge Lesson:**
+- Cognitive overmatch = making better decisions faster
+- Don't just deliver data - deliver processed, contextual intelligence
+- Reduce cognitive load through progressive disclosure
+- Rapid prototyping with user feedback beats long development cycles
+
+**Sources:** [C4ISRNet](https://www.c4isrnet.com/battlefield-tech/2020/06/12/making-the-hyper-enabled-operator-a-reality/), [Task & Purpose](https://taskandpurpose.com/news/hyper-enabled-operator-socom/), [Coffee or Die](https://www.coffeeordie.com/socom-enhanced-operators-program)
+
+---
+
+### FUSION CELL EFFECTIVENESS: WHAT ACTUALLY WORKS
+
+From RAND, DTIC, and operational lessons learned:
+
+**What Makes Fusion Cells Effective:**
+
+1. **Flatness** - Minimal hierarchy within the cell
+2. **Agility** - Ability to pivot rapidly
+3. **Rapid Distribution** - Information flows immediately
+4. **Access to Decision Makers** - Direct line, not through bureaucracy
+5. **Interagency Membership** - Multiple perspectives
+6. **Individual Empowerment** - Authority at the analyst level
+7. **Clear Information Flow** - Everyone knows what goes where
+
+**Common Failure Modes:**
+
+- Physical separation of different analysis types (SIGINT vs HUMINT)
+- Clearance mismatches creating information silos
+- Technology barriers hindering inter-organizational sharing
+- Lack of continuity and expertise in liaison roles
+
+**Key Quote from DEFENDER20:**
+> "Proactivity mitigates a lack of resources or knowledge. Units must not solely rely on centralized paths of communication. Assumptions can lead to critical failures. Realistic advice trumps jargon and sycophancy every time."
+
+**LatticeForge Lesson:**
+- Build for flat, agile teams
+- Don't force hierarchical approval workflows
+- Enable multiple analysis types in one interface
+- Proactive alerts beat waiting for users to ask
+
+**Sources:** [RAND - Military Intelligence Fusion](https://www.rand.org/content/dam/rand/pubs/occasional_papers/2012/RAND_OP377.pdf), [DTIC - What Makes Fusion Cells Effective](https://apps.dtic.mil/sti/tr/pdf/ADA514114.pdf), [Army.mil - DEFENDER20 Lessons](https://www.army.mil/article/243036/fusion_cell_utilization_lessons_in_logistics_from_defender20)
+
+---
+
+### IPB & MDMP FAILURES: LESSONS FROM CALL
+
+From the Center for Army Lessons Learned:
+
+**Intelligence Preparation of the Battlefield (IPB) Failures:**
+
+| Failure | Description |
+|---------|-------------|
+| Not diving deep | IPB failed to explore PMESII-PT variables beyond surface level |
+| Over-focusing | "We've begun to over-focus by assigning more and more NAIs that are too small" |
+| Passive monitoring | "We let down after initial IPB... wait for intelligence to simply flow into our S-2 shop" |
+| Isolation | Event templates manufactured by intelligence staff in isolation, not integrated with operations |
+| Cascading effects | "If the operational environment is misidentified, it compromises the entire MDMP, producing a cascading effect" |
+
+**Military Decision Making Process (MDMP) Failures:**
+
+- Omitting steps degrades mission success
+- Non-doctrinal storyboards lack fidelity for commander decision-making
+- Errors early in the process become increasingly problematic
+- Staff unfamiliarity with steps makes process complex
+
+**Iraq War IPB Failure:**
+> "The IPB failed to dive deep enough into the political, social, and information considerations of PMISII-PT."
+
+**LatticeForge Lesson:**
+- Depth matters - surface-level analysis creates cascading failures
+- PMESII-PT should be comprehensive, not checkbox
+- Analysis must be integrated with operations/decision-making
+- Continuous process, not one-time setup
+
+**Sources:** [CALL Handbook 15-06](https://apps.dtic.mil/sti/pdfs/AD1018227.pdf), [GlobalSecurity IPB Lessons](https://www.globalsecurity.org/military/library/report/call/call_98-8_chap1.htm)
+
+---
+
+### MOGADISHU LESSONS: PLANNING PROCESS
+
+From Kyle Lamb (Delta Force veteran) on lessons from Black Hawk Down:
+
+**The Problem:**
+> "The planning process did not involve every member of the assault force. The team leaders and above would go and start to put together a plan, and they would bring that plan to the operators already in the helicopter."
+
+**The Fix (Applied in Iraq):**
+> "Later on, when they were in Iraq, they would use the same amount of time to plan, but everybody was involved with that planning process. Everybody understood the plan before getting in a helicopter, and they executed faster."
+
+**LatticeForge Lesson:**
+- Shared understanding before execution enables speed
+- Same time investment, better outcomes through inclusion
+- Don't silo planning from execution
+
+**Sources:** [Coffee or Die - Kyle Lamb Mogadishu](https://www.coffeeordie.com/article/kyle-lamb-mogadishu)
+
+---
+
+### OPERATOR COMMUNITY TOOL PREFERENCES
+
+From ShadowSpear, RallyPoint, and operator forums:
+
+**Tools 35-series analysts actually recommend learning:**
+
+- **Network Analysis:** Analyst Notebook, Palantir
+- **Targeting:** M3, Lucky, HOT-R, JIDO ANTS, TAC
+- **Intel Databases:** NCTC Online, TIDE, DataXplorer, PROTON
+- **Visualization:** TargetCOP, BHTK
+- **Toolsets:** Skope, Voltron
+
+**Common Complaints:**
+
+| Issue | Quote |
+|-------|-------|
+| Desk-bound | "Fs are stuck inside a building without windows more often than not" |
+| Isolated | "Will a language-coded position lead me into a desk job in Meade or Gordon where I never see the light again?" |
+| Limited hands-on | Wanting "a more hands-on 'dirty' role as an intelligence soldier" |
+
+**What Experienced Analysts Value:**
+> "A 35F is a jack of all INTs and maybe a master of a few. Each single source person will tell you theirs is the best, but each is strong or weak based on the tactical, operational or strategic situation."
+
+**LatticeForge Lesson:**
+- Multi-INT integration is the value proposition
+- Don't force analysts into one modality
+- Acknowledge situational strengths/weaknesses of different approaches
+
+**Sources:** [ShadowSpear - Advice for 35F](https://shadowspear.com/threads/advice-for-a-35f.31842/), [RallyPoint - Best 35 Series MOSs](https://www.rallypoint.com/answers/what-are-the-best-35-series-moss-for-a-possible-career-in-the-intelligence-field)
+
+---
+
+### PODCAST OSINT: OPERATOR-SOURCED PRINCIPLES
+
+From Jocko Podcast, Mike Drop, Cleared Hot, The Team House:
+
+**Dave Berke (F-22/F-35 pilot) on Battlespace Awareness:**
+> "Fifth-generation fighters dominate not through speed or maneuverability, but through total battlespace awareness – 'If I know everything you're doing and you have no idea I'm even there, I've already won.'"
+
+**Jocko Willink on Decentralized Command:**
+> "Earnest discourse creates exponential opportunity for leadership."
+
+**Bill Thompson (21-year Army CW4, founder of Spartan Forge):**
+Applied military intelligence methods to civilian applications - demonstrating the transferability of the methodology.
+
+**James Olson (CIA Chief of Counterintelligence):**
+The Team House podcast regularly features IC professionals discussing tradecraft and lessons learned.
+
+**LatticeForge Lesson:**
+- Information advantage > kinetic advantage
+- Decentralized execution with shared consciousness
+- Military methodology translates to commercial applications
+
+**Sources:** [Mike Drop](https://podcasts.apple.com/us/podcast/mike-drop/id1346234726), [Cleared Hot](https://podcasts.apple.com/us/podcast/episode-122-jocko-willink/id1247300054), [The Team House](https://open.spotify.com/show/3Qn9VjM5ioPrPFvjkuSjvb)
+
+---
+
+## SYNTHESIS: OPERATIONAL OSINT → PRODUCT REQUIREMENTS
+
+| OSINT Source | Principle | Product Requirement |
+|--------------|-----------|---------------------|
+| DCGS-A Failures | Day-1 usability mandatory | Pre-built templates, progressive complexity |
+| Team of Teams | Shared consciousness | Same intel, multiple formats, no silos |
+| F3EAD | Analysis is the main effort | Exploit-Analyze-Disseminate workflow |
+| Mission Command | Commander's intent | Clear objectives, flexible execution |
+| HEO | Cognitive overmatch | Reduce cognitive load, right info/right time |
+| Fusion Cell | Flatness, agility, empowerment | No hierarchical bottlenecks |
+| IPB Lessons | Depth over breadth | Comprehensive PMESII-PT, continuous process |
+| Mogadishu | Shared understanding = speed | Everyone sees the plan |
+| Operator Tools | Multi-INT integration | Don't force single modality |
+| Podcast OSINT | Information advantage | Battlespace awareness as competitive moat |
+
+---
+
+**A Note on OSINT Confidence:**
+
+> The amount of doctrinal leakage on the open web is insane. But uncorroborated and unconfirmed, we can safely assess our enemies, peers, and competitors struggle to determine ground truth.
+
+This section aggregates publicly available material. Sources range from official doctrine to veteran forums to podcast transcripts. None of it is classified, but the noise-to-signal ratio is itself a form of security. Treat as directional indicators, not ground truth.
+
+---
+
+*Document Version 1.2 | Added OSINT Sweep - Operational Intelligence from Open Sources*
 *Last Updated: December 2024*
 
