@@ -92,7 +92,7 @@ export default function PricingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const handleSelectPlan = async (plan: typeof VISIBLE_PLANS[0]) => {
+  const handleSelectPlan = async (plan: (typeof VISIBLE_PLANS)[0]) => {
     // Direct link (free or enterprise)
     if (plan.href) {
       if (plan.href.startsWith('mailto:')) {
@@ -135,9 +135,7 @@ export default function PricingPage() {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold text-white mb-4">
-            Simple, transparent pricing
-          </h1>
+          <h1 className="text-4xl font-bold text-white mb-4">Simple, transparent pricing</h1>
           <p className="text-xl text-slate-400 max-w-2xl mx-auto">
             Start free, scale as you grow. No hidden fees, cancel anytime.
           </p>
@@ -166,12 +164,8 @@ export default function PricingPage() {
               <div className="mb-6 text-center">
                 <h3 className="text-xl font-bold text-white">{plan.name}</h3>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-white">
-                    {plan.priceLabel}
-                  </span>
-                  {plan.interval && (
-                    <span className="text-slate-400">/{plan.interval}</span>
-                  )}
+                  <span className="text-4xl font-bold text-white">{plan.priceLabel}</span>
+                  {plan.interval && <span className="text-slate-400">/{plan.interval}</span>}
                 </div>
               </div>
 
@@ -203,8 +197,8 @@ export default function PricingPage() {
                   plan.popular
                     ? 'bg-blue-600 text-white hover:bg-blue-500'
                     : plan.id === 'enterprise'
-                    ? 'bg-gradient-to-r from-slate-800 to-slate-700 text-white hover:from-slate-700 hover:to-slate-600 border border-slate-600'
-                    : 'bg-slate-800 text-white hover:bg-slate-700'
+                      ? 'bg-gradient-to-r from-slate-800 to-slate-700 text-white hover:from-slate-700 hover:to-slate-600 border border-slate-600'
+                      : 'bg-slate-800 text-white hover:bg-slate-700'
                 } ${loading === plan.id ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {loading === plan.id ? 'Loading...' : plan.cta}
@@ -225,8 +219,8 @@ export default function PricingPage() {
                 Can I upgrade or downgrade anytime?
               </h3>
               <p className="text-slate-400">
-                Yes, you can change your plan at any time. Upgrades are prorated,
-                and downgrades take effect at the next billing cycle.
+                Yes, you can change your plan at any time. Upgrades are prorated, and downgrades
+                take effect at the next billing cycle.
               </p>
             </div>
 
@@ -235,8 +229,8 @@ export default function PricingPage() {
                 What payment methods do you accept?
               </h3>
               <p className="text-slate-400">
-                We accept all major credit cards via Stripe. Enterprise customers
-                can pay via invoice.
+                We accept all major credit cards via Stripe. Enterprise customers can pay via
+                invoice.
               </p>
             </div>
 
@@ -245,8 +239,8 @@ export default function PricingPage() {
                 What happens if I exceed my API limit?
               </h3>
               <p className="text-slate-400">
-                You'll receive a warning at 80% usage. If you exceed your limit,
-                API calls will be rate-limited until the next billing cycle.
+                You'll receive a warning at 80% usage. If you exceed your limit, API calls will be
+                rate-limited until the next billing cycle.
               </p>
             </div>
 
@@ -263,20 +257,13 @@ export default function PricingPage() {
 
         {/* CTA */}
         <div className="mt-20 text-center">
-          <p className="text-slate-400 mb-4">
-            Need a custom plan for your organization?
-          </p>
+          <p className="text-slate-400 mb-4">Need a custom plan for your organization?</p>
           <a
             href="mailto:contact@crystallinelabs.io?subject=LatticeForge%20Custom%20Plan"
             className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300"
           >
             Contact our sales team
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

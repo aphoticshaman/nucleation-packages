@@ -18,8 +18,18 @@ describe('PhaseTransitionModel', () => {
     const model = new PhaseTransitionModel();
 
     const signals = new Map<string, number[]>();
-    signals.set('market', Array(50).fill(0).map(() => Math.random() * 0.3 + 0.5));
-    signals.set('sentiment', Array(50).fill(0).map(() => Math.random() * 0.3 + 0.5));
+    signals.set(
+      'market',
+      Array(50)
+        .fill(0)
+        .map(() => Math.random() * 0.3 + 0.5)
+    );
+    signals.set(
+      'sentiment',
+      Array(50)
+        .fill(0)
+        .map(() => Math.random() * 0.3 + 0.5)
+    );
 
     const state = model.analyzePhase(signals);
 
@@ -35,7 +45,12 @@ describe('PhaseTransitionModel', () => {
     const model = new PhaseTransitionModel();
 
     const signals = new Map<string, number[]>();
-    signals.set('volatile', Array(50).fill(0).map(() => Math.random()));
+    signals.set(
+      'volatile',
+      Array(50)
+        .fill(0)
+        .map(() => Math.random())
+    );
 
     const state = model.analyzePhase(signals);
 
@@ -53,13 +68,23 @@ describe('PhaseTransitionModel', () => {
     // Build up history
     for (let i = 0; i < 15; i++) {
       const signals = new Map<string, number[]>();
-      signals.set('test', Array(30).fill(0).map(() => 0.5 + Math.random() * 0.3));
+      signals.set(
+        'test',
+        Array(30)
+          .fill(0)
+          .map(() => 0.5 + Math.random() * 0.3)
+      );
       model.analyzePhase(signals);
     }
 
     // Forecasting should work (may or may not predict based on state)
     const signals = new Map<string, number[]>();
-    signals.set('test', Array(30).fill(0).map(() => 0.8 + Math.random() * 0.1));
+    signals.set(
+      'test',
+      Array(30)
+        .fill(0)
+        .map(() => 0.8 + Math.random() * 0.1)
+    );
     const forecast = model.forecastTransition(signals);
 
     // Should return either null or valid forecast
@@ -131,13 +156,24 @@ describe('CascadePredictor', () => {
     const predictor = new CascadePredictor();
 
     const signals = new Map<string, number[]>();
-    signals.set('social', Array(30).fill(0).map(() => Math.random() * 0.5));
-    signals.set('market', Array(30).fill(0).map(() => Math.random() * 0.5));
+    signals.set(
+      'social',
+      Array(30)
+        .fill(0)
+        .map(() => Math.random() * 0.5)
+    );
+    signals.set(
+      'market',
+      Array(30)
+        .fill(0)
+        .map(() => Math.random() * 0.5)
+    );
 
     const state = predictor.analyzeState(signals);
 
-    expect(['dormant', 'seeding', 'spreading', 'peak', 'declining', 'exhausted'])
-      .toContain(state.phase);
+    expect(['dormant', 'seeding', 'spreading', 'peak', 'declining', 'exhausted']).toContain(
+      state.phase
+    );
     expect(state.currentIntensity).toBeGreaterThanOrEqual(0);
     expect(state.currentIntensity).toBeLessThanOrEqual(1);
   });
@@ -157,7 +193,12 @@ describe('CascadePredictor', () => {
     const predictor = new CascadePredictor();
 
     const signals = new Map<string, number[]>();
-    signals.set('test', Array(30).fill(0).map((_, i) => 0.1 + i * 0.02));
+    signals.set(
+      'test',
+      Array(30)
+        .fill(0)
+        .map((_, i) => 0.1 + i * 0.02)
+    );
 
     const prediction = predictor.predict(signals);
 
@@ -172,27 +213,39 @@ describe('SentimentHarmonic', () => {
     const analyzer = new SentimentHarmonic();
 
     const signals = new Map<string, number[]>();
-    signals.set('news', Array(50).fill(0).map((_, i) =>
-      0.5 + 0.3 * Math.sin(2 * Math.PI * i / 10) + Math.random() * 0.1
-    ));
+    signals.set(
+      'news',
+      Array(50)
+        .fill(0)
+        .map((_, i) => 0.5 + 0.3 * Math.sin((2 * Math.PI * i) / 10) + Math.random() * 0.1)
+    );
 
     const result = analyzer.analyze(signals);
 
     expect(result.composite).toBeGreaterThanOrEqual(-1);
     expect(result.composite).toBeLessThanOrEqual(1);
     expect(result.harmonics.baseline).toBeDefined();
-    expect(['euphoric', 'optimistic', 'neutral', 'fearful', 'panic'])
-      .toContain(result.regime);
+    expect(['euphoric', 'optimistic', 'neutral', 'fearful', 'panic']).toContain(result.regime);
   });
 
   it('should handle contrarian detection', () => {
     const analyzer = new SentimentHarmonic();
 
     const sentiment = new Map<string, number[]>();
-    sentiment.set('social', Array(20).fill(0).map(() => 0.9 + Math.random() * 0.1));
+    sentiment.set(
+      'social',
+      Array(20)
+        .fill(0)
+        .map(() => 0.9 + Math.random() * 0.1)
+    );
 
     const fundamentals = new Map<string, number[]>();
-    fundamentals.set('earnings', Array(20).fill(0).map(() => -0.5 - Math.random() * 0.3));
+    fundamentals.set(
+      'earnings',
+      Array(20)
+        .fill(0)
+        .map(() => -0.5 - Math.random() * 0.3)
+    );
 
     const signal = analyzer.detectContrarianSignal(sentiment, fundamentals);
 
@@ -209,13 +262,23 @@ describe('AnomalyFingerprintDetector', () => {
     // Build some baseline
     for (let i = 0; i < 40; i++) {
       const signals = new Map<string, number[]>();
-      signals.set('normal', Array(30).fill(0).map(() => 50 + Math.random() * 5));
+      signals.set(
+        'normal',
+        Array(30)
+          .fill(0)
+          .map(() => 50 + Math.random() * 5)
+      );
       detector.detect(signals);
     }
 
     // Run detection
     const anomalySignals = new Map<string, number[]>();
-    anomalySignals.set('normal', Array(30).fill(0).map(() => 100 + Math.random() * 10));
+    anomalySignals.set(
+      'normal',
+      Array(30)
+        .fill(0)
+        .map(() => 100 + Math.random() * 10)
+    );
 
     const result = detector.detect(anomalySignals);
 
@@ -244,11 +307,17 @@ describe('QuantumInspiredOptimizer', () => {
   it('should run optimization', () => {
     const optimizer = new QuantumInspiredOptimizer();
 
-    const result = optimizer.solve({
-      dimensions: 2,
-      objective: (x) => (x[0] - 3) ** 2 + (x[1] - 4) ** 2,
-      bounds: [{ min: 0, max: 10 }, { min: 0, max: 10 }],
-    }, { maxIterations: 1000 });
+    const result = optimizer.solve(
+      {
+        dimensions: 2,
+        objective: (x) => (x[0] - 3) ** 2 + (x[1] - 4) ** 2,
+        bounds: [
+          { min: 0, max: 10 },
+          { min: 0, max: 10 },
+        ],
+      },
+      { maxIterations: 1000 }
+    );
 
     // Should find something better than worst case (100)
     expect(result.value).toBeLessThan(50);

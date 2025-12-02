@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
@@ -13,7 +13,10 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -22,7 +25,9 @@
 
     <style>
       /* Critical CSS for instant load feel */
-      html, body, #root {
+      html,
+      body,
+      #root {
         margin: 0;
         padding: 0;
         min-height: 100vh;
@@ -45,8 +50,13 @@
       }
 
       @keyframes pulse {
-        0%, 100% { opacity: 0.4; }
-        50% { opacity: 1; }
+        0%,
+        100% {
+          opacity: 0.4;
+        }
+        50% {
+          opacity: 1;
+        }
       }
     </style>
   </head>
@@ -54,10 +64,27 @@
     <div id="root">
       <!-- Loading state while React hydrates -->
       <div class="loading-screen">
-        <svg class="loading-logo" width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M60 10L110 35V85L60 110L10 85V35L60 10Z" stroke="#0ea5e9" stroke-width="2" fill="none"/>
-          <path d="M60 30L90 45V75L60 90L30 75V45L60 30Z" stroke="#38bdf8" stroke-width="2" fill="none"/>
-          <path d="M60 50L75 57.5V72.5L60 80L45 72.5V57.5L60 50Z" fill="#0ea5e9"/>
+        <svg
+          class="loading-logo"
+          width="120"
+          height="120"
+          viewBox="0 0 120 120"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M60 10L110 35V85L60 110L10 85V35L60 10Z"
+            stroke="#0ea5e9"
+            stroke-width="2"
+            fill="none"
+          />
+          <path
+            d="M60 30L90 45V75L60 90L30 75V45L60 30Z"
+            stroke="#38bdf8"
+            stroke-width="2"
+            fill="none"
+          />
+          <path d="M60 50L75 57.5V72.5L60 80L45 72.5V57.5L60 50Z" fill="#0ea5e9" />
         </svg>
       </div>
     </div>

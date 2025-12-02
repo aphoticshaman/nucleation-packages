@@ -159,7 +159,8 @@ export class SentimentHarmonic {
     const fundamentalComposite = this.calculateComposite(fundamentalSignals);
 
     // Extreme sentiment + divergent fundamentals = contrarian
-    const sentimentExtreme = Math.abs(sentimentResult.composite) > SentimentHarmonic.CONTRARIAN_THRESHOLD;
+    const sentimentExtreme =
+      Math.abs(sentimentResult.composite) > SentimentHarmonic.CONTRARIAN_THRESHOLD;
     const divergence = sentimentResult.composite * fundamentalComposite < 0;
 
     if (sentimentExtreme && divergence) {
@@ -176,9 +177,7 @@ export class SentimentHarmonic {
   /**
    * Calculate sentiment vectors for each source
    */
-  private calculateSentimentVectors(
-    signals: Map<string, number[]>
-  ): Map<string, SentimentVector> {
+  private calculateSentimentVectors(signals: Map<string, number[]>): Map<string, SentimentVector> {
     const vectors = new Map<string, SentimentVector>();
 
     for (const [name, values] of signals) {
@@ -252,10 +251,10 @@ export class SentimentHarmonic {
       composite += normalized * weight;
 
       // Store attention for analysis
-      this.attentionWeights.set(name, [
-        ...(this.attentionWeights.get(name) ?? []),
-        weight,
-      ].slice(-100));
+      this.attentionWeights.set(
+        name,
+        [...(this.attentionWeights.get(name) ?? []), weight].slice(-100)
+      );
     }
 
     return Math.max(-1, Math.min(1, composite));
@@ -315,10 +314,7 @@ export class SentimentHarmonic {
    * Goertzel algorithm for single-frequency DFT
    * More efficient than full FFT when analyzing specific frequencies
    */
-  private goertzel(
-    samples: number[],
-    frequency: number
-  ): { amplitude: number; phase: number } {
+  private goertzel(samples: number[], frequency: number): { amplitude: number; phase: number } {
     const N = samples.length;
     const k = Math.round(frequency * N);
     const w = (2 * Math.PI * k) / N;
@@ -500,7 +496,9 @@ export class SentimentHarmonic {
     const meanX = xSlice.reduce((a, b) => a + b, 0) / n;
     const meanY = ySlice.reduce((a, b) => a + b, 0) / n;
 
-    let num = 0, denX = 0, denY = 0;
+    let num = 0,
+      denX = 0,
+      denY = 0;
     for (let i = 0; i < n; i++) {
       const dx = xSlice[i] - meanX;
       const dy = ySlice[i] - meanY;

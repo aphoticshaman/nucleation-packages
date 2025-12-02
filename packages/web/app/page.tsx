@@ -41,7 +41,7 @@ export default function Home() {
     setIsSimulating(true);
     try {
       // Simulate a delay for UI feedback
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       console.log('Simulation step: WasmGeospatialSystem not yet implemented');
     } finally {
       setIsSimulating(false);
@@ -78,11 +78,7 @@ export default function Home() {
       <AlertBanner level={alertLevel} />
 
       {/* Map */}
-      <AttractorMap
-        nations={nations}
-        edges={edges}
-        layer={layer}
-      />
+      <AttractorMap nations={nations} edges={edges} layer={layer} />
 
       {/* Control Panel */}
       <ControlPanel

@@ -90,9 +90,7 @@ export function AuthGate({ onAuthenticate }: AuthGateProps) {
             <LatticeForgeIcon className="w-12 h-12 text-lattice-400" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">LatticeForge</h1>
-          <p className="text-lattice-400 text-sm">
-            The Crystallization of Meta-Insight
-          </p>
+          <p className="text-lattice-400 text-sm">The Crystallization of Meta-Insight</p>
         </div>
 
         {/* Auth card */}
@@ -110,7 +108,11 @@ export function AuthGate({ onAuthenticate }: AuthGateProps) {
           {mode !== 'forgot' && (
             <div className="flex gap-2 mb-6">
               <button
-                onClick={() => { setMode('login'); setError(null); setMessage(null); }}
+                onClick={() => {
+                  setMode('login');
+                  setError(null);
+                  setMessage(null);
+                }}
                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                   mode === 'login'
                     ? 'bg-lattice-500/20 text-lattice-400 border border-lattice-500/30'
@@ -120,7 +122,11 @@ export function AuthGate({ onAuthenticate }: AuthGateProps) {
                 Sign In
               </button>
               <button
-                onClick={() => { setMode('signup'); setError(null); setMessage(null); }}
+                onClick={() => {
+                  setMode('signup');
+                  setError(null);
+                  setMessage(null);
+                }}
                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                   mode === 'signup'
                     ? 'bg-lattice-500/20 text-lattice-400 border border-lattice-500/30'
@@ -192,7 +198,10 @@ export function AuthGate({ onAuthenticate }: AuthGateProps) {
 
               {(mode === 'login' || mode === 'signup') && (
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-lattice-300 mb-2">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-lattice-300 mb-2"
+                  >
                     Password
                   </label>
                   <input
@@ -228,13 +237,33 @@ export function AuthGate({ onAuthenticate }: AuthGateProps) {
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">
                     <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
-                    {mode === 'login' ? 'Signing in...' : mode === 'signup' ? 'Creating account...' : 'Sending...'}
+                    {mode === 'login'
+                      ? 'Signing in...'
+                      : mode === 'signup'
+                        ? 'Creating account...'
+                        : 'Sending...'}
                   </span>
+                ) : mode === 'login' ? (
+                  'Sign In'
+                ) : mode === 'signup' ? (
+                  'Create Account'
                 ) : (
-                  mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Link'
+                  'Send Reset Link'
                 )}
               </button>
             </div>
@@ -243,7 +272,11 @@ export function AuthGate({ onAuthenticate }: AuthGateProps) {
           {/* Forgot password link */}
           {mode === 'login' && (
             <button
-              onClick={() => { setMode('forgot'); setError(null); setMessage(null); }}
+              onClick={() => {
+                setMode('forgot');
+                setError(null);
+                setMessage(null);
+              }}
               className="w-full mt-4 text-sm text-lattice-500 hover:text-lattice-400"
             >
               Forgot your password?
@@ -253,7 +286,11 @@ export function AuthGate({ onAuthenticate }: AuthGateProps) {
           {/* Back to login link */}
           {mode === 'forgot' && (
             <button
-              onClick={() => { setMode('login'); setError(null); setMessage(null); }}
+              onClick={() => {
+                setMode('login');
+                setError(null);
+                setMessage(null);
+              }}
               className="w-full mt-4 text-sm text-lattice-500 hover:text-lattice-400"
             >
               Back to sign in
@@ -279,11 +316,17 @@ export function AuthGate({ onAuthenticate }: AuthGateProps) {
         <div className="text-center mt-8 text-xs text-surface-500">
           <p>Crystalline Labs LLC © 2025</p>
           <p className="mt-1">
-            <a href="#" className="text-lattice-500 hover:text-lattice-400">Contact Sales</a>
+            <a href="#" className="text-lattice-500 hover:text-lattice-400">
+              Contact Sales
+            </a>
             {' · '}
-            <a href="#" className="text-lattice-500 hover:text-lattice-400">Documentation</a>
+            <a href="#" className="text-lattice-500 hover:text-lattice-400">
+              Documentation
+            </a>
             {' · '}
-            <a href="#" className="text-lattice-500 hover:text-lattice-400">Privacy</a>
+            <a href="#" className="text-lattice-500 hover:text-lattice-400">
+              Privacy
+            </a>
           </p>
         </div>
       </div>

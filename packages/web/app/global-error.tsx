@@ -26,9 +26,7 @@ export default function GlobalError({
 
           {/* Error digest for debugging */}
           {error.digest && (
-            <p className="text-xs text-slate-600 mb-4 font-mono">
-              Error ID: {error.digest}
-            </p>
+            <p className="text-xs text-slate-600 mb-4 font-mono">Error ID: {error.digest}</p>
           )}
 
           {/* Actions */}

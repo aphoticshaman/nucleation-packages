@@ -14,9 +14,7 @@ export function Header({ onLogout, user }: HeaderProps) {
         <div className="flex items-center gap-3">
           <LatticeForgeIcon className="w-8 h-8" />
           <div>
-            <h1 className="text-lg font-semibold text-white tracking-tight">
-              LatticeForge
-            </h1>
+            <h1 className="text-lg font-semibold text-white tracking-tight">LatticeForge</h1>
             <p className="text-[10px] text-lattice-400 uppercase tracking-widest -mt-0.5">
               Signal Intelligence
             </p>
@@ -39,9 +37,7 @@ export function Header({ onLogout, user }: HeaderProps) {
         {/* Right - User */}
         <div className="flex items-center gap-4">
           <div className="text-right">
-            <p className="text-sm font-medium text-white">
-              {user?.email || 'API Access'}
-            </p>
+            <p className="text-sm font-medium text-white">{user?.email || 'API Access'}</p>
             <p className="text-[10px] text-lattice-400">
               {user ? 'Authenticated User' : 'API Key'}
             </p>

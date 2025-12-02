@@ -2,52 +2,52 @@
 // Transactional emails: alerts, briefs, invoices, welcome
 // Deploy: supabase functions deploy email
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
-const RESEND_API = 'https://api.resend.com/emails'
-const FROM_EMAIL = 'LatticeForge <alerts@latticeforge.io>'
+const RESEND_API = 'https://api.resend.com/emails';
+const FROM_EMAIL = 'LatticeForge <alerts@latticeforge.io>';
 
 interface EmailRequest {
-  to: string
-  template: 'welcome' | 'alert' | 'brief' | 'invoice' | 'password_reset'
-  data: Record<string, unknown>
+  to: string;
+  template: 'welcome' | 'alert' | 'brief' | 'invoice' | 'password_reset';
+  data: Record<string, unknown>;
 }
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
-  const resendKey = Deno.env.get('RESEND_API_KEY')
+  const resendKey = Deno.env.get('RESEND_API_KEY');
   if (!resendKey) {
-    return jsonResponse({ error: 'Resend not configured' }, 500)
+    return jsonResponse({ error: 'Resend not configured' }, 500);
   }
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-  )
+  );
 
   try {
-    const body: EmailRequest = await req.json()
-    const { to, template, data } = body
+    const body: EmailRequest = await req.json();
+    const { to, template, data } = body;
 
     if (!to || !template) {
-      return jsonResponse({ error: 'Missing to or template' }, 400)
+      return jsonResponse({ error: 'Missing to or template' }, 400);
     }
 
-    const email = buildEmail(template, data)
+    const email = buildEmail(template, data);
 
     const response = await fetch(RESEND_API, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${resendKey}`,
+        Authorization: `Bearer ${resendKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -56,28 +56,30 @@ serve(async (req) => {
         subject: email.subject,
         html: email.html,
       }),
-    })
+    });
 
     if (!response.ok) {
-      const error = await response.text()
-      console.error('Resend error:', error)
-      return jsonResponse({ error: 'Failed to send email' }, 500)
+      const error = await response.text();
+      console.error('Resend error:', error);
+      return jsonResponse({ error: 'Failed to send email' }, 500);
     }
 
-    const result = await response.json()
+    const result = await response.json();
 
     return jsonResponse({
       success: true,
       id: result.id,
-    })
-
+    });
   } catch (error) {
-    console.error('Email error:', error)
-    return jsonResponse({ error: error.message }, 500)
+    console.error('Email error:', error);
+    return jsonResponse({ error: error.message }, 500);
   }
-})
+});
 
-function buildEmail(template: string, data: Record<string, unknown>): { subject: string; html: string } {
+function buildEmail(
+  template: string,
+  data: Record<string, unknown>
+): { subject: string; html: string } {
   switch (template) {
     case 'welcome':
       return {
@@ -103,7 +105,7 @@ function buildEmail(template: string, data: Record<string, unknown>): { subject:
             </p>
           </div>
         `,
-      }
+      };
 
     case 'alert':
       return {
@@ -116,7 +118,9 @@ function buildEmail(template: string, data: Record<string, unknown>): { subject:
             <div style="border: 1px solid #e5e5e5; border-top: none; padding: 24px; border-radius: 0 0 8px 8px;">
               <h3 style="margin-top: 0;">${data.title}</h3>
               <p>${data.message}</p>
-              ${data.indicator ? `
+              ${
+                data.indicator
+                  ? `
                 <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
                   <tr style="background: #f9f9f9;">
                     <td style="padding: 8px; border: 1px solid #e5e5e5;"><strong>Indicator</strong></td>
@@ -131,7 +135,9 @@ function buildEmail(template: string, data: Record<string, unknown>): { subject:
                     <td style="padding: 8px; border: 1px solid #e5e5e5;">${data.threshold}</td>
                   </tr>
                 </table>
-              ` : ''}
+              `
+                  : ''
+              }
               <p>
                 <a href="https://latticeforge.vercel.app/alerts"
                    style="background: #0066ff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
@@ -144,7 +150,7 @@ function buildEmail(template: string, data: Record<string, unknown>): { subject:
             </div>
           </div>
         `,
-      }
+      };
 
     case 'brief':
       return {
@@ -159,11 +165,15 @@ function buildEmail(template: string, data: Record<string, unknown>): { subject:
               <p>${data.summary}</p>
             </div>
 
-            ${data.content ? `
+            ${
+              data.content
+                ? `
               <div style="white-space: pre-wrap; line-height: 1.6;">
                 ${data.content}
               </div>
-            ` : ''}
+            `
+                : ''
+            }
 
             <p>
               <a href="https://latticeforge.vercel.app/briefs"
@@ -173,7 +183,7 @@ function buildEmail(template: string, data: Record<string, unknown>): { subject:
             </p>
           </div>
         `,
-      }
+      };
 
     case 'invoice':
       return {
@@ -207,7 +217,7 @@ function buildEmail(template: string, data: Record<string, unknown>): { subject:
             </p>
           </div>
         `,
-      }
+      };
 
     case 'password_reset':
       return {
@@ -227,13 +237,13 @@ function buildEmail(template: string, data: Record<string, unknown>): { subject:
             </p>
           </div>
         `,
-      }
+      };
 
     default:
       return {
         subject: 'LatticeForge Notification',
         html: `<p>${JSON.stringify(data)}</p>`,
-      }
+      };
   }
 }
 
@@ -241,5 +251,5 @@ function jsonResponse(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  })
+  });
 }

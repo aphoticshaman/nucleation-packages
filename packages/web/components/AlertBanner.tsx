@@ -40,9 +40,7 @@ export default function AlertBanner({ level }: AlertBannerProps) {
       }`}
     >
       <div className="max-w-4xl mx-auto flex items-center gap-3">
-        <div className={`${config.text} font-bold text-sm uppercase tracking-wide`}>
-          {level}
-        </div>
+        <div className={`${config.text} font-bold text-sm uppercase tracking-wide`}>{level}</div>
         <div className="text-slate-300 text-sm">{config.message}</div>
       </div>
     </div>

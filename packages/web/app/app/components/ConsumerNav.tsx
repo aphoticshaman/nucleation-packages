@@ -31,8 +31,8 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-1">
             {navItems.map((item) => {
-              const isActive = pathname === item.href ||
-                (item.href !== '/app' && pathname.startsWith(item.href));
+              const isActive =
+                pathname === item.href || (item.href !== '/app' && pathname.startsWith(item.href));
 
               return (
                 <Link
@@ -73,11 +73,21 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
             >
               {mobileMenuOpen ? (
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               ) : (
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
                 </svg>
               )}
             </button>
@@ -101,8 +111,8 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
       >
         <div className="p-4 space-y-2">
           {navItems.map((item) => {
-            const isActive = pathname === item.href ||
-              (item.href !== '/app' && pathname.startsWith(item.href));
+            const isActive =
+              pathname === item.href || (item.href !== '/app' && pathname.startsWith(item.href));
 
             return (
               <Link
@@ -110,9 +120,7 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-800'
+                  isActive ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800'
                 }`}
               >
                 <span className="text-lg">{item.icon}</span>

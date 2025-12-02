@@ -73,10 +73,10 @@ export default function ControlPanel({
             alertLevel === 'normal'
               ? 'bg-green-900/50 text-green-400'
               : alertLevel === 'elevated'
-              ? 'bg-yellow-900/50 text-yellow-400'
-              : alertLevel === 'warning'
-              ? 'bg-orange-900/50 text-orange-400'
-              : 'bg-red-900/50 text-red-400 animate-pulse'
+                ? 'bg-yellow-900/50 text-yellow-400'
+                : alertLevel === 'warning'
+                  ? 'bg-orange-900/50 text-orange-400'
+                  : 'bg-red-900/50 text-red-400 animate-pulse'
           }`}
         >
           {alertLevel.toUpperCase()}
@@ -90,10 +90,7 @@ export default function ControlPanel({
           <div className="space-y-1">
             {Object.entries(REGIMES).map(([id, { name, color }]) => (
               <div key={id} className="flex items-center gap-2 text-xs">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: color }}
-                />
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
                 <span className="text-slate-300">{name}</span>
               </div>
             ))}

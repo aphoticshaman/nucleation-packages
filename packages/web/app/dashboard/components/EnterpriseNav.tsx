@@ -44,7 +44,12 @@ export default function EnterpriseNav({ user, org }: EnterpriseNavProps) {
           aria-label="Open menu"
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
           </svg>
         </button>
         <div className="flex items-center gap-2">
@@ -69,17 +74,21 @@ export default function EnterpriseNav({ user, org }: EnterpriseNavProps) {
       )}
 
       {/* Sidebar - slides in on mobile, fixed on desktop */}
-      <nav className={`
+      <nav
+        className={`
         fixed left-0 top-0 h-full bg-slate-900 border-r border-slate-800 flex flex-col z-50
         w-72 lg:w-64 2xl:w-72
         transform transition-transform duration-200 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
+      `}
+      >
         {/* Header */}
         <div className="p-4 lg:p-6 border-b border-slate-800 flex items-center justify-between">
           <div>
             <h1 className="text-lg lg:text-xl 2xl:text-2xl font-bold text-white">LatticeForge</h1>
-            <p className="text-xs 2xl:text-sm text-slate-500 mt-0.5 lg:mt-1">Enterprise Dashboard</p>
+            <p className="text-xs 2xl:text-sm text-slate-500 mt-0.5 lg:mt-1">
+              Enterprise Dashboard
+            </p>
           </div>
           {/* Mobile close button */}
           <button
@@ -88,7 +97,12 @@ export default function EnterpriseNav({ user, org }: EnterpriseNavProps) {
             aria-label="Close menu"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -106,7 +120,9 @@ export default function EnterpriseNav({ user, org }: EnterpriseNavProps) {
             <div className="mt-3">
               <div className="flex justify-between text-xs 2xl:text-sm text-slate-400 mb-1">
                 <span>API Usage</span>
-                <span>{org.api_calls_used.toLocaleString()} / {org.api_calls_limit.toLocaleString()}</span>
+                <span>
+                  {org.api_calls_used.toLocaleString()} / {org.api_calls_limit.toLocaleString()}
+                </span>
               </div>
               <div className="h-1.5 2xl:h-2 bg-slate-700 rounded-full overflow-hidden">
                 <div
@@ -124,7 +140,8 @@ export default function EnterpriseNav({ user, org }: EnterpriseNavProps) {
         <div className="flex-1 overflow-y-auto p-3 lg:p-4">
           <div className="space-y-1 lg:space-y-2">
             {navItems.map((item) => {
-              const isActive = pathname === item.href ||
+              const isActive =
+                pathname === item.href ||
                 (item.href !== '/dashboard' && pathname.startsWith(item.href));
 
               return (
@@ -174,7 +191,9 @@ export default function EnterpriseNav({ user, org }: EnterpriseNavProps) {
               {user.full_name?.[0] || user.email[0].toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm 2xl:text-base text-white truncate">{user.full_name || user.email}</p>
+              <p className="text-sm 2xl:text-base text-white truncate">
+                {user.full_name || user.email}
+              </p>
               <p className="text-xs 2xl:text-sm text-slate-500">Engineer</p>
             </div>
           </div>

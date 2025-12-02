@@ -29,8 +29,8 @@ export default function AdminNav({ user }: AdminNavProps) {
       {/* Nav items */}
       <div className="p-4 space-y-2">
         {navItems.map((item) => {
-          const isActive = pathname === item.href ||
-            (item.href !== '/admin' && pathname.startsWith(item.href));
+          const isActive =
+            pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
 
           return (
             <Link

@@ -48,7 +48,7 @@ export default function TierBadge({
   tier,
   size = 'md',
   showLabel = false,
-  className = ''
+  className = '',
 }: TierBadgeProps) {
   const config = TIER_CONFIG[tier];
   const sizeConfig = SIZES[size];
@@ -56,10 +56,7 @@ export default function TierBadge({
   return (
     <div className={`inline-flex flex-col items-center gap-2 ${className}`}>
       {/* Badge with glow */}
-      <div
-        className="relative group"
-        style={{ width: sizeConfig.badge, height: sizeConfig.badge }}
-      >
+      <div className="relative group" style={{ width: sizeConfig.badge, height: sizeConfig.badge }}>
         {/* Animated glow on hover */}
         <div
           className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-60 blur-lg transition-opacity duration-300"

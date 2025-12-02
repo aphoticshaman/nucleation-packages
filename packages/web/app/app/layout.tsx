@@ -1,11 +1,7 @@
 import { requireConsumer } from '@/lib/auth';
 import ConsumerNav from './components/ConsumerNav';
 
-export default async function ConsumerLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function ConsumerLayout({ children }: { children: React.ReactNode }) {
   const user = await requireConsumer();
 
   return (

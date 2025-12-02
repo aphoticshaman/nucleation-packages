@@ -67,7 +67,7 @@ export class Statistics {
 
     const n = data.length;
     const m3 = data.reduce((sum, x) => sum + ((x - mean) / std) ** 3, 0) / n;
-    return m3 * Math.sqrt(n * (n - 1)) / (n - 2);
+    return (m3 * Math.sqrt(n * (n - 1))) / (n - 2);
   }
 
   /**
@@ -94,7 +94,9 @@ export class Statistics {
     const meanX = Statistics.mean(x.slice(0, n));
     const meanY = Statistics.mean(y.slice(0, n));
 
-    let num = 0, denX = 0, denY = 0;
+    let num = 0,
+      denX = 0,
+      denY = 0;
     for (let i = 0; i < n; i++) {
       const dx = x[i] - meanX;
       const dy = y[i] - meanY;
@@ -167,11 +169,7 @@ export class Statistics {
   /**
    * Calculate rolling statistics
    */
-  static rolling(
-    data: number[],
-    window: number,
-    fn: (chunk: number[]) => number
-  ): number[] {
+  static rolling(data: number[], window: number, fn: (chunk: number[]) => number): number[] {
     const result: number[] = [];
     for (let i = window - 1; i < data.length; i++) {
       const chunk = data.slice(i - window + 1, i + 1);
@@ -244,7 +242,8 @@ export class Statistics {
     const meanX = Statistics.mean(lagLevel.slice(0, n));
     const meanY = Statistics.mean(diff);
 
-    let ssXY = 0, ssXX = 0;
+    let ssXY = 0,
+      ssXX = 0;
     for (let i = 0; i < n; i++) {
       ssXY += (lagLevel[i] - meanX) * (diff[i] - meanY);
       ssXX += (lagLevel[i] - meanX) ** 2;
@@ -278,7 +277,7 @@ export class Statistics {
 
     let q = 0;
     for (let k = 1; k <= maxLag; k++) {
-      q += (acfValues[k] ** 2) / (n - k);
+      q += acfValues[k] ** 2 / (n - k);
     }
 
     return n * (n + 2) * q;

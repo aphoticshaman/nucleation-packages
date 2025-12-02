@@ -7,7 +7,12 @@
 
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
-import { securityHeaders, corsMiddleware, validateRequest, requestLogger } from './middleware/security.js';
+import {
+  securityHeaders,
+  corsMiddleware,
+  validateRequest,
+  requestLogger,
+} from './middleware/security.js';
 import { authenticate, registerClient } from './middleware/auth.js';
 import { rateLimit } from './middleware/rate-limit.js';
 import { TIER_LIMITS, TIER_PERMISSIONS } from './types.js';
@@ -173,9 +178,7 @@ app.onError((err, c) => {
 
   // Don't leak internal errors in production
   const message =
-    process.env.NODE_ENV === 'production'
-      ? 'An internal error occurred'
-      : err.message;
+    process.env.NODE_ENV === 'production' ? 'An internal error occurred' : err.message;
 
   return c.json(
     {

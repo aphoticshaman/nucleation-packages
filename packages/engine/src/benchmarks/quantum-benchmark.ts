@@ -69,28 +69,38 @@ function createPortfolioProblem(n: number): {
   covariance: number[][];
 } {
   // Generate realistic-ish returns and covariance
-  const expectedReturns = Array(n).fill(0).map(() => 0.05 + Math.random() * 0.15);
+  const expectedReturns = Array(n)
+    .fill(0)
+    .map(() => 0.05 + Math.random() * 0.15);
 
   // Generate positive semi-definite covariance matrix
-  const randomMatrix = Array(n).fill(null).map(() =>
-    Array(n).fill(0).map(() => Math.random() - 0.5)
-  );
-  const covariance = Array(n).fill(null).map((_, i) =>
-    Array(n).fill(0).map((_, j) => {
-      let sum = 0;
-      for (let k = 0; k < n; k++) {
-        sum += randomMatrix[i][k] * randomMatrix[j][k];
-      }
-      return sum * 0.01; // Scale to realistic variance
-    })
-  );
+  const randomMatrix = Array(n)
+    .fill(null)
+    .map(() =>
+      Array(n)
+        .fill(0)
+        .map(() => Math.random() - 0.5)
+    );
+  const covariance = Array(n)
+    .fill(null)
+    .map((_, i) =>
+      Array(n)
+        .fill(0)
+        .map((_, j) => {
+          let sum = 0;
+          for (let k = 0; k < n; k++) {
+            sum += randomMatrix[i][k] * randomMatrix[j][k];
+          }
+          return sum * 0.01; // Scale to realistic variance
+        })
+    );
 
   const riskFreeRate = 0.02;
 
   const objective = (weights: number[]): number => {
     // Normalize weights to sum to 1
     const sum = weights.reduce((a, b) => a + Math.abs(b), 0) || 1;
-    const normalized = weights.map(w => Math.abs(w) / sum);
+    const normalized = weights.map((w) => Math.abs(w) / sum);
 
     // Portfolio return
     let portReturn = 0;
@@ -120,18 +130,27 @@ function createPortfolioProblem(n: number): {
  * Signal selection problem (combinatorial)
  * Select k signals from n that maximize information gain
  */
-function createSignalSelectionProblem(n: number, k: number): {
+function createSignalSelectionProblem(
+  n: number,
+  k: number
+): {
   objective: (selection: number[]) => number;
   signalValues: number[];
   correlations: number[][];
 } {
   // Each signal has base value
-  const signalValues = Array(n).fill(0).map(() => Math.random());
+  const signalValues = Array(n)
+    .fill(0)
+    .map(() => Math.random());
 
   // Correlations between signals (want diverse selection)
-  const correlations = Array(n).fill(null).map(() =>
-    Array(n).fill(0).map(() => Math.random() * 0.8)
-  );
+  const correlations = Array(n)
+    .fill(null)
+    .map(() =>
+      Array(n)
+        .fill(0)
+        .map(() => Math.random() * 0.8)
+    );
   // Make symmetric with 1s on diagonal
   for (let i = 0; i < n; i++) {
     correlations[i][i] = 1;
@@ -142,7 +161,7 @@ function createSignalSelectionProblem(n: number, k: number): {
 
   const objective = (selection: number[]): number => {
     // Binary selection
-    const selected = selection.map(s => s > 0.5 ? 1 : 0);
+    const selected = selection.map((s) => (s > 0.5 ? 1 : 0));
     const count = selected.reduce((a, b) => a + b, 0);
 
     // Penalty for wrong count
@@ -185,15 +204,15 @@ function randomSearch(
   bounds: { min: number; max: number },
   iterations: number
 ): { solution: number[]; value: number; iterations: number } {
-  let best = Array(dimensions).fill(0).map(() =>
-    bounds.min + Math.random() * (bounds.max - bounds.min)
-  );
+  let best = Array(dimensions)
+    .fill(0)
+    .map(() => bounds.min + Math.random() * (bounds.max - bounds.min));
   let bestValue = objective(best);
 
   for (let i = 0; i < iterations; i++) {
-    const candidate = Array(dimensions).fill(0).map(() =>
-      bounds.min + Math.random() * (bounds.max - bounds.min)
-    );
+    const candidate = Array(dimensions)
+      .fill(0)
+      .map(() => bounds.min + Math.random() * (bounds.max - bounds.min));
     const value = objective(candidate);
     if (value < bestValue) {
       best = candidate;
@@ -213,9 +232,9 @@ function standardAnnealing(
   bounds: { min: number; max: number },
   iterations: number
 ): { solution: number[]; value: number; iterations: number } {
-  let current = Array(dimensions).fill(0).map(() =>
-    bounds.min + Math.random() * (bounds.max - bounds.min)
-  );
+  let current = Array(dimensions)
+    .fill(0)
+    .map(() => bounds.min + Math.random() * (bounds.max - bounds.min));
   let currentValue = objective(current);
   let best = [...current];
   let bestValue = currentValue;
@@ -225,7 +244,7 @@ function standardAnnealing(
 
   for (let i = 0; i < iterations; i++) {
     // Generate neighbor
-    const neighbor = current.map(x => {
+    const neighbor = current.map((x) => {
       const delta = (Math.random() - 0.5) * temp * 0.1;
       return Math.max(bounds.min, Math.min(bounds.max, x + delta));
     });
@@ -233,8 +252,10 @@ function standardAnnealing(
     const neighborValue = objective(neighbor);
 
     // Standard Metropolis acceptance
-    if (neighborValue < currentValue ||
-        Math.random() < Math.exp(-(neighborValue - currentValue) / temp)) {
+    if (
+      neighborValue < currentValue ||
+      Math.random() < Math.exp(-(neighborValue - currentValue) / temp)
+    ) {
       current = neighbor;
       currentValue = neighborValue;
 
@@ -293,12 +314,15 @@ function runBenchmark(
   // Quantum-inspired
   const quantumOpt = new QuantumInspiredOptimizer();
   const quantumStart = performance.now();
-  const quantumResult = quantumOpt.solve({
-    dimensions,
-    objective,
-    bounds: Array(dimensions).fill(bounds),
-    discrete,
-  }, { maxIterations: iterations });
+  const quantumResult = quantumOpt.solve(
+    {
+      dimensions,
+      objective,
+      bounds: Array(dimensions).fill(bounds),
+      discrete,
+    },
+    { maxIterations: iterations }
+  );
   const quantumTime = performance.now() - quantumStart;
   results.push({
     method: 'Quantum-Inspired',
@@ -391,10 +415,10 @@ async function main() {
   let losses = 0;
 
   for (const problem of problems) {
-    const problemResults = allResults.filter(r => r.problem === problem);
-    const quantum = problemResults.find(r => r.method === 'Quantum-Inspired')!;
-    const random = problemResults.find(r => r.method === 'Random Search')!;
-    const standard = problemResults.find(r => r.method === 'Standard SA')!;
+    const problemResults = allResults.filter((r) => r.problem === problem);
+    const quantum = problemResults.find((r) => r.method === 'Quantum-Inspired')!;
+    const random = problemResults.find((r) => r.method === 'Random Search')!;
+    const standard = problemResults.find((r) => r.method === 'Standard SA')!;
 
     const bestBaseline = Math.min(random.bestValue, standard.bestValue);
     const improvement = ((bestBaseline - quantum.bestValue) / Math.abs(bestBaseline)) * 100;

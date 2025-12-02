@@ -188,9 +188,9 @@ function getNextMidnight(): number {
 }
 
 function getIp(c: Context): string {
-  return c.req.header('X-Forwarded-For')?.split(',')[0].trim() ??
-         c.req.header('X-Real-IP') ??
-         '0.0.0.0';
+  return (
+    c.req.header('X-Forwarded-For')?.split(',')[0].trim() ?? c.req.header('X-Real-IP') ?? '0.0.0.0'
+  );
 }
 
 /**

@@ -29,11 +29,7 @@ export async function POST(req: Request) {
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
+    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
   } catch (err) {
     console.error('Webhook signature verification failed:', err);
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
@@ -175,10 +171,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 
   if (org) {
     // Reset API usage for the new billing period
-    await getSupabaseAdmin()
-      .from('organizations')
-      .update({ api_calls_used: 0 })
-      .eq('id', org.id);
+    await getSupabaseAdmin().from('organizations').update({ api_calls_used: 0 }).eq('id', org.id);
 
     console.log(`Payment succeeded, reset usage for org ${org.id}`);
   }

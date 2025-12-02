@@ -23,9 +23,7 @@ function StatCard({
     <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
       <p className="text-sm text-slate-400">{label}</p>
       <p className="text-3xl font-bold text-white mt-2">{value}</p>
-      {change && (
-        <p className={`text-sm mt-2 ${changeColors[changeType]}`}>{change}</p>
-      )}
+      {change && <p className={`text-sm mt-2 ${changeColors[changeType]}`}>{change}</p>}
     </div>
   );
 }
@@ -56,11 +54,7 @@ function EnterpriseRow({
   };
 }) {
   const usagePercent = (org.api_calls_24h / org.api_calls_limit) * 100;
-  const status = !org.is_active
-    ? 'critical'
-    : usagePercent > 80
-    ? 'warning'
-    : 'healthy';
+  const status = !org.is_active ? 'critical' : usagePercent > 80 ? 'warning' : 'healthy';
 
   return (
     <tr className="border-b border-slate-800 hover:bg-slate-800/50">
@@ -109,8 +103,8 @@ function ConsumerRow({
     is_active: boolean;
   };
 }) {
-  const isOnline = user.last_seen_at &&
-    new Date(user.last_seen_at) > new Date(Date.now() - 15 * 60 * 1000);
+  const isOnline =
+    user.last_seen_at && new Date(user.last_seen_at) > new Date(Date.now() - 15 * 60 * 1000);
 
   return (
     <tr className="border-b border-slate-800 hover:bg-slate-800/50">
@@ -119,9 +113,7 @@ function ConsumerRow({
           <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-slate-600'}`} />
           <div>
             <p className="text-white text-sm">{user.full_name || user.email}</p>
-            {user.full_name && (
-              <p className="text-xs text-slate-500">{user.email}</p>
-            )}
+            {user.full_name && <p className="text-xs text-slate-500">{user.email}</p>}
           </div>
         </div>
       </td>
@@ -139,10 +131,7 @@ async function DashboardContent() {
   const supabase = await createClient();
 
   // Fetch dashboard stats
-  const { data: stats } = await supabase
-    .from('admin_dashboard_stats')
-    .select('*')
-    .single();
+  const { data: stats } = await supabase.from('admin_dashboard_stats').select('*').single();
 
   // Fetch enterprise overview
   const { data: enterprises } = await supabase
@@ -178,10 +167,7 @@ async function DashboardContent() {
           value={stats?.active_24h || 0}
           change={`${stats?.active_7d || 0} this week`}
         />
-        <StatCard
-          label="API Calls (24h)"
-          value={(stats?.api_calls_24h || 0).toLocaleString()}
-        />
+        <StatCard label="API Calls (24h)" value={(stats?.api_calls_24h || 0).toLocaleString()} />
       </div>
 
       {/* Two-column layout */}
@@ -212,9 +198,7 @@ async function DashboardContent() {
                 </tr>
               </thead>
               <tbody>
-                {enterprises?.map((org) => (
-                  <EnterpriseRow key={org.id} org={org} />
-                )) || (
+                {enterprises?.map((org) => <EnterpriseRow key={org.id} org={org} />) || (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-slate-500">
                       No enterprise customers yet
@@ -251,9 +235,7 @@ async function DashboardContent() {
                 </tr>
               </thead>
               <tbody>
-                {consumers?.map((user) => (
-                  <ConsumerRow key={user.id} user={user} />
-                )) || (
+                {consumers?.map((user) => <ConsumerRow key={user.id} user={user} />) || (
                   <tr>
                     <td colSpan={4} className="py-8 text-center text-slate-500">
                       No consumer users yet

@@ -30,14 +30,18 @@ const mockHandler: ProxyHandler<object> = {
     }
     // For method chains like .select(), .eq(), etc.
     if (typeof prop === 'string') {
-      return (..._args: unknown[]) => new Proxy({}, {
-        get(_, p) {
-          if (p === 'then') return undefined; // Not a promise
-          if (p === 'data') return null;
-          if (p === 'error') return null;
-          return () => new Proxy({}, mockHandler);
-        }
-      });
+      return (..._args: unknown[]) =>
+        new Proxy(
+          {},
+          {
+            get(_, p) {
+              if (p === 'then') return undefined; // Not a promise
+              if (p === 'data') return null;
+              if (p === 'error') return null;
+              return () => new Proxy({}, mockHandler);
+            },
+          }
+        );
     }
     return undefined;
   },
@@ -69,12 +73,14 @@ function getSupabase(): BrowserClient {
   // Create browser client from @supabase/ssr - this syncs auth to cookies
   // so middleware can read the session server-side
   _supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
-    cookieOptions: isProduction ? {
-      domain: COOKIE_DOMAIN,
-      path: '/',
-      sameSite: 'lax',
-      secure: true,
-    } : undefined,
+    cookieOptions: isProduction
+      ? {
+          domain: COOKIE_DOMAIN,
+          path: '/',
+          sameSite: 'lax',
+          secure: true,
+        }
+      : undefined,
   });
   return _supabase;
 }
@@ -115,7 +121,10 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['nations']['Row'], 'id' | 'created_at' | 'updated_at'>;
+        Insert: Omit<
+          Database['public']['Tables']['nations']['Row'],
+          'id' | 'created_at' | 'updated_at'
+        >;
         Update: Partial<Database['public']['Tables']['nations']['Insert']>;
       };
       influence_edges: {
@@ -141,7 +150,10 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['esteem_relations']['Row'], 'id' | 'created_at' | 'updated_at'>;
+        Insert: Omit<
+          Database['public']['Tables']['esteem_relations']['Row'],
+          'id' | 'created_at' | 'updated_at'
+        >;
         Update: Partial<Database['public']['Tables']['esteem_relations']['Insert']>;
       };
       simulations: {
@@ -161,7 +173,10 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['simulations']['Row'], 'id' | 'created_at' | 'updated_at'>;
+        Insert: Omit<
+          Database['public']['Tables']['simulations']['Row'],
+          'id' | 'created_at' | 'updated_at'
+        >;
         Update: Partial<Database['public']['Tables']['simulations']['Insert']>;
       };
     };

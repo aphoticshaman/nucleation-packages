@@ -137,7 +137,15 @@ export class FusionEngine {
         hash: this.hashData(data),
       };
 
-      this.traceRecorder.record('fetch', { endpoint: config.endpoint }, { length: data.length }, duration, name, undefined, provenance);
+      this.traceRecorder.record(
+        'fetch',
+        { endpoint: config.endpoint },
+        { length: data.length },
+        duration,
+        name,
+        undefined,
+        provenance
+      );
 
       return data;
     } catch (error) {
@@ -249,10 +257,7 @@ export class FusionEngine {
   /**
    * Batch detect phases
    */
-  detectBatch(
-    data: number[],
-    windowSize: number
-  ): { phases: number[]; usedWasm: boolean } {
+  detectBatch(data: number[], windowSize: number): { phases: number[]; usedWasm: boolean } {
     const startTime = performance.now();
     const result = this.wasmBridge.detectPhaseBatch(data, windowSize);
     const duration = performance.now() - startTime;
@@ -437,8 +442,7 @@ export class FusionEngine {
     const sourceConfidence = Math.min(signals.size / 5, 1);
 
     // Longer signals = higher confidence
-    const avgLength =
-      [...signals.values()].reduce((sum, s) => sum + s.length, 0) / signals.size;
+    const avgLength = [...signals.values()].reduce((sum, s) => sum + s.length, 0) / signals.size;
     const lengthConfidence = Math.min(avgLength / 100, 1);
 
     return (sourceConfidence + lengthConfidence) / 2;

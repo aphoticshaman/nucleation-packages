@@ -50,7 +50,8 @@ const PRESETS = [
     icon: '🌏',
     simpleDesc: 'Rising powers',
     standardDesc: 'Major emerging economies',
-    detailedDesc: 'Brazil, Russia, India, China, South Africa + new members with trade dependencies',
+    detailedDesc:
+      'Brazil, Russia, India, China, South Africa + new members with trade dependencies',
   },
   {
     id: 'conflict',
@@ -119,22 +120,27 @@ const KEY_INSIGHTS = [
     icon: '🎯',
     title: 'What This Shows',
     simple: 'Which countries might face big changes soon, and which ones are stable.',
-    standard: 'Nation-level stability analysis based on political, economic, and social indicators combined into a predictive model.',
-    detailed: 'Dynamical systems analysis treating nations as particles in high-dimensional phase space. Basin strength measures attractor depth; transition risk derives from proximity to separatrices.',
+    standard:
+      'Nation-level stability analysis based on political, economic, and social indicators combined into a predictive model.',
+    detailed:
+      'Dynamical systems analysis treating nations as particles in high-dimensional phase space. Basin strength measures attractor depth; transition risk derives from proximity to separatrices.',
   },
   {
     icon: '⏱️',
     title: 'How Current',
     simple: 'Data is updated daily from news and reports.',
     standard: 'Model ingests daily feeds from 500+ sources. Simulations run hourly.',
-    detailed: 'Real-time NLP pipeline processes Reuters, AP, governmental releases. Feature extraction updates at 00:00 UTC. Monte Carlo sims refresh hourly.',
+    detailed:
+      'Real-time NLP pipeline processes Reuters, AP, governmental releases. Feature extraction updates at 00:00 UTC. Monte Carlo sims refresh hourly.',
   },
   {
     icon: '🎲',
     title: 'Accuracy',
     simple: 'The model catches about 7 out of 10 major events beforehand.',
-    standard: '72% recall on regime transitions with 30-day lead time. 85% AUC on binary stability classification.',
-    detailed: 'Backtest 2000-2023: 72% TPR @ 30d horizon, 15% FPR. Brier score 0.18. Calibration verified via reliability diagrams. See methodology docs.',
+    standard:
+      '72% recall on regime transitions with 30-day lead time. 85% AUC on binary stability classification.',
+    detailed:
+      'Backtest 2000-2023: 72% TPR @ 30d horizon, 15% FPR. Brier score 0.18. Calibration verified via reliability diagrams. See methodology docs.',
   },
 ];
 
@@ -161,11 +167,18 @@ export default function ConsumerDashboard() {
   const currentLayer = LAYERS.find((l) => l.id === selectedLayer)!;
   const currentPreset = PRESETS.find((p) => p.id === selectedPreset)!;
 
-  const getDescription = (item: { simpleDesc: string; standardDesc: string; detailedDesc: string }) => {
+  const getDescription = (item: {
+    simpleDesc: string;
+    standardDesc: string;
+    detailedDesc: string;
+  }) => {
     switch (skillLevel) {
-      case 'simple': return item.simpleDesc;
-      case 'detailed': return item.detailedDesc;
-      default: return item.standardDesc;
+      case 'simple':
+        return item.simpleDesc;
+      case 'detailed':
+        return item.detailedDesc;
+      default:
+        return item.standardDesc;
     }
   };
 
@@ -183,8 +196,7 @@ export default function ConsumerDashboard() {
                 ? 'See which countries are stable and which might change'
                 : skillLevel === 'detailed'
                   ? 'Attractor dynamics and transition probability analysis'
-                  : 'Explore nation-level stability and risk patterns'
-              }
+                  : 'Explore nation-level stability and risk patterns'}
             </p>
           </div>
 
@@ -227,7 +239,11 @@ export default function ConsumerDashboard() {
                   <span className="font-medium text-white text-sm">{insight.title}</span>
                 </div>
                 <p className="text-xs md:text-sm text-slate-400 leading-relaxed">
-                  {skillLevel === 'simple' ? insight.simple : skillLevel === 'detailed' ? insight.detailed : insight.standard}
+                  {skillLevel === 'simple'
+                    ? insight.simple
+                    : skillLevel === 'detailed'
+                      ? insight.detailed
+                      : insight.standard}
                 </p>
               </div>
             ))}
@@ -286,11 +302,7 @@ export default function ConsumerDashboard() {
             </div>
 
             <div className="h-[55vh] md:h-[450px] lg:h-[550px] 2xl:h-[650px]">
-              <AttractorMap
-                nations={nations}
-                edges={edges}
-                layer={selectedLayer}
-              />
+              <AttractorMap nations={nations} edges={edges} layer={selectedLayer} />
             </div>
 
             {/* Mobile legend */}
@@ -306,17 +318,23 @@ export default function ConsumerDashboard() {
         </div>
 
         {/* Controls sidebar */}
-        <div className={`
+        <div
+          className={`
           order-2 space-y-4 md:space-y-5
           lg:relative lg:block lg:col-span-1
-          ${controlsOpen
-            ? 'fixed inset-x-0 bottom-0 bg-slate-950 border-t border-slate-800 p-4 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl lg:p-0 lg:border-0 lg:static lg:max-h-none lg:rounded-none'
-            : 'hidden lg:block'
+          ${
+            controlsOpen
+              ? 'fixed inset-x-0 bottom-0 bg-slate-950 border-t border-slate-800 p-4 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl lg:p-0 lg:border-0 lg:static lg:max-h-none lg:rounded-none'
+              : 'hidden lg:block'
           }
-        `}>
+        `}
+        >
           {/* Mobile close handle */}
           <div className="lg:hidden flex justify-center pb-2">
-            <button onClick={() => setControlsOpen(false)} className="w-12 h-1.5 bg-slate-600 rounded-full" />
+            <button
+              onClick={() => setControlsOpen(false)}
+              className="w-12 h-1.5 bg-slate-600 rounded-full"
+            />
           </div>
 
           {/* View selector */}
@@ -340,9 +358,7 @@ export default function ConsumerDashboard() {
                     <span>{layer.icon}</span>
                     <span className="font-medium text-sm">{layer.name}</span>
                   </div>
-                  <p className="text-xs opacity-75 mt-1 ml-6">
-                    {getDescription(layer)}
-                  </p>
+                  <p className="text-xs opacity-75 mt-1 ml-6">{getDescription(layer)}</p>
                 </button>
               ))}
             </div>
@@ -357,8 +373,7 @@ export default function ConsumerDashboard() {
             <p className="text-xs text-slate-500 mb-3">
               {skillLevel === 'simple'
                 ? 'Step forward in time to see how things might change'
-                : 'Advance the model by one timestep'
-              }
+                : 'Advance the model by one timestep'}
             </p>
             <button
               onClick={() => void handleSimulate()}
@@ -369,11 +384,15 @@ export default function ConsumerDashboard() {
                   : 'bg-green-600 text-white hover:bg-green-500 active:bg-green-700'
               }`}
             >
-              {wasmLoading ? 'Loading...' : isSimulating ? 'Running...' : skillLevel === 'simple' ? 'Step Forward' : 'Run Step'}
+              {wasmLoading
+                ? 'Loading...'
+                : isSimulating
+                  ? 'Running...'
+                  : skillLevel === 'simple'
+                    ? 'Step Forward'
+                    : 'Run Step'}
             </button>
-            <p className="text-xs text-slate-500 mt-2 text-center">
-              10 remaining today
-            </p>
+            <p className="text-xs text-slate-500 mt-2 text-center">10 remaining today</p>
           </div>
 
           {/* Save */}
@@ -396,7 +415,10 @@ export default function ConsumerDashboard() {
 
         {/* Mobile overlay */}
         {controlsOpen && (
-          <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setControlsOpen(false)} />
+          <div
+            className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+            onClick={() => setControlsOpen(false)}
+          />
         )}
       </div>
 
@@ -412,8 +434,7 @@ export default function ConsumerDashboard() {
               ? 'Darker colors mean more stable. Bright colors mean things might change soon. Click any country to learn more.'
               : skillLevel === 'detailed'
                 ? 'Color saturation encodes basin depth (stability). Marker size represents influence radius. Click nodes to view velocity vectors and network connections.'
-                : 'Each country is colored by its current stability level. Brighter colors indicate higher risk of change. Click for details.'
-            }
+                : 'Each country is colored by its current stability level. Brighter colors indicate higher risk of change. Click for details.'}
           </p>
         </div>
         <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 md:p-5">
@@ -426,8 +447,7 @@ export default function ConsumerDashboard() {
               ? 'We look at news, trade, and politics to guess which countries might face big changes in the next few months.'
               : skillLevel === 'detailed'
                 ? 'Transition probabilities are derived from Monte Carlo sampling of phase space trajectories. 30-day forecast horizon with confidence intervals.'
-                : 'The model predicts likelihood of major political or economic shifts over the next 1-6 months based on multiple data sources.'
-            }
+                : 'The model predicts likelihood of major political or economic shifts over the next 1-6 months based on multiple data sources.'}
           </p>
         </div>
         <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 md:p-5 sm:col-span-2 lg:col-span-1">
@@ -440,8 +460,7 @@ export default function ConsumerDashboard() {
               ? 'No prediction is perfect. Use this as one tool among many. Always check multiple sources before making decisions.'
               : skillLevel === 'detailed'
                 ? 'Model assumes continuous dynamics; black swan events may cause discontinuous jumps. Past performance does not guarantee future accuracy. See confidence intervals.'
-                : 'Predictions are probabilistic, not certain. The model may miss sudden events. Always combine with other intelligence sources.'
-            }
+                : 'Predictions are probabilistic, not certain. The model may miss sudden events. Always combine with other intelligence sources.'}
           </p>
         </div>
       </div>

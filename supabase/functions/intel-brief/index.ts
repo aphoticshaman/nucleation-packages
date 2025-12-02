@@ -3,64 +3,68 @@
 // Model: Claude Opus (~$0.22 per brief, reserved for top tier)
 // Deploy: supabase functions deploy intel-brief
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 // Confidence level definitions (IC standard)
 const CONFIDENCE_LEVELS = {
   HIGH: 'HIGH CONFIDENCE - Based on high-quality information from multiple independent sources; well-established analytical frameworks; strong historical precedent',
-  MODERATE: 'MODERATE CONFIDENCE - Based on credibly sourced information but with some gaps; reasonable analytical basis; some historical precedent',
+  MODERATE:
+    'MODERATE CONFIDENCE - Based on credibly sourced information but with some gaps; reasonable analytical basis; some historical precedent',
   LOW: 'LOW CONFIDENCE - Based on limited or fragmentary information; significant gaps in data; weak or no historical precedent; high uncertainty',
   INSUFFICIENT: 'INSUFFICIENT DATA - Lack adequate information to make a meaningful assessment',
-  COMPLEX: 'HIGH UNCERTAINTY - Variables are too numerous and dynamic for reliable prediction; multiple plausible outcomes',
-}
+  COMPLEX:
+    'HIGH UNCERTAINTY - Variables are too numerous and dynamic for reliable prediction; multiple plausible outcomes',
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    );
 
     // Verify premium tier
-    const authHeader = req.headers.get('Authorization')
+    const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return jsonResponse({ error: 'Authorization required' }, 401)
+      return jsonResponse({ error: 'Authorization required' }, 401);
     }
 
-    const token = authHeader.replace('Bearer ', '')
+    const token = authHeader.replace('Bearer ', '');
 
     // Check if user has premium tier (simplified - in production use proper auth)
-    const { data: keyData } = await supabase
-      .rpc('validate_api_key', { p_key: token })
+    const { data: keyData } = await supabase.rpc('validate_api_key', { p_key: token });
 
     if (!keyData?.[0] || keyData[0].client_tier !== 'enterprise') {
-      return jsonResponse({
-        error: 'Intel Brief requires Enterprise tier',
-        upgrade_url: '/pricing',
-        current_tier: keyData?.[0]?.client_tier || 'unknown',
-      }, 403)
+      return jsonResponse(
+        {
+          error: 'Intel Brief requires Enterprise tier',
+          upgrade_url: '/pricing',
+          current_tier: keyData?.[0]?.client_tier || 'unknown',
+        },
+        403
+      );
     }
 
-    const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')
+    const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
     if (!anthropicKey) {
-      throw new Error('ANTHROPIC_API_KEY not configured')
+      throw new Error('ANTHROPIC_API_KEY not configured');
     }
 
     // Gather comprehensive data
-    const signals = await gatherIntelSignals(supabase)
+    const signals = await gatherIntelSignals(supabase);
 
     // Generate intel-style brief with Opus
-    const brief = await generateIntelBrief(anthropicKey, signals)
+    const brief = await generateIntelBrief(anthropicKey, signals);
 
     // Record usage (premium pricing)
     await supabase.rpc('record_usage', {
@@ -69,7 +73,7 @@ serve(async (req) => {
       p_operation: 'analysis.intel_brief',
       p_analysis_tokens: brief.tokens_used,
       p_metadata: { model: 'claude-opus-4-20250514', brief_type: 'intel' },
-    })
+    });
 
     // Store the brief
     const { data: savedBrief, error } = await supabase
@@ -88,21 +92,20 @@ serve(async (req) => {
         },
       })
       .select()
-      .single()
+      .single();
 
-    if (error) throw error
+    if (error) throw error;
 
     return jsonResponse({
       status: 'generated',
       brief: savedBrief,
       cost_estimate: `$${(brief.tokens_used * 0.00006).toFixed(4)}`,
-    })
-
+    });
   } catch (error) {
-    console.error('Intel Brief error:', error)
-    return jsonResponse({ error: error.message }, 500)
+    console.error('Intel Brief error:', error);
+    return jsonResponse({ error: error.message }, 500);
   }
-})
+});
 
 async function gatherIntelSignals(supabase: any) {
   // Get all available US signals
@@ -110,37 +113,37 @@ async function gatherIntelSignals(supabase: any) {
     .from('country_signals')
     .select('*')
     .eq('country_code', 'USA')
-    .order('updated_at', { ascending: false })
+    .order('updated_at', { ascending: false });
 
   // Get major economy comparisons
   const { data: globalSignals } = await supabase
     .from('country_signals')
     .select('*')
     .in('country_code', ['CHN', 'DEU', 'JPN', 'GBR', 'FRA'])
-    .order('updated_at', { ascending: false })
+    .order('updated_at', { ascending: false });
 
   // Get recent briefs for context
   const { data: recentBriefs } = await supabase
     .from('briefs')
     .select('summary, signals_snapshot, created_at')
     .order('created_at', { ascending: false })
-    .limit(5)
+    .limit(5);
 
   // Deduplicate and structure
-  const usIndicators: Record<string, any> = {}
+  const usIndicators: Record<string, any> = {};
   for (const s of usSignals || []) {
     if (!usIndicators[s.indicator]) {
-      usIndicators[s.indicator] = s
+      usIndicators[s.indicator] = s;
     }
   }
 
-  const globalByCountry: Record<string, Record<string, any>> = {}
+  const globalByCountry: Record<string, Record<string, any>> = {};
   for (const s of globalSignals || []) {
     if (!globalByCountry[s.country_code]) {
-      globalByCountry[s.country_code] = {}
+      globalByCountry[s.country_code] = {};
     }
     if (!globalByCountry[s.country_code][s.indicator]) {
-      globalByCountry[s.country_code][s.indicator] = s
+      globalByCountry[s.country_code][s.indicator] = s;
     }
   }
 
@@ -149,26 +152,26 @@ async function gatherIntelSignals(supabase: any) {
     global: globalByCountry,
     recent_assessments: recentBriefs || [],
     as_of: new Date().toISOString(),
-  }
+  };
 }
 
 async function generateIntelBrief(apiKey: string, signals: any) {
   const usText = Object.entries(signals.us)
     .map(([key, val]: [string, any]) => `  ${key}: ${val.value} (${val.source})`)
-    .join('\n')
+    .join('\n');
 
   const globalText = Object.entries(signals.global)
     .map(([country, indicators]: [string, any]) => {
       const indText = Object.entries(indicators)
         .map(([k, v]: [string, any]) => `    ${k}: ${v.value}`)
-        .join('\n')
-      return `  ${country}:\n${indText}`
+        .join('\n');
+      return `  ${country}:\n${indText}`;
     })
-    .join('\n')
+    .join('\n');
 
   const recentContext = signals.recent_assessments
     .map((b: any) => `  - ${new Date(b.created_at).toLocaleDateString()}: ${b.summary}`)
-    .join('\n')
+    .join('\n');
 
   const prompt = `You are a senior intelligence analyst producing a National Intelligence Estimate (NIE) style brief for institutional investors.
 
@@ -237,7 +240,7 @@ When should this estimate be revisited? What events would trigger an update?
 
 ---
 
-Use precise language. Quantify when possible. Flag uncertainty explicitly. This is for sophisticated institutional readers who need actionable intelligence, not reassurance.`
+Use precise language. Quantify when possible. Flag uncertainty explicitly. This is for sophisticated institutional readers who need actionable intelligence, not reassurance.`;
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -251,28 +254,28 @@ Use precise language. Quantify when possible. Flag uncertainty explicitly. This 
       max_tokens: 4000,
       messages: [{ role: 'user', content: prompt }],
     }),
-  })
+  });
 
   if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Anthropic API error: ${error}`)
+    const error = await response.text();
+    throw new Error(`Anthropic API error: ${error}`);
   }
 
-  const data = await response.json()
-  const content = data.content[0].text
+  const data = await response.json();
+  const content = data.content[0].text;
 
   // Extract key judgments
-  const keyJudgmentsMatch = content.match(/KEY JUDGMENTS[\s\S]*?(?=###|$)/i)
+  const keyJudgmentsMatch = content.match(/KEY JUDGMENTS[\s\S]*?(?=###|$)/i);
   const keyJudgments = keyJudgmentsMatch
     ? keyJudgmentsMatch[0].match(/\([A-Z\s]+CONFIDENCE\)[^\n]+/g) || []
-    : []
+    : [];
 
   // Extract forecasts from near-term section
-  const forecastMatch = content.match(/Near-Term Forecast[\s\S]*?(?=###|$)/i)
-  const forecasts = forecastMatch ? forecastMatch[0] : ''
+  const forecastMatch = content.match(/Near-Term Forecast[\s\S]*?(?=###|$)/i);
+  const forecasts = forecastMatch ? forecastMatch[0] : '';
 
   // Extract first key judgment as summary
-  const summary = keyJudgments[0] || content.split('.')[0] + '.'
+  const summary = keyJudgments[0] || content.split('.')[0] + '.';
 
   return {
     content,
@@ -280,12 +283,12 @@ Use precise language. Quantify when possible. Flag uncertainty explicitly. This 
     key_judgments: keyJudgments,
     forecasts,
     tokens_used: data.usage.input_tokens + data.usage.output_tokens,
-  }
+  };
 }
 
 function jsonResponse(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  })
+  });
 }

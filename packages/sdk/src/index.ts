@@ -160,7 +160,7 @@ export class LatticeForge {
    */
   async isPhaseChanging(): Promise<boolean> {
     const alerts = await this.detect();
-    return alerts.some(a => a.type === 'phase_change' && a.severity !== 'low');
+    return alerts.some((a) => a.type === 'phase_change' && a.severity !== 'low');
   }
 
   /**
@@ -264,11 +264,7 @@ export class LatticeForge {
     return data as T;
   }
 
-  private async rawRequest(
-    method: string,
-    path: string,
-    body?: unknown
-  ): Promise<Response> {
+  private async rawRequest(method: string, path: string, body?: unknown): Promise<Response> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
@@ -276,7 +272,7 @@ export class LatticeForge {
       const response = await fetch(`${this.baseUrl}${path}`, {
         method,
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
           'X-Client': 'latticeforge-sdk/0.1.0',
         },

@@ -9,10 +9,7 @@ export async function POST(req: Request) {
 
     // Validate plan
     if (!['starter', 'pro', 'enterprise'].includes(planId)) {
-      return NextResponse.json(
-        { error: 'Invalid plan' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
     }
 
     // Get current user
@@ -43,13 +40,12 @@ export async function POST(req: Request) {
       }
     );
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     // Get or create organization for user
@@ -74,19 +70,13 @@ export async function POST(req: Request) {
 
       if (orgError) {
         console.error('Failed to create org:', orgError);
-        return NextResponse.json(
-          { error: 'Failed to create organization' },
-          { status: 500 }
-        );
+        return NextResponse.json({ error: 'Failed to create organization' }, { status: 500 });
       }
 
       organizationId = newOrg.id;
 
       // Link user to org
-      await supabase
-        .from('profiles')
-        .update({ organization_id: organizationId })
-        .eq('id', user.id);
+      await supabase.from('profiles').update({ organization_id: organizationId }).eq('id', user.id);
     }
 
     // Get org details
@@ -118,10 +108,7 @@ export async function POST(req: Request) {
     const priceId = PRICE_IDS[planId as keyof typeof PRICE_IDS];
 
     if (!priceId) {
-      return NextResponse.json(
-        { error: 'Price not configured' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Price not configured' }, { status: 500 });
     }
 
     // Create checkout session
@@ -138,9 +125,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error('Checkout error:', error);
-    return NextResponse.json(
-      { error: 'Failed to create checkout session' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 });
   }
 }

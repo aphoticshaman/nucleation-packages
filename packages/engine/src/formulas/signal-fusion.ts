@@ -57,7 +57,7 @@ export class SignalFusionRecipe {
   private static readonly CATEGORY_WEIGHTS: Record<string, number> = {
     official: 0.35, // SEC filings, Fed data - highest trust
     market: 0.25, // Price action, volume
-    news: 0.20, // Mainstream media
+    news: 0.2, // Mainstream media
     social: 0.12, // Reddit, Twitter, etc.
     alternative: 0.08, // Other signals
   };
@@ -73,7 +73,7 @@ export class SignalFusionRecipe {
   private static readonly CONFIDENCE_DECAY = {
     hourly: 0.98,
     daily: 0.85,
-    weekly: 0.60,
+    weekly: 0.6,
   };
 
   private wasm: WasmBridge | null = null;
@@ -147,9 +147,7 @@ export class SignalFusionRecipe {
   /**
    * Select signals that meet quality thresholds
    */
-  private selectActiveSignals(
-    signals: Map<string, number[]>
-  ): Map<string, number[]> {
+  private selectActiveSignals(signals: Map<string, number[]>): Map<string, number[]> {
     const active = new Map<string, number[]>();
     const entries = Array.from(signals.entries());
 
@@ -174,10 +172,7 @@ export class SignalFusionRecipe {
    * Align signals accounting for different latencies
    * SECRET: Proprietary latency compensation algorithm
    */
-  private alignSignals(
-    signals: Map<string, number[]>,
-    _targetTime?: Date
-  ): Map<string, number> {
+  private alignSignals(signals: Map<string, number[]>, _targetTime?: Date): Map<string, number> {
     const aligned = new Map<string, number>();
 
     for (const [name, values] of signals) {
@@ -213,8 +208,7 @@ export class SignalFusionRecipe {
 
       // Base weight from category
       const categoryWeight =
-        SignalFusionRecipe.CATEGORY_WEIGHTS[meta?.category ?? 'alternative'] ??
-        0.08;
+        SignalFusionRecipe.CATEGORY_WEIGHTS[meta?.category ?? 'alternative'] ?? 0.08;
 
       // Reliability multiplier
       const reliabilityMult = meta?.reliability ?? 0.5;
@@ -245,10 +239,7 @@ export class SignalFusionRecipe {
    * Ensure no single category dominates
    * SECRET: Category cap formula
    */
-  private applyDiversification(
-    weights: Map<string, number>,
-    _signals: Map<string, number>
-  ): void {
+  private applyDiversification(weights: Map<string, number>, _signals: Map<string, number>): void {
     const categoryTotals = new Map<string, number>();
     const maxCategoryWeight = 0.45; // No category can exceed 45%
 
@@ -256,10 +247,7 @@ export class SignalFusionRecipe {
     for (const [name, weight] of weights) {
       const meta = this.signalRegistry.get(name);
       const category = meta?.category ?? 'alternative';
-      categoryTotals.set(
-        category,
-        (categoryTotals.get(category) ?? 0) + weight
-      );
+      categoryTotals.set(category, (categoryTotals.get(category) ?? 0) + weight);
     }
 
     // Cap and redistribute
@@ -316,9 +304,7 @@ export class SignalFusionRecipe {
     }
 
     // Sort contributors by absolute contribution
-    contributors.sort(
-      (a, b) => Math.abs(b.contribution) - Math.abs(a.contribution)
-    );
+    contributors.sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution));
 
     return { value: fusedValue, contributors };
   }
@@ -340,31 +326,22 @@ export class SignalFusionRecipe {
     const range = max - min || 1;
 
     // Calculate weighted variance
-    const weightedMean = Array.from(signals.entries()).reduce(
-      (sum, [name, value]) => {
-        const normValue = (value - min) / range;
-        return sum + normValue * (weights.get(name) ?? 0);
-      },
-      0
-    );
+    const weightedMean = Array.from(signals.entries()).reduce((sum, [name, value]) => {
+      const normValue = (value - min) / range;
+      return sum + normValue * (weights.get(name) ?? 0);
+    }, 0);
 
-    const weightedVariance = Array.from(signals.entries()).reduce(
-      (sum, [name, value]) => {
-        const normValue = (value - min) / range;
-        const weight = weights.get(name) ?? 0;
-        return sum + weight * Math.pow(normValue - weightedMean, 2);
-      },
-      0
-    );
+    const weightedVariance = Array.from(signals.entries()).reduce((sum, [name, value]) => {
+      const normValue = (value - min) / range;
+      const weight = weights.get(name) ?? 0;
+      return sum + weight * Math.pow(normValue - weightedMean, 2);
+    }, 0);
 
     // Low variance = high agreement = high confidence
     // Confidence = 1 - sqrt(variance) * conflict_penalty
     const confidence = Math.max(
       0,
-      Math.min(
-        1,
-        1 - Math.sqrt(weightedVariance) * (1 + this.config.conflictPenalty)
-      )
+      Math.min(1, 1 - Math.sqrt(weightedVariance) * (1 + this.config.conflictPenalty))
     );
 
     return confidence;
@@ -423,10 +400,7 @@ export class SignalFusionRecipe {
 
           // Opposite directions = conflict
           if (dir1 * dir2 < 0) {
-            const severity = Math.min(
-              1,
-              (Math.abs(dir1) + Math.abs(dir2)) / 2
-            );
+            const severity = Math.min(1, (Math.abs(dir1) + Math.abs(dir2)) / 2);
             if (severity > 0.1) {
               conflicts.push({ signal1: name1, signal2: name2, severity });
             }
@@ -502,20 +476,17 @@ export class SignalFusionRecipe {
     }
 
     const avgConfidence =
-      this.fusionHistory.reduce((sum, f) => sum + f.confidence, 0) /
-      this.fusionHistory.length;
+      this.fusionHistory.reduce((sum, f) => sum + f.confidence, 0) / this.fusionHistory.length;
 
     const regimeDistribution: Record<string, number> = {};
     const signalContributions: Record<string, number> = {};
 
     for (const fused of this.fusionHistory) {
-      regimeDistribution[fused.regime] =
-        (regimeDistribution[fused.regime] ?? 0) + 1;
+      regimeDistribution[fused.regime] = (regimeDistribution[fused.regime] ?? 0) + 1;
 
       for (const contributor of fused.contributors) {
         signalContributions[contributor.signal] =
-          (signalContributions[contributor.signal] ?? 0) +
-          Math.abs(contributor.contribution);
+          (signalContributions[contributor.signal] ?? 0) + Math.abs(contributor.contribution);
       }
     }
 

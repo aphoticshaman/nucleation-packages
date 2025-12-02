@@ -69,7 +69,7 @@ export class PhaseTransitionModel {
   private static readonly ORDER_DECAY_RATE = 0.1847;
   private static readonly NUCLEATION_THRESHOLD = 0.4219;
   private static readonly CORRELATION_WINDOW = 21;
-  private static readonly HARMONIC_WEIGHTS = [0.382, 0.236, 0.146, 0.090, 0.056];
+  private static readonly HARMONIC_WEIGHTS = [0.382, 0.236, 0.146, 0.09, 0.056];
 
   private wasm: WasmBridge | null = null;
   private history: number[][] = [];
@@ -96,10 +96,7 @@ export class PhaseTransitionModel {
     const orderParameter = this.calculateOrderParameter(signalArrays);
 
     // Estimate critical exponent (proximity to transition)
-    const criticalExponent = this.calculateCriticalExponent(
-      temperature,
-      orderParameter
-    );
+    const criticalExponent = this.calculateCriticalExponent(temperature, orderParameter);
 
     // Count nucleation sites (potential cascade triggers)
     const nucleationSites = this.detectNucleationSites(signalArrays);
@@ -113,11 +110,7 @@ export class PhaseTransitionModel {
     );
 
     // Calculate confidence
-    const confidence = this.calculateConfidence(
-      temperature,
-      orderParameter,
-      criticalExponent
-    );
+    const confidence = this.calculateConfidence(temperature, orderParameter, criticalExponent);
 
     const state: PhaseState = {
       phase,
@@ -139,9 +132,7 @@ export class PhaseTransitionModel {
   /**
    * Forecast upcoming phase transitions
    */
-  forecastTransition(
-    signals: Map<string, number[]>
-  ): TransitionForecast | null {
+  forecastTransition(signals: Map<string, number[]>): TransitionForecast | null {
     const currentState = this.analyzePhase(signals);
 
     // Need history for forecasting
@@ -180,17 +171,14 @@ export class PhaseTransitionModel {
     for (const signal of signals) {
       // Calculate variance (kinetic energy analog)
       const mean = signal.reduce((a, b) => a + b, 0) / signal.length;
-      const variance =
-        signal.reduce((sum, x) => sum + (x - mean) ** 2, 0) / signal.length;
+      const variance = signal.reduce((sum, x) => sum + (x - mean) ** 2, 0) / signal.length;
       totalVariance += variance;
     }
 
     // Cross-correlation contributes to temperature (interaction energy)
     for (let i = 0; i < signals.length; i++) {
       for (let j = i + 1; j < signals.length; j++) {
-        totalCrossCorrelation += Math.abs(
-          this.pearsonCorrelation(signals[i], signals[j])
-        );
+        totalCrossCorrelation += Math.abs(this.pearsonCorrelation(signals[i], signals[j]));
       }
     }
 
@@ -200,8 +188,7 @@ export class PhaseTransitionModel {
     // Temperature formula: variance weighted by inverse correlation
     // High variance + low correlation = high temperature (chaotic)
     // High variance + high correlation = moderate temperature (coordinated)
-    const temperature =
-      (totalVariance / signals.length) * (1 + (1 - avgCorrelation));
+    const temperature = (totalVariance / signals.length) * (1 + (1 - avgCorrelation));
 
     return Math.min(1, Math.max(0, temperature));
   }
@@ -234,8 +221,7 @@ export class PhaseTransitionModel {
       let harmonicSum = 0;
       for (let h = 0; h < PhaseTransitionModel.HARMONIC_WEIGHTS.length; h++) {
         if (h < spectrum.length) {
-          harmonicSum +=
-            PhaseTransitionModel.HARMONIC_WEIGHTS[h] * spectrum[h];
+          harmonicSum += PhaseTransitionModel.HARMONIC_WEIGHTS[h] * spectrum[h];
         }
       }
 
@@ -256,11 +242,7 @@ export class PhaseTransitionModel {
 
     for (const signal of signals) {
       let autoCorr = 0;
-      for (
-        let lag = 1;
-        lag <= Math.min(5, Math.floor(signal.length / 4));
-        lag++
-      ) {
+      for (let lag = 1; lag <= Math.min(5, Math.floor(signal.length / 4)); lag++) {
         const corr = this.autocorrelation(signal, lag);
         autoCorr += Math.abs(corr) * PhaseTransitionModel.HARMONIC_WEIGHTS[lag - 1];
       }
@@ -276,10 +258,7 @@ export class PhaseTransitionModel {
    *
    * SECRET: Derived from Landau-Ginzburg theory adaptation
    */
-  private calculateCriticalExponent(
-    temperature: number,
-    orderParameter: number
-  ): number {
+  private calculateCriticalExponent(temperature: number, orderParameter: number): number {
     const criticalTemp = PhaseTransitionModel.CRITICAL_TEMPERATURE;
 
     // Distance from critical point in phase space
@@ -367,10 +346,8 @@ export class PhaseTransitionModel {
     // Post-transition: decreasing temperature, increasing order
     if (this.phaseHistory.length > 5) {
       const recent = this.phaseHistory.slice(-5);
-      const tempTrend =
-        recent[recent.length - 1].temperature - recent[0].temperature;
-      const orderTrend =
-        recent[recent.length - 1].orderParameter - recent[0].orderParameter;
+      const tempTrend = recent[recent.length - 1].temperature - recent[0].temperature;
+      const orderTrend = recent[recent.length - 1].orderParameter - recent[0].orderParameter;
 
       if (tempTrend < -0.1 && orderTrend > 0.1) {
         return SystemPhase.ANNEALING;
@@ -391,8 +368,7 @@ export class PhaseTransitionModel {
     const baseConfidence = criticalExponent;
 
     // Extreme values increase confidence
-    const extremity =
-      Math.abs(temperature - 0.5) / 0.5 + Math.abs(orderParameter - 0.5) / 0.5;
+    const extremity = Math.abs(temperature - 0.5) / 0.5 + Math.abs(orderParameter - 0.5) / 0.5;
 
     return Math.min(1, baseConfidence * 0.6 + extremity * 0.2 + 0.2);
   }

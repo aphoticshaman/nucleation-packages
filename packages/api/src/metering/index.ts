@@ -182,10 +182,7 @@ export class UsageMeter {
     };
 
     tokens.total_tokens =
-      tokens.signal_tokens +
-      tokens.fusion_tokens +
-      tokens.analysis_tokens +
-      tokens.storage_tokens;
+      tokens.signal_tokens + tokens.fusion_tokens + tokens.analysis_tokens + tokens.storage_tokens;
 
     const now = new Date();
     const billingPeriod = this.getBillingPeriod(now);
@@ -266,7 +263,10 @@ export class UsageMeter {
     } else if (current.fusion_tokens + operationTokens.fusion_tokens > limits.max_fusion_tokens) {
       allowed = false;
       reason = `Fusion token limit exceeded (${current.fusion_tokens}/${limits.max_fusion_tokens})`;
-    } else if (current.analysis_tokens + operationTokens.analysis_tokens > limits.max_analysis_tokens) {
+    } else if (
+      current.analysis_tokens + operationTokens.analysis_tokens >
+      limits.max_analysis_tokens
+    ) {
       allowed = false;
       reason = `Analysis token limit exceeded (${current.analysis_tokens}/${limits.max_analysis_tokens})`;
     } else if (current.total_tokens + operationTokens.total_tokens > limits.max_total_tokens) {
@@ -291,9 +291,8 @@ export class UsageMeter {
     const periodEnd = new Date(periodStart.getTime() + limits.period_seconds * 1000);
 
     // Calculate percentage used
-    const percentageUsed = limits.max_total_tokens > 0
-      ? (tokens.total_tokens / limits.max_total_tokens) * 100
-      : 0;
+    const percentageUsed =
+      limits.max_total_tokens > 0 ? (tokens.total_tokens / limits.max_total_tokens) * 100 : 0;
 
     // Estimate cost
     const estimatedCost = this.calculateCost(tokens);
@@ -432,11 +431,7 @@ export class UsageMeter {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`;
   }
 
-  private updateClientUsage(
-    clientId: string,
-    billingPeriod: string,
-    tokens: UsageTokens
-  ): void {
+  private updateClientUsage(clientId: string, billingPeriod: string, tokens: UsageTokens): void {
     if (!this.clientUsage.has(clientId)) {
       this.clientUsage.set(clientId, new Map());
     }
@@ -473,13 +468,15 @@ export class UsageMeter {
       };
     }
 
-    return clientPeriods.get(billingPeriod) ?? {
-      signal_tokens: 0,
-      fusion_tokens: 0,
-      analysis_tokens: 0,
-      storage_tokens: 0,
-      total_tokens: 0,
-    };
+    return (
+      clientPeriods.get(billingPeriod) ?? {
+        signal_tokens: 0,
+        fusion_tokens: 0,
+        analysis_tokens: 0,
+        storage_tokens: 0,
+        total_tokens: 0,
+      }
+    );
   }
 }
 

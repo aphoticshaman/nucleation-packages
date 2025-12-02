@@ -106,7 +106,7 @@ export class FredSource {
       throw new Error(`FRED API error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json() as { seriess: FredSeries[] };
+    const data = (await response.json()) as { seriess: FredSeries[] };
     return data.seriess[0];
   }
 
@@ -148,7 +148,7 @@ export class FredSource {
       throw new Error(`FRED API error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json() as { observations: FredObservation[] };
+    const data = (await response.json()) as { observations: FredObservation[] };
     return data.observations;
   }
 
@@ -175,9 +175,7 @@ export class FredSource {
    * Convert observations to numeric signal
    */
   toSignal(observations: FredObservation[]): number[] {
-    return observations
-      .map((o) => parseFloat(o.value))
-      .filter((v) => !isNaN(v));
+    return observations.map((o) => parseFloat(o.value)).filter((v) => !isNaN(v));
   }
 
   /**
@@ -213,9 +211,7 @@ export class FredSource {
   /**
    * Get yield curve data (2Y, 10Y, spread)
    */
-  async getYieldCurve(
-    options: { startDate?: string; endDate?: string } = {}
-  ): Promise<{
+  async getYieldCurve(options: { startDate?: string; endDate?: string } = {}): Promise<{
     dates: string[];
     twoYear: number[];
     tenYear: number[];
