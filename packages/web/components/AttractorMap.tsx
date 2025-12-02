@@ -63,30 +63,8 @@ export default function AttractorMap({
         zoom: 2,
         minZoom: 2,
         maxZoom: 10,
-        // Dark theme styles (can't use with mapId)
-        styles: [
-          { elementType: 'geometry', stylers: [{ color: '#1e293b' }] },
-          { elementType: 'labels.text.stroke', stylers: [{ color: '#1e293b' }] },
-          { elementType: 'labels.text.fill', stylers: [{ color: '#94a3b8' }] },
-          {
-            featureType: 'water',
-            elementType: 'geometry',
-            stylers: [{ color: '#0f172a' }],
-          },
-          {
-            featureType: 'administrative.country',
-            elementType: 'geometry.stroke',
-            stylers: [{ color: '#475569' }],
-          },
-          {
-            featureType: 'poi',
-            stylers: [{ visibility: 'off' }],
-          },
-          {
-            featureType: 'transit',
-            stylers: [{ visibility: 'off' }],
-          },
-        ],
+        // Use cloud-based styling via Map ID (configured in Google Cloud Console)
+        mapId: process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID,
         restriction: {
           latLngBounds: {
             north: 85,
@@ -100,7 +78,6 @@ export default function AttractorMap({
         zoomControl: true,
         mapTypeControl: false,
         streetViewControl: false,
-        backgroundColor: '#0f172a',
       });
 
       setMap(mapInstance);
