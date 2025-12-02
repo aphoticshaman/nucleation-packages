@@ -404,7 +404,7 @@ export class CDCSource {
     wastewaterIncreaseHigh?: number;
   }): Promise<SurveillanceAlert[]> {
     const alerts: SurveillanceAlert[] = [];
-    const defaults = {
+    const _defaults = {
       casesHigh: 50000,
       hospitalizationHigh: 0.15,
       wastewaterIncreaseHigh: 50,

@@ -70,7 +70,7 @@ signals.post('/fetch', requirePermission('read:signals'), async (c) => {
   const auth = c.get('auth') as AuthContext;
   const body = await c.req.json();
 
-  const { sources, startDate, endDate, normalize, fuse } = body;
+  const { sources, normalize, fuse } = body;
 
   if (!sources || !Array.isArray(sources) || sources.length === 0) {
     return c.json(

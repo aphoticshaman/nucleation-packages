@@ -232,13 +232,10 @@ export class PhaseTransitionModel {
 
       // Apply proprietary harmonic weights
       let harmonicSum = 0;
-      let weightSum = 0;
-
       for (let h = 0; h < PhaseTransitionModel.HARMONIC_WEIGHTS.length; h++) {
         if (h < spectrum.length) {
           harmonicSum +=
             PhaseTransitionModel.HARMONIC_WEIGHTS[h] * spectrum[h];
-          weightSum += PhaseTransitionModel.HARMONIC_WEIGHTS[h];
         }
       }
 

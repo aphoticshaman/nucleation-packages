@@ -1,6 +1,6 @@
 'use client';
 
-import { MapLayer, AlertLevel, REGIMES } from '@/types';
+import { MapLayer, REGIMES } from '@/types';
 
 interface ControlPanelProps {
   layer: MapLayer;

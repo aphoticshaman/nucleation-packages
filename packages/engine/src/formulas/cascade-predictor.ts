@@ -282,7 +282,7 @@ export class CascadePredictor {
   /**
    * Calculate velocity (first derivative) of intensity
    */
-  private calculateVelocity(signals: Map<string, number[]>): number {
+  private calculateVelocity(_signals: Map<string, number[]>): number {
     if (this.history.length < 2) return 0;
 
     const recent = this.history.slice(-5);
@@ -308,7 +308,7 @@ export class CascadePredictor {
   /**
    * Calculate acceleration (second derivative)
    */
-  private calculateAcceleration(signals: Map<string, number[]>): number {
+  private calculateAcceleration(_signals: Map<string, number[]>): number {
     if (this.history.length < 3) return 0;
 
     const recent = this.history.slice(-5);
@@ -444,7 +444,7 @@ export class CascadePredictor {
   /**
    * Match current pattern to known signatures
    */
-  private matchSignature(signals: Map<string, number[]>): CascadeSignature | null {
+  private matchSignature(_signals: Map<string, number[]>): CascadeSignature | null {
     if (this.history.length < 10) return null;
 
     const recent = this.history.slice(-20);

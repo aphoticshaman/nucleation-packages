@@ -80,10 +80,13 @@ export async function requireRole(allowedRoles: UserRole[]): Promise<UserProfile
     switch (user.role) {
       case 'admin':
         redirect('/admin');
+        break;
       case 'enterprise':
         redirect('/dashboard');
+        break;
       case 'consumer':
         redirect('/app');
+        break;
       default:
         redirect('/');
     }

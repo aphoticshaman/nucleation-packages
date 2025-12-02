@@ -59,7 +59,7 @@ export interface EdgarSearchParams {
 
 const BASE_URL = 'https://data.sec.gov';
 const SUBMISSIONS_URL = 'https://data.sec.gov/submissions';
-const FULL_TEXT_URL = 'https://efts.sec.gov/LATEST/search-index';
+const _FULL_TEXT_URL = 'https://efts.sec.gov/LATEST/search-index';
 
 // SEC requires a User-Agent header
 const USER_AGENT = 'LatticeForge/1.0 (Crystalline Labs LLC)';

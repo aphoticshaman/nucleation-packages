@@ -35,14 +35,14 @@ export interface ScrubberConfig {
 
 // Patterns for PII detection
 const PII_PATTERNS: Record<PiiType, RegExp> = {
-  email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
-  phone: /\b(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{4}\b/g,
+  email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g,
+  phone: /\b(?:\+?1[-.\s]?)?(?:\d{3}[-.\s]?)?\d{3}[-.\s]?\d{4}\b/g,
   ssn: /\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b/g,
   credit_card: /\b(?:\d{4}[-\s]?){3}\d{4}\b/g,
   ip_address: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
   name: /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/g, // Simple name pattern
   address: /\b\d+\s+[A-Za-z\s]+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr)\b/gi,
-  date_of_birth: /\b(?:0?[1-9]|1[0-2])[\/\-](?:0?[1-9]|[12]\d|3[01])[\/\-](?:19|20)\d{2}\b/g,
+  date_of_birth: /\b(?:0?[1-9]|1[0-2])[/-](?:0?[1-9]|[12]\d|3[01])[/-](?:19|20)\d{2}\b/g,
 };
 
 const DEFAULT_TYPES: PiiType[] = ['email', 'phone', 'ssn', 'credit_card', 'ip_address'];

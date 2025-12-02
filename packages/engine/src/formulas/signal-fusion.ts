@@ -176,7 +176,7 @@ export class SignalFusionRecipe {
    */
   private alignSignals(
     signals: Map<string, number[]>,
-    targetTime?: Date
+    _targetTime?: Date
   ): Map<string, number> {
     const aligned = new Map<string, number>();
 
@@ -192,17 +192,8 @@ export class SignalFusionRecipe {
       idx = Math.max(0, Math.min(values.length - 1, idx));
 
       // Apply confidence decay based on age
-      let value = values[idx];
-      if (periodsBack > 0) {
-        const decayFactor = Math.pow(
-          SignalFusionRecipe.CONFIDENCE_DECAY.daily,
-          periodsBack
-        );
-        // Don't decay the value, but track it for weighting
-        aligned.set(name, value);
-      } else {
-        aligned.set(name, value);
-      }
+      const value = values[idx];
+      aligned.set(name, value);
     }
 
     return aligned;
@@ -256,7 +247,7 @@ export class SignalFusionRecipe {
    */
   private applyDiversification(
     weights: Map<string, number>,
-    signals: Map<string, number>
+    _signals: Map<string, number>
   ): void {
     const categoryTotals = new Map<string, number>();
     const maxCategoryWeight = 0.45; // No category can exceed 45%
@@ -347,8 +338,6 @@ export class SignalFusionRecipe {
     const min = Math.min(...values);
     const max = Math.max(...values);
     const range = max - min || 1;
-
-    const normalized = values.map((v) => (v - min) / range);
 
     // Calculate weighted variance
     const weightedMean = Array.from(signals.entries()).reduce(
