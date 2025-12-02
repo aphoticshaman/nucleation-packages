@@ -8,7 +8,8 @@ export default async function ConsumerLayout({ children }: { children: React.Rea
     <div className="min-h-screen bg-slate-950">
       <ConsumerNav user={user} />
       <main className="pt-16">
-        <div className="max-w-7xl mx-auto px-4 py-8">{children}</div>
+        {/* Full-width layout - no max-width constraint on desktop */}
+        <div className="px-4 lg:px-6 xl:px-8 py-6">{children}</div>
       </main>
     </div>
   );
