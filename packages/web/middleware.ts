@@ -99,5 +99,7 @@ export const config = {
     // Auth routes
     '/login',
     '/signup',
+    // Auth callback - CRITICAL: Must be included for session cookies to be set
+    '/auth/callback',
   ],
 };

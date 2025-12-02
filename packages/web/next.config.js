@@ -24,10 +24,12 @@ const nextConfig = {
   },
 
   // Headers for SharedArrayBuffer (required for multi-threaded WASM)
+  // IMPORTANT: Exclude auth routes - COOP/COEP breaks OAuth redirects
   async headers() {
     return [
       {
-        source: '/:path*',
+        // Apply COOP/COEP only to app routes that need WASM, not auth routes
+        source: '/(app|dashboard|admin)/:path*',
         headers: [
           {
             key: 'Cross-Origin-Opener-Policy',
