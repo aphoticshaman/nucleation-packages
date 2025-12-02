@@ -25,23 +25,135 @@ function getAnthropic() {
   return anthropic;
 }
 
-// RSS feeds by domain
+// RSS feeds by domain - comprehensive multi-sector coverage
 const RSS_SOURCES: Record<string, { url: string; domain: string }[]> = {
+  // Geopolitical & World Affairs
   geopolitical: [
     { url: 'https://feeds.reuters.com/Reuters/worldNews', domain: 'geopolitical' },
-    { url: 'https://feeds.npr.org/1004/rss.xml', domain: 'geopolitical' }, // NPR World
+    { url: 'https://feeds.npr.org/1004/rss.xml', domain: 'geopolitical' },
+    { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', domain: 'geopolitical' },
   ],
-  economic: [
-    { url: 'https://feeds.reuters.com/reuters/businessNews', domain: 'economic' },
+  // Financial & Economic
+  financial: [
+    { url: 'https://feeds.reuters.com/reuters/businessNews', domain: 'financial' },
+    { url: 'https://feeds.bloomberg.com/markets/news.rss', domain: 'financial' },
+    { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html', domain: 'financial' },
   ],
+  // Cybersecurity
   cyber: [
     { url: 'https://www.cisa.gov/news.xml', domain: 'cyber' },
+    { url: 'https://krebsonsecurity.com/feed/', domain: 'cyber' },
+    { url: 'https://feeds.feedburner.com/TheHackersNews', domain: 'cyber' },
+    { url: 'https://www.darkreading.com/rss.xml', domain: 'cyber' },
   ],
+  // Defense & Military
+  defense: [
+    { url: 'https://www.defensenews.com/arc/outboundfeeds/rss/?outputType=xml', domain: 'defense' },
+    { url: 'https://breakingdefense.com/feed/', domain: 'defense' },
+    { url: 'https://www.janes.com/feeds/news', domain: 'defense' },
+  ],
+  // Energy & Petrochemical
+  energy: [
+    { url: 'https://www.eia.gov/rss/todayinenergy.xml', domain: 'energy' },
+    { url: 'https://oilprice.com/rss/main', domain: 'energy' },
+    { url: 'https://www.rigzone.com/news/rss/rigzone_latest.aspx', domain: 'energy' },
+  ],
+  // Healthcare & Pharma
   health: [
     { url: 'https://tools.cdc.gov/api/v2/resources/media/rss', domain: 'health' },
+    { url: 'https://www.who.int/rss-feeds/news-english.xml', domain: 'health' },
+    { url: 'https://www.fiercepharma.com/rss/xml', domain: 'pharma' },
+    { url: 'https://www.fiercebiotech.com/rss/xml', domain: 'biotech' },
   ],
+  // Biotech & Cancer Research
+  biotech: [
+    { url: 'https://www.nature.com/nbt.rss', domain: 'biotech' },
+    { url: 'https://www.cancer.gov/news-events/cancer-currents-blog/rss', domain: 'cancer_research' },
+    { url: 'https://www.statnews.com/feed/', domain: 'biotech' },
+  ],
+  // Technology & AI
+  tech: [
+    { url: 'https://feeds.arstechnica.com/arstechnica/technology-lab', domain: 'tech' },
+    { url: 'https://techcrunch.com/feed/', domain: 'tech' },
+    { url: 'https://www.wired.com/feed/rss', domain: 'tech' },
+    { url: 'https://news.ycombinator.com/rss', domain: 'tech' },
+  ],
+  // Quantum & Fusion
+  quantum_fusion: [
+    { url: 'https://thequantuminsider.com/feed/', domain: 'quantum' },
+    { url: 'https://www.nextbigfuture.com/feed', domain: 'fusion' },
+    { url: 'https://physicsworld.com/feed/', domain: 'quantum' },
+  ],
+  // Space & Aerospace
+  space: [
+    { url: 'https://spacenews.com/feed/', domain: 'space' },
+    { url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss', domain: 'space' },
+    { url: 'https://feeds.arstechnica.com/arstechnica/science', domain: 'space' },
+  ],
+  // Telecom
+  telecom: [
+    { url: 'https://www.fiercewireless.com/rss/xml', domain: 'telecom' },
+    { url: 'https://www.lightreading.com/rss.xml', domain: 'telecom' },
+  ],
+  // Automotive & EV
+  automotive: [
+    { url: 'https://www.autonews.com/rss.xml', domain: 'automotive' },
+    { url: 'https://electrek.co/feed/', domain: 'automotive' },
+    { url: 'https://insideevs.com/rss/news/all/', domain: 'automotive' },
+  ],
+  // Manufacturing & Industrial
+  manufacturing: [
+    { url: 'https://www.industryweek.com/rss.xml', domain: 'manufacturing' },
+    { url: 'https://www.supplychaindive.com/feeds/news/', domain: 'supply_chain' },
+  ],
+  // Climate & Environment
   climate: [
     { url: 'https://www.noaa.gov/rss.xml', domain: 'climate' },
+    { url: 'https://www.epa.gov/rss/epa-news.xml', domain: 'climate' },
+    { url: 'https://climate.nasa.gov/rss/news', domain: 'climate' },
+  ],
+  // Employment & Labor
+  employment: [
+    { url: 'https://www.bls.gov/feed/bls_latest.rss', domain: 'employment' },
+    { url: 'https://www.shrm.org/rss/pages/rss.aspx', domain: 'employment' },
+  ],
+  // Agriculture & Food Security
+  agriculture: [
+    { url: 'https://www.usda.gov/rss/latest-releases.xml', domain: 'agriculture' },
+    { url: 'https://www.fao.org/news/rss-feed/en/', domain: 'agriculture' },
+  ],
+  // Neurotech & Brain-Computer Interface
+  neurotech: [
+    { url: 'https://www.neurotechreports.com/rss.xml', domain: 'neurotech' },
+    { url: 'https://www.medgadget.com/feed', domain: 'neurotech' },
+    { url: 'https://spectrum.ieee.org/feeds/topic/biomedical', domain: 'neurotech' },
+  ],
+  // Semiconductors & Chips
+  semiconductors: [
+    { url: 'https://www.eetimes.com/feed/', domain: 'semiconductors' },
+    { url: 'https://semiengineering.com/feed/', domain: 'semiconductors' },
+    { url: 'https://www.tomshardware.com/feeds/all', domain: 'semiconductors' },
+  ],
+  // AI & Machine Learning
+  ai: [
+    { url: 'https://venturebeat.com/category/ai/feed/', domain: 'ai' },
+    { url: 'https://www.marktechpost.com/feed/', domain: 'ai' },
+    { url: 'https://syncedreview.com/feed/', domain: 'ai' },
+  ],
+  // Robotics & Automation
+  robotics: [
+    { url: 'https://www.therobotreport.com/feed/', domain: 'robotics' },
+    { url: 'https://spectrum.ieee.org/feeds/topic/robotics', domain: 'robotics' },
+  ],
+  // Materials Science & Nanotech
+  materials: [
+    { url: 'https://www.materialstoday.com/rss/', domain: 'materials' },
+    { url: 'https://nanotechweb.org/cws/rss', domain: 'nanotech' },
+  ],
+  // Cryptocurrency & Blockchain
+  crypto: [
+    { url: 'https://cointelegraph.com/rss', domain: 'crypto' },
+    { url: 'https://www.coindesk.com/arc/outboundfeeds/rss/', domain: 'crypto' },
   ],
 };
 
