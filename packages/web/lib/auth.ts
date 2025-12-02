@@ -15,6 +15,9 @@ export interface UserProfile {
   last_seen_at: string | null;
 }
 
+// Cookie domain for cross-subdomain auth (auth.latticeforge.ai ↔ latticeforge.ai)
+const COOKIE_DOMAIN = '.latticeforge.ai';
+
 // Create Supabase client for server components
 export async function createClient() {
   const cookieStore = await cookies();
@@ -29,14 +32,16 @@ export async function createClient() {
         },
         set(name: string, value: string, options: Record<string, unknown>) {
           try {
-            cookieStore.set({ name, value, ...options });
+            // Set cookie with cross-subdomain domain
+            cookieStore.set({ name, value, ...options, domain: COOKIE_DOMAIN });
           } catch {
             // Called from Server Component - can't set cookies
           }
         },
         remove(name: string, options: Record<string, unknown>) {
           try {
-            cookieStore.set({ name, value: '', ...options });
+            // Remove cookie with cross-subdomain domain
+            cookieStore.set({ name, value: '', ...options, domain: COOKIE_DOMAIN });
           } catch {
             // Called from Server Component - can't set cookies
           }
