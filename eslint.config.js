@@ -58,6 +58,8 @@ export default tseslint.config(
       '**/dist/**',
       'coverage/**',
       'harness/**',
+      // Apps directory (separate projects with own configs)
+      'apps/**',
       // Legacy JS packages - will migrate to TypeScript later
       'packages/regime-shift/**',
       'packages/threat-pulse/**',
@@ -70,9 +72,18 @@ export default tseslint.config(
       'packages/match-pulse/**',
       'packages/market-canary/**',
       'packages/nucleation/**',
+      // Data source packages (need separate security review for regex patterns)
+      'packages/sources/**',
+      'packages/compliance/**',
+      // Web package JS config files
+      'packages/web/*.js',
+      'packages/web/public/**',
+      // Supabase edge functions (Deno runtime)
+      'supabase/**',
       '*.js',
       '*.d.ts',
       'vitest.config.ts',
+      '**/vitest.config.ts',
     ],
   }
 );

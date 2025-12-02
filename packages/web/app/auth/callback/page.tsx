@@ -101,9 +101,9 @@ function AuthCallbackHandler() {
         setTimeout(() => {
           subscription.unsubscribe();
           // One final check before giving up
-          supabase.auth.getSession().then(({ data: { session: finalSession } }) => {
+          void supabase.auth.getSession().then(({ data: { session: finalSession } }) => {
             if (finalSession) {
-              ensureProfileAndRedirect();
+              void ensureProfileAndRedirect();
             } else {
               router.push('/login?error=timeout');
             }

@@ -19,7 +19,7 @@ export default function Home() {
   const { wasm, loading: wasmLoading, error: wasmError } = useWasm();
   const { nations, edges, loading: dataLoading } = useSupabaseNations();
   const [layer, setLayer] = useState<'basin' | 'risk' | 'influence' | 'regime'>('basin');
-  const [alertLevel, setAlertLevel] = useState<string>('normal');
+  const alertLevel = 'normal'; // TODO: Make dynamic when alert system is implemented
   const [isSimulating, setIsSimulating] = useState(false);
   const geoSystemInitialized = useRef(false);
 
@@ -88,7 +88,7 @@ export default function Home() {
       <ControlPanel
         layer={layer}
         onLayerChange={setLayer}
-        onStep={runStep}
+        onStep={() => void runStep()}
         isSimulating={isSimulating}
         alertLevel={alertLevel}
       />
