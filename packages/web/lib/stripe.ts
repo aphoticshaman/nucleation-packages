@@ -53,6 +53,25 @@ export const PRICE_IDS = {
 
 // Plan definitions
 export const PLANS = {
+  trial: {
+    name: 'Trial',
+    price: 0,
+    interval: 'month' as const,
+    trialDays: 7,
+    features: [
+      '7-day free trial',
+      '25 simulations per day',
+      '10 saved simulations',
+      'Basic visualizations',
+      'Email support',
+    ],
+    limits: {
+      simulations_per_day: 25,
+      saved_simulations: 10,
+      api_calls: 0,
+      team_seats: 1,
+    },
+  },
   free: {
     name: 'Free',
     price: 0,
@@ -131,6 +150,30 @@ export const PLANS = {
 };
 
 export type PlanId = keyof typeof PLANS;
+
+// Trial status helpers
+export const TRIAL_DURATION_DAYS = 7;
+
+export function isTrialExpired(trialEndsAt: string | Date | null): boolean {
+  if (!trialEndsAt) return true;
+  const endDate = new Date(trialEndsAt);
+  return endDate < new Date();
+}
+
+export function getTrialDaysRemaining(trialEndsAt: string | Date | null): number {
+  if (!trialEndsAt) return 0;
+  const endDate = new Date(trialEndsAt);
+  const now = new Date();
+  const diffMs = endDate.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  return Math.max(0, diffDays);
+}
+
+export function getTrialEndDate(): Date {
+  const endDate = new Date();
+  endDate.setDate(endDate.getDate() + TRIAL_DURATION_DAYS);
+  return endDate;
+}
 
 // Create checkout session
 export async function createCheckoutSession({
