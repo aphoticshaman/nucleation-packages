@@ -169,6 +169,49 @@ After the OAuth loop, check the browser console for:
 
 ---
 
+## Code Fixes Applied (December 2024)
+
+### Fix 1: Added `/auth/callback` to Middleware Matcher
+The middleware wasn't processing the OAuth callback route, so session cookies weren't being set properly on the server side.
+
+**File:** `packages/web/middleware.ts`
+```typescript
+export const config = {
+  matcher: [
+    // ... other routes
+    // Auth callback - CRITICAL: Must be included for session cookies to be set
+    '/auth/callback',
+  ],
+};
+```
+
+### Fix 2: Excluded Auth Routes from COOP/COEP Headers
+The `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers were being applied globally, which can break OAuth flows.
+
+**File:** `packages/web/next.config.js`
+```javascript
+async headers() {
+  return [
+    {
+      // Apply COOP/COEP only to app routes that need WASM, not auth routes
+      source: '/(app|dashboard|admin)/:path*',
+      // ...
+    },
+  ];
+},
+```
+
+### Fix 3: Improved Auth Callback Handler
+Added PKCE code exchange support and better error handling.
+
+**File:** `packages/web/app/auth/callback/page.tsx`
+- Added explicit code exchange via `exchangeCodeForSession()`
+- Added OAuth error parameter handling
+- Added visible error state display
+- Added try-catch for unexpected errors
+
+---
+
 ## Code Verification
 
 The current code is correct. Here's what it does:
