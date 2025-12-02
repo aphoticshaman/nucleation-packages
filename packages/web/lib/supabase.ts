@@ -1,8 +1,10 @@
 import { createBrowserClient } from '@supabase/ssr';
-import { SupabaseClient } from '@supabase/supabase-js';
+
+// Use ReturnType to get the correct type from createBrowserClient
+type BrowserClient = ReturnType<typeof createBrowserClient>;
 
 // Lazy-initialized Supabase client (avoids build-time env var access)
-let _supabase: SupabaseClient | null = null;
+let _supabase: BrowserClient | null = null;
 
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
@@ -41,7 +43,7 @@ const mockHandler: ProxyHandler<object> = {
   },
 };
 
-function getSupabase(): SupabaseClient {
+function getSupabase(): BrowserClient {
   // Return cached client if available
   if (_supabase) {
     return _supabase;
@@ -54,11 +56,11 @@ function getSupabase(): SupabaseClient {
   if (!supabaseUrl || !supabaseAnonKey) {
     if (!isBrowser) {
       // During SSR/build, return a mock that doesn't throw
-      return new Proxy({}, mockHandler) as unknown as SupabaseClient;
+      return new Proxy({}, mockHandler) as unknown as BrowserClient;
     }
     // On client without env vars (shouldn't happen in production)
     console.error('Supabase environment variables not configured');
-    return new Proxy({}, mockHandler) as unknown as SupabaseClient;
+    return new Proxy({}, mockHandler) as unknown as BrowserClient;
   }
 
   // Check if we're in production (latticeforge.ai)
@@ -81,7 +83,7 @@ function getSupabase(): SupabaseClient {
 export { getSupabase };
 
 // For backwards compatibility, export a lazy accessor
-export const supabase = new Proxy({} as SupabaseClient, {
+export const supabase = new Proxy({} as BrowserClient, {
   get(_, prop) {
     const client = getSupabase();
     const value = (client as unknown as Record<string, unknown>)[prop as string];
