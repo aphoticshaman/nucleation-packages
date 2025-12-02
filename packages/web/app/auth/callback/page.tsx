@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
-export default function AuthCallbackPage() {
+function AuthCallbackHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/app';
@@ -44,11 +44,28 @@ export default function AuthCallbackPage() {
   }, [router, redirect]);
 
   return (
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+      <p className="text-slate-400">Completing sign in...</p>
+    </div>
+  );
+}
+
+function CallbackFallback() {
+  return (
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+      <p className="text-slate-400">Loading...</p>
+    </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-        <p className="text-slate-400">Completing sign in...</p>
-      </div>
+      <Suspense fallback={<CallbackFallback />}>
+        <AuthCallbackHandler />
+      </Suspense>
     </div>
   );
 }
