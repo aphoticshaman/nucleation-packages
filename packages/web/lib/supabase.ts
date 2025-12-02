@@ -6,6 +6,14 @@ let _supabase: SupabaseClient | null = null;
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
 
+// Cookie options for cross-subdomain auth (auth.latticeforge.ai ↔ latticeforge.ai)
+const cookieOptions = {
+  domain: '.latticeforge.ai',
+  path: '/',
+  sameSite: 'lax' as const,
+  secure: true,
+};
+
 // Mock handler for build-time/SSR when env vars aren't available
 const mockHandler: ProxyHandler<object> = {
   get(target, prop) {
@@ -57,7 +65,30 @@ function getSupabase(): SupabaseClient {
     return new Proxy({}, mockHandler) as unknown as SupabaseClient;
   }
 
-  _supabase = createClient(supabaseUrl, supabaseAnonKey);
+  // Create client with cookie options for cross-subdomain auth
+  _supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      flowType: 'pkce',
+      // Only set cookie domain in production (not localhost)
+      ...(isBrowser && window.location.hostname.includes('latticeforge.ai') && {
+        storage: {
+          getItem: (key: string) => {
+            if (typeof document === 'undefined') return null;
+            const match = document.cookie.match(new RegExp('(^| )' + key + '=([^;]+)'));
+            return match ? decodeURIComponent(match[2]) : null;
+          },
+          setItem: (key: string, value: string) => {
+            if (typeof document === 'undefined') return;
+            document.cookie = `${key}=${encodeURIComponent(value)}; domain=${cookieOptions.domain}; path=${cookieOptions.path}; SameSite=${cookieOptions.sameSite}; ${cookieOptions.secure ? 'Secure' : ''}; max-age=31536000`;
+          },
+          removeItem: (key: string) => {
+            if (typeof document === 'undefined') return;
+            document.cookie = `${key}=; domain=${cookieOptions.domain}; path=${cookieOptions.path}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+          },
+        },
+      }),
+    },
+  });
   return _supabase;
 }
 
