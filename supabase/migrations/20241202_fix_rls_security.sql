@@ -48,20 +48,72 @@ END $$;
 
 -- 3. Fix function search_path security (prevents search_path injection attacks)
 -- These functions need SET search_path = public added
+-- Using DO blocks since ALTER FUNCTION doesn't support IF EXISTS
 
-ALTER FUNCTION IF EXISTS public.expire_trial() SET search_path = public;
-ALTER FUNCTION IF EXISTS public.compare_nations(text, text) SET search_path = public;
-ALTER FUNCTION IF EXISTS public.update_nation_geometry() SET search_path = public;
-ALTER FUNCTION IF EXISTS public.nations_within_distance(geography, double precision) SET search_path = public;
-ALTER FUNCTION IF EXISTS public.get_user_role() SET search_path = public;
-ALTER FUNCTION IF EXISTS public.accept_invite(uuid) SET search_path = public;
-ALTER FUNCTION IF EXISTS public.handle_new_user() SET search_path = public;
-ALTER FUNCTION IF EXISTS public.generate_api_key() SET search_path = public;
-ALTER FUNCTION IF EXISTS public.trial_days_remaining() SET search_path = public;
-ALTER FUNCTION IF EXISTS public.is_trial_active() SET search_path = public;
-ALTER FUNCTION IF EXISTS public.create_trial_invite(text, text) SET search_path = public;
-ALTER FUNCTION IF EXISTS public.update_last_seen() SET search_path = public;
-ALTER FUNCTION IF EXISTS public.validate_invite(uuid) SET search_path = public;
+DO $$ BEGIN
+  ALTER FUNCTION public.expire_trial() SET search_path = public;
+EXCEPTION WHEN undefined_function THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER FUNCTION public.compare_nations(text, text) SET search_path = public;
+EXCEPTION WHEN undefined_function THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER FUNCTION public.update_nation_geometry() SET search_path = public;
+EXCEPTION WHEN undefined_function THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER FUNCTION public.nations_within_distance(geography, double precision) SET search_path = public;
+EXCEPTION WHEN undefined_function THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER FUNCTION public.get_user_role() SET search_path = public;
+EXCEPTION WHEN undefined_function THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER FUNCTION public.accept_invite(uuid) SET search_path = public;
+EXCEPTION WHEN undefined_function THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER FUNCTION public.handle_new_user() SET search_path = public;
+EXCEPTION WHEN undefined_function THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER FUNCTION public.generate_api_key() SET search_path = public;
+EXCEPTION WHEN undefined_function THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER FUNCTION public.trial_days_remaining() SET search_path = public;
+EXCEPTION WHEN undefined_function THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER FUNCTION public.is_trial_active() SET search_path = public;
+EXCEPTION WHEN undefined_function THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER FUNCTION public.create_trial_invite(text, text) SET search_path = public;
+EXCEPTION WHEN undefined_function THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER FUNCTION public.update_last_seen() SET search_path = public;
+EXCEPTION WHEN undefined_function THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER FUNCTION public.validate_invite(uuid) SET search_path = public;
+EXCEPTION WHEN undefined_function THEN NULL;
+END $$;
 
 -- 4. Fix SECURITY DEFINER views by recreating as SECURITY INVOKER
 -- Note: Admin views intentionally use SECURITY DEFINER with app-level role checks
