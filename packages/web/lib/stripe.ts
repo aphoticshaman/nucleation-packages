@@ -58,18 +58,22 @@ export const PLANS = {
     price: 0,
     interval: 'month' as const,
     trialDays: 7,
+    requiresCard: true,  // CC required for trial
+    convertsTo: 'starter',  // Auto-converts to Starter after trial
     features: [
-      '7-day free trial',
-      '25 simulations per day',
-      '10 saved simulations',
-      'Basic visualizations',
-      'Email support',
+      '7-day free trial of Starter plan',
+      'Full Starter features during trial',
+      '1,000 API calls/month',
+      '3 team seats',
+      'REST API access',
+      'Cancel anytime before trial ends',
     ],
+    // Same limits as Starter during trial
     limits: {
-      simulations_per_day: 25,
-      saved_simulations: 10,
-      api_calls: 0,
-      team_seats: 1,
+      simulations_per_day: -1,
+      saved_simulations: -1,
+      api_calls: 1000,
+      team_seats: 3,
     },
   },
   free: {
