@@ -157,9 +157,6 @@ const RSS_SOURCES: Record<string, { url: string; domain: string }[]> = {
   ],
 };
 
-// GDELT event codes that indicate significant events
-const SIGNIFICANT_EVENT_CODES = ['14', '15', '17', '18', '19', '20']; // Protest, Military, Coerce, Assault, Fight, Mass Violence
-
 interface NewsItem {
   title: string;
   description: string;
@@ -169,30 +166,29 @@ interface NewsItem {
   source_type: string;
 }
 
-interface GDELTEvent {
-  Actor1Name: string;
-  Actor2Name: string | null;
-  EventCode: string;
-  GoldsteinScale: string;
-  NumMentions: string;
-  AvgTone: string;
-  Actor1CountryCode: string;
-  Actor2CountryCode: string | null;
-  SOURCEURL: string;
-  SQLDATE: string;
-}
-
 async function fetchGDELT(): Promise<NewsItem[]> {
   try {
-    const url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=conflict OR crisis OR war OR sanctions&mode=artlist&maxrecords=20&format=json';
-    const res = await fetch(url, { next: { revalidate: 0 } });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
 
-    if (!res.ok) return [];
+    const url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=conflict OR crisis OR war OR sanctions&mode=artlist&maxrecords=20&format=json';
+    const res = await fetch(url, {
+      next: { revalidate: 0 },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      console.log(`GDELT returned ${res.status}`);
+      return [];
+    }
 
     const data = await res.json();
     const articles = data.articles || [];
 
-    return articles.slice(0, 10).map((a: { title: string; seendate: string; url: string }) => ({
+    console.log(`GDELT: fetched ${articles.length} articles`);
+
+    return articles.slice(0, 15).map((a: { title: string; seendate: string; url: string }) => ({
       title: a.title,
       description: a.title, // GDELT doesn't give description
       link: a.url,
@@ -200,32 +196,65 @@ async function fetchGDELT(): Promise<NewsItem[]> {
       domain: 'geopolitical',
       source_type: 'gdelt',
     }));
-  } catch {
-    console.error('GDELT fetch failed');
+  } catch (e) {
+    const error = e as Error;
+    if (error.name === 'AbortError') {
+      console.error('GDELT fetch timeout');
+    } else {
+      console.error('GDELT fetch failed:', error.message);
+    }
     return [];
   }
 }
 
 async function fetchRSS(feedUrl: string, domain: string): Promise<NewsItem[]> {
   try {
-    const res = await fetch(feedUrl, { next: { revalidate: 0 } });
-    if (!res.ok) return [];
+    // Add timeout to prevent hanging
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+
+    const res = await fetch(feedUrl, {
+      next: { revalidate: 0 },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      console.log(`RSS ${feedUrl} returned ${res.status}`);
+      return [];
+    }
 
     const text = await res.text();
-    // Simple XML parsing for RSS
+    // Simple XML parsing for RSS - handle both item and entry (Atom)
     const items: NewsItem[] = [];
-    const itemMatches = text.match(/<item>([\s\S]*?)<\/item>/g) || [];
+    const itemMatches = text.match(/<item>([\s\S]*?)<\/item>/g) ||
+                        text.match(/<entry>([\s\S]*?)<\/entry>/g) || [];
 
-    for (const item of itemMatches.slice(0, 5)) {
-      const title = item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>|<title>(.*?)<\/title>/)?.[1] || item.match(/<title>(.*?)<\/title>/)?.[1] || '';
-      const description = item.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>|<description>(.*?)<\/description>/)?.[1] || '';
-      const link = item.match(/<link>(.*?)<\/link>/)?.[1] || '';
-      const pubDate = item.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || new Date().toISOString();
+    for (const item of itemMatches.slice(0, 10)) { // Increased from 5 to 10
+      // Handle multiple CDATA and plain text formats
+      const titleMatch = item.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) ||
+                        item.match(/<title[^>]*>([\s\S]*?)<\/title>/);
+      const title = titleMatch?.[1] || '';
 
-      if (title) {
+      const descMatch = item.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) ||
+                       item.match(/<description[^>]*>([\s\S]*?)<\/description>/) ||
+                       item.match(/<summary[^>]*>([\s\S]*?)<\/summary>/) ||
+                       item.match(/<content[^>]*>([\s\S]*?)<\/content>/);
+      const description = descMatch?.[1] || '';
+
+      const linkMatch = item.match(/<link[^>]*href="([^"]+)"/) ||
+                       item.match(/<link>([^<]+)<\/link>/);
+      const link = linkMatch?.[1] || '';
+
+      const dateMatch = item.match(/<pubDate>([\s\S]*?)<\/pubDate>/) ||
+                       item.match(/<published>([\s\S]*?)<\/published>/) ||
+                       item.match(/<updated>([\s\S]*?)<\/updated>/);
+      const pubDate = dateMatch?.[1] || new Date().toISOString();
+
+      if (title && title.length > 10) {
         items.push({
-          title: title.replace(/<[^>]*>/g, ''),
-          description: description.replace(/<[^>]*>/g, '').slice(0, 500),
+          title: title.replace(/<[^>]*>/g, '').trim(),
+          description: description.replace(/<[^>]*>/g, '').trim().slice(0, 500),
           link,
           pubDate,
           domain,
@@ -234,9 +263,15 @@ async function fetchRSS(feedUrl: string, domain: string): Promise<NewsItem[]> {
       }
     }
 
+    console.log(`RSS ${domain}: fetched ${items.length} items from ${feedUrl}`);
     return items;
-  } catch {
-    console.error(`RSS fetch failed for ${feedUrl}`);
+  } catch (e) {
+    const error = e as Error;
+    if (error.name === 'AbortError') {
+      console.error(`RSS timeout for ${feedUrl}`);
+    } else {
+      console.error(`RSS fetch failed for ${feedUrl}: ${error.message}`);
+    }
     return [];
   }
 }
@@ -314,57 +349,126 @@ export async function GET(request: Request) {
     stored: 0,
     errors: [] as string[],
     domains: {} as Record<string, number>,
+    feed_stats: {} as Record<string, { success: number; failed: number }>,
   };
 
-  // Fetch from all sources
+  // Fetch from all sources IN PARALLEL
   const allNews: NewsItem[] = [];
 
-  // GDELT
-  const gdeltNews = await fetchGDELT();
-  allNews.push(...gdeltNews);
-
-  // RSS feeds
-  for (const [, sources] of Object.entries(RSS_SOURCES)) {
+  // Build list of all feed fetches
+  const allSources: { url: string; domain: string }[] = [];
+  for (const [category, sources] of Object.entries(RSS_SOURCES)) {
     for (const source of sources) {
-      const news = await fetchRSS(source.url, source.domain);
-      allNews.push(...news);
+      allSources.push(source);
+    }
+    results.feed_stats[category] = { success: 0, failed: 0 };
+  }
+
+  console.log(`Fetching from ${allSources.length} RSS feeds in parallel...`);
+
+  // Fetch all RSS feeds in parallel (with GDELT)
+  const fetchPromises = [
+    fetchGDELT(),
+    ...allSources.map(source => fetchRSS(source.url, source.domain)),
+  ];
+
+  const fetchResults = await Promise.allSettled(fetchPromises);
+
+  // Process GDELT result
+  if (fetchResults[0].status === 'fulfilled') {
+    allNews.push(...fetchResults[0].value);
+  }
+
+  // Process RSS results
+  for (let i = 1; i < fetchResults.length; i++) {
+    const result = fetchResults[i];
+    const source = allSources[i - 1];
+    const category = Object.entries(RSS_SOURCES).find(([, sources]) =>
+      sources.some(s => s.url === source.url)
+    )?.[0] || 'unknown';
+
+    if (result.status === 'fulfilled' && result.value.length > 0) {
+      allNews.push(...result.value);
+      results.feed_stats[category].success++;
+    } else {
+      results.feed_stats[category].failed++;
+      if (result.status === 'rejected') {
+        results.errors.push(`Feed ${source.url}: ${result.reason}`);
+      }
     }
   }
 
+  console.log(`Total news items fetched: ${allNews.length}`);
+
   results.fetched = allNews.length;
 
-  // Generate training examples
-  for (const news of allNews) {
-    try {
-      const example = await generateTrainingExample(news);
-      if (!example) continue;
+  // Deduplicate by title before processing
+  const seenTitles = new Set<string>();
+  const uniqueNews = allNews.filter(news => {
+    const key = news.title.toLowerCase().slice(0, 50);
+    if (seenTitles.has(key)) return false;
+    seenTitles.add(key);
+    return true;
+  });
 
+  console.log(`Unique news items after dedup: ${uniqueNews.length}`);
+
+  // Generate training examples in parallel batches of 5
+  const BATCH_SIZE = 5;
+  for (let i = 0; i < uniqueNews.length; i += BATCH_SIZE) {
+    const batch = uniqueNews.slice(i, i + BATCH_SIZE);
+
+    const batchPromises = batch.map(async (news) => {
+      try {
+        const example = await generateTrainingExample(news);
+        if (!example) return null;
+
+        return { news, example };
+      } catch (e) {
+        results.errors.push(`LLM error for ${news.domain}: ${e}`);
+        return null;
+      }
+    });
+
+    const batchResults = await Promise.allSettled(batchPromises);
+
+    for (const result of batchResults) {
+      if (result.status !== 'fulfilled' || !result.value) continue;
+
+      const { news, example } = result.value;
       results.generated++;
 
       // Store in Supabase
-      const { error } = await getSupabase().from('training_examples').insert({
-        instruction: example.instruction,
-        input: example.input,
-        output: example.output,
-        domain: news.domain,
-        source_type: news.source_type,
-        source_url: news.link,
-        source_date: new Date(news.pubDate).toISOString(),
-        confidence: example.confidence,
-      });
+      try {
+        const { error } = await getSupabase().from('training_examples').insert({
+          instruction: example.instruction,
+          input: example.input,
+          output: example.output,
+          domain: news.domain,
+          source_type: news.source_type,
+          source_url: news.link,
+          source_date: new Date(news.pubDate).toISOString(),
+          confidence: example.confidence,
+        });
 
-      if (error) {
-        if (error.code === '23505') {
-          // Duplicate - already have this one
-          continue;
+        if (error) {
+          if (error.code === '23505') {
+            // Duplicate - already have this one
+            continue;
+          }
+          results.errors.push(`Insert error: ${error.message}`);
+        } else {
+          results.stored++;
+          results.domains[news.domain] = (results.domains[news.domain] || 0) + 1;
         }
-        results.errors.push(`Insert error: ${error.message}`);
-      } else {
-        results.stored++;
-        results.domains[news.domain] = (results.domains[news.domain] || 0) + 1;
+      } catch (e) {
+        results.errors.push(`DB error: ${e}`);
       }
-    } catch (e) {
-      results.errors.push(`Processing error: ${e}`);
+    }
+
+    // Small delay between batches to avoid rate limits
+    if (i + BATCH_SIZE < uniqueNews.length) {
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
   }
 
@@ -376,6 +480,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     success: true,
     ...results,
+    unique_after_dedup: uniqueNews.length,
     total_examples: count,
     timestamp: new Date().toISOString(),
   });
