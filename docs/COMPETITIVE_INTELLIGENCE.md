@@ -563,3 +563,273 @@ Combining military doctrine with physics-based attractor dynamics:
 | ADP 3-0 | Operations (PMESII-PT) | [armypubs.army.mil](https://armypubs.army.mil/) |
 | Red Team Handbook | Alternative Analysis | [UFMCS](https://newandimproved.com/wp-content/uploads/2014/04/ufmcs_red_team_handbook_apr2011.pdf) |
 
+---
+
+## DESIGN PRINCIPLES FROM OPERATIONAL EXPERIENCE
+
+Real-world operational insights from intelligence fusion environments and tactical operations. These aren't academic—they're from experienced military operators.
+
+### PRINCIPLE 1: DAY-1 USEFUL
+
+**The Problem:** Kibana. Elastic. "WTF does a fresh Sec+ do with that?"
+
+Most intel tools assume operators already know what they're looking for. They don't provide guardrails or templates. A junior analyst stares at a blank dashboard and has no idea where to start.
+
+**The Solution:**
+```
+Progressive Complexity Model:
+├── Level 1: Pre-built dashboards (just click)
+├── Level 2: Template queries (fill in the blanks)
+├── Level 3: Guided custom analysis (wizard)
+└── Level 4: Full custom (for power users)
+
+Day 1: "Show me countries at risk" (one button)
+Day 30: Building custom indicators from raw data
+```
+
+**Implementation:**
+- Every feature has a "Quick Start" mode
+- Pre-built templates for common analysis tasks
+- Progressive disclosure (hide complexity until needed)
+- Community templates library (learn from others)
+- In-context tutorials, not separate documentation
+
+---
+
+### PRINCIPLE 2: CONFIDENCE IS MANDATORY
+
+**The Problem:** Intelligence without confidence levels is useless.
+
+**Source:** [US Intelligence Community Verbal Estimates](https://www.dni.gov/files/documents/ICD/ICD%20203%20Analytic%20Standards.pdf)
+
+The IC doesn't say "X will happen." They say "We assess with high confidence that X will likely occur." Every word is calibrated.
+
+**IC Confidence Scale:**
+| Verbal | Probability | Usage |
+|--------|-------------|-------|
+| Almost certainly | >90% | Very high confidence |
+| Likely/Probably | 60-90% | High confidence |
+| Roughly even odds | 40-60% | Moderate confidence |
+| Unlikely | 10-40% | Low confidence |
+| Remote/Highly unlikely | <10% | Very low confidence |
+
+**Confidence vs Likelihood:**
+- **Confidence** = How sure are we about our assessment? (based on source quality, corroboration)
+- **Likelihood** = How probable is the event? (based on analysis)
+
+Both must be communicated. "We assess with moderate confidence that regime change is likely" ≠ "We assess with high confidence that regime change is likely."
+
+**Implementation:**
+```typescript
+interface Assessment {
+  prediction: string;
+  likelihood: 'almost_certain' | 'likely' | 'even_odds' | 'unlikely' | 'remote';
+  confidence: 'high' | 'moderate' | 'low';
+  confidence_factors: {
+    source_quality: number;    // 1-5
+    corroboration: number;     // How many independent sources?
+    recency: number;           // How fresh is the data?
+    analytical_rigor: number;  // Methodology strength
+  };
+  key_assumptions: string[];
+  key_uncertainties: string[];
+}
+```
+
+**UI Requirements:**
+- NEVER show a prediction without confidence level
+- Color-code confidence (green/yellow/red)
+- Hover to see confidence breakdown
+- Force users to set confidence on custom analyses
+
+---
+
+### PRINCIPLE 3: ASSUMPTIONS ARE VISIBLE AND CHALLENGEABLE
+
+**The Problem:** Bad assumptions kill operations. They also kill predictions.
+
+**Real Example - IED Network Analysis:**
+> Working an IED network. Everyone assumed foreign financiers because "that's how these things work." Red team asked: "What if it's entirely locally funded?"
+>
+> Turns out it was. Local businesses paying protection money that got funneled into IED materials. The foreign financier assumption had us chasing ghosts overseas while the network was three blocks from the FOB.
+
+**The Solution:**
+Every analysis in LatticeForge must:
+1. **Explicitly list key assumptions**
+2. **Allow users to challenge/modify assumptions**
+3. **Show how predictions change when assumptions change**
+4. **Track assumption accuracy over time**
+
+**Implementation:**
+```
+Assumption Tracking Panel:
+├── Listed Assumptions
+│   ├── "Current regime has military support" [CRITICAL] [UNTESTED]
+│   ├── "Opposition lacks external funding" [MODERATE] [CHALLENGED]
+│   └── "Economic conditions remain stable" [SUPPORTING] [VALIDATED]
+├── Challenge Mode
+│   └── "What if military support shifts?" → Show alternate scenario
+└── Assumption Audit
+    └── Historical: 78% of flagged assumptions proved correct
+```
+
+**Red Team Mode:**
+- One-click "Devil's Advocate" that challenges top 3 assumptions
+- AI-generated contrarian scenarios
+- "Pre-mortem" analysis: "This prediction failed. Why?"
+
+---
+
+### PRINCIPLE 4: ASSERTIVE WHEN IT MATTERS (THE OVERSTEP PRINCIPLE)
+
+**The Problem:** Some tools are too polite. They present options when they should be giving direct guidance.
+
+**Real Example - EOD Context:**
+> As an EOD team leader, when stakes are high enough, you don't politely suggest. You tell the infantry dudes exactly how not to get killed. "Do X. Don't do Y. Here's why, but also just do it because I said so."
+>
+> The key: this assertiveness is earned. You have credibility. And you only deploy it when it matters.
+
+**The Solution:**
+LatticeForge should have **contextual assertiveness**:
+
+| Risk Level | Communication Style |
+|------------|---------------------|
+| Low | "Consider monitoring these indicators" |
+| Moderate | "We recommend increased attention to X" |
+| High | "ACTION REQUIRED: Critical risk factors detected" |
+| Critical | **"ALERT: Transition likely imminent. Recommended actions: [specific list]"** |
+
+**Implementation:**
+```typescript
+interface RiskGuidance {
+  risk_level: 'low' | 'moderate' | 'high' | 'critical';
+  tone: 'advisory' | 'recommended' | 'urgent' | 'directive';
+  actions: {
+    immediate: string[];    // Do now
+    short_term: string[];   // Do this week
+    monitoring: string[];   // Watch these
+  };
+  rationale: string;        // Always explain why
+}
+```
+
+**Key Principle:** Assertiveness must be earned and calibrated:
+- Don't cry wolf (only escalate when warranted)
+- Always explain rationale (credibility)
+- Provide specific, actionable guidance (not vague warnings)
+- Track accuracy of escalations (accountability)
+
+---
+
+### PRINCIPLE 5: BROTHERHOOD MODEL (FUSION ARCHITECTURE)
+
+**The Problem:** Siloed intelligence is useless intelligence.
+
+**Real Example - Fusion Environment:**
+> "Reach up, reach down, reach left, reach right." The best intel fusion environments don't hoard. They share obsessively. Same intelligence, reformatted for different audiences.
+>
+> The SIGINT guy tells the HUMINT guy what to ask. The HUMINT guy tells the imagery analyst where to look. The analyst packages it all for the commander. Everyone sees the same picture, formatted for their needs.
+
+**The Solution:**
+LatticeForge must support the "brotherhood model" of intelligence sharing:
+
+1. **Same Intel, Multiple Formats**
+```
+Core Analysis: "Russia-Ukraine escalation risk +15% this week"
+    ↓
+├── Executive Brief: 3-bullet summary with key action
+├── Analyst View: Full methodology, data sources, assumptions
+├── Operations View: Timeline, watch indicators, trigger points
+├── API/Webhook: Raw data for downstream systems
+└── Alert: Push notification with severity
+```
+
+2. **Cross-Role Visibility**
+- Analysts can see what executives are reading
+- Executives can drill down into analyst detail
+- No information hiding between tiers (within clearance)
+
+3. **Rapid Fielding**
+- New indicators? Push to all subscribers immediately
+- Updated assessment? Auto-update all downstream products
+- Breaking development? Real-time annotation visible to all
+
+**Implementation:**
+```typescript
+interface IntelProduct {
+  core_assessment: Assessment;
+  views: {
+    executive: ExecutiveBrief;
+    analyst: FullAnalysis;
+    operations: OpsView;
+    alert: AlertConfig;
+  };
+  subscribers: {
+    users: string[];
+    teams: string[];
+    webhooks: WebhookConfig[];
+  };
+  versioning: {
+    current: number;
+    history: Assessment[];
+    changelog: string[];
+  };
+}
+```
+
+---
+
+## SYNTHESIS: THE LATTICEFORGE UX PHILOSOPHY
+
+From billion-dollar military methodology to a self-serve SaaS:
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                  LATTICEFORGE UX PRINCIPLES                    │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│  "An E-3 analyst should be dangerous on Day 1.                │
+│   An O-6 should trust the output enough to brief up.          │
+│   A CEO should get answers without learning a query language." │
+│                                                                │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │
+│  │  DAY-1       │  │  CONFIDENCE  │  │  ASSUMPTIONS │        │
+│  │  USEFUL      │  │  MANDATORY   │  │  VISIBLE     │        │
+│  │              │  │              │  │              │        │
+│  │ Progressive  │  │ IC verbal    │  │ Explicit     │        │
+│  │ complexity,  │  │ scale baked  │  │ tracking,    │        │
+│  │ templates    │  │ into every   │  │ red team     │        │
+│  │ first        │  │ output       │  │ challenges   │        │
+│  └──────────────┘  └──────────────┘  └──────────────┘        │
+│                                                                │
+│  ┌──────────────┐  ┌──────────────┐                          │
+│  │  ASSERTIVE   │  │  BROTHERHOOD │                          │
+│  │  WHEN IT     │  │  MODEL       │                          │
+│  │  MATTERS     │  │              │                          │
+│  │              │  │ Same intel,  │                          │
+│  │ Earned       │  │ multiple     │                          │
+│  │ credibility, │  │ formats.     │                          │
+│  │ calibrated   │  │ Share        │                          │
+│  │ escalation   │  │ obsessively. │                          │
+│  └──────────────┘  └──────────────┘                          │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+```
+
+**The Anti-Kibana Promise:**
+> "You don't need to be a data scientist to use this.
+> You don't need a $500K implementation.
+> You don't need a dedicated analyst team.
+>
+> You open it, and it tells you what matters.
+> You dig deeper only if you want to.
+> It warns you when you need to act.
+> It admits when it doesn't know."
+
+---
+
+*Document Version 1.1 | Added Operational Experience Design Principles*
+*Last Updated: December 2024*
+
