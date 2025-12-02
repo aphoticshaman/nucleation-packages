@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "wasm:build": "cd ../research/rust && wasm-pack build --target web --release -- --no-default-features --features wasm",
-    "wasm:copy": "cp -r ../research/rust/pkg ./lib/wasm"
+    "wasm:copy": "cp -r ../research/rust/pkg/* ./public/wasm/"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.6",

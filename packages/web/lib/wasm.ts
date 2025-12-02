@@ -1,8 +1,8 @@
-// WASM module loader
-// After running `npm run wasm:copy`, the WASM module will be in ./wasm/
+// WASM module loader - loads from /public/wasm at runtime
+// This avoids webpack trying to parse the WASM at build time
 
-let wasmModule: typeof import('./wasm/latticeforge_core') | null = null;
-let wasmLoading: Promise<typeof import('./wasm/latticeforge_core')> | null = null;
+let wasmModule: WasmCore | null = null;
+let wasmLoading: Promise<WasmCore> | null = null;
 
 export interface WasmCore {
   // Particle swarm
@@ -45,27 +45,47 @@ export interface WasmGeospatialSystem {
 
 export async function loadWasm(): Promise<WasmCore> {
   if (wasmModule) {
-    return wasmModule as unknown as WasmCore;
+    return wasmModule;
   }
 
   if (wasmLoading) {
-    return wasmLoading as unknown as Promise<WasmCore>;
+    return wasmLoading;
   }
 
   wasmLoading = (async () => {
     try {
-      // Dynamic import of WASM module
-      const wasm = await import('./wasm/latticeforge_core');
-      await wasm.default();
-      wasmModule = wasm;
-      return wasm;
+      // Load WASM from public folder at runtime
+      const wasmUrl = '/wasm/latticeforge_core_bg.wasm';
+
+      // Fetch and compile the WASM module
+      const wasmResponse = await fetch(wasmUrl);
+      const wasmBytes = await wasmResponse.arrayBuffer();
+
+      // For wasm-bindgen generated modules, we need to load the JS glue
+      // and initialize it with the WASM bytes
+      const init = (await import(
+        /* webpackIgnore: true */
+        '/wasm/latticeforge_core.js'
+      )).default;
+
+      await init(wasmBytes);
+
+      // Re-import to get the exports after init
+      const wasm = await import(
+        /* webpackIgnore: true */
+        '/wasm/latticeforge_core.js'
+      );
+
+      wasmModule = wasm as unknown as WasmCore;
+      return wasmModule;
     } catch (error) {
       console.error('Failed to load WASM:', error);
+      // Return a mock for graceful degradation
       throw error;
     }
   })();
 
-  return wasmLoading as unknown as Promise<WasmCore>;
+  return wasmLoading;
 }
 
 // Helper to check if WASM is loaded
