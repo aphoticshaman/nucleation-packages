@@ -5,32 +5,16 @@
 -- USER ROLES & PROFILES
 -- ============================================
 
--- User roles enum
-CREATE TYPE user_role AS ENUM ('admin', 'enterprise', 'consumer', 'support');
+-- User roles enum (idempotent - only create if not exists)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+        CREATE TYPE user_role AS ENUM ('admin', 'enterprise', 'consumer', 'support');
+    END IF;
+END$$;
 
--- User profiles (extends Supabase auth.users)
-CREATE TABLE profiles (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    email VARCHAR(255) NOT NULL,
-    full_name VARCHAR(255),
-    avatar_url TEXT,
-    role user_role NOT NULL DEFAULT 'consumer',
-
-    -- Organization (for enterprise users)
-    organization_id UUID REFERENCES organizations(id),
-
-    -- Status
-    is_active BOOLEAN DEFAULT true,
-    last_seen_at TIMESTAMPTZ,
-
-    -- Metadata
-    metadata JSONB DEFAULT '{}',
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Organizations (for enterprise customers)
-CREATE TABLE organizations (
+-- Organizations (for enterprise customers) - must be created before profiles
+CREATE TABLE IF NOT EXISTS organizations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     slug VARCHAR(100) UNIQUE NOT NULL,
@@ -55,8 +39,29 @@ CREATE TABLE organizations (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- User profiles (extends Supabase auth.users)
+CREATE TABLE IF NOT EXISTS profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email VARCHAR(255) NOT NULL,
+    full_name VARCHAR(255),
+    avatar_url TEXT,
+    role user_role NOT NULL DEFAULT 'consumer',
+
+    -- Organization (for enterprise users)
+    organization_id UUID REFERENCES organizations(id),
+
+    -- Status
+    is_active BOOLEAN DEFAULT true,
+    last_seen_at TIMESTAMPTZ,
+
+    -- Metadata
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- API Keys (for enterprise)
-CREATE TABLE api_keys (
+CREATE TABLE IF NOT EXISTS api_keys (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
     created_by UUID REFERENCES profiles(id),
@@ -80,7 +85,7 @@ CREATE TABLE api_keys (
 );
 
 -- API Usage logs
-CREATE TABLE api_usage (
+CREATE TABLE IF NOT EXISTS api_usage (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     api_key_id UUID REFERENCES api_keys(id) ON DELETE SET NULL,
     organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
@@ -98,15 +103,15 @@ CREATE TABLE api_usage (
 );
 
 -- Index for usage queries
-CREATE INDEX idx_api_usage_org_time ON api_usage(organization_id, created_at DESC);
-CREATE INDEX idx_api_usage_key_time ON api_usage(api_key_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_api_usage_org_time ON api_usage(organization_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_api_usage_key_time ON api_usage(api_key_id, created_at DESC);
 
 -- ============================================
 -- CONSUMER USER DATA
 -- ============================================
 
 -- Saved simulations (consumer)
-CREATE TABLE saved_simulations (
+CREATE TABLE IF NOT EXISTS saved_simulations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
 
@@ -126,7 +131,7 @@ CREATE TABLE saved_simulations (
 );
 
 -- User activity (for admin dashboard)
-CREATE TABLE user_activity (
+CREATE TABLE IF NOT EXISTS user_activity (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
 
@@ -136,8 +141,8 @@ CREATE TABLE user_activity (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_user_activity_time ON user_activity(created_at DESC);
-CREATE INDEX idx_user_activity_user ON user_activity(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_activity_time ON user_activity(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_activity_user ON user_activity(user_id, created_at DESC);
 
 -- ============================================
 -- ADMIN VIEWS
@@ -203,27 +208,32 @@ ALTER TABLE saved_simulations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_activity ENABLE ROW LEVEL SECURITY;
 
 -- Profiles: users can read their own, admins can read all
+DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
 CREATE POLICY "Users can view own profile"
     ON profiles FOR SELECT
     USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Admins can view all profiles" ON profiles;
 CREATE POLICY "Admins can view all profiles"
     ON profiles FOR SELECT
     USING (
         EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
     );
 
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 CREATE POLICY "Users can update own profile"
     ON profiles FOR UPDATE
     USING (auth.uid() = id);
 
 -- Organizations: members can view their org, admins can view all
+DROP POLICY IF EXISTS "Org members can view their org" ON organizations;
 CREATE POLICY "Org members can view their org"
     ON organizations FOR SELECT
     USING (
         EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND organization_id = organizations.id)
     );
 
+DROP POLICY IF EXISTS "Admins can view all orgs" ON organizations;
 CREATE POLICY "Admins can view all orgs"
     ON organizations FOR SELECT
     USING (
@@ -231,12 +241,14 @@ CREATE POLICY "Admins can view all orgs"
     );
 
 -- API Keys: org members can manage their org's keys
+DROP POLICY IF EXISTS "Org members can view their API keys" ON api_keys;
 CREATE POLICY "Org members can view their API keys"
     ON api_keys FOR SELECT
     USING (
         EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND organization_id = api_keys.organization_id)
     );
 
+DROP POLICY IF EXISTS "Org members can create API keys" ON api_keys;
 CREATE POLICY "Org members can create API keys"
     ON api_keys FOR INSERT
     WITH CHECK (
@@ -244,10 +256,12 @@ CREATE POLICY "Org members can create API keys"
     );
 
 -- Saved simulations: users own their simulations
+DROP POLICY IF EXISTS "Users can CRUD own simulations" ON saved_simulations;
 CREATE POLICY "Users can CRUD own simulations"
     ON saved_simulations FOR ALL
     USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Public simulations are viewable" ON saved_simulations;
 CREATE POLICY "Public simulations are viewable"
     ON saved_simulations FOR SELECT
     USING (is_public = true);
@@ -271,6 +285,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION handle_new_user();
@@ -284,6 +299,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS on_user_activity ON user_activity;
 CREATE TRIGGER on_user_activity
     AFTER INSERT ON user_activity
     FOR EACH ROW EXECUTE FUNCTION update_last_seen();

@@ -54,14 +54,22 @@ export async function middleware(request: NextRequest) {
 
   if (isAuthPage && user) {
     // Get user role to redirect to correct dashboard
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    // Wrapped in try-catch to handle cases where profiles table doesn't exist yet
+    let role = 'consumer';
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      role = profile?.role || 'consumer';
+    } catch {
+      // If profiles query fails (table doesn't exist, RLS issue, etc), default to consumer
+      console.warn('Failed to fetch user profile, defaulting to consumer role');
+    }
 
     const url = request.nextUrl.clone();
-    switch (profile?.role) {
+    switch (role) {
       case 'admin':
         url.pathname = '/admin';
         break;
