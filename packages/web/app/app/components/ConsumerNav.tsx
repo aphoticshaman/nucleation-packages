@@ -62,7 +62,7 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
 
             {/* User avatar */}
             <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white text-sm font-medium">
-              {user.full_name?.[0] || user.email[0].toUpperCase()}
+              {user.full_name?.[0] || user.email?.[0]?.toUpperCase() || '?'}
             </div>
 
             {/* Mobile menu button */}
@@ -137,7 +137,7 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-800">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white font-medium">
-              {user.full_name?.[0] || user.email[0].toUpperCase()}
+              {user.full_name?.[0] || user.email?.[0]?.toUpperCase() || '?'}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white text-sm truncate">{user.full_name || 'User'}</p>
