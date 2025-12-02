@@ -361,7 +361,7 @@ export default function ConsumerDashboard() {
               }
             </p>
             <button
-              onClick={handleSimulate}
+              onClick={() => void handleSimulate()}
               disabled={isSimulating || wasmLoading}
               className={`w-full py-3 rounded-lg font-medium transition-colors ${
                 isSimulating || wasmLoading

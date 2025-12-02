@@ -197,7 +197,7 @@ export default function PricingPage() {
               </ul>
 
               <button
-                onClick={() => handleSelectPlan(plan)}
+                onClick={() => void handleSelectPlan(plan)}
                 disabled={loading === plan.id}
                 className={`w-full py-3 rounded-lg font-medium transition-colors ${
                   plan.popular

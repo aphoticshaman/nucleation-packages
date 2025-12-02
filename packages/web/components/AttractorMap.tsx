@@ -61,22 +61,19 @@ export default function AttractorMap({
       const mapInstance = new google.maps.Map(mapRef.current, {
         center: { lat: 20, lng: 0 },
         zoom: 2,
-        mapId: 'latticeforge-dark',
-        styles: [
-          { elementType: 'geometry', stylers: [{ color: '#1e293b' }] },
-          { elementType: 'labels.text.stroke', stylers: [{ color: '#1e293b' }] },
-          { elementType: 'labels.text.fill', stylers: [{ color: '#94a3b8' }] },
-          {
-            featureType: 'water',
-            elementType: 'geometry',
-            stylers: [{ color: '#0f172a' }],
+        minZoom: 2,
+        maxZoom: 10,
+        // Use cloud-based styling via Map ID (configured in Google Cloud Console)
+        mapId: process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID,
+        restriction: {
+          latLngBounds: {
+            north: 85,
+            south: -85,
+            west: -180,
+            east: 180,
           },
-          {
-            featureType: 'administrative.country',
-            elementType: 'geometry.stroke',
-            stylers: [{ color: '#475569' }],
-          },
-        ],
+          strictBounds: true,
+        },
         disableDefaultUI: true,
         zoomControl: true,
         mapTypeControl: false,

@@ -12,6 +12,19 @@ function AuthCallbackHandler() {
   const [status, setStatus] = useState<string>('Completing sign in...');
 
   useEffect(() => {
+    const ensureProfileAndRedirect = async () => {
+      setStatus('Setting up your account...');
+      try {
+        await fetch('/api/auth/ensure-profile', {
+          method: 'POST',
+          credentials: 'include',
+        });
+      } catch {
+        // Continue anyway
+      }
+      router.push(redirect);
+    };
+
     const handleCallback = async () => {
       try {
         // Check for error in URL params (OAuth provider errors)
@@ -23,88 +36,79 @@ function AuthCallbackHandler() {
           return;
         }
 
-        // For PKCE flow, check for code in URL and exchange it
-        const code = searchParams.get('code');
-        if (code) {
-          setStatus('Exchanging authorization code...');
-          // Exchange the code for a session
-          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-          if (exchangeError) {
-            console.error('Code exchange error:', exchangeError);
-            setError(exchangeError.message);
-            setTimeout(() => router.push('/login?error=code_exchange_failed'), 2000);
-            return;
-          }
-          if (data.session) {
-            // Ensure profile exists before redirecting
-            setStatus('Setting up your account...');
-            try {
-              const profileRes = await fetch('/api/auth/ensure-profile', {
-                method: 'POST',
-                credentials: 'include',
-              });
-              if (!profileRes.ok) {
-                const { error: profileError } = await profileRes.json();
-                console.warn('Profile creation warning:', profileError);
-                // Continue anyway - profile might already exist or will be created on next load
-              }
-            } catch (profileErr) {
-              console.warn('Profile ensure failed:', profileErr);
-              // Continue anyway
-            }
-            router.push(redirect);
-            return;
-          }
-        }
+        // First, check if we already have a session (Supabase might have handled the exchange)
+        setStatus('Checking authentication...');
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
 
-        // For implicit flow, Supabase client automatically picks up the hash fragment
-        // We just need to wait for the session to be established
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-        if (sessionError) {
-          console.error('Auth callback error:', sessionError);
-          setError(sessionError.message);
-          setTimeout(() => router.push('/login?error=auth_failed'), 2000);
+        if (existingSession) {
+          // Session already exists - just ensure profile and redirect
+          await ensureProfileAndRedirect();
           return;
         }
 
-        if (session) {
-          // Ensure profile exists
-          setStatus('Setting up your account...');
+        // Try to exchange code if present (PKCE flow)
+        const code = searchParams.get('code');
+        if (code) {
+          setStatus('Completing sign in...');
           try {
-            await fetch('/api/auth/ensure-profile', {
-              method: 'POST',
-              credentials: 'include',
-            });
-          } catch {
-            // Continue anyway
-          }
-          router.push(redirect);
-        } else {
-          // If no session yet, listen for auth state change
-          const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            if (event === 'SIGNED_IN' && session) {
-              subscription.unsubscribe();
-              // Ensure profile exists
-              setStatus('Setting up your account...');
-              try {
-                await fetch('/api/auth/ensure-profile', {
-                  method: 'POST',
-                  credentials: 'include',
-                });
-              } catch {
-                // Continue anyway
+            const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+            if (!exchangeError && data.session) {
+              await ensureProfileAndRedirect();
+              return;
+            }
+            // If exchange fails (e.g., verifier missing), check session again
+            // The session might have been established via cookies from Supabase auth server
+            if (exchangeError) {
+              console.warn('Code exchange failed, checking for existing session:', exchangeError.message);
+              const { data: { session: retrySession } } = await supabase.auth.getSession();
+              if (retrySession) {
+                await ensureProfileAndRedirect();
+                return;
               }
-              router.push(redirect);
+            }
+          } catch (err) {
+            console.warn('Code exchange threw, checking session:', err);
+            const { data: { session: fallbackSession } } = await supabase.auth.getSession();
+            if (fallbackSession) {
+              await ensureProfileAndRedirect();
+              return;
+            }
+          }
+        }
+
+        // Check hash fragment for implicit flow
+        if (window.location.hash) {
+          setStatus('Processing authentication...');
+          // Give Supabase time to process the hash
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const { data: { session: hashSession } } = await supabase.auth.getSession();
+          if (hashSession) {
+            await ensureProfileAndRedirect();
+            return;
+          }
+        }
+
+        // Last resort: listen for auth state change
+        setStatus('Waiting for authentication...');
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          if (event === 'SIGNED_IN' && session) {
+            subscription.unsubscribe();
+            await ensureProfileAndRedirect();
+          }
+        });
+
+        // Timeout fallback
+        setTimeout(() => {
+          subscription.unsubscribe();
+          // One final check before giving up
+          void supabase.auth.getSession().then(({ data: { session: finalSession } }) => {
+            if (finalSession) {
+              void ensureProfileAndRedirect();
+            } else {
+              router.push('/login?error=timeout');
             }
           });
-
-          // Timeout fallback - if nothing happens in 5 seconds, redirect to login
-          setTimeout(() => {
-            subscription.unsubscribe();
-            router.push('/login?error=timeout');
-          }, 5000);
-        }
+        }, 5000);
       } catch (err) {
         console.error('Unexpected auth callback error:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');

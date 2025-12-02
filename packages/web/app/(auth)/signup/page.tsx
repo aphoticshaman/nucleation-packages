@@ -75,7 +75,7 @@ export default function SignupPage() {
           {/* OAuth buttons */}
           <div className="space-y-3 mb-6">
             <button
-              onClick={() => handleOAuthSignup('google')}
+              onClick={() => void handleOAuthSignup('google')}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white text-slate-900 rounded-lg font-medium hover:bg-slate-100 transition-colors"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -88,7 +88,7 @@ export default function SignupPage() {
             </button>
 
             <button
-              onClick={() => handleOAuthSignup('github')}
+              onClick={() => void handleOAuthSignup('github')}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-slate-800 text-white rounded-lg font-medium hover:bg-slate-700 transition-colors"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -108,7 +108,7 @@ export default function SignupPage() {
           </div>
 
           {/* Email form */}
-          <form onSubmit={handleSignup} className="space-y-4">
+          <form onSubmit={(e) => void handleSignup(e)} className="space-y-4">
             <div>
               <label className="block text-sm text-slate-400 mb-2">Full Name</label>
               <input
