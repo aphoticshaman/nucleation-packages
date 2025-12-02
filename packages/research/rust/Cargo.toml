@@ -9,6 +9,9 @@ repository = "https://github.com/latticeforge/research"
 keywords = ["simulation", "wasm", "intelligence-fusion", "active-inference"]
 categories = ["science", "simulation", "wasm"]
 
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
 [lib]
 name = "latticeforge_core"
 crate-type = ["cdylib", "rlib"]
