@@ -60,9 +60,10 @@ export function useSupabaseNations(): UseSupabaseNationsResult {
   }, []);
 
   const updateNation = useCallback(async (code: string, updates: Partial<Nation>) => {
+    // Cast to any to work with generic Supabase client types
     const { error } = await supabase
       .from('nations')
-      .update(updates)
+      .update(updates as Record<string, unknown>)
       .eq('code', code);
 
     if (error) throw error;
