@@ -9,6 +9,7 @@ function AuthCallbackHandler() {
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/app';
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string>('Completing sign in...');
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -25,6 +26,7 @@ function AuthCallbackHandler() {
         // For PKCE flow, check for code in URL and exchange it
         const code = searchParams.get('code');
         if (code) {
+          setStatus('Exchanging authorization code...');
           // Exchange the code for a session
           const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) {
@@ -34,6 +36,22 @@ function AuthCallbackHandler() {
             return;
           }
           if (data.session) {
+            // Ensure profile exists before redirecting
+            setStatus('Setting up your account...');
+            try {
+              const profileRes = await fetch('/api/auth/ensure-profile', {
+                method: 'POST',
+                credentials: 'include',
+              });
+              if (!profileRes.ok) {
+                const { error: profileError } = await profileRes.json();
+                console.warn('Profile creation warning:', profileError);
+                // Continue anyway - profile might already exist or will be created on next load
+              }
+            } catch (profileErr) {
+              console.warn('Profile ensure failed:', profileErr);
+              // Continue anyway
+            }
             router.push(redirect);
             return;
           }
@@ -51,12 +69,32 @@ function AuthCallbackHandler() {
         }
 
         if (session) {
+          // Ensure profile exists
+          setStatus('Setting up your account...');
+          try {
+            await fetch('/api/auth/ensure-profile', {
+              method: 'POST',
+              credentials: 'include',
+            });
+          } catch {
+            // Continue anyway
+          }
           router.push(redirect);
         } else {
           // If no session yet, listen for auth state change
-          const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (event === 'SIGNED_IN' && session) {
               subscription.unsubscribe();
+              // Ensure profile exists
+              setStatus('Setting up your account...');
+              try {
+                await fetch('/api/auth/ensure-profile', {
+                  method: 'POST',
+                  credentials: 'include',
+                });
+              } catch {
+                // Continue anyway
+              }
               router.push(redirect);
             }
           });
@@ -89,7 +127,7 @@ function AuthCallbackHandler() {
       ) : (
         <>
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-slate-400">Completing sign in...</p>
+          <p className="text-slate-400">{status}</p>
         </>
       )}
     </div>
