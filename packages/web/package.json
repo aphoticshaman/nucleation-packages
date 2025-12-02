@@ -11,6 +11,7 @@
     "wasm:copy": "cp -r ../research/rust/pkg/* ./public/wasm/"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.0",
     "@googlemaps/js-api-loader": "^1.16.6",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.47.0",
