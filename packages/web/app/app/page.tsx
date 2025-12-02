@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useWasm } from '@/hooks/useWasm';
+import { useSupabaseNations } from '@/hooks/useSupabaseNations';
 
 // Dynamic import for map (client-side only)
 const AttractorMap = dynamic(() => import('@/components/AttractorMap'), {
@@ -144,8 +145,65 @@ const KEY_INSIGHTS = [
   },
 ];
 
+// Preset filters - ISO 3166-1 alpha-3 country codes
+const PRESET_FILTERS: Record<string, string[] | null> = {
+  global: null, // null = show all
+  nato: [
+    'USA',
+    'CAN',
+    'GBR',
+    'FRA',
+    'DEU',
+    'ITA',
+    'ESP',
+    'POL',
+    'NLD',
+    'BEL',
+    'PRT',
+    'GRC',
+    'TUR',
+    'NOR',
+    'DNK',
+    'CZE',
+    'HUN',
+    'ROU',
+    'BGR',
+    'SVK',
+    'HRV',
+    'SVN',
+    'LVA',
+    'LTU',
+    'EST',
+    'ALB',
+    'MNE',
+    'MKD',
+    'FIN',
+    'SWE',
+    'ISL',
+    'LUX',
+  ],
+  brics: ['BRA', 'RUS', 'IND', 'CHN', 'ZAF', 'IRN', 'EGY', 'ETH', 'SAU', 'ARE'],
+  conflict: [
+    'UKR',
+    'RUS',
+    'ISR',
+    'PSE',
+    'LBN',
+    'SYR',
+    'YEM',
+    'SDN',
+    'MMR',
+    'AFG',
+    'TWN',
+    'CHN',
+    'PRK',
+    'KOR',
+  ],
+};
+
 export default function ConsumerDashboard() {
   const { wasm, loading: wasmLoading } = useWasm();
+  const { nations: allNations, edges: allEdges, loading: dataLoading } = useSupabaseNations();
   const [selectedPreset, setSelectedPreset] = useState('global');
   const [selectedLayer, setSelectedLayer] = useState<'basin' | 'risk' | 'regime'>('basin');
   const [skillLevel, setSkillLevel] = useState<SkillLevel>('standard');
@@ -153,9 +211,24 @@ export default function ConsumerDashboard() {
   const [controlsOpen, setControlsOpen] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
 
-  // Placeholder nation data
-  const nations: never[] = [];
-  const edges: never[] = [];
+  // Filter nations and edges based on selected preset
+  const { nations, edges } = useMemo(() => {
+    const filter = PRESET_FILTERS[selectedPreset];
+    if (!filter) {
+      // Global - show all
+      return { nations: allNations, edges: allEdges };
+    }
+
+    const filteredNations = allNations.filter((n) => filter.includes(n.code));
+    const nationCodes = new Set(filteredNations.map((n) => n.code));
+
+    // Only show edges where both source and target are in the filtered set
+    const filteredEdges = allEdges.filter(
+      (e) => nationCodes.has(e.source_code) && nationCodes.has(e.target_code)
+    );
+
+    return { nations: filteredNations, edges: filteredEdges };
+  }, [allNations, allEdges, selectedPreset]);
 
   const handleSimulate = async () => {
     if (!wasm) return;
@@ -377,20 +450,22 @@ export default function ConsumerDashboard() {
             </p>
             <button
               onClick={() => void handleSimulate()}
-              disabled={isSimulating || wasmLoading}
+              disabled={isSimulating || wasmLoading || dataLoading}
               className={`w-full py-3 rounded-lg font-medium transition-colors ${
-                isSimulating || wasmLoading
+                isSimulating || wasmLoading || dataLoading
                   ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
                   : 'bg-green-600 text-white hover:bg-green-500 active:bg-green-700'
               }`}
             >
-              {wasmLoading
-                ? 'Loading...'
-                : isSimulating
-                  ? 'Running...'
-                  : skillLevel === 'simple'
-                    ? 'Step Forward'
-                    : 'Run Step'}
+              {dataLoading
+                ? 'Loading data...'
+                : wasmLoading
+                  ? 'Loading WASM...'
+                  : isSimulating
+                    ? 'Running...'
+                    : skillLevel === 'simple'
+                      ? 'Step Forward'
+                      : 'Run Step'}
             </button>
             <p className="text-xs text-slate-500 mt-2 text-center">10 remaining today</p>
           </div>
