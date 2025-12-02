@@ -5,42 +5,55 @@ let wasmModule: WasmCore | null = null;
 let wasmLoading: Promise<WasmCore> | null = null;
 
 export interface WasmCore {
-  // Particle swarm
-  WasmSwarm: new (n: number, dims: number) => WasmSwarm;
+  // Particle swarm - actual constructor signature from wasm-bindgen
+  WasmSwarm: new (
+    n_particles: number,
+    dt: number,
+    diffusion: number,
+    interaction_strength: number,
+    attractor_x: number,
+    attractor_y: number,
+    attractor_strength: number,
+    seed: bigint
+  ) => WasmSwarm;
 
   // Persistence
-  wasm_compute_persistence: (points: Float64Array, n: number, dims: number, max_edge: number) => WasmPersistence;
+  wasm_compute_persistence: (points_flat: Float64Array, n_points: number, max_edge: number) => WasmPersistence;
 
   // Q-matrix
-  wasm_build_q_matrix: (k: number, kappaUp: number, kappaDown: number) => Float64Array;
-  wasm_stationary_distribution: (qMatrix: Float64Array, k: number) => Float64Array;
+  wasm_build_q_matrix: (rates_flat: Float64Array, n: number) => Float64Array;
+  wasm_analyze_q: (q_flat: Float64Array, n: number) => unknown;
 
-  // Geospatial
-  WasmGeospatialSystem: new (nDims: number) => WasmGeospatialSystem;
+  // Distance matrix
+  wasm_distance_matrix: (points_flat: Float64Array, n_points: number) => Float64Array;
+
+  // Geodesic integration
+  wasm_integrate_geodesic_fisher: (x0: Float64Array, v0: Float64Array, dt: number, n_steps: number) => unknown;
+
+  // Markov chain simulation
+  wasm_simulate_markov_chain: (q_flat: Float64Array, n: number, r0: number, total_time: number, dt: number, seed: bigint) => unknown;
+
+  // Persistent entropy
+  wasm_persistent_entropy: (births: Float64Array, deaths: Float64Array) => number;
+
+  // Init function
+  init: () => void;
 }
 
 export interface WasmSwarm {
+  free: () => void;
   step: () => void;
-  run: (n: number) => void;
+  run: (n_steps: number) => unknown;
   get_positions: () => Float64Array;
-  get_mean_position: () => Float64Array;
-  get_mean_field_strength: () => number;
+  get_metrics: () => unknown;
+  get_n_particles: () => number;
+  get_time: () => number;
+  set_attractor: (x: number, y: number) => void;
 }
 
 export interface WasmPersistence {
-  h0_pairs: Float64Array;
-  h1_pairs: Float64Array;
-  total_persistence: number;
-  persistent_entropy: number;
-}
-
-export interface WasmGeospatialSystem {
-  add_nation: (code: string, name: string, lat: number, lon: number, position: Float64Array, regime: number) => void;
-  set_esteem: (source: string, target: string, esteem: number) => void;
-  step: () => void;
-  run: (n: number) => void;
-  to_geojson: (layer: string) => string;
-  get_comparison: (code1: string, code2: string) => string;
+  // Return type from wasm_compute_persistence
+  [key: string]: unknown;
 }
 
 export async function loadWasm(): Promise<WasmCore> {

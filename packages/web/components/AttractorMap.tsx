@@ -63,7 +63,7 @@ export default function AttractorMap({
         zoom: 2,
         minZoom: 2,
         maxZoom: 10,
-        mapId: 'latticeforge-dark',
+        // Dark theme styles (can't use with mapId)
         styles: [
           { elementType: 'geometry', stylers: [{ color: '#1e293b' }] },
           { elementType: 'labels.text.stroke', stylers: [{ color: '#1e293b' }] },
@@ -77,6 +77,14 @@ export default function AttractorMap({
             featureType: 'administrative.country',
             elementType: 'geometry.stroke',
             stylers: [{ color: '#475569' }],
+          },
+          {
+            featureType: 'poi',
+            stylers: [{ visibility: 'off' }],
+          },
+          {
+            featureType: 'transit',
+            stylers: [{ visibility: 'off' }],
           },
         ],
         restriction: {
