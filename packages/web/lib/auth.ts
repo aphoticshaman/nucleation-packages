@@ -52,19 +52,66 @@ export async function createClient() {
 }
 
 // Get current user with profile
+// Auto-creates a profile if one doesn't exist (for OAuth users)
 export async function getUser(): Promise<UserProfile | null> {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: profile } = await supabase
+  // Try to get existing profile
+  const { data: profile, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
     .single();
 
-  return profile as UserProfile | null;
+  // If profile exists, return it
+  if (profile) {
+    return profile as UserProfile;
+  }
+
+  // If profile doesn't exist (new OAuth user), create one
+  if (error?.code === 'PGRST116') {
+    // PGRST116 = "JSON object requested, multiple (or no) rows returned"
+    const newProfile: Omit<UserProfile, 'last_seen_at'> & { last_seen_at: string } = {
+      id: user.id,
+      email: user.email || '',
+      full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+      avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+      role: 'consumer',
+      organization_id: null,
+      is_active: true,
+      last_seen_at: new Date().toISOString(),
+    };
+
+    const { data: createdProfile, error: insertError } = await supabase
+      .from('profiles')
+      .insert(newProfile)
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Failed to create user profile:', insertError);
+      // Return a minimal profile to allow the user to proceed
+      return {
+        id: user.id,
+        email: user.email || '',
+        full_name: user.user_metadata?.full_name || null,
+        avatar_url: user.user_metadata?.avatar_url || null,
+        role: 'consumer',
+        organization_id: null,
+        is_active: true,
+        last_seen_at: null,
+      };
+    }
+
+    return createdProfile as UserProfile;
+  }
+
+  // Some other error occurred
+  console.error('Error fetching user profile:', error);
+  return null;
 }
 
 // Require authentication
