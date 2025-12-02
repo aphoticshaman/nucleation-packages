@@ -42,3 +42,12 @@ export { CommandPalette, useCommandPalette } from './CommandPalette';
 
 // Component 43: Toast Notification Stack
 export { ToastProvider, useToast, InlineToast } from './ToastNotifications';
+
+// Component 08: Jargon Decoder Tooltip
+export { JargonDecoder, TermTooltip, getJargonDefinition, JARGON_DICTIONARY } from './JargonDecoder';
+
+// Component 25: Prediction Confidence Cone
+export { ConfidenceCone, generateMockForecast } from './ConfidenceCone';
+
+// Component 34: Token Attention Highlighter
+export { TokenAttention, TokenHeatmap, AttentionComparison, mockTokenWeights } from './TokenAttention';
