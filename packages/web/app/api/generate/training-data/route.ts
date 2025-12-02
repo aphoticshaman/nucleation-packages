@@ -166,6 +166,190 @@ interface NewsItem {
   source_type: string;
 }
 
+// Domain-specific analyst agents with specialized expertise
+const DOMAIN_ANALYSTS: Record<string, {
+  name: string;
+  expertise: string;
+  riskFactors: string[];
+  cascadeTargets: string[];
+}> = {
+  // Geopolitical & Defense
+  geopolitical: {
+    name: 'Geopolitical Intelligence Analyst',
+    expertise: 'international relations, territorial disputes, diplomatic tensions, sanctions regimes, alliance dynamics',
+    riskFactors: ['military escalation', 'diplomatic breakdown', 'sanctions', 'regime change', 'territorial disputes'],
+    cascadeTargets: ['financial markets', 'energy prices', 'supply chains', 'defense spending', 'refugee flows'],
+  },
+  defense: {
+    name: 'Defense & Military Analyst',
+    expertise: 'military capabilities, defense procurement, force postures, arms transfers, military exercises',
+    riskFactors: ['arms race', 'force projection', 'nuclear posture', 'cyber warfare', 'space militarization'],
+    cascadeTargets: ['geopolitical tensions', 'defense stocks', 'rare earth demand', 'tech transfer restrictions'],
+  },
+
+  // Economic & Financial
+  financial: {
+    name: 'Financial Markets Analyst',
+    expertise: 'equity markets, fixed income, forex, derivatives, central bank policy, credit markets',
+    riskFactors: ['liquidity crisis', 'credit spreads', 'yield curve', 'currency volatility', 'margin calls'],
+    cascadeTargets: ['corporate solvency', 'pension funds', 'emerging markets', 'real estate', 'consumer credit'],
+  },
+  crypto: {
+    name: 'Digital Assets & DeFi Analyst',
+    expertise: 'cryptocurrencies, blockchain protocols, DeFi, stablecoins, regulatory frameworks',
+    riskFactors: ['exchange insolvency', 'smart contract exploits', 'regulatory crackdown', 'stablecoin depegging'],
+    cascadeTargets: ['traditional finance', 'tech stocks', 'payment systems', 'remittance markets'],
+  },
+
+  // Technology & Cyber
+  cyber: {
+    name: 'Cybersecurity Threat Analyst',
+    expertise: 'APT groups, ransomware, zero-days, critical infrastructure, nation-state actors',
+    riskFactors: ['ransomware surge', 'supply chain attacks', 'critical infrastructure compromise', 'data breaches'],
+    cascadeTargets: ['insurance markets', 'healthcare operations', 'financial systems', 'industrial control'],
+  },
+  tech: {
+    name: 'Technology & Innovation Analyst',
+    expertise: 'semiconductor supply, cloud infrastructure, platform dynamics, tech regulation, AI development',
+    riskFactors: ['chip shortage', 'platform instability', 'tech regulation', 'talent migration', 'IP disputes'],
+    cascadeTargets: ['automotive production', 'consumer electronics', 'defense systems', 'AI capabilities'],
+  },
+  ai: {
+    name: 'AI & Machine Learning Analyst',
+    expertise: 'foundation models, AI governance, compute infrastructure, AI safety, autonomous systems',
+    riskFactors: ['capability jumps', 'alignment failures', 'compute bottlenecks', 'regulatory fragmentation'],
+    cascadeTargets: ['labor markets', 'content authenticity', 'cybersecurity', 'scientific research'],
+  },
+  semiconductors: {
+    name: 'Semiconductor Industry Analyst',
+    expertise: 'chip fabrication, EDA tools, packaging, foundry capacity, export controls',
+    riskFactors: ['fab disruption', 'export restrictions', 'equipment bottlenecks', 'talent shortage'],
+    cascadeTargets: ['automotive', 'consumer electronics', 'defense', 'AI compute', 'telecommunications'],
+  },
+  quantum: {
+    name: 'Quantum & Emerging Tech Analyst',
+    expertise: 'quantum computing, quantum sensing, post-quantum cryptography, fusion energy',
+    riskFactors: ['cryptographic vulnerability', 'quantum supremacy claims', 'talent concentration'],
+    cascadeTargets: ['cybersecurity', 'drug discovery', 'financial modeling', 'materials science'],
+  },
+
+  // Energy & Resources
+  energy: {
+    name: 'Energy Markets Analyst',
+    expertise: 'oil & gas markets, renewables, grid infrastructure, energy security, OPEC dynamics',
+    riskFactors: ['supply disruption', 'refinery outages', 'pipeline incidents', 'OPEC decisions', 'grid instability'],
+    cascadeTargets: ['transportation costs', 'manufacturing', 'inflation', 'petrochemicals', 'food prices'],
+  },
+  climate: {
+    name: 'Climate & Environmental Risk Analyst',
+    expertise: 'extreme weather, climate policy, carbon markets, physical climate risks, transition risks',
+    riskFactors: ['extreme weather', 'stranded assets', 'regulatory shifts', 'water stress', 'biodiversity loss'],
+    cascadeTargets: ['insurance', 'agriculture', 'real estate', 'supply chains', 'migration patterns'],
+  },
+
+  // Healthcare & Biotech
+  health: {
+    name: 'Healthcare & Epidemiology Analyst',
+    expertise: 'disease surveillance, health systems, pandemic preparedness, drug supply chains',
+    riskFactors: ['outbreak emergence', 'health system strain', 'drug shortages', 'antimicrobial resistance'],
+    cascadeTargets: ['labor markets', 'travel industry', 'pharmaceutical stocks', 'global trade'],
+  },
+  pharma: {
+    name: 'Pharmaceutical Industry Analyst',
+    expertise: 'drug development, clinical trials, FDA/EMA approvals, pricing dynamics, patent cliffs',
+    riskFactors: ['trial failures', 'regulatory rejection', 'pricing pressure', 'patent expiry', 'supply issues'],
+    cascadeTargets: ['biotech valuations', 'healthcare costs', 'patient outcomes', 'insurance premiums'],
+  },
+  biotech: {
+    name: 'Biotechnology & Life Sciences Analyst',
+    expertise: 'gene therapy, CRISPR, synthetic biology, diagnostics, biomanufacturing',
+    riskFactors: ['safety signals', 'regulatory hurdles', 'manufacturing failures', 'IP litigation'],
+    cascadeTargets: ['pharma partnerships', 'agricultural biotech', 'industrial biotech', 'healthcare costs'],
+  },
+  cancer_research: {
+    name: 'Oncology Research Analyst',
+    expertise: 'cancer therapeutics, immunotherapy, precision medicine, clinical outcomes',
+    riskFactors: ['trial failures', 'resistance mechanisms', 'pricing access', 'competitive dynamics'],
+    cascadeTargets: ['biotech valuations', 'healthcare budgets', 'patient access', 'research priorities'],
+  },
+  neurotech: {
+    name: 'Neurotechnology Analyst',
+    expertise: 'brain-computer interfaces, neurostimulation, neuroimaging, cognitive enhancement',
+    riskFactors: ['safety concerns', 'regulatory uncertainty', 'ethical debates', 'data privacy'],
+    cascadeTargets: ['disability services', 'mental health treatment', 'human augmentation debate'],
+  },
+
+  // Industrial & Manufacturing
+  manufacturing: {
+    name: 'Industrial & Manufacturing Analyst',
+    expertise: 'factory automation, industrial IoT, lean manufacturing, reshoring trends',
+    riskFactors: ['supply disruption', 'labor disputes', 'equipment failures', 'quality issues'],
+    cascadeTargets: ['consumer goods availability', 'employment', 'trade balances', 'inflation'],
+  },
+  supply_chain: {
+    name: 'Supply Chain & Logistics Analyst',
+    expertise: 'global logistics, port operations, freight markets, inventory management',
+    riskFactors: ['port congestion', 'shipping delays', 'container shortages', 'customs disruption'],
+    cascadeTargets: ['retail inventory', 'manufacturing', 'commodity prices', 'inflation'],
+  },
+  automotive: {
+    name: 'Automotive & EV Analyst',
+    expertise: 'vehicle production, EV transition, battery technology, autonomous driving',
+    riskFactors: ['chip shortage', 'battery supply', 'charging infrastructure', 'recall events'],
+    cascadeTargets: ['lithium/cobalt prices', 'grid demand', 'oil demand', 'urban planning'],
+  },
+  robotics: {
+    name: 'Robotics & Automation Analyst',
+    expertise: 'industrial robots, warehouse automation, humanoid robotics, autonomous systems',
+    riskFactors: ['labor displacement', 'safety incidents', 'capability limitations', 'cost barriers'],
+    cascadeTargets: ['manufacturing employment', 'logistics efficiency', 'labor markets'],
+  },
+  materials: {
+    name: 'Advanced Materials Analyst',
+    expertise: 'nanomaterials, composites, rare earths, critical minerals, battery materials',
+    riskFactors: ['supply concentration', 'processing bottlenecks', 'environmental regulations'],
+    cascadeTargets: ['electronics manufacturing', 'defense systems', 'clean energy', 'construction'],
+  },
+
+  // Space & Telecom
+  space: {
+    name: 'Space & Aerospace Analyst',
+    expertise: 'launch services, satellite constellations, space debris, lunar/Mars programs',
+    riskFactors: ['launch failures', 'orbital congestion', 'space weather', 'ASAT capabilities'],
+    cascadeTargets: ['telecommunications', 'GPS services', 'weather forecasting', 'defense ISR'],
+  },
+  telecom: {
+    name: 'Telecommunications Analyst',
+    expertise: '5G/6G networks, spectrum policy, undersea cables, satellite internet',
+    riskFactors: ['network outages', 'spectrum conflicts', 'cable damage', 'equipment bans'],
+    cascadeTargets: ['financial transactions', 'emergency services', 'cloud services', 'IoT'],
+  },
+
+  // Agriculture & Employment
+  agriculture: {
+    name: 'Agriculture & Food Security Analyst',
+    expertise: 'crop production, commodity markets, food supply chains, agricultural policy',
+    riskFactors: ['crop failures', 'export bans', 'fertilizer shortages', 'pest outbreaks'],
+    cascadeTargets: ['food prices', 'social stability', 'biofuel markets', 'livestock feed'],
+  },
+  employment: {
+    name: 'Labor Markets & Employment Analyst',
+    expertise: 'labor statistics, wage dynamics, workforce participation, automation impact',
+    riskFactors: ['mass layoffs', 'skills mismatch', 'wage-price spiral', 'strike actions'],
+    cascadeTargets: ['consumer spending', 'housing markets', 'social programs', 'political sentiment'],
+  },
+};
+
+// Get analyst for a domain (with fallback)
+function getAnalyst(domain: string) {
+  return DOMAIN_ANALYSTS[domain] || {
+    name: 'Multi-Domain Intelligence Analyst',
+    expertise: 'cross-domain risk assessment, systemic analysis, emerging threats',
+    riskFactors: ['systemic risk', 'cascading failures', 'black swan events'],
+    cascadeTargets: ['multiple sectors', 'global markets', 'social stability'],
+  };
+}
+
 async function fetchGDELT(): Promise<NewsItem[]> {
   try {
     const controller = new AbortController();
@@ -282,7 +466,11 @@ async function generateTrainingExample(news: NewsItem): Promise<{
   output: string;
   confidence: number;
 } | null> {
-  const prompt = `You are a geopolitical intelligence analyst. Convert this news into a training example for an AI risk analysis system.
+  const analyst = getAnalyst(news.domain);
+
+  const prompt = `You are a ${analyst.name} with deep expertise in ${analyst.expertise}.
+
+Convert this news into a training example for an AI risk analysis system.
 
 NEWS:
 Title: ${news.title}
@@ -290,13 +478,16 @@ Description: ${news.description}
 Date: ${news.pubDate}
 Domain: ${news.domain}
 
+Your domain-specific risk factors to consider: ${analyst.riskFactors.join(', ')}
+Potential cascade effects to: ${analyst.cascadeTargets.join(', ')}
+
 Generate a training example with:
-1. A detailed INPUT that describes the situation with specific details, metrics, and context
-2. An expert OUTPUT analysis covering:
-   - Risk assessment (CRITICAL/HIGH/ELEVATED/LOW)
-   - Key indicators and signals
-   - Cascade potential to other domains (economic, military, social, etc.)
-   - Historical parallels
+1. A detailed INPUT that describes the situation with specific details, metrics, actors, and context relevant to ${news.domain}
+2. An expert OUTPUT analysis as a ${analyst.name} covering:
+   - Risk assessment (CRITICAL/HIGH/ELEVATED/LOW) with domain-specific reasoning
+   - Key indicators and signals specific to ${news.domain}
+   - Cascade potential to: ${analyst.cascadeTargets.slice(0, 3).join(', ')}
+   - Historical parallels from your domain expertise
    - Recommended monitoring actions
 
 Respond in this exact JSON format:
@@ -319,13 +510,13 @@ Only output the JSON, nothing else.`;
     const parsed = JSON.parse(text);
 
     return {
-      instruction: `Analyze the ${news.domain} risk signals in the following situation`,
+      instruction: `As a ${analyst.name}, analyze the ${news.domain} risk signals in the following situation`,
       input: parsed.input,
       output: parsed.output,
       confidence: parsed.confidence || 0.8,
     };
   } catch (e) {
-    console.error('LLM generation failed:', e);
+    console.error(`LLM generation failed for ${news.domain}:`, e);
     return null;
   }
 }
@@ -413,29 +604,58 @@ export async function GET(request: Request) {
 
   console.log(`Unique news items after dedup: ${uniqueNews.length}`);
 
-  // Generate training examples in parallel batches of 5
-  const BATCH_SIZE = 5;
-  for (let i = 0; i < uniqueNews.length; i += BATCH_SIZE) {
-    const batch = uniqueNews.slice(i, i + BATCH_SIZE);
+  // Group news by domain
+  const newsByDomain: Record<string, NewsItem[]> = {};
+  for (const news of uniqueNews) {
+    if (!newsByDomain[news.domain]) {
+      newsByDomain[news.domain] = [];
+    }
+    newsByDomain[news.domain].push(news);
+  }
 
-    const batchPromises = batch.map(async (news) => {
+  const domains = Object.keys(newsByDomain);
+  console.log(`Processing ${domains.length} domains in parallel...`);
+
+  // Process each domain as an independent "analyst agent" - ALL IN PARALLEL
+  const ITEMS_PER_DOMAIN = 4; // 3-4 items per domain max
+
+  const domainPromises = domains.map(async (domain) => {
+    const domainNews = newsByDomain[domain].slice(0, ITEMS_PER_DOMAIN);
+    const domainResults: { news: NewsItem; example: Awaited<ReturnType<typeof generateTrainingExample>> }[] = [];
+
+    // Process this domain's items (can do 2-3 in parallel within domain)
+    const itemPromises = domainNews.map(async (news) => {
       try {
         const example = await generateTrainingExample(news);
-        if (!example) return null;
-
         return { news, example };
       } catch (e) {
-        results.errors.push(`LLM error for ${news.domain}: ${e}`);
-        return null;
+        console.error(`Domain ${domain} item error:`, e);
+        return { news, example: null };
       }
     });
 
-    const batchResults = await Promise.allSettled(batchPromises);
+    const itemResults = await Promise.allSettled(itemPromises);
+    for (const result of itemResults) {
+      if (result.status === 'fulfilled' && result.value.example) {
+        domainResults.push(result.value as { news: NewsItem; example: NonNullable<Awaited<ReturnType<typeof generateTrainingExample>>> });
+      }
+    }
 
-    for (const result of batchResults) {
-      if (result.status !== 'fulfilled' || !result.value) continue;
+    return { domain, results: domainResults };
+  });
 
-      const { news, example } = result.value;
+  // Wait for ALL domain agents to complete
+  const allDomainResults = await Promise.allSettled(domainPromises);
+
+  // Process results from all domains
+  for (const domainResult of allDomainResults) {
+    if (domainResult.status !== 'fulfilled') continue;
+
+    const { domain, results: domainItems } = domainResult.value;
+
+    for (const { news, example } of domainItems) {
+      if (!example) continue;
+
       results.generated++;
 
       // Store in Supabase
@@ -456,19 +676,14 @@ export async function GET(request: Request) {
             // Duplicate - already have this one
             continue;
           }
-          results.errors.push(`Insert error: ${error.message}`);
+          results.errors.push(`Insert error (${domain}): ${error.message}`);
         } else {
           results.stored++;
           results.domains[news.domain] = (results.domains[news.domain] || 0) + 1;
         }
       } catch (e) {
-        results.errors.push(`DB error: ${e}`);
+        results.errors.push(`DB error (${domain}): ${e}`);
       }
-    }
-
-    // Small delay between batches to avoid rate limits
-    if (i + BATCH_SIZE < uniqueNews.length) {
-      await new Promise(resolve => setTimeout(resolve, 500));
     }
   }
 
@@ -481,6 +696,8 @@ export async function GET(request: Request) {
     success: true,
     ...results,
     unique_after_dedup: uniqueNews.length,
+    domains_processed: domains.length,
+    items_per_domain: ITEMS_PER_DOMAIN,
     total_examples: count,
     timestamp: new Date().toISOString(),
   });

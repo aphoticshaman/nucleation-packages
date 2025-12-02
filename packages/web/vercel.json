@@ -24,7 +24,7 @@
     },
     {
       "path": "/api/generate/training-data",
-      "schedule": "*/15 * * * *"
+      "schedule": "*/10 * * * *"
     },
     {
       "path": "/api/analyze/cascades",
