@@ -1,5 +1,5 @@
 -- Briefs table for storing AI-generated executive summaries
-CREATE TABLE briefs (
+CREATE TABLE IF NOT EXISTS briefs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   content TEXT NOT NULL,
   summary TEXT NOT NULL,
@@ -10,20 +10,26 @@ CREATE TABLE briefs (
 );
 
 -- Index for fast retrieval of latest briefs
-CREATE INDEX idx_briefs_created ON briefs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_briefs_created ON briefs(created_at DESC);
 
 -- Enable RLS
 ALTER TABLE briefs ENABLE ROW LEVEL SECURITY;
 
 -- Policy: authenticated users can read briefs
-CREATE POLICY "Authenticated users can view briefs"
-  ON briefs FOR SELECT
-  USING (auth.role() = 'authenticated' OR auth.role() = 'service_role');
+DO $$ BEGIN
+  CREATE POLICY "Authenticated users can view briefs"
+    ON briefs FOR SELECT
+    USING (auth.role() = 'authenticated' OR auth.role() = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Policy: only service role can insert (Edge Function)
-CREATE POLICY "Service role can insert briefs"
-  ON briefs FOR INSERT
-  WITH CHECK (auth.role() = 'service_role');
+DO $$ BEGIN
+  CREATE POLICY "Service role can insert briefs"
+    ON briefs FOR INSERT
+    WITH CHECK (auth.role() = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Optional: auto-cleanup old briefs (keep last 30 days)
 CREATE OR REPLACE FUNCTION cleanup_old_briefs()

@@ -1,12 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Disable built-in ESLint during builds - we use our own flat config at root
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // Enable Turbopack (Next.js 16 default)
+  turbopack: {},
 
-  // Enable WASM support
-  webpack: (config, { isServer }) => {
+  // Enable WASM support (webpack fallback for complex WASM needs)
+  webpack: (config) => {
     // WASM support
     config.experiments = {
       ...config.experiments,

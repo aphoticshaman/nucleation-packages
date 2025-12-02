@@ -161,7 +161,7 @@ export default function ConsumerSettingsPage() {
       {/* Save button */}
       <div className="flex justify-end">
         <button
-          onClick={handleSave}
+          onClick={() => void handleSave()}
           disabled={saving}
           className={`px-6 py-2 rounded-lg font-medium ${
             saving

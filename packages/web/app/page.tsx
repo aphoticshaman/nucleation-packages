@@ -6,85 +6,43 @@ import { useWasm } from '@/hooks/useWasm';
 import { useSupabaseNations } from '@/hooks/useSupabaseNations';
 import ControlPanel from '@/components/ControlPanel';
 import AlertBanner from '@/components/AlertBanner';
-import type { WasmGeospatialSystem } from '@/lib/wasm';
-
 // Dynamic import for Google Maps (no SSR)
 const AttractorMap = dynamic(() => import('@/components/AttractorMap'), {
   ssr: false,
   loading: () => <div className="wasm-loader" />,
 });
 
+// Note: WasmGeospatialSystem is not yet implemented in the WASM module.
+// The simulation features are disabled until it's added.
+
 export default function Home() {
   const { wasm, loading: wasmLoading, error: wasmError } = useWasm();
   const { nations, edges, loading: dataLoading } = useSupabaseNations();
   const [layer, setLayer] = useState<'basin' | 'risk' | 'influence' | 'regime'>('basin');
-  const [alertLevel, setAlertLevel] = useState<string>('normal');
+  const alertLevel = 'normal'; // TODO: Make dynamic when alert system is implemented
   const [isSimulating, setIsSimulating] = useState(false);
-  const geoSystemRef = useRef<WasmGeospatialSystem | null>(null);
+  const geoSystemInitialized = useRef(false);
 
-  // Initialize geospatial system when WASM and nations are ready
+  // Log when WASM is ready (geospatial system not yet implemented)
   useEffect(() => {
-    if (!wasm || nations.length === 0 || geoSystemRef.current) return;
+    if (!wasm || nations.length === 0 || geoSystemInitialized.current) return;
 
-    try {
-      // Create geospatial system with 3 dimensions for attractor space
-      const geoSystem = new wasm.WasmGeospatialSystem(3);
+    // Mark as initialized to prevent re-running
+    geoSystemInitialized.current = true;
 
-      // Add nations to the system
-      nations.forEach((nation) => {
-        const pos = new Float64Array(nation.position ?? [0, 0, 0]);
-        geoSystem.add_nation(
-          nation.code,
-          nation.name,
-          nation.lat,
-          nation.lon,
-          pos,
-          nation.regime ?? 0
-        );
-      });
-
-      // Add edges (esteem relationships)
-      edges.forEach((edge) => {
-        geoSystem.set_esteem(edge.source_code, edge.target_code, edge.esteem);
-      });
-
-      geoSystemRef.current = geoSystem;
-    } catch (err) {
-      console.error('Failed to initialize geospatial system:', err);
-    }
+    // TODO: Initialize WasmGeospatialSystem when implemented in WASM module
+    // For now, the map displays static nation data from Supabase
+    console.log('WASM loaded, nations ready. Geospatial simulation pending implementation.');
   }, [wasm, nations, edges]);
 
-  // Run simulation step
+  // Run simulation step (placeholder - WasmGeospatialSystem not yet implemented)
   const runStep = async () => {
-    const geoSystem = geoSystemRef.current;
-    if (!geoSystem) return;
-
+    // TODO: Implement when WasmGeospatialSystem is added to WASM module
     setIsSimulating(true);
     try {
-      // Run one step of the simulation
-      geoSystem.step();
-
-      // Get GeoJSON for risk assessment
-      const riskJson = geoSystem.to_geojson('risk');
-      const riskData = JSON.parse(riskJson);
-
-      // Calculate max transition risk from features
-      const maxRisk = riskData.features?.reduce((max: number, f: { properties?: { risk?: number } }) => {
-        return Math.max(max, f.properties?.risk ?? 0);
-      }, 0) ?? 0;
-
-      // Update alert level based on risk
-      if (maxRisk > 0.75) {
-        setAlertLevel('critical');
-      } else if (maxRisk > 0.5) {
-        setAlertLevel('warning');
-      } else if (maxRisk > 0.25) {
-        setAlertLevel('elevated');
-      } else {
-        setAlertLevel('normal');
-      }
-    } catch (err) {
-      console.error('Simulation step failed:', err);
+      // Simulate a delay for UI feedback
+      await new Promise(resolve => setTimeout(resolve, 500));
+      console.log('Simulation step: WasmGeospatialSystem not yet implemented');
     } finally {
       setIsSimulating(false);
     }
@@ -130,7 +88,7 @@ export default function Home() {
       <ControlPanel
         layer={layer}
         onLayerChange={setLayer}
-        onStep={runStep}
+        onStep={() => void runStep()}
         isSimulating={isSimulating}
         alertLevel={alertLevel}
       />
