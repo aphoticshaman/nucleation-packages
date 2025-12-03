@@ -1,15 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
-
-// Service role client
-function getServiceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 interface TrainingExample {
   id: string;
@@ -24,7 +14,7 @@ interface TrainingExample {
 
 // GET: Export training data in various formats for RunPod/fine-tuning
 export async function GET(request: Request) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createClient();
   const { searchParams } = new URL(request.url);
 
   // Check auth - allow admin or cron
@@ -57,7 +47,7 @@ export async function GET(request: Request) {
   const limit = parseInt(searchParams.get('limit') || '10000');
   const includeMetadata = searchParams.get('metadata') === 'true';
 
-  const serviceClient = getServiceClient();
+  const serviceClient = createAdminClient();
 
   // Fetch training examples
   let query = serviceClient
@@ -213,7 +203,7 @@ export async function GET(request: Request) {
 
 // POST: Generate training data summary/stats
 export async function POST(request: Request) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
@@ -230,7 +220,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
   }
 
-  const serviceClient = getServiceClient();
+  const serviceClient = createAdminClient();
 
   // Get comprehensive stats
   const { data: totalCount } = await serviceClient
