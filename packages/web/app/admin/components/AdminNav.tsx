@@ -12,7 +12,17 @@ const navItems = [
   { href: '/admin', label: 'Overview', icon: '📊' },
   { href: '/admin/customers', label: 'Customers', icon: '👥' },
   { href: '/admin/billing', label: 'Billing', icon: '💳' },
+  { href: '/admin/analytics', label: 'Analytics', icon: '📈' },
+  { href: '/admin/pipelines', label: 'Data Pipelines', icon: '🔄' },
+  { href: '/admin/models', label: 'ML Models', icon: '🤖' },
+  { href: '/admin/compliance', label: 'Compliance', icon: '🛡️' },
   { href: '/admin/config', label: 'System Config', icon: '⚙️' },
+];
+
+const quickLinks = [
+  { href: '/app', label: 'User View', icon: '👤' },
+  { href: '/app/briefings', label: 'Briefings', icon: '📡' },
+  { href: '/app/packages', label: 'Packages', icon: '📦' },
 ];
 
 export default function AdminNav({ user }: AdminNavProps) {
