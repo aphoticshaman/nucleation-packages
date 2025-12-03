@@ -22,6 +22,18 @@ def main():
         "freedom_coercion_training.json",
         "tech_materials_systems_training.json",
         "meta_compression_training.json",
+        # New batch
+        "quant_stats_training.json",
+        "reasoning_patterns_training.json",
+        "news_osint_training.json",
+        "historical_cases_training.json",
+        "biotech_pharma_training.json",
+        "food_water_training.json",
+        "climate_demographics_training.json",
+        "legal_regulatory_training.json",
+        "insurance_realestate_training.json",
+        "telecom_space_training.json",
+        "ux_ui_extended_training.json",
     ]
 
     all_examples = []
