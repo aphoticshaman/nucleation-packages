@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/auth';
 import { Suspense } from 'react';
 
-// Stats card component
 function StatCard({
   label,
   value,
@@ -20,7 +19,7 @@ function StatCard({
   };
 
   return (
-    <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+    <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl p-6 border border-white/[0.06]">
       <p className="text-sm text-slate-400">{label}</p>
       <p className="text-3xl font-bold text-white mt-2">{value}</p>
       {change && <p className={`text-sm mt-2 ${changeColors[changeType]}`}>{change}</p>}
@@ -28,7 +27,6 @@ function StatCard({
   );
 }
 
-// Customer status indicator
 function StatusBadge({ status }: { status: 'healthy' | 'warning' | 'critical' }) {
   const colors = {
     healthy: 'bg-green-500',
@@ -39,7 +37,6 @@ function StatusBadge({ status }: { status: 'healthy' | 'warning' | 'critical' })
   return <span className={`w-2 h-2 rounded-full ${colors[status]}`} />;
 }
 
-// Enterprise customer row
 function EnterpriseRow({
   org,
 }: {
@@ -57,7 +54,7 @@ function EnterpriseRow({
   const status = !org.is_active ? 'critical' : usagePercent > 80 ? 'warning' : 'healthy';
 
   return (
-    <tr className="border-b border-slate-800 hover:bg-slate-800/50">
+    <tr className="border-b border-white/[0.06] hover:bg-white/[0.02]">
       <td className="py-4 px-4">
         <div className="flex items-center gap-3">
           <StatusBadge status={status} />
@@ -65,13 +62,13 @@ function EnterpriseRow({
         </div>
       </td>
       <td className="py-4 px-4">
-        <span className="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300 uppercase">
+        <span className="px-2 py-1 bg-white/[0.06] rounded text-xs text-slate-300 uppercase">
           {org.plan}
         </span>
       </td>
       <td className="py-4 px-4">
         <div className="flex items-center gap-2">
-          <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden max-w-[100px]">
+          <div className="flex-1 h-2 bg-white/[0.06] rounded-full overflow-hidden max-w-[100px]">
             <div
               className={`h-full ${usagePercent > 80 ? 'bg-yellow-500' : 'bg-blue-500'}`}
               style={{ width: `${Math.min(usagePercent, 100)}%` }}
@@ -90,7 +87,6 @@ function EnterpriseRow({
   );
 }
 
-// Consumer activity row
 function ConsumerRow({
   user,
 }: {
@@ -107,7 +103,7 @@ function ConsumerRow({
     user.last_seen_at && new Date(user.last_seen_at) > new Date(Date.now() - 15 * 60 * 1000);
 
   return (
-    <tr className="border-b border-slate-800 hover:bg-slate-800/50">
+    <tr className="border-b border-white/[0.06] hover:bg-white/[0.02]">
       <td className="py-3 px-4">
         <div className="flex items-center gap-3">
           <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-slate-600'}`} />
@@ -126,21 +122,17 @@ function ConsumerRow({
   );
 }
 
-// Main dashboard content
 async function DashboardContent() {
   const supabase = await createClient();
 
-  // Fetch dashboard stats
   const { data: stats } = await supabase.from('admin_dashboard_stats').select('*').single();
 
-  // Fetch enterprise overview
   const { data: enterprises } = await supabase
     .from('admin_enterprise_overview')
     .select('*')
     .order('api_calls_24h', { ascending: false })
     .limit(10);
 
-  // Fetch recent consumers
   const { data: consumers } = await supabase
     .from('admin_consumer_overview')
     .select('*')
@@ -173,15 +165,15 @@ async function DashboardContent() {
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Enterprise Customers */}
-        <div className="bg-slate-900 rounded-xl border border-slate-800">
-          <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+        <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl border border-white/[0.06]">
+          <div className="p-6 border-b border-white/[0.06] flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold text-white">Enterprise Customers</h2>
               <p className="text-sm text-slate-400">API usage and status</p>
             </div>
             <a
               href="/admin/customers?type=enterprise"
-              className="text-sm text-blue-400 hover:text-blue-300"
+              className="text-sm text-blue-400 hover:text-blue-300 min-h-[44px] flex items-center"
             >
               View all
             </a>
@@ -211,15 +203,15 @@ async function DashboardContent() {
         </div>
 
         {/* Consumer Users */}
-        <div className="bg-slate-900 rounded-xl border border-slate-800">
-          <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+        <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl border border-white/[0.06]">
+          <div className="p-6 border-b border-white/[0.06] flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold text-white">Consumer Users</h2>
               <p className="text-sm text-slate-400">Recent activity</p>
             </div>
             <a
               href="/admin/customers?type=consumer"
-              className="text-sm text-blue-400 hover:text-blue-300"
+              className="text-sm text-blue-400 hover:text-blue-300 min-h-[44px] flex items-center"
             >
               View all
             </a>
@@ -249,7 +241,7 @@ async function DashboardContent() {
       </div>
 
       {/* System Health */}
-      <div className="mt-8 bg-slate-900 rounded-xl border border-slate-800 p-6">
+      <div className="mt-8 bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl border border-white/[0.06] p-6">
         <h2 className="text-lg font-bold text-white mb-4">System Health</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="flex items-center gap-4">
@@ -293,7 +285,7 @@ export default function AdminDashboard() {
             {[...Array(4)].map((_, i) => (
               <div
                 key={i}
-                className="bg-slate-900 rounded-xl p-6 border border-slate-800 animate-pulse h-32"
+                className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl p-6 border border-white/[0.06] animate-pulse h-32"
               />
             ))}
           </div>
