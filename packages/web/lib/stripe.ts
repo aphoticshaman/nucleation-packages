@@ -90,6 +90,19 @@ export const stripe = {
 // ============================================
 
 // Price IDs (set these in your Stripe dashboard and env vars)
+// NOTE: Using getter to ensure runtime evaluation, not build-time
+export function getPriceId(plan: 'starter' | 'pro' | 'enterprise'): string | undefined {
+  switch (plan) {
+    case 'starter':
+      return process.env.STRIPE_PRICE_STARTER;
+    case 'pro':
+      return process.env.STRIPE_PRICE_PRO;
+    case 'enterprise':
+      return process.env.STRIPE_PRICE_ENTERPRISE;
+  }
+}
+
+// Legacy export for compatibility (evaluated at build time - may be undefined)
 export const PRICE_IDS = {
   starter: process.env.STRIPE_PRICE_STARTER!,
   pro: process.env.STRIPE_PRICE_PRO!,
