@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { OnboardingWizard } from './OnboardingWizard';
-import type { UserTier } from '@/lib/config/powerUser';
+import { OnboardingWizard, type OnboardingConfig } from './OnboardingWizard';
+import { authTierToPowerTier, type UserTier, type AuthTier } from '@/lib/config/powerUser';
 
 interface OnboardingGateProps {
   children: React.ReactNode;
   userId: string;
-  userTier: UserTier;
+  userTier: UserTier | AuthTier;
   hasCompletedOnboarding: boolean;
 }
 
@@ -21,6 +21,11 @@ interface OnboardingGateProps {
  *
  * The wizard adapts based on their stated use case and experience.
  */
+// Check if tier is an auth tier
+const isAuthTier = (tier: string): tier is AuthTier => {
+  return ['free', 'starter', 'pro', 'enterprise_tier'].includes(tier);
+};
+
 export default function OnboardingGate({
   children,
   userId,
@@ -30,6 +35,9 @@ export default function OnboardingGate({
   const [showWizard, setShowWizard] = useState(!hasCompletedOnboarding);
   const [isCompleting, setIsCompleting] = useState(false);
 
+  // Convert auth tier to power tier if needed
+  const powerTier: UserTier = isAuthTier(userTier) ? authTierToPowerTier(userTier) : userTier;
+
   // Check localStorage for skip (dev/testing only - should be removed in prod)
   useEffect(() => {
     const skipOnboarding = localStorage.getItem('latticeforge_skip_onboarding');
@@ -38,7 +46,7 @@ export default function OnboardingGate({
     }
   }, []);
 
-  const handleComplete = async (config: Record<string, unknown>) => {
+  const handleComplete = async (config: OnboardingConfig) => {
     setIsCompleting(true);
 
     try {
@@ -86,7 +94,7 @@ export default function OnboardingGate({
   if (showWizard) {
     return (
       <OnboardingWizard
-        userTier={userTier}
+        userTier={powerTier}
         onComplete={handleComplete}
         onSkip={canSkip ? handleSkip : undefined}
       />

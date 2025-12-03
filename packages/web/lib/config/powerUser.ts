@@ -621,3 +621,34 @@ export function getTierUpgrade(current: UserTier): UserTier | null {
   const idx = order.indexOf(current);
   return idx < order.length - 1 ? order[idx + 1] : null;
 }
+
+// ============================================
+// Auth Tier Mapping
+// ============================================
+
+// Maps the auth system tiers to power user tiers
+// Auth: 'free' | 'starter' | 'pro' | 'enterprise_tier'
+// Power: 'explorer' | 'analyst' | 'strategist' | 'architect'
+export type AuthTier = 'free' | 'starter' | 'pro' | 'enterprise_tier';
+
+const AUTH_TO_POWER_TIER: Record<AuthTier, UserTier> = {
+  free: 'explorer',
+  starter: 'analyst',
+  pro: 'strategist',
+  enterprise_tier: 'architect',
+};
+
+const POWER_TO_AUTH_TIER: Record<UserTier, AuthTier> = {
+  explorer: 'free',
+  analyst: 'starter',
+  strategist: 'pro',
+  architect: 'enterprise_tier',
+};
+
+export function authTierToPowerTier(authTier: AuthTier): UserTier {
+  return AUTH_TO_POWER_TIER[authTier] || 'explorer';
+}
+
+export function powerTierToAuthTier(powerTier: UserTier): AuthTier {
+  return POWER_TO_AUTH_TIER[powerTier] || 'free';
+}

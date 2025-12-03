@@ -15,6 +15,7 @@ export interface UserProfile {
   organization_id: string | null;
   is_active: boolean;
   last_seen_at: string | null;
+  onboarding_completed_at: string | null;
 }
 
 // Cookie domain for cross-subdomain auth (auth.latticeforge.ai ↔ latticeforge.ai)
@@ -104,7 +105,7 @@ export async function getUser(): Promise<UserProfile | null> {
     // If profile doesn't exist (new OAuth user), try to create one
     if (error?.code === 'PGRST116') {
       // PGRST116 = "JSON object requested, multiple (or no) rows returned"
-      const newProfile: Omit<UserProfile, 'last_seen_at'> & { last_seen_at: string } = {
+      const newProfile: Omit<UserProfile, 'last_seen_at' | 'onboarding_completed_at'> & { last_seen_at: string; onboarding_completed_at: null } = {
         id: user.id,
         email: user.email || '',
         full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
@@ -114,6 +115,7 @@ export async function getUser(): Promise<UserProfile | null> {
         organization_id: null,
         is_active: true,
         last_seen_at: new Date().toISOString(),
+        onboarding_completed_at: null,
       };
 
       const { data: createdProfile, error: insertError } = await supabase
@@ -148,6 +150,7 @@ export async function getUser(): Promise<UserProfile | null> {
     organization_id: null,
     is_active: true,
     last_seen_at: null,
+    onboarding_completed_at: null,
   };
 }
 
