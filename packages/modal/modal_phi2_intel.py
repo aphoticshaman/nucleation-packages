@@ -31,6 +31,7 @@ image = (
         "safetensors>=0.4.0",
         "sentencepiece>=0.1.99",
         "protobuf>=4.25.0",
+        "fastapi",  # Required for web endpoints
     )
     .run_commands(
         "pip install flash-attn --no-build-isolation || true"  # Optional, faster attention
@@ -44,9 +45,9 @@ image = (
     volumes={"/model": model_volume},
     secrets=[modal.Secret.from_name("huggingface")],  # For private HF model
     timeout=300,
-    container_idle_timeout=120,  # Keep warm for 2 min after last request
-    allow_concurrent_inputs=10,  # Handle multiple requests
+    scaledown_window=120,  # Keep warm for 2 min after last request
 )
+@modal.concurrent(max_inputs=10)  # Handle multiple requests
 class Phi2IntelModel:
     """
     Fine-tuned Phi-2 for geopolitical intelligence analysis.
@@ -318,7 +319,7 @@ Output JSON format:
     image=image,
     timeout=60,
 )
-@modal.web_endpoint(method="POST", docs=True)
+@modal.fastapi_endpoint(method="POST", docs=True)
 def inference(request: dict) -> dict:
     """
     HTTP endpoint for inference.
