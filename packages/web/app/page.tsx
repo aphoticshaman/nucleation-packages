@@ -4,9 +4,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { useWasm } from '@/hooks/useWasm';
 import { useSupabaseNations } from '@/hooks/useSupabaseNations';
-import { useAlertLevel, type NationState } from '@/hooks/useAlertLevel';
+import { useAlertLevel } from '@/hooks/useAlertLevel';
 import ControlPanel from '@/components/ControlPanel';
 import AlertBanner from '@/components/AlertBanner';
+import type { Nation } from '@/types';
 import type { WasmGeospatialSystem } from '@/public/wasm/latticeforge_core';
 
 // Dynamic import for Google Maps (no SSR)
@@ -24,7 +25,7 @@ export default function Home() {
 
   // Geospatial system state
   const geoSystemRef = useRef<WasmGeospatialSystem | null>(null);
-  const [simulatedNations, setSimulatedNations] = useState<NationState[]>([]);
+  const [simulatedNations, setSimulatedNations] = useState<Nation[]>([]);
 
   // Use simulated nations if available, otherwise use database nations
   const nations = simulatedNations.length > 0 ? simulatedNations : dbNations;
@@ -78,7 +79,7 @@ export default function Home() {
         // Get updated nation states from the simulation
         const updatedNations = geoSystemRef.current.get_all_nations();
         if (updatedNations && Array.isArray(updatedNations)) {
-          setSimulatedNations(updatedNations as NationState[]);
+          setSimulatedNations(updatedNations as Nation[]);
         }
       } else {
         // Fallback: simulate a delay for UI feedback
