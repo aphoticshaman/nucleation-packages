@@ -208,15 +208,15 @@ export function CommandPalette({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] md:pt-[15vh]">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Palette */}
-      <div className="relative w-full max-w-2xl mx-4 bg-slate-900/95 backdrop-blur-2xl border border-slate-700/50 rounded-xl shadow-2xl overflow-hidden">
+      {/* Palette - responsive sizing for mobile */}
+      <div className="relative w-full max-w-2xl mx-3 md:mx-4 bg-slate-900/95 backdrop-blur-2xl border border-slate-700/50 rounded-xl shadow-2xl overflow-hidden">
         {/* Input */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-800">
           {/* Mode indicator */}
@@ -241,8 +241,8 @@ export function CommandPalette({
           </div>
         </div>
 
-        {/* Results */}
-        <div className="max-h-80 overflow-y-auto py-2">
+        {/* Results - responsive max height for mobile keyboards */}
+        <div className="max-h-[50vh] md:max-h-80 overflow-y-auto py-2">
           {displayCommands.length === 0 ? (
             <div className="px-4 py-8 text-center text-slate-500">
               No results found for "{query}"
@@ -257,11 +257,11 @@ export function CommandPalette({
                 }}
                 onMouseEnter={() => setSelectedIndex(index)}
                 className={`
-                  w-full flex items-center gap-3 px-4 py-2.5 text-left
+                  w-full flex items-center gap-3 px-4 min-h-[48px] text-left
                   transition-colors duration-75
                   ${index === selectedIndex
                     ? 'bg-slate-800/80'
-                    : 'hover:bg-slate-800/40'
+                    : 'hover:bg-slate-800/40 active:bg-slate-800/60'
                   }
                 `}
               >
