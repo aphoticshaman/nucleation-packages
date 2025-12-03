@@ -1,19 +1,10 @@
--- ============================================
--- CONSOLIDATED SECURITY FIXES (DEFENSIVE)
--- Run this to fix all RLS and SECURITY DEFINER issues
--- All statements wrapped to handle missing tables gracefully
--- ============================================
-
--- 1. Enable RLS and create policies for training_examples
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'training_examples') THEN
     ALTER TABLE public.training_examples ENABLE ROW LEVEL SECURITY;
-
     DROP POLICY IF EXISTS "training_examples_read_authenticated" ON public.training_examples;
     DROP POLICY IF EXISTS "training_examples_insert_service" ON public.training_examples;
     DROP POLICY IF EXISTS "training_examples_update_service" ON public.training_examples;
     DROP POLICY IF EXISTS "training_examples_delete_service" ON public.training_examples;
-
     CREATE POLICY "training_examples_read_authenticated" ON public.training_examples
       FOR SELECT TO authenticated USING (true);
     CREATE POLICY "training_examples_insert_service" ON public.training_examples
@@ -22,19 +13,15 @@ DO $$ BEGIN
       FOR UPDATE TO service_role USING (true) WITH CHECK (true);
     CREATE POLICY "training_examples_delete_service" ON public.training_examples
       FOR DELETE TO service_role USING (true);
-
     COMMENT ON TABLE public.training_examples IS 'Training data for model fine-tuning. RLS enabled.';
   END IF;
 END $$;
 
--- 2. Enable RLS and create policies for predictions
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'predictions') THEN
     ALTER TABLE public.predictions ENABLE ROW LEVEL SECURITY;
-
     DROP POLICY IF EXISTS "predictions_read_authenticated" ON public.predictions;
     DROP POLICY IF EXISTS "predictions_manage_service" ON public.predictions;
-
     CREATE POLICY "predictions_read_authenticated" ON public.predictions
       FOR SELECT TO authenticated USING (true);
     CREATE POLICY "predictions_manage_service" ON public.predictions
@@ -42,14 +29,11 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- 3. Enable RLS and create policies for known_cascade_patterns
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'known_cascade_patterns') THEN
     ALTER TABLE public.known_cascade_patterns ENABLE ROW LEVEL SECURITY;
-
     DROP POLICY IF EXISTS "cascade_patterns_read" ON public.known_cascade_patterns;
     DROP POLICY IF EXISTS "cascade_patterns_manage_service" ON public.known_cascade_patterns;
-
     CREATE POLICY "cascade_patterns_read" ON public.known_cascade_patterns
       FOR SELECT TO authenticated USING (true);
     CREATE POLICY "cascade_patterns_manage_service" ON public.known_cascade_patterns
@@ -57,9 +41,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- 4. Recreate views with SECURITY INVOKER
-
--- admin_consumer_overview
 DO $$ BEGIN
   DROP VIEW IF EXISTS public.admin_consumer_overview;
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'profiles') THEN
@@ -72,7 +53,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- admin_enterprise_overview
 DO $$ BEGIN
   DROP VIEW IF EXISTS public.admin_enterprise_overview;
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'profiles')
@@ -87,7 +67,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- admin_dashboard_stats
 DO $$ BEGIN
   DROP VIEW IF EXISTS public.admin_dashboard_stats;
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'profiles') THEN
@@ -104,7 +83,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- exportable_training_data
 DO $$ BEGIN
   DROP VIEW IF EXISTS public.exportable_training_data;
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'training_examples') THEN
@@ -115,7 +93,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- nations_at_risk
 DO $$ BEGIN
   DROP VIEW IF EXISTS public.nations_at_risk;
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'nations') THEN
@@ -126,7 +103,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- admin_trial_invites
 DO $$ BEGIN
   DROP VIEW IF EXISTS public.admin_trial_invites;
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'trial_invites') THEN
@@ -136,7 +112,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- training_data_stats
 DO $$ BEGIN
   DROP VIEW IF EXISTS public.training_data_stats;
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'training_examples') THEN
@@ -148,7 +123,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- country_risk_score
 DO $$ BEGIN
   DROP VIEW IF EXISTS public.country_risk_score;
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'nations') THEN
@@ -168,7 +142,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- nations_geojson
 DO $$ BEGIN
   DROP VIEW IF EXISTS public.nations_geojson;
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'nations') THEN
@@ -179,7 +152,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- edges_geojson
 DO $$ BEGIN
   DROP VIEW IF EXISTS public.edges_geojson;
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'influence_edges') THEN
@@ -193,7 +165,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- 5. Fix spatial_ref_sys permissions if PostGIS is installed
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'spatial_ref_sys') THEN
     REVOKE ALL ON public.spatial_ref_sys FROM anon;
