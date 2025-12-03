@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     const { planId } = await req.json();
 
     // Validate plan
-    if (!['starter', 'pro', 'enterprise'].includes(planId)) {
+    if (!['pro', 'team', 'enterprise'].includes(planId)) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
     }
 
@@ -120,7 +120,7 @@ export async function POST(req: Request) {
     }
 
     // Get price ID at runtime (not build time)
-    const priceId = getPriceId(planId as 'starter' | 'pro' | 'enterprise');
+    const priceId = getPriceId(planId as 'pro' | 'team' | 'enterprise');
 
     if (!priceId) {
       console.error(`Price not configured for plan: ${planId}`);

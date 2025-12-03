@@ -23,9 +23,9 @@ export function isStripeConfigured(): { ok: boolean; missing: string[] } {
   const missing: string[] = [];
   if (!process.env.STRIPE_SECRET_KEY) missing.push('STRIPE_SECRET_KEY');
   if (!process.env.STRIPE_WEBHOOK_SECRET) missing.push('STRIPE_WEBHOOK_SECRET');
-  if (!process.env.STRIPE_PRICE_STARTER) missing.push('STRIPE_PRICE_STARTER');
   if (!process.env.STRIPE_PRICE_PRO) missing.push('STRIPE_PRICE_PRO');
-  if (!process.env.STRIPE_PRICE_ENTERPRISE) missing.push('STRIPE_PRICE_ENTERPRISE');
+  if (!process.env.STRIPE_PRICE_TEAM) missing.push('STRIPE_PRICE_TEAM');
+  // Enterprise is optional (custom pricing)
   return { ok: missing.length === 0, missing };
 }
 
@@ -73,30 +73,37 @@ export const stripe = {
 // ============================================
 // Create these products in Stripe Dashboard:
 //
-// 1. Product: "LatticeForge Starter"
-//    - Price ID: price_starter_monthly
-//    - Amount: $49/month
-//    - Metadata: { tier: "starter", api_calls: "1000", seats: "3" }
-//
-// 2. Product: "LatticeForge Pro"
+// 1. Product: "LatticeForge Pro" (Individual)
 //    - Price ID: price_pro_monthly
-//    - Amount: $199/month
-//    - Metadata: { tier: "pro", api_calls: "10000", seats: "10" }
+//    - Amount: $79/month
+//    - Metadata: { tier: "pro", seats: "1" }
+//
+// 2. Product: "LatticeForge Team" (Per-seat)
+//    - Price ID: price_team_monthly
+//    - Amount: $59/seat/month
+//    - Metadata: { tier: "team", per_seat: "true" }
 //
 // 3. Product: "LatticeForge Enterprise"
 //    - Price ID: price_enterprise_monthly
-//    - Amount: $499/month (or custom)
-//    - Metadata: { tier: "enterprise", api_calls: "100000", seats: "unlimited" }
+//    - Amount: Custom (contact sales)
+//    - Metadata: { tier: "enterprise" }
+//
+// COMPETITIVE ANALYSIS:
+// - Dataminr: $50k+/year (enterprise only)
+// - Recorded Future: $100k+/year
+// - Factal: ~$500/mo for small teams
+// - Riskline: $50-100/user/mo
+// - US: $79/mo individual, $59/seat team = UNDERCUT by 30-50%
 // ============================================
 
 // Price IDs (set these in your Stripe dashboard and env vars)
 // NOTE: Using getter to ensure runtime evaluation, not build-time
-export function getPriceId(plan: 'starter' | 'pro' | 'enterprise'): string | undefined {
+export function getPriceId(plan: 'pro' | 'team' | 'enterprise'): string | undefined {
   switch (plan) {
-    case 'starter':
-      return process.env.STRIPE_PRICE_STARTER;
     case 'pro':
       return process.env.STRIPE_PRICE_PRO;
+    case 'team':
+      return process.env.STRIPE_PRICE_TEAM;
     case 'enterprise':
       return process.env.STRIPE_PRICE_ENTERPRISE;
   }
@@ -104,112 +111,140 @@ export function getPriceId(plan: 'starter' | 'pro' | 'enterprise'): string | und
 
 // Legacy export for compatibility (evaluated at build time - may be undefined)
 export const PRICE_IDS = {
-  starter: process.env.STRIPE_PRICE_STARTER!,
   pro: process.env.STRIPE_PRICE_PRO!,
+  team: process.env.STRIPE_PRICE_TEAM!,
   enterprise: process.env.STRIPE_PRICE_ENTERPRISE!,
 };
 
-// Plan definitions
+// Plan definitions - Bottoms-up SaaS pricing
+// Individual pays credit card, spreads to team, enterprise comes to us
 export const PLANS = {
-  trial: {
-    name: 'Trial',
-    price: 0,
-    interval: 'month' as const,
-    trialDays: 7,
-    requiresCard: true, // CC required for trial
-    convertsTo: 'starter', // Auto-converts to Starter after trial
-    features: [
-      '7-day free trial of Starter plan',
-      'Full Starter features during trial',
-      '1,000 API calls/month',
-      '3 team seats',
-      'REST API access',
-      'Cancel anytime before trial ends',
-    ],
-    // Same limits as Starter during trial
-    limits: {
-      simulations_per_day: -1,
-      saved_simulations: -1,
-      api_calls: 1000,
-      team_seats: 3,
-    },
-  },
   free: {
     name: 'Free',
     price: 0,
     interval: 'month' as const,
     features: [
-      '10 simulations per day',
-      '5 saved simulations',
-      'Basic visualizations',
+      '1 region focus only',
+      '7-day historical data',
+      'Daily briefing (delayed)',
+      'Basic dashboard',
       'Community support',
     ],
     limits: {
-      simulations_per_day: 10,
-      saved_simulations: 5,
+      regions: 1,
+      history_days: 7,
+      alerts: 0,
       api_calls: 0,
+      saved_views: 3,
+      exports: 0,
       team_seats: 1,
     },
   },
-  starter: {
-    name: 'Starter',
-    price: 19,
+  trial: {
+    name: 'Pro Trial',
+    price: 0,
     interval: 'month' as const,
-    popular: true,
+    trialDays: 14,
+    requiresCard: true,
+    convertsTo: 'pro',
     features: [
-      '1,000 API calls/month',
-      '3 team seats',
-      'REST API access',
-      'Basic webhooks',
-      'Email support',
+      '14-day free trial of Pro',
+      'All Pro features unlocked',
+      'No credit card charge until trial ends',
+      'Cancel anytime',
     ],
     limits: {
-      simulations_per_day: -1, // unlimited
-      saved_simulations: -1,
-      api_calls: 1000,
-      team_seats: 3,
+      regions: -1,
+      history_days: 90,
+      alerts: -1,
+      api_calls: 5000,
+      saved_views: -1,
+      exports: -1,
+      team_seats: 1,
     },
   },
   pro: {
     name: 'Pro',
-    price: 49,
+    price: 79,
     interval: 'month' as const,
+    popular: true,
+    description: 'For individual analysts and researchers',
     features: [
-      '10,000 API calls/month',
-      '10 team seats',
-      'REST + WebSocket APIs',
-      'Real-time streaming',
-      'Advanced webhooks',
-      'Priority support',
+      'All regions & categories',
+      '90-day historical data',
+      'Real-time alerts (unlimited)',
+      'Custom dashboards',
+      '5,000 API calls/month',
+      'PDF & Excel exports',
+      'Email support (24h response)',
     ],
     limits: {
-      simulations_per_day: -1,
-      saved_simulations: -1,
-      api_calls: 10000,
-      team_seats: 10,
+      regions: -1,
+      history_days: 90,
+      alerts: -1,
+      api_calls: 5000,
+      saved_views: -1,
+      exports: -1,
+      team_seats: 1,
+    },
+  },
+  team: {
+    name: 'Team',
+    price: 59, // per seat
+    pricePerSeat: true,
+    interval: 'month' as const,
+    minSeats: 3,
+    description: 'For teams who need to collaborate',
+    features: [
+      'Everything in Pro',
+      '1-year historical data',
+      'Shared dashboards & views',
+      'Team comments & annotations',
+      '10,000 API calls/month per seat',
+      'Slack/Teams integration',
+      'Priority support (4h response)',
+    ],
+    limits: {
+      regions: -1,
+      history_days: 365,
+      alerts: -1,
+      api_calls: 10000, // per seat
+      saved_views: -1,
+      exports: -1,
+      team_seats: -1, // pay per seat
     },
   },
   enterprise: {
     name: 'Enterprise',
     price: null, // Custom pricing
     interval: 'month' as const,
+    description: 'For organizations with advanced needs',
     features: [
-      'Unlimited API calls',
-      'Unlimited team seats',
-      'Full API suite',
-      'Custom integrations',
-      'SLA guarantee',
-      'Dedicated support',
-      'On-premise option',
+      'Everything in Team',
+      'Unlimited historical data',
+      'SSO (SAML, OIDC)',
+      'Audit logs & compliance',
+      'Custom data integrations',
+      'Dedicated success manager',
+      'SLA guarantee (99.9%)',
+      'On-premise deployment option',
     ],
     limits: {
-      simulations_per_day: -1,
-      saved_simulations: -1,
+      regions: -1,
+      history_days: -1,
+      alerts: -1,
       api_calls: -1,
+      saved_views: -1,
+      exports: -1,
       team_seats: -1,
     },
   },
 };
+
+// Annual pricing (2 months free)
+export const ANNUAL_DISCOUNT = 2 / 12; // ~17% off
+export const getAnnualPrice = (monthlyPrice: number) =>
+  Math.round(monthlyPrice * 12 * (1 - ANNUAL_DISCOUNT));
 
 export type PlanId = keyof typeof PLANS;
 

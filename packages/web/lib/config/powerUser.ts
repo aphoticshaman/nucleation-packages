@@ -54,19 +54,25 @@ export interface TierCapabilities {
   multiTenancy: boolean;
 }
 
+// Tier capabilities aligned with pricing:
+// explorer (Free): $0 - 1 region, 7-day history, no alerts
+// analyst (Pro): $79/mo - All regions, 90-day history, unlimited alerts
+// strategist (Team): $59/seat/mo - 1-year history, team features
+// architect (Enterprise): Custom - Unlimited everything, compliance
 export const TIER_CAPABILITIES: Record<UserTier, TierCapabilities> = {
   explorer: {
-    maxEntities: 50,
-    maxHistoricalDays: 90,
-    maxProjectionDays: 30,
-    realTimeUpdates: false,
+    // FREE TIER - Lead gen, limited but useful
+    maxEntities: 50, // 1 region focus
+    maxHistoricalDays: 7,
+    maxProjectionDays: 7,
+    realTimeUpdates: false, // Delayed briefings only
     rawDataExport: false,
     maxSavedViews: 3,
     customDashboards: false,
     maxDashboards: 0,
     widgetLibrary: false,
     customWidgets: false,
-    maxAlertRules: 3,
+    maxAlertRules: 0, // No alerts on free
     webhooks: false,
     scheduledReports: false,
     customTriggers: false,
@@ -84,42 +90,44 @@ export const TIER_CAPABILITIES: Record<UserTier, TierCapabilities> = {
     multiTenancy: false,
   },
   analyst: {
-    maxEntities: 195, // All nations
-    maxHistoricalDays: 365,
-    maxProjectionDays: 90,
+    // PRO TIER - $79/mo individual
+    maxEntities: -1, // All regions
+    maxHistoricalDays: 90,
+    maxProjectionDays: 30,
     realTimeUpdates: true,
-    rawDataExport: true,
-    maxSavedViews: 25,
+    rawDataExport: true, // PDF/Excel exports
+    maxSavedViews: -1, // Unlimited
     customDashboards: true,
-    maxDashboards: 5,
+    maxDashboards: 10,
     widgetLibrary: true,
     customWidgets: false,
-    maxAlertRules: 25,
+    maxAlertRules: -1, // Unlimited alerts
     webhooks: true,
     scheduledReports: true,
     customTriggers: false,
     macros: false,
     apiAccess: true,
-    apiCallsPerDay: 1000,
+    apiCallsPerDay: 167, // ~5000/month
     streamingApi: false,
     bulkOperations: false,
     customModels: false,
     sdkAccess: false,
     whiteLabel: false,
     ssoIntegration: false,
-    auditLogs: true,
+    auditLogs: false,
     teamManagement: false,
     multiTenancy: false,
   },
   strategist: {
-    maxEntities: -1, // Unlimited
-    maxHistoricalDays: 3650, // 10 years
-    maxProjectionDays: 365,
+    // TEAM TIER - $59/seat/mo
+    maxEntities: -1,
+    maxHistoricalDays: 365, // 1 year
+    maxProjectionDays: 90,
     realTimeUpdates: true,
     rawDataExport: true,
     maxSavedViews: -1,
     customDashboards: true,
-    maxDashboards: 50,
+    maxDashboards: -1,
     widgetLibrary: true,
     customWidgets: true,
     maxAlertRules: -1,
@@ -128,21 +136,22 @@ export const TIER_CAPABILITIES: Record<UserTier, TierCapabilities> = {
     customTriggers: true,
     macros: true,
     apiAccess: true,
-    apiCallsPerDay: 50000,
+    apiCallsPerDay: 333, // ~10000/month per seat
     streamingApi: true,
     bulkOperations: true,
-    customModels: true,
-    sdkAccess: true,
+    customModels: false,
+    sdkAccess: false,
     whiteLabel: false,
-    ssoIntegration: true,
+    ssoIntegration: false,
     auditLogs: true,
     teamManagement: true,
     multiTenancy: false,
   },
   architect: {
+    // ENTERPRISE TIER - Custom pricing
     maxEntities: -1,
-    maxHistoricalDays: -1, // Full history
-    maxProjectionDays: -1, // Unlimited projections
+    maxHistoricalDays: -1, // Unlimited history
+    maxProjectionDays: -1,
     realTimeUpdates: true,
     rawDataExport: true,
     maxSavedViews: -1,
