@@ -512,9 +512,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate preset input (prevent injection)
-    const validPresets = ['global', 'nato', 'brics', 'conflict'];
-    if (!validPresets.includes(preset)) {
+    // Validate preset input (already validated earlier, but double-check)
+    const allowedPresetValues = ['global', 'nato', 'brics', 'conflict'];
+    if (!allowedPresetValues.includes(preset)) {
       return NextResponse.json({ error: 'Invalid preset' }, { status: 400 });
     }
 

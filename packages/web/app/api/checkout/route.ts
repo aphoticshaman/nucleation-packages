@@ -1,10 +1,25 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
-import { createCheckoutSession, getOrCreateCustomer, PRICE_IDS } from '@/lib/stripe';
+import { createCheckoutSession, getOrCreateCustomer, PRICE_IDS, isStripeConfigured } from '@/lib/stripe';
 
 export async function POST(req: Request) {
   try {
+    // Check Stripe configuration first
+    const stripeCheck = isStripeConfigured();
+    if (!stripeCheck.ok) {
+      console.error('Stripe not configured. Missing:', stripeCheck.missing);
+      return NextResponse.json(
+        {
+          error: 'Payment system not configured',
+          details: process.env.NODE_ENV === 'development'
+            ? `Missing env vars: ${stripeCheck.missing.join(', ')}`
+            : 'Please contact support',
+        },
+        { status: 503 }
+      );
+    }
+
     const { planId } = await req.json();
 
     // Validate plan
