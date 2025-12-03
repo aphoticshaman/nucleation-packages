@@ -350,6 +350,716 @@ function getAnalyst(domain: string) {
   };
 }
 
+// ============================================================================
+// HISTORIAN AGENT - Searches 500+ year old events for correlates
+// ============================================================================
+
+const HISTORIAN_AGENT = {
+  name: 'Historical Intelligence Analyst',
+  expertise: 'ancient history, medieval conflicts, early modern state formation, historical cycles, long-term pattern recognition',
+  minimumYearsAgo: 500,
+  instruction: 'Drawing on events from 500+ years ago, identify historical parallels and recurring patterns',
+};
+
+// Curated historical events database (500+ years ago only)
+const HISTORICAL_EVENTS: {
+  id: string;
+  name: string;
+  period: string;
+  yearsAgo: number;
+  keywords: string[];
+  causalPattern: string;
+  outcome: string;
+  domains: string[];
+}[] = [
+  // Ancient & Classical
+  {
+    id: 'peloponnesian-war',
+    name: 'Peloponnesian War',
+    period: '431-404 BC',
+    yearsAgo: 2455,
+    keywords: ['hegemonic rivalry', 'alliance systems', 'democracy vs oligarchy', 'naval power', 'plague'],
+    causalPattern: 'Rising power threatens established power → preventive war (Thucydides Trap)',
+    outcome: 'Mutual exhaustion, third-party gains (Persia, later Macedon)',
+    domains: ['geopolitical', 'defense', 'health'],
+  },
+  {
+    id: 'fall-of-rome',
+    name: 'Fall of Western Roman Empire',
+    period: '376-476 AD',
+    yearsAgo: 1549,
+    keywords: ['imperial overstretch', 'border pressure', 'economic decline', 'currency debasement', 'migration'],
+    causalPattern: 'Overextension + migration pressure + fiscal crisis → systemic collapse',
+    outcome: 'Fragmentation, institutional memory loss, centuries of instability',
+    domains: ['geopolitical', 'financial', 'employment', 'defense'],
+  },
+  {
+    id: 'byzantine-arab-wars',
+    name: 'Byzantine-Arab Wars',
+    period: '629-1180 AD',
+    yearsAgo: 1395,
+    keywords: ['religious conflict', 'territorial expansion', 'naval warfare', 'siege warfare'],
+    causalPattern: 'Ideological expansion + weakened opponent → territorial transformation',
+    outcome: 'Permanent territorial realignment, cultural exchange despite conflict',
+    domains: ['geopolitical', 'defense'],
+  },
+  {
+    id: 'mongol-invasions',
+    name: 'Mongol Invasions',
+    period: '1206-1368',
+    yearsAgo: 818,
+    keywords: ['rapid conquest', 'steppe warfare', 'psychological warfare', 'disease spread', 'trade routes'],
+    causalPattern: 'Unified nomadic power + military innovation → rapid expansion',
+    outcome: 'Eurasian trade integration (Pax Mongolica), population collapse, institutional destruction',
+    domains: ['geopolitical', 'defense', 'supply_chain', 'health'],
+  },
+  {
+    id: 'black-death',
+    name: 'Black Death Pandemic',
+    period: '1346-1353',
+    yearsAgo: 678,
+    keywords: ['pandemic', 'trade routes', 'social upheaval', 'labor shortage', 'religious crisis'],
+    causalPattern: 'Disease + trade networks + urban density → mass mortality → social transformation',
+    outcome: 'Labor power shift, wage gains, religious questioning, eventual Renaissance',
+    domains: ['health', 'employment', 'financial', 'supply_chain'],
+  },
+  {
+    id: 'ottoman-rise',
+    name: 'Ottoman Rise and Fall of Constantinople',
+    period: '1299-1453',
+    yearsAgo: 571,
+    keywords: ['siege warfare', 'gunpowder', 'religious conflict', 'trade route control', 'military innovation'],
+    causalPattern: 'Military innovation + declining opponent → regime change',
+    outcome: 'Trade route disruption, Renaissance acceleration, religious polarization',
+    domains: ['geopolitical', 'defense', 'tech', 'supply_chain'],
+  },
+  {
+    id: 'hundred-years-war',
+    name: 'Hundred Years War',
+    period: '1337-1453',
+    yearsAgo: 687,
+    keywords: ['dynastic conflict', 'longbow', 'nationalism', 'mercenaries', 'economic devastation'],
+    causalPattern: 'Succession dispute + technological advantage → prolonged attritional conflict',
+    outcome: 'French national identity, English pivot to sea power, end of feudal warfare',
+    domains: ['geopolitical', 'defense', 'financial'],
+  },
+  {
+    id: 'ming-treasure-voyages',
+    name: 'Ming Treasure Voyages & Withdrawal',
+    period: '1405-1433',
+    yearsAgo: 620,
+    keywords: ['naval power', 'isolationism', 'bureaucratic politics', 'strategic choice'],
+    causalPattern: 'Capability + choice not to use → strategic withdrawal',
+    outcome: 'Power vacuum in Indian Ocean, European maritime opportunity',
+    domains: ['geopolitical', 'space', 'defense'],
+  },
+  {
+    id: 'italian-wars',
+    name: 'Italian Wars',
+    period: '1494-1559',
+    yearsAgo: 531,
+    keywords: ['balance of power', 'mercenaries', 'foreign intervention', 'city-state rivalry'],
+    causalPattern: 'Power vacuum + external intervention → prolonged proxy conflict',
+    outcome: 'Habsburg dominance, end of Italian independence, diplomatic innovation (permanent embassies)',
+    domains: ['geopolitical', 'defense', 'financial'],
+  },
+  {
+    id: 'reformation',
+    name: 'Protestant Reformation',
+    period: '1517-1555',
+    yearsAgo: 508,
+    keywords: ['religious schism', 'printing press', 'political fragmentation', 'ideological warfare', 'information revolution'],
+    causalPattern: 'Information technology + elite dissatisfaction + popular grievance → revolutionary transformation',
+    outcome: 'Permanent religious split, wars of religion, state-church reconfiguration',
+    domains: ['geopolitical', 'tech', 'ai'],
+  },
+  {
+    id: 'spanish-conquest',
+    name: 'Spanish Conquest of Americas',
+    period: '1492-1572',
+    yearsAgo: 533,
+    keywords: ['technological asymmetry', 'disease', 'alliance exploitation', 'resource extraction'],
+    causalPattern: 'Technology gap + disease + local divisions → rapid conquest',
+    outcome: 'Demographic collapse, silver inflation (Price Revolution), global trade transformation',
+    domains: ['geopolitical', 'health', 'financial', 'materials'],
+  },
+  // Economic & Financial Historical Events
+  {
+    id: 'florentine-banking',
+    name: 'Florentine Banking Crisis (Bardi/Peruzzi)',
+    period: '1343-1346',
+    yearsAgo: 681,
+    keywords: ['sovereign default', 'banking collapse', 'credit crisis', 'Edward III'],
+    causalPattern: 'Concentrated sovereign lending + default → systemic banking collapse',
+    outcome: 'Medici rise, more diversified banking practices',
+    domains: ['financial', 'geopolitical'],
+  },
+  {
+    id: 'debasement-roman',
+    name: 'Roman Currency Debasement',
+    period: '200-300 AD',
+    yearsAgo: 1800,
+    keywords: ['inflation', 'currency debasement', 'fiscal crisis', 'silver content'],
+    causalPattern: 'Military spending + revenue shortfall → currency debasement → inflation spiral',
+    outcome: 'Economic instability, barter economy emergence, Diocletian price controls',
+    domains: ['financial', 'defense', 'crypto'],
+  },
+  // Technological/Scientific
+  {
+    id: 'printing-revolution',
+    name: 'Gutenberg Printing Revolution',
+    period: '1440-1500',
+    yearsAgo: 585,
+    keywords: ['information democratization', 'literacy', 'censorship attempts', 'knowledge diffusion'],
+    causalPattern: 'Information technology breakthrough → accelerated social change + resistance',
+    outcome: 'Reformation, Scientific Revolution, modern public sphere',
+    domains: ['tech', 'ai', 'geopolitical'],
+  },
+  // Climate & Agriculture
+  {
+    id: 'little-ice-age-start',
+    name: 'Little Ice Age Onset',
+    period: '1300-1400',
+    yearsAgo: 700,
+    keywords: ['climate change', 'crop failure', 'famine', 'social unrest'],
+    causalPattern: 'Climate shift → agricultural stress → social/political instability',
+    outcome: 'Great Famine 1315-1317, weakened populations before Black Death',
+    domains: ['climate', 'agriculture', 'health', 'geopolitical'],
+  },
+  {
+    id: 'mayan-collapse',
+    name: 'Classic Maya Collapse',
+    period: '800-1000 AD',
+    yearsAgo: 1200,
+    keywords: ['drought', 'deforestation', 'warfare', 'elite competition', 'infrastructure abandonment'],
+    causalPattern: 'Environmental degradation + resource competition → cascading urban collapse',
+    outcome: 'Abandonment of major cities, population dispersal, knowledge loss',
+    domains: ['climate', 'agriculture', 'geopolitical'],
+  },
+  // More Ancient Events
+  {
+    id: 'bronze-age-collapse',
+    name: 'Bronze Age Collapse',
+    period: '1200-1150 BC',
+    yearsAgo: 3200,
+    keywords: ['systems collapse', 'sea peoples', 'drought', 'trade disruption', 'palace economies'],
+    causalPattern: 'Multiple simultaneous stressors + interdependent systems → cascading civilizational failure',
+    outcome: 'Near-total collapse of Eastern Mediterranean civilizations, Dark Age, eventual Iron Age',
+    domains: ['geopolitical', 'supply_chain', 'climate', 'defense'],
+  },
+  {
+    id: 'persian-wars',
+    name: 'Persian Wars',
+    period: '499-449 BC',
+    yearsAgo: 2500,
+    keywords: ['asymmetric warfare', 'naval innovation', 'coalition warfare', 'imperial overreach'],
+    causalPattern: 'Empire attacks smaller states → unified resistance + tactical innovation → repulsion',
+    outcome: 'Greek independence, Athenian naval supremacy, eventual Delian League imperialism',
+    domains: ['geopolitical', 'defense', 'space'],
+  },
+  {
+    id: 'alexander-conquests',
+    name: 'Alexander the Great Conquests',
+    period: '336-323 BC',
+    yearsAgo: 2350,
+    keywords: ['blitzkrieg', 'combined arms', 'decapitation strikes', 'cultural fusion'],
+    causalPattern: 'Military genius + decrepit opponent + speed → continental conquest',
+    outcome: 'Hellenistic kingdoms, Greek-Persian fusion, knowledge preservation/transmission',
+    domains: ['geopolitical', 'defense'],
+  },
+  {
+    id: 'punic-wars',
+    name: 'Punic Wars',
+    period: '264-146 BC',
+    yearsAgo: 2300,
+    keywords: ['total war', 'naval supremacy', 'economic warfare', 'scorched earth'],
+    causalPattern: 'Commercial rivalry → existential conflict → complete destruction of loser',
+    outcome: 'Roman Mediterranean hegemony, destruction of Carthage, expansion of slavery',
+    domains: ['geopolitical', 'defense', 'financial', 'supply_chain'],
+  },
+  {
+    id: 'roman-republic-fall',
+    name: 'Fall of Roman Republic',
+    period: '133-27 BC',
+    yearsAgo: 2100,
+    keywords: ['political violence', 'wealth inequality', 'military loyalty', 'constitutional crisis'],
+    causalPattern: 'Inequality + armed factions + constitutional breakdown → autocracy',
+    outcome: 'End of republic, Principate, eventual stability under Augustus',
+    domains: ['geopolitical', 'financial', 'employment'],
+  },
+  {
+    id: 'han-dynasty-fall',
+    name: 'Fall of Han Dynasty',
+    period: '184-220 AD',
+    yearsAgo: 1800,
+    keywords: ['peasant rebellion', 'warlordism', 'eunuch politics', 'land concentration'],
+    causalPattern: 'Agrarian crisis + elite capture + military fragmentation → dynastic collapse',
+    outcome: 'Three Kingdoms period, 400 years of division, eventual Sui reunification',
+    domains: ['geopolitical', 'agriculture', 'employment'],
+  },
+  {
+    id: 'antonine-plague',
+    name: 'Antonine Plague',
+    period: '165-180 AD',
+    yearsAgo: 1860,
+    keywords: ['pandemic', 'military spread', 'population decline', 'economic contraction'],
+    causalPattern: 'Disease spread via military/trade networks → demographic shock → economic decline',
+    outcome: 'Estimated 5-10 million dead, Roman military weakening, crisis of third century precursor',
+    domains: ['health', 'defense', 'financial', 'employment'],
+  },
+  {
+    id: 'justinian-plague',
+    name: 'Plague of Justinian',
+    period: '541-549 AD',
+    yearsAgo: 1480,
+    keywords: ['bubonic plague', 'trade routes', 'empire decline', 'labor shortage'],
+    causalPattern: 'First bubonic pandemic → massive mortality → imperial overstretch failure',
+    outcome: 'End of Justinian reconquest ambitions, Byzantine retrenchment, Arab expansion opportunity',
+    domains: ['health', 'geopolitical', 'employment', 'defense'],
+  },
+  {
+    id: 'islamic-conquests',
+    name: 'Islamic Conquests',
+    period: '632-750 AD',
+    yearsAgo: 1400,
+    keywords: ['rapid expansion', 'religious motivation', 'cavalry warfare', 'empire collapse'],
+    causalPattern: 'Unified ideology + weakened empires + mobile warfare → territorial transformation',
+    outcome: 'Umayyad/Abbasid Caliphates, preservation of Greek knowledge, trade network expansion',
+    domains: ['geopolitical', 'defense'],
+  },
+  {
+    id: 'viking-age',
+    name: 'Viking Age',
+    period: '793-1066 AD',
+    yearsAgo: 1200,
+    keywords: ['raiding', 'naval technology', 'trade routes', 'state formation'],
+    causalPattern: 'Demographic pressure + naval innovation + weak targets → expansion/settlement',
+    outcome: 'Norman states, Rus formation, North Atlantic exploration, eventual Christianization',
+    domains: ['geopolitical', 'defense', 'supply_chain'],
+  },
+  {
+    id: 'song-dynasty-economy',
+    name: 'Song Dynasty Economic Revolution',
+    period: '960-1279 AD',
+    yearsAgo: 1000,
+    keywords: ['paper money', 'iron production', 'urbanization', 'proto-industrialization'],
+    causalPattern: 'Technological innovation + market integration → economic takeoff',
+    outcome: 'First paper money, 100M+ population, eventual Mongol conquest despite wealth',
+    domains: ['financial', 'tech', 'manufacturing', 'crypto'],
+  },
+  {
+    id: 'crusades',
+    name: 'Crusades',
+    period: '1095-1291 AD',
+    yearsAgo: 930,
+    keywords: ['religious warfare', 'colonialism', 'military orders', 'trade expansion'],
+    causalPattern: 'Religious mobilization + demographic pressure → foreign intervention cycle',
+    outcome: 'Failed permanent conquest, Italian trade dominance, technology/knowledge transfer',
+    domains: ['geopolitical', 'defense', 'supply_chain'],
+  },
+  {
+    id: 'magna-carta',
+    name: 'Magna Carta',
+    period: '1215 AD',
+    yearsAgo: 809,
+    keywords: ['constitutional limits', 'noble rebellion', 'rule of law', 'taxation consent'],
+    causalPattern: 'Royal overreach + organized opposition → constitutional constraint',
+    outcome: 'Foundation of limited government tradition, eventual parliamentary sovereignty',
+    domains: ['geopolitical', 'financial'],
+  },
+  {
+    id: 'fourth-crusade',
+    name: 'Fourth Crusade Sack of Constantinople',
+    period: '1204 AD',
+    yearsAgo: 821,
+    keywords: ['betrayal', 'commercial interests', 'civilizational damage', 'debt default'],
+    causalPattern: 'Debt obligation + commercial opportunism → strategic catastrophe',
+    outcome: 'Byzantine permanent weakening, Ottoman eventual conquest, East-West schism deepened',
+    domains: ['geopolitical', 'financial', 'defense'],
+  },
+  {
+    id: 'great-famine-1315',
+    name: 'Great Famine of 1315-1317',
+    period: '1315-1317 AD',
+    yearsAgo: 710,
+    keywords: ['crop failure', 'climate', 'population collapse', 'social unrest'],
+    causalPattern: 'Climate anomaly + population peak → famine → societal stress',
+    outcome: 'Estimated 10-25% mortality, end of medieval population growth, Black Death susceptibility',
+    domains: ['climate', 'agriculture', 'health'],
+  },
+  {
+    id: 'avignon-papacy',
+    name: 'Avignon Papacy & Western Schism',
+    period: '1309-1417 AD',
+    yearsAgo: 715,
+    keywords: ['institutional crisis', 'legitimacy split', 'state capture', 'reform demands'],
+    causalPattern: 'Institutional capture + legitimacy crisis → authority fragmentation',
+    outcome: 'Permanent damage to papal authority, conciliarism, eventual Reformation',
+    domains: ['geopolitical'],
+  },
+  {
+    id: 'tamerlane',
+    name: 'Tamerlane Conquests',
+    period: '1370-1405 AD',
+    yearsAgo: 655,
+    keywords: ['terror warfare', 'pyramid skulls', 'cavalry', 'trade disruption'],
+    causalPattern: 'Military genius + extreme violence → short-term empire',
+    outcome: 'Massive destruction (17M dead est.), Timurid renaissance, Delhi Sultanate weakened',
+    domains: ['geopolitical', 'defense'],
+  },
+  {
+    id: 'zheng-he',
+    name: 'Zheng He Voyages',
+    period: '1405-1433 AD',
+    yearsAgo: 620,
+    keywords: ['treasure fleets', 'soft power', 'maritime exploration', 'strategic withdrawal'],
+    causalPattern: 'State capacity demonstration + policy reversal → strategic opportunity cost',
+    outcome: 'Chinese withdrawal, eventual European maritime dominance',
+    domains: ['geopolitical', 'defense', 'space'],
+  },
+  {
+    id: 'wars-roses',
+    name: 'Wars of the Roses',
+    period: '1455-1487 AD',
+    yearsAgo: 570,
+    keywords: ['dynastic war', 'noble factionalism', 'weak king', 'military aristocracy'],
+    causalPattern: 'Succession dispute + noble power + weak center → civil war',
+    outcome: 'Tudor dynasty, noble power broken, centralized state',
+    domains: ['geopolitical', 'defense'],
+  },
+  {
+    id: 'columbus-exchange',
+    name: 'Columbian Exchange',
+    period: '1492-1600 AD',
+    yearsAgo: 533,
+    keywords: ['biological exchange', 'disease', 'crops', 'silver', 'globalization'],
+    causalPattern: 'Continental connection → biological/economic transformation',
+    outcome: 'Indigenous population collapse (90%+), global trade, European enrichment',
+    domains: ['health', 'agriculture', 'financial', 'supply_chain'],
+  },
+  {
+    id: 'machiavelli-era',
+    name: 'Machiavelli Era Italian Politics',
+    period: '1494-1527 AD',
+    yearsAgo: 530,
+    keywords: ['realpolitik', 'balance of power', 'foreign invasion', 'political science'],
+    causalPattern: 'Multi-polar competition + external intervention → endless conflict',
+    outcome: 'Birth of modern political theory, Habsburg-Valois rivalry',
+    domains: ['geopolitical', 'defense'],
+  },
+  {
+    id: 'price-revolution',
+    name: 'Price Revolution',
+    period: '1500-1650 AD',
+    yearsAgo: 525,
+    keywords: ['inflation', 'silver imports', 'monetary expansion', 'social dislocation'],
+    causalPattern: 'Monetary expansion (American silver) → sustained inflation → social transformation',
+    outcome: '400-600% price increase, Spanish decline, Northern European rise',
+    domains: ['financial', 'crypto', 'employment'],
+  },
+  {
+    id: 'ottoman-peak',
+    name: 'Ottoman Empire Peak',
+    period: '1520-1566 AD',
+    yearsAgo: 505,
+    keywords: ['Suleiman', 'naval power', 'siege warfare', 'imperial overstretch'],
+    causalPattern: 'Military excellence + institutional strength → expansion → limits',
+    outcome: 'Vienna siege failure 1529, Mediterranean contested, eventual stagnation',
+    domains: ['geopolitical', 'defense'],
+  },
+  // More Financial/Economic
+  {
+    id: 'fugger-banking',
+    name: 'Fugger Banking Empire',
+    period: '1470-1560 AD',
+    yearsAgo: 555,
+    keywords: ['merchant banking', 'sovereign lending', 'political influence', 'monopolies'],
+    causalPattern: 'Financial innovation + state dependency → political power',
+    outcome: 'Habsburg financing, eventual default exposure, diversification',
+    domains: ['financial', 'geopolitical', 'materials'],
+  },
+  {
+    id: 'spanish-bankruptcies',
+    name: 'Spanish Imperial Bankruptcies',
+    period: '1557-1627 AD',
+    yearsAgo: 468,
+    keywords: ['sovereign default', 'military overstretch', 'silver dependence', 'inflation'],
+    causalPattern: 'Military spending > revenue → serial default → creditor losses',
+    outcome: '6+ bankruptcies, Genoese banker displacement, Spanish decline',
+    domains: ['financial', 'defense', 'geopolitical'],
+  },
+  // Technology/Science
+  {
+    id: 'compass-adoption',
+    name: 'Magnetic Compass Adoption',
+    period: '1100-1300 AD',
+    yearsAgo: 900,
+    keywords: ['navigation', 'maritime trade', 'Chinese origin', 'technology diffusion'],
+    causalPattern: 'Technology transfer + adoption → capability expansion',
+    outcome: 'All-weather navigation, European exploration enabled',
+    domains: ['tech', 'space', 'supply_chain'],
+  },
+  {
+    id: 'gunpowder-revolution',
+    name: 'Gunpowder Revolution',
+    period: '1300-1500 AD',
+    yearsAgo: 700,
+    keywords: ['military revolution', 'castle obsolescence', 'state centralization', 'Chinese origin'],
+    causalPattern: 'Weapon technology shift → military organization change → political change',
+    outcome: 'Centralized states, noble power decline, modern warfare origins',
+    domains: ['defense', 'tech', 'geopolitical'],
+  },
+  {
+    id: 'arabic-science',
+    name: 'Islamic Golden Age Translation Movement',
+    period: '750-1100 AD',
+    yearsAgo: 1250,
+    keywords: ['knowledge preservation', 'translation', 'mathematics', 'medicine'],
+    causalPattern: 'Patronage + multicultural empire → knowledge synthesis',
+    outcome: 'Greek knowledge preserved, algebra/algorithms invented, European Renaissance enabled',
+    domains: ['tech', 'ai', 'health'],
+  },
+  // Disease/Health
+  {
+    id: 'leprosy-peak',
+    name: 'Medieval Leprosy Epidemic',
+    period: '1000-1350 AD',
+    yearsAgo: 1000,
+    keywords: ['disease', 'social exclusion', 'institutional response', 'quarantine'],
+    causalPattern: 'Endemic disease → institutional response → social marginalization',
+    outcome: 'Leper colonies, quarantine precedent, eventual decline before Black Death',
+    domains: ['health'],
+  },
+  {
+    id: 'ergot-poisoning',
+    name: 'Ergotism (St. Anthony\'s Fire)',
+    period: '857-1300 AD',
+    yearsAgo: 1150,
+    keywords: ['food contamination', 'mass psychosis', 'rye bread', 'religious interpretation'],
+    causalPattern: 'Grain contamination + poverty → mass illness + social disruption',
+    outcome: 'Religious hospital orders, grain storage improvements',
+    domains: ['health', 'agriculture'],
+  },
+  // Expansion/Exploration
+  {
+    id: 'polynesian-expansion',
+    name: 'Polynesian Pacific Expansion',
+    period: '1000 BC - 1200 AD',
+    yearsAgo: 2500,
+    keywords: ['navigation', 'colonization', 'resource limits', 'cultural adaptation'],
+    causalPattern: 'Navigation mastery + demographic pressure → island colonization',
+    outcome: 'Settlement of Pacific including Hawaii, NZ, Easter Island',
+    domains: ['space', 'climate', 'agriculture'],
+  },
+  {
+    id: 'vinland',
+    name: 'Norse Vinland Settlement',
+    period: '1000-1020 AD',
+    yearsAgo: 1025,
+    keywords: ['exploration', 'failed colonization', 'indigenous resistance', 'climate'],
+    causalPattern: 'Exploration + settlement attempt + resistance → abandonment',
+    outcome: 'First European Americas contact, no permanent settlement, forgotten until modern',
+    domains: ['geopolitical', 'climate'],
+  },
+  // More Medieval/Institutional
+  {
+    id: 'hanseatic-league',
+    name: 'Hanseatic League',
+    period: '1200-1450 AD',
+    yearsAgo: 825,
+    keywords: ['trade confederation', 'merchant power', 'standardization', 'collective security'],
+    causalPattern: 'Commercial cooperation + mutual defense → regional trade dominance',
+    outcome: 'Northern European trade control, urban autonomy, eventual nation-state displacement',
+    domains: ['financial', 'supply_chain', 'geopolitical'],
+  },
+  {
+    id: 'venetian-system',
+    name: 'Venetian Commercial Republic',
+    period: '697-1500 AD',
+    yearsAgo: 1300,
+    keywords: ['maritime republic', 'trade monopoly', 'espionage', 'financial innovation'],
+    causalPattern: 'Geographic advantage + institutional innovation → commercial dominance',
+    outcome: 'Mediterranean trade control, banking innovation, eventual Portuguese disruption',
+    domains: ['financial', 'supply_chain', 'geopolitical', 'cyber'],
+  },
+  {
+    id: 'university-formation',
+    name: 'Medieval University Formation',
+    period: '1088-1300 AD',
+    yearsAgo: 935,
+    keywords: ['education', 'knowledge institutions', 'scholasticism', 'autonomy'],
+    causalPattern: 'Knowledge demand + institutional innovation → new social institution',
+    outcome: 'Bologna, Paris, Oxford - template for higher education, intellectual class',
+    domains: ['tech', 'ai'],
+  },
+  {
+    id: 'inquisition',
+    name: 'Medieval Inquisition',
+    period: '1184-1500 AD',
+    yearsAgo: 840,
+    keywords: ['heresy', 'surveillance', 'information control', 'confession'],
+    causalPattern: 'Ideological threat perception → institutional surveillance response',
+    outcome: 'Precedent for systematic persecution, bureaucratic surveillance',
+    domains: ['cyber', 'geopolitical'],
+  },
+  // More Climate/Agriculture
+  {
+    id: 'medieval-warm-period',
+    name: 'Medieval Warm Period',
+    period: '900-1300 AD',
+    yearsAgo: 1100,
+    keywords: ['climate optimum', 'agricultural expansion', 'population growth', 'Greenland'],
+    causalPattern: 'Climate warming → agricultural expansion → population/economic growth',
+    outcome: 'Viking Greenland, European population peak, cathedral building',
+    domains: ['climate', 'agriculture', 'geopolitical'],
+  },
+  {
+    id: 'three-field-system',
+    name: 'Three-Field System Adoption',
+    period: '800-1200 AD',
+    yearsAgo: 1200,
+    keywords: ['agricultural revolution', 'productivity', 'population support'],
+    causalPattern: 'Agricultural innovation → productivity increase → population capacity',
+    outcome: 'European population growth, urbanization enabled',
+    domains: ['agriculture', 'employment'],
+  },
+  // Plague/Epidemic Variations
+  {
+    id: 'dancing-plague',
+    name: 'Dancing Plague of 1518',
+    period: '1518 AD',
+    yearsAgo: 507,
+    keywords: ['mass hysteria', 'stress response', 'social contagion', 'famine context'],
+    causalPattern: 'Extreme stress + social contagion → mass psychogenic illness',
+    outcome: 'Hundreds affected, deaths, example of stress-induced social phenomena',
+    domains: ['health'],
+  },
+  {
+    id: 'sweating-sickness',
+    name: 'English Sweating Sickness',
+    period: '1485-1551 AD',
+    yearsAgo: 540,
+    keywords: ['unknown pathogen', 'rapid mortality', 'class differential', 'disappearance'],
+    causalPattern: 'Novel pathogen → high mortality → unexplained disappearance',
+    outcome: 'Multiple outbreaks then vanished, Arthur Tudor death affected succession',
+    domains: ['health', 'geopolitical'],
+  },
+];
+
+// Find historical correlates for modern events
+function findHistoricalCorrelates(
+  modernKeywords: string[],
+  modernDomain: string,
+  limit: number = 3
+): typeof HISTORICAL_EVENTS {
+  const normalizedKeywords = modernKeywords.map(k => k.toLowerCase());
+
+  // Score each historical event by keyword match and domain relevance
+  const scored = HISTORICAL_EVENTS.map(event => {
+    let score = 0;
+
+    // Keyword matching
+    for (const keyword of event.keywords) {
+      for (const modern of normalizedKeywords) {
+        if (keyword.includes(modern) || modern.includes(keyword)) {
+          score += 2;
+        }
+      }
+    }
+
+    // Domain matching
+    if (event.domains.includes(modernDomain)) {
+      score += 3;
+    }
+
+    // Bonus for causal pattern relevance
+    for (const modern of normalizedKeywords) {
+      if (event.causalPattern.toLowerCase().includes(modern)) {
+        score += 1;
+      }
+    }
+
+    return { event, score };
+  });
+
+  // Return top matches
+  return scored
+    .filter(s => s.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(s => s.event);
+}
+
+// Generate historical correlate training example
+async function generateHistorianExample(
+  modernNews: NewsItem[],
+  historicalEvents: typeof HISTORICAL_EVENTS
+): Promise<{
+  instruction: string;
+  input: string;
+  output: string;
+  confidence: number;
+} | null> {
+  if (historicalEvents.length === 0) return null;
+
+  const modernSummary = modernNews.slice(0, 5).map(n =>
+    `- ${n.domain.toUpperCase()}: ${n.title}`
+  ).join('\n');
+
+  const historicalContext = historicalEvents.map(e =>
+    `- ${e.name} (${e.period}): ${e.causalPattern}`
+  ).join('\n');
+
+  const prompt = `You are the ${HISTORIAN_AGENT.name} with expertise in ${HISTORIAN_AGENT.expertise}.
+
+CURRENT SIGNALS (Modern Events):
+${modernSummary}
+
+HISTORICAL CORRELATES (500+ years ago):
+${historicalContext}
+
+Generate a training example that teaches an AI to recognize historical patterns in modern events.
+
+The example should:
+1. Describe a SYNTHESIZED modern situation combining themes from the current signals
+2. Provide EXPERT HISTORICAL ANALYSIS that:
+   - Identifies the most relevant historical parallel from 500+ years ago
+   - Explains the causal mechanism that recurs across centuries
+   - Notes KEY DIVERGENCES where modern context differs
+   - Calculates "rhyme probability" - how likely the pattern repeats
+   - Recommends what historical outcome to watch for
+
+Respond in this exact JSON format:
+{
+  "input": "Modern situation synthesis with specific actors, dates, and metrics...",
+  "output": "HISTORICAL PATTERN ANALYSIS\\n\\n1) PRIMARY CORRELATE: [Historical event] (${historicalEvents[0].period})\\n\\n2) CAUSAL MECHANISM: ...\\n\\n3) KEY DIVERGENCES: ...\\n\\n4) RHYME PROBABILITY: 0.XX - ...\\n\\n5) WATCH FOR: [historical outcome that may recur]",
+  "confidence": 0.75
+}
+
+Only output the JSON.`;
+
+  try {
+    const response = await getAnthropic().messages.create({
+      model: 'claude-3-haiku-20240307',
+      max_tokens: 1200,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const text = response.content[0].type === 'text' ? response.content[0].text : '';
+    const parsed = JSON.parse(text);
+
+    return {
+      instruction: `As a ${HISTORIAN_AGENT.name}, identify historical patterns (500+ years old) that illuminate modern ${modernNews[0]?.domain || 'geopolitical'} developments`,
+      input: parsed.input,
+      output: parsed.output,
+      confidence: parsed.confidence || 0.72,
+    };
+  } catch (e) {
+    console.error('Historian agent generation failed:', e);
+    return null;
+  }
+}
+
 async function fetchGDELT(): Promise<NewsItem[]> {
   try {
     const controller = new AbortController();
@@ -687,6 +1397,92 @@ export async function GET(request: Request) {
     }
   }
 
+  // ========================================================================
+  // HISTORIAN AGENT - Run in parallel with domain agents
+  // ========================================================================
+  console.log('Running Historian Agent to find historical correlates...');
+
+  // Extract keywords from all modern news for historical matching
+  const allKeywords: string[] = [];
+  for (const news of uniqueNews.slice(0, 20)) {
+    // Extract keywords from titles
+    const words = news.title.toLowerCase()
+      .replace(/[^a-z\s]/g, '')
+      .split(/\s+/)
+      .filter(w => w.length > 4);
+    allKeywords.push(...words);
+  }
+
+  // Find historical correlates
+  const historicalCorrelates = findHistoricalCorrelates(
+    [...new Set(allKeywords)],
+    uniqueNews[0]?.domain || 'geopolitical',
+    5
+  );
+
+  // Generate historian training examples (2-3 per run)
+  const historianPromises = [];
+  const domainsWithNews = Object.entries(newsByDomain)
+    .filter(([, items]) => items.length > 0)
+    .slice(0, 3);
+
+  for (const [domain, domainNews] of domainsWithNews) {
+    const domainCorrelates = findHistoricalCorrelates(
+      domainNews.slice(0, 3).flatMap(n =>
+        n.title.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/).filter(w => w.length > 4)
+      ),
+      domain,
+      3
+    );
+
+    if (domainCorrelates.length > 0) {
+      historianPromises.push(
+        generateHistorianExample(domainNews.slice(0, 5), domainCorrelates)
+          .then(example => ({ domain, example }))
+          .catch(e => {
+            console.error(`Historian agent error for ${domain}:`, e);
+            return { domain, example: null };
+          })
+      );
+    }
+  }
+
+  // Wait for historian examples
+  const historianResults = await Promise.allSettled(historianPromises);
+  let historianGenerated = 0;
+  let historianStored = 0;
+
+  for (const result of historianResults) {
+    if (result.status !== 'fulfilled' || !result.value.example) continue;
+
+    const { domain, example } = result.value;
+    historianGenerated++;
+
+    try {
+      const { error } = await getSupabase().from('training_examples').insert({
+        instruction: example.instruction,
+        input: example.input,
+        output: example.output,
+        domain: `historical_${domain}`,
+        source_type: 'historian_agent',
+        source_url: null,
+        source_date: new Date().toISOString(),
+        confidence: example.confidence,
+      });
+
+      if (error && error.code !== '23505') {
+        results.errors.push(`Historian insert error: ${error.message}`);
+      } else if (!error) {
+        historianStored++;
+        results.domains[`historical_${domain}`] = (results.domains[`historical_${domain}`] || 0) + 1;
+      }
+    } catch (e) {
+      results.errors.push(`Historian DB error: ${e}`);
+    }
+  }
+
+  console.log(`Historian Agent: generated ${historianGenerated}, stored ${historianStored}`);
+
   // Get total count
   const { count } = await getSupabase()
     .from('training_examples')
@@ -698,6 +1494,12 @@ export async function GET(request: Request) {
     unique_after_dedup: uniqueNews.length,
     domains_processed: domains.length,
     items_per_domain: ITEMS_PER_DOMAIN,
+    historian_agent: {
+      historical_events_db: HISTORICAL_EVENTS.length,
+      correlates_found: historicalCorrelates.length,
+      examples_generated: historianGenerated,
+      examples_stored: historianStored,
+    },
     total_examples: count,
     timestamp: new Date().toISOString(),
   });
