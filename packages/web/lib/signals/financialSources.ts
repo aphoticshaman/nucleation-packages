@@ -410,7 +410,7 @@ export interface DataFreshness {
   dataAge: number; // seconds since last successful fetch
   status: 'fresh' | 'stale' | 'error' | 'unknown';
   recordCount: number;
-  staleness Threshold: number; // seconds before considered stale
+  stalenessThreshold: number; // seconds before considered stale
 }
 
 export const STALENESS_THRESHOLDS: Record<string, number> = {

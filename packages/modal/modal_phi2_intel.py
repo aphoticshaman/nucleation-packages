@@ -42,6 +42,7 @@ image = (
     image=image,
     gpu="T4",  # T4 is cheapest, Phi-2 fits easily. Use A10G for faster inference.
     volumes={"/model": model_volume},
+    secrets=[modal.Secret.from_name("huggingface")],  # For private HF model
     timeout=300,
     container_idle_timeout=120,  # Keep warm for 2 min after last request
     allow_concurrent_inputs=10,  # Handle multiple requests
