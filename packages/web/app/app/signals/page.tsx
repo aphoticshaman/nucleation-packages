@@ -85,7 +85,7 @@ export default function SignalsPage() {
         <div className="lg:col-span-2 space-y-4">
           {/* Quick indicators */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {MARKET_INDICATORS.indices.slice(0, 4).map((indicator) => (
+            {MARKET_INDICATORS.us_indices.slice(0, 4).map((indicator) => (
               <div key={indicator.symbol} className="bg-slate-900 rounded-xl border border-slate-800 p-4">
                 <p className="text-xs text-slate-400">{indicator.name}</p>
                 <p className="text-xl font-bold text-white mt-1">--</p>
