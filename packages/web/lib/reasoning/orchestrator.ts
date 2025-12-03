@@ -15,6 +15,11 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import {
+  generateContextEmbedding,
+  featureSimilarity,
+  EMBEDDING_DIMENSIONS,
+} from '@/lib/embeddings';
 
 // Types for reasoning system
 export interface ReasoningQuery {
@@ -271,12 +276,91 @@ export class ReasoningOrchestrator {
   }
 
   /**
-   * Find historical analogies
+   * Find historical analogies using vector similarity search
    */
   private async findAnalogies(query: ReasoningQuery): Promise<HistoricalCase[]> {
-    // TODO: Implement vector similarity search against historical cases
-    // For now, return hardcoded examples based on domain
+    try {
+      // Extract numeric features from context for feature-based matching
+      const numericFeatures: Record<string, number> = {};
+      for (const [key, value] of Object.entries(query.context)) {
+        if (typeof value === 'number') {
+          numericFeatures[key] = value;
+        }
+      }
 
+      // Try vector similarity search first (if embeddings available)
+      const embeddingResult = await generateContextEmbedding(query.domain, query.context);
+
+      if (embeddingResult) {
+        // Use pgvector similarity search
+        const { data: cases, error } = await this.supabase.rpc('find_similar_cases', {
+          query_embedding: `[${embeddingResult.embedding.join(',')}]`,
+          query_domain: query.domain,
+          match_threshold: 0.5,
+          match_count: 5,
+        });
+
+        if (!error && cases && cases.length > 0) {
+          return cases.map(
+            (c: {
+              case_id: string;
+              description: string;
+              similarity: number;
+              outcome: string;
+              lessons: string[];
+            }) => ({
+              id: c.case_id,
+              description: c.description,
+              similarity: c.similarity,
+              outcome: c.outcome,
+              lessons: c.lessons || [],
+            })
+          );
+        }
+      }
+
+      // Fallback: Query historical cases from database with feature matching
+      const { data: allCases, error: fetchError } = await this.supabase
+        .from('historical_cases')
+        .select('case_id, description, outcome, lessons, features, domain')
+        .eq('verified', true)
+        .or(`domain.eq.${query.domain},domain.is.null`)
+        .limit(20);
+
+      if (fetchError || !allCases || allCases.length === 0) {
+        // Final fallback: return hardcoded examples
+        return this.getHardcodedAnalogies(query.domain);
+      }
+
+      // Compute feature similarity for each case
+      const scoredCases = allCases
+        .map((c) => {
+          const caseFeatures =
+            typeof c.features === 'object' ? (c.features as Record<string, number>) : {};
+          const similarity = featureSimilarity(numericFeatures, caseFeatures);
+          return {
+            id: c.case_id,
+            description: c.description,
+            similarity,
+            outcome: c.outcome,
+            lessons: c.lessons || [],
+          };
+        })
+        .filter((c) => c.similarity > 0.3)
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, 5);
+
+      return scoredCases.length > 0 ? scoredCases : this.getHardcodedAnalogies(query.domain);
+    } catch (error) {
+      console.error('Error finding analogies:', error);
+      return this.getHardcodedAnalogies(query.domain);
+    }
+  }
+
+  /**
+   * Hardcoded fallback analogies when database unavailable
+   */
+  private getHardcodedAnalogies(domain: string): HistoricalCase[] {
     const analogyDatabase: Record<string, HistoricalCase[]> = {
       conflict: [
         {
@@ -313,7 +397,7 @@ export class ReasoningOrchestrator {
       ],
     };
 
-    return analogyDatabase[query.domain] || [];
+    return analogyDatabase[domain] || [];
   }
 
   /**

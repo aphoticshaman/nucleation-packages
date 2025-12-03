@@ -48,6 +48,121 @@ export class WasmSwarm {
 }
 
 /**
+ * Geospatial attractor system for nation-level dynamics
+ */
+export class WasmGeospatialSystem {
+  free(): void;
+  [Symbol.dispose](): void;
+  /**
+   * Create new geospatial system
+   */
+  constructor(
+    n_dims: number,
+    interaction_decay: number,
+    min_influence: number,
+    dt: number,
+    diffusion: number
+  );
+  /**
+   * Create with default configuration
+   */
+  static with_defaults(): WasmGeospatialSystem;
+  /**
+   * Add a nation to the system
+   */
+  add_nation(code: string, name: string, lat: number, lon: number, regime: number): void;
+  /**
+   * Add a nation with initial position in attractor space
+   */
+  add_nation_with_position(
+    code: string,
+    name: string,
+    lat: number,
+    lon: number,
+    position: Float64Array,
+    regime: number
+  ): void;
+  /**
+   * Set esteem relationship between nations
+   */
+  set_esteem(source: string, target: string, esteem: number): void;
+  /**
+   * Get esteem from source to target
+   */
+  get_esteem(source: string, target: string): number;
+  /**
+   * Run one simulation step
+   */
+  step(): void;
+  /**
+   * Run multiple simulation steps
+   */
+  run(n_steps: number): void;
+  /**
+   * Get current simulation time
+   */
+  get_time(): number;
+  /**
+   * Get number of nations
+   */
+  get_nation_count(): number;
+  /**
+   * Get number of influence edges
+   */
+  get_edge_count(): number;
+  /**
+   * Export to GeoJSON for basin strength visualization
+   */
+  to_geojson_basin(): any;
+  /**
+   * Export to GeoJSON for transition risk visualization
+   */
+  to_geojson_risk(): any;
+  /**
+   * Export to GeoJSON for influence flow visualization
+   */
+  to_geojson_influence(): any;
+  /**
+   * Export to GeoJSON for regime cluster visualization
+   */
+  to_geojson_regime(): any;
+  /**
+   * Compare two nations
+   */
+  compare_nations(code1: string, code2: string): any;
+  /**
+   * Get nation data as JSON
+   */
+  get_nation(code: string): any;
+  /**
+   * Get all nations as JSON array
+   */
+  get_all_nations(): any;
+  /**
+   * Get all edges as JSON array
+   */
+  get_all_edges(): any;
+  /**
+   * Serialize entire system state
+   */
+  serialize(): string;
+  /**
+   * Deserialize system state
+   */
+  static deserialize(json: string): WasmGeospatialSystem;
+}
+
+/**
+ * Compute haversine distance between two points
+ */
+export function wasm_haversine_distance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number;
+
+/**
  * Initialize WASM module
  */
 export function init(): void;

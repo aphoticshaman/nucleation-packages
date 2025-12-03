@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { stripe, PLANS, PlanId } from '@/lib/stripe';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { sendEmail, emailTemplates } from '@/lib/email';
 
 // Lazy-initialized Supabase admin client (avoids build-time env var access)
 let _supabaseAdmin: SupabaseClient | null = null;
@@ -139,6 +140,13 @@ async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
     return;
   }
 
+  // Get organization details before update
+  const { data: org } = await getSupabaseAdmin()
+    .from('organizations')
+    .select('id, name')
+    .eq('id', organizationId)
+    .single();
+
   // Downgrade to free
   await getSupabaseAdmin()
     .from('organizations')
@@ -156,6 +164,26 @@ async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
     .update({ role: 'consumer' })
     .eq('organization_id', organizationId);
 
+  // Send cancellation email to admin
+  if (org) {
+    const { data: admin } = await getSupabaseAdmin()
+      .from('profiles')
+      .select('email')
+      .eq('organization_id', organizationId)
+      .limit(1)
+      .single();
+
+    if (admin?.email) {
+      const template = emailTemplates.subscriptionCanceled(org.name || 'Your Organization');
+      await sendEmail({
+        to: admin.email,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+      });
+    }
+  }
+
   console.log(`Subscription canceled for org ${organizationId}`);
 }
 
@@ -165,13 +193,35 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   // Get organization by customer ID
   const { data: org } = await getSupabaseAdmin()
     .from('organizations')
-    .select('id')
+    .select('id, name, plan')
     .eq('stripe_customer_id', customerId)
     .single();
 
   if (org) {
     // Reset API usage for the new billing period
     await getSupabaseAdmin().from('organizations').update({ api_calls_used: 0 }).eq('id', org.id);
+
+    // Send payment receipt email
+    const { data: admin } = await getSupabaseAdmin()
+      .from('profiles')
+      .select('email')
+      .eq('organization_id', org.id)
+      .limit(1)
+      .single();
+
+    if (admin?.email) {
+      const template = emailTemplates.paymentSucceeded(
+        org.name || 'Your Organization',
+        invoice.amount_paid || 0,
+        org.plan || 'Pro'
+      );
+      await sendEmail({
+        to: admin.email,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+      });
+    }
 
     console.log(`Payment succeeded, reset usage for org ${org.id}`);
   }
@@ -194,7 +244,27 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
       .update({ plan_status: 'past_due' })
       .eq('id', org.id);
 
-    // TODO: Send email notification
+    // Send payment failed email notification
+    const { data: admin } = await getSupabaseAdmin()
+      .from('profiles')
+      .select('email')
+      .eq('organization_id', org.id)
+      .limit(1)
+      .single();
+
+    if (admin?.email) {
+      const template = emailTemplates.paymentFailed(
+        org.name || 'Your Organization',
+        invoice.amount_due || undefined
+      );
+      await sendEmail({
+        to: admin.email,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+      });
+      console.log(`Payment failed email sent to ${admin.email} for org ${org.id}`);
+    }
 
     console.log(`Payment failed for org ${org.id}`);
   }
