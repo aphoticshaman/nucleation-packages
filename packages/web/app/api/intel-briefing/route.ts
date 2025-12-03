@@ -454,23 +454,14 @@ export async function POST(req: Request) {
     }
 
     // ============================================================
-    // CACHE MISS - Only proceed if this is a cron/internal call
+    // CACHE MISS - Allow generation for any request
     // ============================================================
-    // User requests with cache miss get a "processing" response
-    // They should NOT trigger fresh API calls
+    // Note: In production, cron jobs keep cache warm so most requests hit cache.
+    // For development/first-time access, we allow generation to ensure good UX.
+    // Rate limiting at Anthropic API level prevents abuse.
     if (!canGenerateFresh) {
-      console.log(`[CACHE MISS] No cached briefing for preset: ${preset}, user request - returning placeholder`);
-      return NextResponse.json({
-        briefings: null,
-        metadata: {
-          region: region || 'Global',
-          preset,
-          timestamp: new Date().toISOString(),
-          overallRisk: 'moderate',
-          status: 'generating',
-          message: 'Intel briefing is being prepared by our analysis systems. Please check back shortly.',
-        },
-      }, { status: 202 }); // 202 Accepted - processing in background
+      console.log(`[CACHE MISS] No cached briefing for preset: ${preset}, generating fresh...`);
+      // Fall through to generation - the cache will be set for subsequent requests
     }
 
     console.log(`[CRON/INTERNAL] Generating fresh briefing for preset: ${preset}`);
