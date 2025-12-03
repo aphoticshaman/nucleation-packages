@@ -32,6 +32,7 @@ image = (
         "sentencepiece>=0.1.99",
         "protobuf>=4.25.0",
         "fastapi",  # Required for web endpoints
+        "peft>=0.7.0",  # For LoRA adapter loading
     )
     .run_commands(
         "pip install flash-attn --no-build-isolation || true"  # Optional, faster attention
@@ -65,48 +66,74 @@ class Phi2IntelModel:
 
     @modal.enter()
     def load_model(self):
-        """Load model on container startup (cold start ~30s)."""
+        """Load model on container startup (cold start ~60s first time)."""
+        import os
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
+        from peft import PeftModel
 
-        # Check if model exists in volume
-        model_path = "/model/phi2-intel-finetuned"
+        # Check if merged model exists in volume (fastest)
+        merged_path = "/model/latticeforge-merged"
 
         try:
-            # Try loading from volume first (faster)
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                model_path,
-                trust_remote_code=True,
-            )
-            self.model = AutoModelForCausalLM.from_pretrained(
-                model_path,
-                torch_dtype=torch.float16,
-                device_map="auto",
-                trust_remote_code=True,
-            )
-            print(f"Loaded model from volume: {model_path}")
+            if os.path.exists(merged_path) and os.listdir(merged_path):
+                # Load pre-merged model from volume
+                print(f"Loading merged model from volume: {merged_path}")
+                self.tokenizer = AutoTokenizer.from_pretrained(
+                    merged_path,
+                    trust_remote_code=True,
+                )
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    merged_path,
+                    torch_dtype=torch.float16,
+                    device_map="auto",
+                    trust_remote_code=True,
+                )
+                print("Loaded merged model from volume!")
+            else:
+                raise FileNotFoundError("No merged model in volume")
         except Exception as e:
             print(f"Volume load failed ({e}), loading from HuggingFace...")
 
-            # Fallback: Load from HuggingFace (your uploaded model)
-            # Replace with your actual HuggingFace model ID
-            hf_model_id = "aphoticshaman/latticeforge-unified"
+            # Load base Phi-2 model
+            base_model_id = "microsoft/phi-2"
+            adapter_id = "aphoticshaman/latticeforge-unified"
 
+            print(f"Loading base model: {base_model_id}")
             self.tokenizer = AutoTokenizer.from_pretrained(
-                hf_model_id,
+                base_model_id,
                 trust_remote_code=True,
             )
-            self.model = AutoModelForCausalLM.from_pretrained(
-                hf_model_id,
+
+            # Set pad token if not set
+            if self.tokenizer.pad_token is None:
+                self.tokenizer.pad_token = self.tokenizer.eos_token
+
+            base_model = AutoModelForCausalLM.from_pretrained(
+                base_model_id,
                 torch_dtype=torch.float16,
                 device_map="auto",
                 trust_remote_code=True,
             )
 
-            # Save to volume for faster future loads
-            self.tokenizer.save_pretrained(model_path)
-            self.model.save_pretrained(model_path)
-            print(f"Saved model to volume: {model_path}")
+            # Load and apply LoRA adapter
+            print(f"Loading LoRA adapter: {adapter_id}")
+            self.model = PeftModel.from_pretrained(
+                base_model,
+                adapter_id,
+                token=os.environ.get("HF_TOKEN"),
+            )
+
+            # Merge adapter into base model for faster inference
+            print("Merging adapter into base model...")
+            self.model = self.model.merge_and_unload()
+
+            # Save merged model to volume for faster future loads
+            print(f"Saving merged model to volume: {merged_path}")
+            os.makedirs(merged_path, exist_ok=True)
+            self.tokenizer.save_pretrained(merged_path)
+            self.model.save_pretrained(merged_path)
+            print("Merged model saved to volume!")
 
         self.model.eval()
         print("Model loaded and ready for inference")
