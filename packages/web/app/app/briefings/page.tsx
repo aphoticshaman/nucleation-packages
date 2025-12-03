@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import { useIntelBriefing, getRiskBadgeStyle } from '@/hooks/useIntelBriefing';
+import { Globe, Shield, TrendingUp, AlertTriangle, RefreshCw, Target } from 'lucide-react';
 
 const PRESETS = [
-  { id: 'global', name: 'Global Overview', icon: '🌍', desc: 'All 195 nations' },
-  { id: 'nato', name: 'NATO Alliance', icon: '🛡️', desc: '32 member states' },
-  { id: 'brics', name: 'BRICS+', icon: '🌏', desc: 'Emerging powers bloc' },
-  { id: 'conflict', name: 'Hot Spots', icon: '⚠️', desc: 'Active tension zones' },
+  { id: 'global', name: 'Global Overview', icon: Globe, desc: 'All 195 nations' },
+  { id: 'nato', name: 'NATO Alliance', icon: Shield, desc: '32 member states' },
+  { id: 'brics', name: 'BRICS+', icon: TrendingUp, desc: 'Emerging powers bloc' },
+  { id: 'conflict', name: 'Hot Spots', icon: AlertTriangle, desc: 'Active tension zones' },
 ];
 
 export default function BriefingsPage() {
@@ -30,53 +31,60 @@ export default function BriefingsPage() {
 
       {/* Preset selector */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {PRESETS.map((preset) => (
-          <button
-            key={preset.id}
-            onClick={() => {
-              setSelectedPreset(preset.id);
-              setHasLoaded(false);
-            }}
-            className={`p-4 rounded-xl border text-left transition-all ${
-              selectedPreset === preset.id
-                ? 'bg-blue-600/20 border-blue-500 text-white'
-                : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
-            }`}
-          >
-            <span className="text-2xl">{preset.icon}</span>
-            <p className="font-medium mt-2">{preset.name}</p>
-            <p className="text-xs text-slate-400 mt-1">{preset.desc}</p>
-          </button>
-        ))}
+        {PRESETS.map((preset) => {
+          const Icon = preset.icon;
+          return (
+            <button
+              key={preset.id}
+              onClick={() => {
+                setSelectedPreset(preset.id);
+                setHasLoaded(false);
+              }}
+              className={`p-4 rounded-xl border text-left transition-all min-h-[100px] ${
+                selectedPreset === preset.id
+                  ? 'bg-blue-500/20 border-blue-500/50 text-white'
+                  : 'bg-[rgba(18,18,26,0.7)] backdrop-blur-sm border-white/[0.06] text-slate-300 hover:border-white/[0.12] hover:bg-[rgba(18,18,26,0.8)]'
+              }`}
+            >
+              <Icon className={`w-6 h-6 mb-2 ${selectedPreset === preset.id ? 'text-blue-400' : 'text-slate-500'}`} />
+              <p className="font-medium">{preset.name}</p>
+              <p className="text-xs text-slate-400 mt-1">{preset.desc}</p>
+            </button>
+          );
+        })}
       </div>
 
       {/* Load button or briefing content */}
       {!hasLoaded ? (
-        <div className="bg-slate-900 rounded-xl border border-slate-800 p-8 text-center">
+        <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl border border-white/[0.06] p-8 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 flex items-center justify-center">
+            <RefreshCw className="w-8 h-8 text-blue-400" />
+          </div>
           <p className="text-slate-400 mb-4">Ready to generate briefing for {PRESETS.find(p => p.id === selectedPreset)?.name}</p>
           <button
             onClick={() => void handleLoad()}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium"
+            className="px-6 py-3.5 min-h-[52px] bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl font-medium
+              hover:shadow-[0_0_30px_rgba(59,130,246,0.4)] active:scale-[0.98] transition-all touch-manipulation"
           >
             Generate Intel Briefing
           </button>
           <p className="text-xs text-slate-500 mt-3">Cached for 10 minutes • Uses AI analysis</p>
         </div>
       ) : loading ? (
-        <div className="bg-slate-900 rounded-xl border border-slate-800 p-8">
+        <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl border border-white/[0.06] p-8">
           <div className="animate-pulse space-y-4">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="space-y-2">
-                <div className="h-4 bg-slate-800 rounded w-32" />
-                <div className="h-3 bg-slate-800 rounded w-full" />
+                <div className="h-4 bg-white/10 rounded w-32" />
+                <div className="h-3 bg-white/10 rounded w-full" />
               </div>
             ))}
           </div>
         </div>
       ) : (
-        <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 space-y-6">
+        <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl border border-white/[0.06] p-6 space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
             <div>
               <h2 className="text-lg font-semibold text-white">
                 {PRESETS.find(p => p.id === selectedPreset)?.name} Briefing
@@ -86,7 +94,7 @@ export default function BriefingsPage() {
               </p>
             </div>
             {metadata && (
-              <span className={`px-3 py-1 rounded text-sm font-medium ${getRiskBadgeStyle(metadata.overallRisk)}`}>
+              <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${getRiskBadgeStyle(metadata.overallRisk)}`}>
                 {metadata.overallRisk?.toUpperCase()} RISK
               </span>
             )}
@@ -95,8 +103,8 @@ export default function BriefingsPage() {
           {/* Briefing sections */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {briefings && Object.entries(briefings).filter(([key]) => !['summary', 'nsm'].includes(key)).map(([key, value]) => (
-              <div key={key} className="space-y-2">
-                <h3 className="text-sm font-medium text-blue-400 capitalize">{key.replace(/_/g, ' ')}</h3>
+              <div key={key} className="bg-black/20 rounded-lg border border-white/[0.04] p-4">
+                <h3 className="text-sm font-medium text-blue-400 capitalize mb-2">{key.replace(/_/g, ' ')}</h3>
                 <p className="text-sm text-slate-300">{value as string}</p>
               </div>
             ))}
@@ -104,13 +112,16 @@ export default function BriefingsPage() {
 
           {/* Summary & NSM */}
           {briefings?.summary && (
-            <div className="border-t border-slate-800 pt-4">
+            <div className="border-t border-white/[0.06] pt-4">
               <p className="text-slate-400 italic">{briefings.summary}</p>
             </div>
           )}
           {briefings?.nsm && (
-            <div className="bg-blue-950/30 border border-blue-800/50 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-blue-300 mb-2">🎯 Next Strategic Move</h3>
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Target className="w-4 h-4 text-blue-400" />
+                <h3 className="text-sm font-medium text-blue-300">Next Strategic Move</h3>
+              </div>
               <p className="text-sm text-blue-200">{briefings.nsm}</p>
             </div>
           )}
