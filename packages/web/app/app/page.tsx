@@ -5,6 +5,8 @@ import dynamic from 'next/dynamic';
 import { useWasm } from '@/hooks/useWasm';
 import { useSupabaseNations } from '@/hooks/useSupabaseNations';
 import { useIntelBriefing, getRiskBadgeStyle } from '@/hooks/useIntelBriefing';
+import HelpTip from '@/components/HelpTip';
+import Glossary from '@/components/Glossary';
 
 // Dynamic import for map (client-side only)
 const AttractorMap = dynamic(() => import('@/components/AttractorMap'), {
@@ -219,6 +221,7 @@ export default function ConsumerDashboard() {
   const [isSimulating, setIsSimulating] = useState(false);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
+  const [showGlossary, setShowGlossary] = useState(false);
 
   // Filter nations and edges based on selected preset
   const { nations, edges } = useMemo(() => {
@@ -282,23 +285,33 @@ export default function ConsumerDashboard() {
             </p>
           </div>
 
-          {/* Skill level selector - 44px min touch targets */}
-          <div className="flex items-center gap-1 bg-slate-900 rounded-lg p-1 border border-slate-800">
-            {SKILL_LEVELS.map((level) => (
-              <button
-                key={level.id}
-                onClick={() => setSkillLevel(level.id)}
-                className={`min-h-[44px] px-3 md:px-4 rounded-md text-xs md:text-sm transition-all flex items-center gap-1.5 ${
-                  skillLevel === level.id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800 active:bg-slate-700'
-                }`}
-                title={level.desc}
-              >
-                <span className="text-base">{level.icon}</span>
-                <span className="hidden sm:inline">{level.label}</span>
-              </button>
-            ))}
+          {/* Skill level selector + Help */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 bg-slate-900 rounded-lg p-1 border border-slate-800">
+              {SKILL_LEVELS.map((level) => (
+                <button
+                  key={level.id}
+                  onClick={() => setSkillLevel(level.id)}
+                  className={`min-h-[44px] px-3 md:px-4 rounded-md text-xs md:text-sm transition-all flex items-center gap-1.5 ${
+                    skillLevel === level.id
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800 active:bg-slate-700'
+                  }`}
+                  title={level.desc}
+                >
+                  <span className="text-base">{level.icon}</span>
+                  <span className="hidden sm:inline">{level.label}</span>
+                </button>
+              ))}
+            </div>
+            {/* Glossary button */}
+            <button
+              onClick={() => setShowGlossary(true)}
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              title="Terminology Reference"
+            >
+              <span className="text-lg">📖</span>
+            </button>
           </div>
         </div>
 
@@ -768,6 +781,12 @@ export default function ConsumerDashboard() {
                   <div className="flex items-center gap-2">
                     <span>{layer.icon}</span>
                     <span className="font-medium text-sm">{layer.name}</span>
+                    <HelpTip
+                      term={layer.id === 'basin' ? 'Basin' : layer.id === 'risk' ? 'Transition Risk' : 'Regime'}
+                      skillLevel={skillLevel}
+                      size={12}
+                      position="right"
+                    />
                   </div>
                   <p className="text-xs opacity-75 mt-1 ml-6">{getDescription(layer)}</p>
                 </button>
@@ -780,6 +799,7 @@ export default function ConsumerDashboard() {
             <h3 className="font-medium text-white mb-2 text-sm flex items-center gap-2">
               <span>⚡</span>
               <span>{skillLevel === 'simple' ? 'See the future' : skillLevel === 'detailed' ? 'Propagate Dynamics' : 'Run Simulation'}</span>
+              <HelpTip term="Monte Carlo" skillLevel={skillLevel} size={12} position="right" />
             </h3>
             <p className="text-xs text-slate-500 mb-3">
               {skillLevel === 'simple'
@@ -881,6 +901,13 @@ export default function ConsumerDashboard() {
           </p>
         </div>
       </div>
+
+      {/* Glossary Modal */}
+      <Glossary
+        isOpen={showGlossary}
+        onClose={() => setShowGlossary(false)}
+        skillLevel={skillLevel}
+      />
     </div>
   );
 }
