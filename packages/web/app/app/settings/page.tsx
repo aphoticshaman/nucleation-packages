@@ -1,6 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
+import dynamic from 'next/dynamic';
+
+// Dynamic import to handle useSearchParams with Suspense
+const IntegrationsSettings = dynamic(
+  () => import('@/components/settings/IntegrationsSettings'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="bg-slate-900 rounded-xl border border-slate-800 p-6">
+        <div className="animate-pulse">
+          <div className="h-6 w-32 bg-slate-700 rounded mb-4" />
+          <div className="h-20 bg-slate-800 rounded" />
+        </div>
+      </div>
+    ),
+  }
+);
 
 export default function ConsumerSettingsPage() {
   const [saving, setSaving] = useState(false);
@@ -83,6 +100,20 @@ export default function ConsumerSettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Integrations */}
+      <Suspense
+        fallback={
+          <div className="bg-slate-900 rounded-xl border border-slate-800 p-6">
+            <div className="animate-pulse">
+              <div className="h-6 w-32 bg-slate-700 rounded mb-4" />
+              <div className="h-20 bg-slate-800 rounded" />
+            </div>
+          </div>
+        }
+      >
+        <IntegrationsSettings />
+      </Suspense>
 
       {/* Usage */}
       <div className="bg-slate-900 rounded-xl border border-slate-800 p-6">
