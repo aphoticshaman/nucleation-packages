@@ -440,20 +440,4 @@ export function calculateDataQuality(
   };
 }
 
-// ============================================
-// EXPORT
-// ============================================
-
-export type {
-  DataPoint,
-  DataPointMetadata,
-  SourceContribution,
-  PipelineSummary,
-  DashboardDataConfig,
-  DashboardFocus,
-  DataSourceConfig,
-  RefreshConfig,
-  PipelineRegistry,
-  SourceStatus,
-  DataQualityIndicator,
-};
+// Types are exported inline at their declarations above
