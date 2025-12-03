@@ -228,7 +228,7 @@ const DIFFERENTIATORS = [
   {
     icon: Shield,
     title: 'Enterprise Security',
-    description: 'SOC 2 compliant. AES-256 encryption. Your data never trains our models.',
+    description: 'AES-256 encryption at rest. Your data never trains our models.',
   },
 ];
 
@@ -298,11 +298,11 @@ export default function LoginPage() {
             <p className="text-xs text-slate-600 mt-2">- The LatticeForge Team</p>
           </div>
 
-          {/* Trust badges */}
+          {/* Trust indicators */}
           <div className="flex items-center gap-6 mt-8">
             <div className="flex items-center gap-2 text-xs text-slate-500">
               <Shield className="w-4 h-4" />
-              <span>SOC 2 Type II</span>
+              <span>Encrypted</span>
             </div>
             <div className="flex items-center gap-2 text-xs text-slate-500">
               <Globe className="w-4 h-4" />
