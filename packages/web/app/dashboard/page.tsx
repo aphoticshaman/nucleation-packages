@@ -251,13 +251,13 @@ async function DashboardContent() {
             </p>
           </div>
           <div className="flex gap-2 shrink-0">
-            <button className="px-2.5 md:px-3 py-1 md:py-1.5 text-xs md:text-sm bg-slate-700 text-white rounded hover:bg-slate-600">
+            <button className="min-h-[44px] px-3 md:px-4 text-xs md:text-sm bg-slate-700 text-white rounded-lg hover:bg-slate-600 active:bg-slate-500">
               cURL
             </button>
-            <button className="px-2.5 md:px-3 py-1 md:py-1.5 text-xs md:text-sm bg-slate-800 text-slate-400 rounded hover:bg-slate-700">
+            <button className="min-h-[44px] px-3 md:px-4 text-xs md:text-sm bg-slate-800 text-slate-400 rounded-lg hover:bg-slate-700 active:bg-slate-600">
               Python
             </button>
-            <button className="px-2.5 md:px-3 py-1 md:py-1.5 text-xs md:text-sm bg-slate-800 text-slate-400 rounded hover:bg-slate-700">
+            <button className="min-h-[44px] px-3 md:px-4 text-xs md:text-sm bg-slate-800 text-slate-400 rounded-lg hover:bg-slate-700 active:bg-slate-600">
               Node.js
             </button>
           </div>

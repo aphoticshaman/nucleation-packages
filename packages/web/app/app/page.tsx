@@ -283,30 +283,30 @@ export default function ConsumerDashboard() {
             </p>
           </div>
 
-          {/* Skill level selector */}
+          {/* Skill level selector - 44px min touch targets */}
           <div className="flex items-center gap-1 bg-slate-900 rounded-lg p-1 border border-slate-800">
             {SKILL_LEVELS.map((level) => (
               <button
                 key={level.id}
                 onClick={() => setSkillLevel(level.id)}
-                className={`px-3 py-1.5 md:px-4 md:py-2 rounded-md text-xs md:text-sm transition-all flex items-center gap-1.5 ${
+                className={`min-h-[44px] px-3 md:px-4 rounded-md text-xs md:text-sm transition-all flex items-center gap-1.5 ${
                   skillLevel === level.id
                     ? 'bg-blue-600 text-white'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800 active:bg-slate-700'
                 }`}
                 title={level.desc}
               >
-                <span>{level.icon}</span>
+                <span className="text-base">{level.icon}</span>
                 <span className="hidden sm:inline">{level.label}</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Quick insight toggle */}
+        {/* Quick insight toggle - 44px touch target */}
         <button
           onClick={() => setShowInsights(!showInsights)}
-          className="self-start flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300"
+          className="self-start min-h-[44px] flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 active:text-blue-200 px-2 -ml-2"
         >
           <span>{showInsights ? '▼' : '▶'}</span>
           <span>{showInsights ? 'Hide' : 'Show'} key information</span>
@@ -824,18 +824,18 @@ export default function ConsumerDashboard() {
             <p className="text-xs text-slate-500 mt-2 text-center">10 remaining today</p>
           </div>
 
-          {/* Save */}
+          {/* Save - 44px touch target */}
           <div className="bg-slate-900 rounded-xl border border-slate-800 p-4">
-            <button className="w-full py-2.5 rounded-lg font-medium bg-slate-800 text-white hover:bg-slate-700 transition-colors text-sm">
+            <button className="w-full min-h-[44px] rounded-lg font-medium bg-slate-800 text-white hover:bg-slate-700 active:bg-slate-600 transition-colors text-sm">
               💾 Save This View
             </button>
             <p className="text-xs text-slate-500 mt-2 text-center">3 of 5 slots used</p>
           </div>
 
-          {/* Mobile controls toggle (shows when controls hidden) */}
+          {/* Mobile controls toggle - 48px for FAB */}
           <button
             onClick={() => setControlsOpen(!controlsOpen)}
-            className="fixed bottom-4 right-4 lg:hidden z-30 px-4 py-3 bg-blue-600 text-white rounded-full shadow-lg flex items-center gap-2"
+            className="fixed bottom-4 right-4 lg:hidden z-30 min-h-[48px] px-4 bg-blue-600 text-white rounded-full shadow-lg flex items-center gap-2 active:bg-blue-500"
           >
             <span>⚙️</span>
             <span className="text-sm font-medium">Controls</span>

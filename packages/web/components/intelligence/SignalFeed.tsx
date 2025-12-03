@@ -109,13 +109,13 @@ function EntityChip({
     <button
       onClick={onClick}
       className={`
-        inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs
-        transition-all hover:scale-105 cursor-pointer
+        inline-flex items-center gap-1.5 px-2.5 py-1.5 min-h-[32px] rounded-full border text-xs
+        transition-all hover:scale-105 active:scale-95 cursor-pointer
         ${config.color}
       `}
     >
-      <span className="text-[10px]">{config.icon}</span>
-      <span className="font-medium truncate max-w-[100px]">{entity.text}</span>
+      <span className="text-sm">{config.icon}</span>
+      <span className="font-medium truncate max-w-[120px] sm:max-w-[140px]">{entity.text}</span>
       {entity.confidence < 0.8 && (
         <span className="text-[10px] opacity-50">?</span>
       )}
@@ -192,7 +192,7 @@ function SignalCard({
 
           {/* Entities */}
           {signal.entities.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-2">
+            <div className="flex flex-wrap gap-2 mt-3">
               {signal.entities.slice(0, isExpanded ? undefined : 4).map(entity => (
                 <EntityChip
                   key={entity.id}

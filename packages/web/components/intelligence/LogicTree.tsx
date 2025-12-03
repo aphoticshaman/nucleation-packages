@@ -205,7 +205,7 @@ function TreeLevel({
           .filter(Boolean) as LogicNode[];
 
         return (
-          <div key={node.id} className="flex items-start gap-8">
+          <div key={node.id} className="flex flex-col md:flex-row items-start gap-3 md:gap-8">
             {/* Current node */}
             <LogicNodeComponent
               node={node}
@@ -270,34 +270,34 @@ export function LogicTree({
   }, [onNodeClick]);
 
   return (
-    <div className="relative bg-slate-900/50 rounded-xl border border-slate-700/50 p-6">
+    <div className="relative bg-slate-900/50 rounded-xl border border-slate-700/50 p-3 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <h3 className="text-lg font-medium text-slate-200">Logic Tree Inspector</h3>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 md:mb-6">
+        <div className="flex items-center gap-2 md:gap-3">
+          <h3 className="text-base md:text-lg font-medium text-slate-200">Logic Tree</h3>
           <div className="px-2 py-1 rounded text-xs font-medium bg-green-500/20 text-green-400">
             {data.finalDecision}
           </div>
         </div>
 
         {/* Controls */}
-        <div className="flex items-center gap-3">
-          {/* Counterfactual toggle */}
+        <div className="flex items-center gap-2 md:gap-3">
+          {/* Counterfactual toggle - 44px touch target */}
           <button
             onClick={() => setIsCounterfactualMode(!isCounterfactualMode)}
             className={`
-              px-3 py-1.5 rounded text-xs font-medium transition-colors
+              min-h-[44px] px-3 md:px-4 rounded text-xs font-medium transition-colors
               ${isCounterfactualMode
                 ? 'bg-orange-500/20 text-orange-400 border border-orange-500/50'
-                : 'bg-slate-800 text-slate-400 border border-slate-700 hover:border-slate-600'
+                : 'bg-slate-800 text-slate-400 border border-slate-700 active:border-slate-500'
               }
             `}
           >
-            {isCounterfactualMode ? '↩ Exit Counterfactual' : '🔄 What If?'}
+            {isCounterfactualMode ? '↩ Exit' : '🔄 What If?'}
           </button>
 
-          {/* Legend */}
-          <div className="flex items-center gap-4 text-xs">
+          {/* Legend - hidden on smallest screens */}
+          <div className="hidden sm:flex items-center gap-2 md:gap-4 text-xs">
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 rounded-full bg-cyan-500/50 border border-cyan-500" />
               <span className="text-slate-400">Neural</span>
@@ -311,17 +311,19 @@ export function LogicTree({
       </div>
 
       {/* Overall confidence */}
-      <div className="mb-6 flex items-center gap-4">
-        <span className="text-sm text-slate-400">Overall Confidence:</span>
-        <div className="flex-1 max-w-xs h-2 bg-slate-800 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-cyan-500 to-green-500 transition-all duration-500"
-            style={{ width: `${data.overallConfidence * 100}%` }}
-          />
+      <div className="mb-4 md:mb-6 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+        <span className="text-xs sm:text-sm text-slate-400">Confidence:</span>
+        <div className="flex items-center gap-2 flex-1">
+          <div className="flex-1 max-w-xs h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-cyan-500 to-green-500 transition-all duration-500"
+              style={{ width: `${data.overallConfidence * 100}%` }}
+            />
+          </div>
+          <span className="text-sm font-mono text-slate-200">
+            {(data.overallConfidence * 100).toFixed(1)}%
+          </span>
         </div>
-        <span className="text-sm font-mono text-slate-200">
-          {(data.overallConfidence * 100).toFixed(1)}%
-        </span>
       </div>
 
       {/* Tree visualization */}

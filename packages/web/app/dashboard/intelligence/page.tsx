@@ -58,11 +58,11 @@ export default function IntelligenceDashboard() {
       />
 
       {/* Main Layout */}
-      <div className="flex h-[calc(100vh-48px)]">
-        {/* Sidebar */}
-        <aside className="w-16 bg-slate-900/80 border-r border-slate-800 flex flex-col items-center py-4 gap-2">
+      <div className="flex flex-col md:flex-row h-[calc(100dvh-48px)]">
+        {/* Desktop Sidebar - hidden on mobile */}
+        <aside className="hidden md:flex w-16 bg-slate-900/80 border-r border-slate-800 flex-col items-center py-4 gap-2">
           {/* Logo */}
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold mb-4">
+          <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold mb-4">
             LF
           </div>
 
@@ -91,14 +91,14 @@ export default function IntelligenceDashboard() {
           {/* Command palette trigger */}
           <button
             onClick={open}
-            className="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+            className="w-11 h-11 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
             title="Command Palette (⌘K)"
           >
             ⌘
           </button>
 
           {/* Settings */}
-          <button className="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+          <button className="w-11 h-11 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
             ⚙️
           </button>
         </aside>
@@ -106,9 +106,9 @@ export default function IntelligenceDashboard() {
         {/* Main Content */}
         <main className="flex-1 flex flex-col overflow-hidden">
           {/* Top Bar */}
-          <header className="h-14 px-6 bg-slate-900/50 border-b border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1 className="text-lg font-semibold">
+          <header className="h-14 px-3 md:px-6 bg-slate-900/50 border-b border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-2 md:gap-4">
+              <h1 className="text-base md:text-lg font-semibold truncate">
                 {selectedView === 'feed' && 'Signal Feed'}
                 {selectedView === 'logic' && 'Logic Inspector'}
                 {selectedView === 'map' && 'Risk Map'}
@@ -119,27 +119,32 @@ export default function IntelligenceDashboard() {
               />
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Filter chips */}
-              <div className="flex gap-2">
+            <div className="flex items-center gap-2 md:gap-3">
+              {/* Filter chips - hidden on mobile */}
+              <div className="hidden md:flex gap-2">
                 <FilterChip label="All Domains" isActive />
                 <FilterChip label="Critical Only" />
                 <FilterChip label="Last 1h" />
               </div>
 
-              {/* Search */}
+              {/* Search - touch-friendly on mobile */}
               <button
                 onClick={open}
-                className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 rounded-lg text-sm text-slate-400 hover:text-white transition-colors"
+                className="hidden md:flex items-center gap-2 px-3 py-2 bg-slate-800 rounded-lg text-sm text-slate-400 hover:text-white transition-colors"
               >
                 <span>Search...</span>
                 <kbd className="px-1.5 py-0.5 bg-slate-700 rounded text-xs">⌘K</kbd>
               </button>
+
+              {/* Mobile filter button */}
+              <button className="md:hidden min-h-[44px] min-w-[44px] flex items-center justify-center bg-slate-800 rounded-lg text-slate-400 active:bg-slate-700">
+                <span className="text-lg">☰</span>
+              </button>
             </div>
           </header>
 
-          {/* Content Area */}
-          <div className="flex-1 overflow-hidden p-6">
+          {/* Content Area - extra bottom padding on mobile for nav */}
+          <div className="flex-1 overflow-hidden p-3 md:p-6 pb-20 md:pb-6">
             {selectedView === 'feed' && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                 {/* Signal Feed - 2 cols */}
@@ -237,6 +242,36 @@ export default function IntelligenceDashboard() {
             )}
           </div>
         </main>
+
+        {/* Mobile Bottom Navigation - 44px+ touch targets */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-sm border-t border-slate-800 px-2 pb-safe">
+          <div className="flex items-center justify-around h-16">
+            <MobileNavButton
+              icon="📡"
+              label="Signals"
+              isActive={selectedView === 'feed'}
+              onClick={() => setSelectedView('feed')}
+            />
+            <MobileNavButton
+              icon="🧠"
+              label="Logic"
+              isActive={selectedView === 'logic'}
+              onClick={() => setSelectedView('logic')}
+            />
+            <MobileNavButton
+              icon="🗺️"
+              label="Map"
+              isActive={selectedView === 'map'}
+              onClick={() => setSelectedView('map')}
+            />
+            <MobileNavButton
+              icon="⌘"
+              label="Search"
+              isActive={false}
+              onClick={open}
+            />
+          </div>
+        </nav>
       </div>
     </div>
   );
@@ -258,7 +293,7 @@ function NavButton({
     <button
       onClick={onClick}
       className={`
-        w-10 h-10 rounded-lg flex items-center justify-center transition-all
+        w-11 h-11 rounded-lg flex items-center justify-center transition-all
         ${isActive
           ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.3)]'
           : 'text-slate-400 hover:bg-slate-800 hover:text-white'
@@ -267,6 +302,34 @@ function NavButton({
       title={label}
     >
       <span className="text-lg">{icon}</span>
+    </button>
+  );
+}
+
+function MobileNavButton({
+  icon,
+  label,
+  isActive,
+  onClick,
+}: {
+  icon: string;
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        min-w-[56px] h-12 px-3 rounded-lg flex flex-col items-center justify-center gap-0.5 transition-all
+        ${isActive
+          ? 'bg-cyan-500/20 text-cyan-400'
+          : 'text-slate-400 active:bg-slate-800 active:text-white'
+        }
+      `}
+    >
+      <span className="text-lg">{icon}</span>
+      <span className="text-[10px] font-medium">{label}</span>
     </button>
   );
 }
