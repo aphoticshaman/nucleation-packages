@@ -12,6 +12,54 @@ import {
 // Vercel Edge Runtime for low latency
 export const runtime = 'edge';
 
+// =============================================================================
+// SERVER-SIDE CACHE - Prevents redundant LLM calls across ALL users
+// =============================================================================
+// Cache TTL: 10 minutes. All users hitting the same preset get cached response.
+// Only Enterprise tier gets fresh on-demand analysis.
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+interface CachedBriefing {
+  data: {
+    briefings: Record<string, string>;
+    metadata: Record<string, unknown>;
+  };
+  timestamp: number;
+  generatedAt: string;
+}
+
+// In-memory cache - shared across all requests in the same edge instance
+// For production at scale, replace with Vercel KV or Redis
+const briefingCache = new Map<string, CachedBriefing>();
+
+function getCacheKey(preset: string): string {
+  return `briefing:${preset}`;
+}
+
+function getCachedBriefing(preset: string): CachedBriefing | null {
+  const key = getCacheKey(preset);
+  const cached = briefingCache.get(key);
+
+  if (!cached) return null;
+
+  // Check if expired
+  if (Date.now() - cached.timestamp > CACHE_TTL_MS) {
+    briefingCache.delete(key);
+    return null;
+  }
+
+  return cached;
+}
+
+function setCachedBriefing(preset: string, data: CachedBriefing['data']): void {
+  const key = getCacheKey(preset);
+  briefingCache.set(key, {
+    data,
+    timestamp: Date.now(),
+    generatedAt: new Date().toISOString(),
+  });
+}
+
 // Types for our computed intel
 interface ComputedMetrics {
   region: string;
@@ -406,7 +454,34 @@ export async function POST(req: Request) {
     const userTier = profile?.role || 'consumer';
 
     // Parse request
-    const { preset = 'global', region } = await req.json();
+    const { preset = 'global', region, forceRefresh = false } = await req.json();
+
+    // ============================================================
+    // CACHE CHECK - Return cached response for non-Enterprise users
+    // ============================================================
+    // Only Enterprise tier can force fresh analysis (they pay for it!)
+    // Everyone else gets the cached version that updates every 10 min
+    const isEnterprise = userTier === 'enterprise';
+    const shouldUseCached = !isEnterprise && !forceRefresh;
+
+    if (shouldUseCached) {
+      const cached = getCachedBriefing(preset);
+      if (cached) {
+        console.log(`[CACHE HIT] Serving cached briefing for preset: ${preset}, age: ${Math.round((Date.now() - cached.timestamp) / 1000)}s`);
+        return NextResponse.json({
+          ...cached.data,
+          metadata: {
+            ...cached.data.metadata,
+            cached: true,
+            cachedAt: cached.generatedAt,
+            cacheAgeSeconds: Math.round((Date.now() - cached.timestamp) / 1000),
+          },
+        });
+      }
+      console.log(`[CACHE MISS] No cached briefing for preset: ${preset}, generating fresh...`);
+    } else if (isEnterprise) {
+      console.log(`[ENTERPRISE] Fresh analysis for user, preset: ${preset}`);
+    }
 
     // ============================================================
     // SECURITY LAYER - Validate input and check rate limits
@@ -695,7 +770,7 @@ export async function POST(req: Request) {
 
     const totalLatency = Date.now() - startTime;
 
-    return NextResponse.json({
+    const responseData = {
       briefings,
       metadata: {
         region: computedMetrics.region,
@@ -716,8 +791,18 @@ export async function POST(req: Request) {
           llmLatencyMs: llmLatency,
         },
         rateLimitRemaining: rateLimit.remaining,
+        cached: false,
       },
-    });
+    };
+
+    // ============================================================
+    // CACHE SET - Store for future requests (non-Enterprise users)
+    // ============================================================
+    // Cache the response so next user hitting this preset gets instant response
+    setCachedBriefing(preset, responseData);
+    console.log(`[CACHE SET] Cached fresh briefing for preset: ${preset}`);
+
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error('Intel briefing error:', error);
 
