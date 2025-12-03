@@ -85,7 +85,7 @@ export { TokenAttention, TokenHeatmap, AttentionComparison, mockTokenWeights } f
 export { DataTable, RiskCell, TrendCell, StatusCell } from './DataTable';
 
 // Component 18: Citation Manager with NATO Admiralty Codes
-export { CitationManager, CitationBadge, mockCitations } from './CitationManager';
+export { CitationManager, CitationRef, mockCitations } from './CitationManager';
 
 // Component 19: Force-Directed Network Graph
 export { NetworkGraph, mockNetworkData } from './NetworkGraph';
