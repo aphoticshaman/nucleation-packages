@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
-import { createCheckoutSession, getOrCreateCustomer, PRICE_IDS, isStripeConfigured } from '@/lib/stripe';
+import { createCheckoutSession, getOrCreateCustomer, getPriceId, isStripeConfigured } from '@/lib/stripe';
 
 export async function POST(req: Request) {
   try {
@@ -119,10 +119,16 @@ export async function POST(req: Request) {
         .eq('id', organizationId);
     }
 
-    // Get price ID
-    const priceId = PRICE_IDS[planId as keyof typeof PRICE_IDS];
+    // Get price ID at runtime (not build time)
+    const priceId = getPriceId(planId as 'starter' | 'pro' | 'enterprise');
 
     if (!priceId) {
+      console.error(`Price not configured for plan: ${planId}`);
+      console.error('Available env vars:', {
+        STRIPE_PRICE_STARTER: !!process.env.STRIPE_PRICE_STARTER,
+        STRIPE_PRICE_PRO: !!process.env.STRIPE_PRICE_PRO,
+        STRIPE_PRICE_ENTERPRISE: !!process.env.STRIPE_PRICE_ENTERPRISE,
+      });
       return NextResponse.json({ error: 'Price not configured' }, { status: 500 });
     }
 
