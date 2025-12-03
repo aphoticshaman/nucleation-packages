@@ -19,6 +19,8 @@ def main():
         "geopolitical_risk_training.json",
         "cascade_history_training.json",
         "energy_materials_training.json",
+        "freedom_coercion_training.json",
+        "tech_materials_systems_training.json",
     ]
 
     all_examples = []
