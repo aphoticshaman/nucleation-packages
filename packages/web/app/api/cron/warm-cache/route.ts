@@ -11,11 +11,11 @@ import { NextResponse } from 'next/server';
  * {
  *   "crons": [{
  *     "path": "/api/cron/warm-cache",
- *     "schedule": "*/10 * * * *"
+ *     "schedule": "0,10,20,30,40,50 (every-10-min)"
  *   }]
  * }
  *
- * Or call externally: curl -X POST https://yoursite.com/api/cron/warm-cache \
+ * Or call externally: curl -X POST https://yoursite.com/api/cron/warm-cache
  *                          -H "Authorization: Bearer YOUR_CRON_SECRET"
  */
 

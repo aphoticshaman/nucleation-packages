@@ -1,12 +1,45 @@
 import Stripe from 'stripe';
 
+// ============================================
+// STRIPE SETUP CHECKLIST
+// ============================================
+// Before subscriptions work, you need:
+//
+// 1. STRIPE_SECRET_KEY - From Stripe Dashboard > Developers > API Keys
+// 2. STRIPE_WEBHOOK_SECRET - From Stripe Dashboard > Developers > Webhooks
+//    (Create webhook pointing to /api/webhooks/stripe)
+// 3. Create Products & Prices in Stripe Dashboard:
+//    - Starter ($19/mo) -> copy Price ID to STRIPE_PRICE_STARTER
+//    - Pro ($49/mo) -> copy Price ID to STRIPE_PRICE_PRO
+//    - Enterprise (custom) -> copy Price ID to STRIPE_PRICE_ENTERPRISE
+//
+// Test mode price IDs look like: price_1ABC123...
+// ============================================
+
 // Lazy-initialized Stripe client (avoids build-time env var access)
 let _stripe: Stripe | null = null;
 
+export function isStripeConfigured(): { ok: boolean; missing: string[] } {
+  const missing: string[] = [];
+  if (!process.env.STRIPE_SECRET_KEY) missing.push('STRIPE_SECRET_KEY');
+  if (!process.env.STRIPE_WEBHOOK_SECRET) missing.push('STRIPE_WEBHOOK_SECRET');
+  if (!process.env.STRIPE_PRICE_STARTER) missing.push('STRIPE_PRICE_STARTER');
+  if (!process.env.STRIPE_PRICE_PRO) missing.push('STRIPE_PRICE_PRO');
+  if (!process.env.STRIPE_PRICE_ENTERPRISE) missing.push('STRIPE_PRICE_ENTERPRISE');
+  return { ok: missing.length === 0, missing };
+}
+
 function getStripe(): Stripe {
   if (!_stripe) {
-    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: '2023-10-16',
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) {
+      throw new Error(
+        'STRIPE_SECRET_KEY not configured. Add it to your .env.local file. ' +
+        'Get it from: https://dashboard.stripe.com/apikeys'
+      );
+    }
+    _stripe = new Stripe(secretKey, {
+      apiVersion: '2024-11-20.acacia',
       typescript: true,
     });
   }
