@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { ALL_FINANCIAL_SOURCES, MARKET_INDICATORS, type FinancialSource } from '@/lib/signals/financialSources';
-import { TrendingUp, Fuel, DollarSign, Bitcoin, Building, Globe, Bell, Plus, Settings } from 'lucide-react';
+import { TrendingUp, Fuel, DollarSign, Bitcoin, Building, Globe, Bell, Plus, Settings, BookOpen } from 'lucide-react';
+import Glossary from '@/components/Glossary';
+import HelpTip from '@/components/HelpTip';
 
 const SIGNAL_CATEGORIES = [
   { id: 'equities', name: 'Equities', icon: TrendingUp, desc: 'Stock market indices' },
@@ -16,6 +18,7 @@ const SIGNAL_CATEGORIES = [
 export default function SignalsPage() {
   const [selectedCategory, setSelectedCategory] = useState('equities');
   const [activeAPIs, setActiveAPIs] = useState<string[]>(['yahoo_finance', 'fred']);
+  const [showGlossary, setShowGlossary] = useState(false);
 
   const toggleAPI = (apiId: string) => {
     setActiveAPIs(prev =>
@@ -33,12 +36,21 @@ export default function SignalsPage() {
           <h1 className="text-2xl font-bold text-white">Market Signals</h1>
           <p className="text-slate-400 mt-1">Real-time financial data from 12+ sources</p>
         </div>
-        <div className="text-right">
-          <div className="flex items-center gap-2 text-green-400">
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-sm font-medium">Live</span>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setShowGlossary(true)}
+            className="flex items-center gap-2 px-3 py-2 min-h-[44px] bg-[rgba(18,18,26,0.7)] backdrop-blur-sm rounded-xl border border-white/[0.06] text-slate-400 hover:text-white hover:border-white/[0.12] transition-all"
+          >
+            <BookOpen className="w-4 h-4" />
+            <span className="text-sm">Terms</span>
+          </button>
+          <div className="text-right">
+            <div className="flex items-center gap-2 text-green-400">
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-sm font-medium">Live</span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">{activeAPIs.length} sources active</p>
           </div>
-          <p className="text-xs text-slate-500 mt-1">{activeAPIs.length} sources active</p>
         </div>
       </div>
 
@@ -153,6 +165,13 @@ export default function SignalsPage() {
           </div>
         </div>
       </div>
+
+      {/* Glossary Modal */}
+      <Glossary
+        isOpen={showGlossary}
+        onClose={() => setShowGlossary(false)}
+        skillLevel="standard"
+      />
     </div>
   );
 }
