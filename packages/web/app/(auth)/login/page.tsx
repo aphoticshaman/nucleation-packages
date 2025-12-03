@@ -239,27 +239,28 @@ export default function LoginPage() {
 
       {/* Left side - Form */}
       <div className="flex-1 relative flex items-center justify-center py-8 sm:py-12 lg:py-16 min-h-screen lg:min-h-0">
-        {/* Hero sphere - background on mobile, decorative on desktop */}
+        {/* Hero wireframe sphere - background on mobile */}
         <div className="absolute inset-0 lg:hidden overflow-hidden">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] opacity-30">
+          {/* Orange glow behind sphere */}
+          <div
+            className="absolute top-[30%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(251,146,60,0.4) 0%, rgba(251,146,60,0.15) 40%, transparent 70%)' }}
+          />
+          {/* Wireframe sphere */}
+          <div className="absolute top-[30%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] h-[320px] opacity-50">
             <Image
-              src="/images/shapes/sphere.png"
+              src="/images/hero/wireframe-sphere.png"
               alt=""
               fill
               className="object-contain"
               priority
             />
           </div>
-          {/* Orange glow */}
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full opacity-20"
-            style={{ background: 'radial-gradient(circle, rgba(251,146,60,0.5) 0%, transparent 70%)' }}
-          />
         </div>
 
-        {/* Blue accent glow */}
-        <div className="absolute top-0 left-0 w-[600px] h-[600px] -translate-x-1/2 -translate-y-1/2 opacity-30 pointer-events-none">
-          <div className="w-full h-full rounded-full bg-blue-500/30 blur-[100px]" />
+        {/* Blue accent glow - top left corner */}
+        <div className="absolute -top-32 -left-32 w-[500px] h-[500px] opacity-25 pointer-events-none">
+          <div className="w-full h-full rounded-full bg-blue-600/40 blur-[120px]" />
         </div>
 
         <Suspense fallback={<LoginFallback />}>
@@ -269,28 +270,28 @@ export default function LoginPage() {
 
       {/* Right side - Hero visual (desktop only) */}
       <div className="hidden lg:flex flex-1 relative items-center justify-center bg-[rgba(10,10,15,0.5)] border-l border-white/[0.05] overflow-hidden">
-        {/* Large sphere hero */}
-        <div className="relative w-[600px] h-[600px] xl:w-[700px] xl:h-[700px]">
+        {/* Orange glow - core effect */}
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[55%] w-[500px] h-[500px] xl:w-[600px] xl:h-[600px] rounded-full pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, rgba(251,146,60,0.5) 0%, rgba(251,146,60,0.2) 30%, transparent 60%)',
+          }}
+        />
+        {/* Blue accent glow */}
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[55%] w-[600px] h-[600px] xl:w-[700px] xl:h-[700px] rounded-full pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle at 30% 70%, rgba(59,130,246,0.15) 0%, transparent 50%)',
+          }}
+        />
+        {/* Large wireframe sphere hero */}
+        <div className="relative w-[500px] h-[500px] xl:w-[600px] xl:h-[600px] -mt-16">
           <Image
-            src="/images/shapes/sphere.png"
+            src="/images/hero/wireframe-sphere.png"
             alt="LatticeForge Intelligence Network"
             fill
             className="object-contain drop-shadow-2xl"
             priority
-          />
-          {/* Orange glow behind sphere */}
-          <div
-            className="absolute inset-0 -z-10"
-            style={{
-              background: 'radial-gradient(circle at center, rgba(251,146,60,0.3) 0%, rgba(251,146,60,0.1) 30%, transparent 60%)',
-            }}
-          />
-          {/* Blue accent */}
-          <div
-            className="absolute inset-0 -z-10"
-            style={{
-              background: 'radial-gradient(circle at 30% 70%, rgba(59,130,246,0.2) 0%, transparent 50%)',
-            }}
           />
         </div>
 
