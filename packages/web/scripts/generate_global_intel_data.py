@@ -246,7 +246,7 @@ def generate_examples() -> List[Dict]:
             examples.append({"instruction": v, "input": "", "output": f"[Analysis would go here]"})
 
     # ==========================================================================
-    # 4. SOCIOPOLITICAL DYNAMICS
+    # 4. SOCIOPOLITICAL DYNAMICS - Expanded significantly
     # ==========================================================================
     sociopolitical_topics = {
         "us_tribalism": [
@@ -260,6 +260,11 @@ def generate_examples() -> List[Dict]:
             "What sectors benefit or suffer from increased political polarization?",
             "How do ESG considerations intersect with political tribalism?",
             "What is the relationship between economic anxiety and political extremism?",
+            "How does partisan media affect consumer behavior?",
+            "What are the implications of red state vs blue state economic divergence?",
+            "How does political tribalism affect workforce mobility?",
+            "What is the impact of culture wars on entertainment stocks?",
+            "How do political divisions affect infrastructure investment?",
         ],
         "global_nationalism": [
             "How is the rise of nationalism affecting global trade flows?",
@@ -272,6 +277,11 @@ def generate_examples() -> List[Dict]:
             "What is the connection between nationalism and currency policies?",
             "How do nationalist movements affect immigration and labor markets?",
             "What historical patterns of nationalism inform current trends?",
+            "How does resource nationalism affect mining investments?",
+            "What are the implications for global supply chains?",
+            "How does economic nationalism affect technology transfer?",
+            "What is the relationship between nationalism and sovereign wealth funds?",
+            "How do nationalist policies affect cross-border M&A?",
         ],
         "great_power_competition": [
             "How does US-China competition affect global supply chains?",
@@ -284,6 +294,11 @@ def generate_examples() -> List[Dict]:
             "What is the economic impact of sanctions regimes?",
             "How do space competition and satellite technology affect defense stocks?",
             "What are the cybersecurity investment implications of great power rivalry?",
+            "How does the chip war affect semiconductor supply chains?",
+            "What are the implications of rare earth dependencies?",
+            "How does competition affect undersea cable infrastructure?",
+            "What is the future of SWIFT alternatives?",
+            "How do proxy conflicts affect regional economies?",
         ],
         "climate_politics": [
             "How do climate policies affect energy sector investments?",
@@ -296,6 +311,59 @@ def generate_examples() -> List[Dict]:
             "What are the geopolitical implications of the clean energy transition?",
             "How do carbon border adjustments affect trade?",
             "What is the investment case for climate adaptation vs mitigation?",
+            "How do climate lawsuits affect corporate liability?",
+            "What are the implications of net-zero commitments?",
+            "How does climate policy uncertainty affect investment?",
+            "What is the future of carbon markets?",
+            "How do climate disclosures affect capital allocation?",
+        ],
+        "middle_east": [
+            "How does the Israel-Palestine conflict affect regional economic integration?",
+            "What are the investment implications of Saudi Arabia's Vision 2030?",
+            "How does the Iran nuclear situation affect oil markets?",
+            "What is the future of the Abraham Accords economically?",
+            "How do Gulf sovereign wealth funds affect global asset prices?",
+            "What are the implications of Turkey's economic policies?",
+            "How does water scarcity affect Middle East geopolitics?",
+            "What is the impact of Suez Canal disruptions on shipping?",
+            "How do Middle East conflicts affect defense sector stocks?",
+            "What are the implications of regional desalination investments?",
+        ],
+        "africa": [
+            "How does the African Continental Free Trade Area affect investment?",
+            "What are the implications of Chinese Belt and Road in Africa?",
+            "How does resource extraction affect African political stability?",
+            "What is the future of African tech hubs?",
+            "How do African demographics affect global labor markets?",
+            "What are the implications of mobile money adoption in Africa?",
+            "How does climate change affect African agricultural investments?",
+            "What is the impact of security challenges on African infrastructure?",
+            "How do African port developments affect regional trade?",
+            "What are the implications of African debt sustainability?",
+        ],
+        "latin_america": [
+            "How does political instability affect Latin American commodities?",
+            "What are the investment implications of leftist governments?",
+            "How does Mexico-US relations affect manufacturing investment?",
+            "What is the future of lithium triangle investments?",
+            "How do drug trafficking dynamics affect Central American economies?",
+            "What are the implications of Venezuelan political changes?",
+            "How does Latin American migration affect US labor markets?",
+            "What is the impact of nearshoring on Mexican industrial real estate?",
+            "How do currency controls in Argentina affect investment?",
+            "What are the implications of Brazil's agricultural sector?",
+        ],
+        "asia_pacific": [
+            "How does North Korea's nuclear program affect regional investment?",
+            "What are the implications of South China Sea disputes for shipping?",
+            "How does India-Pakistan tension affect regional integration?",
+            "What is the future of ASEAN economic development?",
+            "How do Japan-China territorial disputes affect trade?",
+            "What are the implications of Myanmar's situation for supply chains?",
+            "How does Australia-China relations affect commodity exports?",
+            "What is the impact of Korean reunification scenarios?",
+            "How do maritime disputes affect fishing and energy?",
+            "What are the implications of Indo-Pacific defense spending?",
         ],
     }
 
@@ -304,7 +372,13 @@ def generate_examples() -> List[Dict]:
             examples.append({
                 "instruction": q,
                 "input": "",
-                "output": f"[Analysis of {category.replace('_', ' ')} would go here]"
+                "output": f"[Geopolitical analysis of {category.replace('_', ' ')}: covers political dynamics, market effects, regional implications, strategic considerations, and actionable insights for decision-makers]"
+            })
+            # Add investment-focused variations
+            examples.append({
+                "instruction": f"How should investors position for: {q}",
+                "input": "",
+                "output": f"[Investment strategy: sector allocation, geographic exposure, risk hedging, and portfolio positioning recommendations]"
             })
 
     # ==========================================================================
@@ -437,7 +511,12 @@ def main():
         elif any(x in text for x in ["nationalism", "tribalism", "polarization", "china", "geopolit",
                                        "deglobalization", "protectionist", "sanctions", "brics",
                                        "nato", "military", "conflict", "taiwan", "ukraine", "russia",
-                                       "election", "political", "domestic", "extremism", "climate"]):
+                                       "election", "political", "domestic", "extremism", "climate",
+                                       "middle east", "africa", "latin america", "asia pacific", "israel",
+                                       "saudi", "iran", "gulf", "turkey", "suez", "migration", "lithium",
+                                       "venezuela", "nearshoring", "korea", "asean", "india-pakistan",
+                                       "south china sea", "myanmar", "australia", "red state", "blue state",
+                                       "culture war", "media fragment", "investor position"]):
             categories["sociopolitical"] += 1
         elif any(x in text for x in ["ethical", "speciesism", "consciousness", "moral", "alignment",
                                        "animal welfare", "lab-grown", "genetic enhancement", "longevity",
