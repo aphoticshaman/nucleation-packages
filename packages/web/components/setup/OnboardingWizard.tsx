@@ -57,7 +57,7 @@ const STEPS: StepConfig[] = [
 // Configuration State
 // ============================================
 
-interface OnboardingConfig {
+export interface OnboardingConfig {
   // Experience
   experienceLevel: 'beginner' | 'intermediate' | 'advanced' | 'expert';
   primaryUseCase: string;
