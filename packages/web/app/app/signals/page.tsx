@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FINANCIAL_APIS, MARKET_INDICATORS, type FinancialAPI } from '@/lib/signals/financialSources';
+import { ALL_FINANCIAL_SOURCES, MARKET_INDICATORS, type FinancialSource } from '@/lib/signals/financialSources';
 
 const SIGNAL_CATEGORIES = [
   { id: 'equities', name: 'Equities', icon: '📈', desc: 'Stock market indices' },
@@ -61,7 +61,7 @@ export default function SignalsPage() {
         <div className="bg-slate-900 rounded-xl border border-slate-800 p-4">
           <h2 className="text-lg font-semibold text-white mb-4">Data Sources</h2>
           <div className="space-y-2">
-            {FINANCIAL_APIS.map((api: FinancialAPI) => (
+            {ALL_FINANCIAL_SOURCES.map((api: FinancialSource) => (
               <button
                 key={api.id}
                 onClick={() => toggleAPI(api.id)}
