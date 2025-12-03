@@ -1,10 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { BookOpen } from 'lucide-react';
 import type { UserProfile } from '@/lib/auth';
 import ViewAsSwitcher from '@/components/admin/ViewAsSwitcher';
+import Glossary from '@/components/Glossary';
 
 interface AdminNavProps {
   user: UserProfile;
@@ -31,8 +34,10 @@ const quickLinks = [
 
 export default function AdminNav({ user }: AdminNavProps) {
   const pathname = usePathname();
+  const [showGlossary, setShowGlossary] = useState(false);
 
   return (
+    <>
     <nav className="fixed left-0 top-0 h-full w-72 bg-[rgba(10,10,15,0.95)] backdrop-blur-xl border-r border-white/[0.06] z-50">
       {/* Header */}
       <div className="p-6 border-b border-white/[0.06]">
@@ -93,6 +98,14 @@ export default function AdminNav({ user }: AdminNavProps) {
             </Link>
           ))}
         </div>
+        {/* Glossary Button */}
+        <button
+          onClick={() => setShowGlossary(true)}
+          className="flex items-center gap-2 w-full px-4 py-2.5 mt-2 text-sm text-slate-400 hover:text-white hover:bg-white/[0.03] rounded-lg transition-all"
+        >
+          <BookOpen className="w-4 h-4" />
+          <span>Terminology Reference</span>
+        </button>
       </div>
 
       {/* View As Switcher */}
@@ -124,5 +137,13 @@ export default function AdminNav({ user }: AdminNavProps) {
         </div>
       </div>
     </nav>
+
+    {/* Glossary Modal */}
+    <Glossary
+      isOpen={showGlossary}
+      onClose={() => setShowGlossary(false)}
+      skillLevel="detailed"
+    />
+    </>
   );
 }

@@ -21,9 +21,12 @@ import {
   BarChart3,
   LineChart,
   X,
+  BookOpen,
 } from 'lucide-react';
 import { DASHBOARD_PRESETS, type PresetId } from '@/lib/config/dashboardPresets';
 import { FOCUS_TEMPLATES } from '@/lib/pipeline/DataPipeline';
+import Glossary from '@/components/Glossary';
+import HelpTip from '@/components/HelpTip';
 
 interface UserDashboard {
   id: string;
@@ -82,6 +85,7 @@ export default function DashboardHub() {
   const [selectedPreset, setSelectedPreset] = useState<PresetId | null>(null);
   const [selectedFocus, setSelectedFocus] = useState<string | null>(null);
   const [createStep, setCreateStep] = useState<'preset' | 'focus' | 'configure'>('preset');
+  const [showGlossary, setShowGlossary] = useState(false);
 
   const favoriteDashboards = dashboards.filter(d => d.isFavorite);
   const otherDashboards = dashboards.filter(d => !d.isFavorite);
@@ -135,17 +139,26 @@ export default function DashboardHub() {
             Create, customize, and manage your intelligence dashboards
           </p>
         </div>
-        <button
-          onClick={() => {
-            setShowCreateModal(true);
-            setCreateStep('preset');
-          }}
-          className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-gradient-to-r from-cyan-600 to-blue-500 text-white rounded-xl font-medium
-            hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-[0.98] transition-all"
-        >
-          <Plus className="w-5 h-5" />
-          New Dashboard
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowGlossary(true)}
+            className="flex items-center gap-2 px-3 py-2 min-h-[44px] bg-[rgba(18,18,26,0.7)] backdrop-blur-sm rounded-xl border border-white/[0.06] text-slate-400 hover:text-white hover:border-white/[0.12] transition-all"
+          >
+            <BookOpen className="w-4 h-4" />
+            <span className="text-sm">Terms</span>
+          </button>
+          <button
+            onClick={() => {
+              setShowCreateModal(true);
+              setCreateStep('preset');
+            }}
+            className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] bg-gradient-to-r from-cyan-600 to-blue-500 text-white rounded-xl font-medium
+              hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-[0.98] transition-all"
+          >
+            <Plus className="w-5 h-5" />
+            New Dashboard
+          </button>
+        </div>
       </div>
 
       {/* Data Health Overview */}
@@ -294,6 +307,13 @@ export default function DashboardHub() {
           }}
         />
       )}
+
+      {/* Glossary Modal */}
+      <Glossary
+        isOpen={showGlossary}
+        onClose={() => setShowGlossary(false)}
+        skillLevel="standard"
+      />
     </div>
   );
 }

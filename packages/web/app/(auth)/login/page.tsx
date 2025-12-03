@@ -239,17 +239,17 @@ export default function LoginPage() {
 
       {/* Left side - Form */}
       <div className="flex-1 relative flex items-center justify-center py-8 sm:py-12 lg:py-16 min-h-screen lg:min-h-0">
-        {/* Hero wireframe sphere - background on mobile */}
+        {/* Hero LatticeForge globe - background on mobile */}
         <div className="absolute inset-0 lg:hidden overflow-hidden">
-          {/* Orange glow behind sphere */}
+          {/* Orange glow behind globe */}
           <div
-            className="absolute top-[30%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(251,146,60,0.4) 0%, rgba(251,146,60,0.15) 40%, transparent 70%)' }}
+            className="absolute top-[25%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[200px] rounded-full"
+            style={{ background: 'radial-gradient(ellipse, rgba(251,146,60,0.35) 0%, rgba(251,146,60,0.1) 50%, transparent 70%)' }}
           />
-          {/* Wireframe sphere */}
-          <div className="absolute top-[30%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] h-[320px] opacity-50">
+          {/* LatticeForge globe */}
+          <div className="absolute top-[25%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[140px] opacity-60">
             <Image
-              src="/images/hero/wireframe-sphere.png"
+              src="/images/hero/lattice-globe.png"
               alt=""
               fill
               className="object-contain"
@@ -284,10 +284,10 @@ export default function LoginPage() {
             background: 'radial-gradient(circle at 30% 70%, rgba(59,130,246,0.15) 0%, transparent 50%)',
           }}
         />
-        {/* Large wireframe sphere hero */}
-        <div className="relative w-[500px] h-[500px] xl:w-[600px] xl:h-[600px] -mt-16">
+        {/* LatticeForge Globe Hero with branding */}
+        <div className="relative w-[700px] h-[280px] xl:w-[850px] xl:h-[340px] -mt-16">
           <Image
-            src="/images/hero/wireframe-sphere.png"
+            src="/images/hero/lattice-globe.png"
             alt="LatticeForge Intelligence Network"
             fill
             className="object-contain drop-shadow-2xl"
