@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { useIntelBriefing, getRiskBadgeStyle } from '@/hooks/useIntelBriefing';
-import { Globe, Shield, TrendingUp, AlertTriangle, RefreshCw, Target } from 'lucide-react';
+import { Globe, Shield, TrendingUp, AlertTriangle, RefreshCw, Target, BookOpen } from 'lucide-react';
+import Glossary from '@/components/Glossary';
+import HelpTip from '@/components/HelpTip';
 
 const PRESETS = [
   { id: 'global', name: 'Global Overview', icon: Globe, desc: 'All 195 nations' },
@@ -15,6 +17,7 @@ export default function BriefingsPage() {
   const [selectedPreset, setSelectedPreset] = useState('global');
   const { briefings, metadata, loading, refetch } = useIntelBriefing(selectedPreset);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [showGlossary, setShowGlossary] = useState(false);
 
   const handleLoad = async () => {
     setHasLoaded(true);
@@ -24,9 +27,18 @@ export default function BriefingsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white">Intel Briefings</h1>
-        <p className="text-slate-400 mt-1">AI-generated intelligence summaries across all domains</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Intel Briefings</h1>
+          <p className="text-slate-400 mt-1">AI-generated intelligence summaries across all domains</p>
+        </div>
+        <button
+          onClick={() => setShowGlossary(true)}
+          className="flex items-center gap-2 px-3 py-2 min-h-[44px] bg-[rgba(18,18,26,0.7)] backdrop-blur-sm rounded-xl border border-white/[0.06] text-slate-400 hover:text-white hover:border-white/[0.12] transition-all"
+        >
+          <BookOpen className="w-4 h-4" />
+          <span className="text-sm">Terms</span>
+        </button>
       </div>
 
       {/* Preset selector */}
@@ -94,9 +106,12 @@ export default function BriefingsPage() {
               </p>
             </div>
             {metadata && (
-              <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${getRiskBadgeStyle(metadata.overallRisk)}`}>
-                {metadata.overallRisk?.toUpperCase()} RISK
-              </span>
+              <div className="flex items-center gap-1">
+                <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${getRiskBadgeStyle(metadata.overallRisk)}`}>
+                  {metadata.overallRisk?.toUpperCase()} RISK
+                </span>
+                <HelpTip term="Transition Risk" skillLevel="standard" size={10} />
+              </div>
             )}
           </div>
 
@@ -120,13 +135,23 @@ export default function BriefingsPage() {
             <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Target className="w-4 h-4 text-blue-400" />
-                <h3 className="text-sm font-medium text-blue-300">Next Strategic Move</h3>
+                <h3 className="text-sm font-medium text-blue-300">
+                  Next Strategic Move
+                  <HelpTip term="NSM (Next Strategic Move)" skillLevel="standard" size={10} />
+                </h3>
               </div>
               <p className="text-sm text-blue-200">{briefings.nsm}</p>
             </div>
           )}
         </div>
       )}
+
+      {/* Glossary Modal */}
+      <Glossary
+        isOpen={showGlossary}
+        onClose={() => setShowGlossary(false)}
+        skillLevel="standard"
+      />
     </div>
   );
 }
