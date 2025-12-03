@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 export type UserRole = 'admin' | 'enterprise' | 'consumer' | 'support';
+export type UserTier = 'free' | 'starter' | 'pro' | 'enterprise_tier';
 
 export interface UserProfile {
   id: string;
@@ -10,6 +11,7 @@ export interface UserProfile {
   full_name: string | null;
   avatar_url: string | null;
   role: UserRole;
+  tier: UserTier;
   organization_id: string | null;
   is_active: boolean;
   last_seen_at: string | null;
@@ -108,6 +110,7 @@ export async function getUser(): Promise<UserProfile | null> {
         full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
         avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
         role: 'consumer',
+        tier: 'free',
         organization_id: null,
         is_active: true,
         last_seen_at: new Date().toISOString(),
@@ -141,6 +144,7 @@ export async function getUser(): Promise<UserProfile | null> {
     full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
     avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
     role: 'consumer',
+    tier: 'free',
     organization_id: null,
     is_active: true,
     last_seen_at: null,
