@@ -11,10 +11,10 @@ interface ControlPanelProps {
 }
 
 const LAYER_OPTIONS: { value: MapLayer; label: string; description: string }[] = [
-  { value: 'basin', label: 'Basin Strength', description: 'Attractor stability' },
-  { value: 'risk', label: 'Transition Risk', description: 'Phase transition probability' },
-  { value: 'influence', label: 'Influence Flow', description: 'Cross-national influence' },
-  { value: 'regime', label: 'Regime Clusters', description: 'Political regime types' },
+  { value: 'basin', label: 'Stability', description: 'How steady is each country' },
+  { value: 'risk', label: 'Risk', description: 'Chance of major changes soon' },
+  { value: 'influence', label: 'Connections', description: 'How countries affect each other' },
+  { value: 'regime', label: 'Government Type', description: 'How each country is governed' },
 ];
 
 export default function ControlPanel({
@@ -100,7 +100,7 @@ export default function ControlPanel({
 
       {layer === 'basin' && (
         <div className="mb-4">
-          <label className="block text-sm text-slate-400 mb-2">Basin Strength</label>
+          <label className="block text-sm text-slate-400 mb-2">Stability</label>
           <div className="flex items-center gap-1">
             <span className="text-xs text-slate-500">Low</span>
             <div className="flex-1 h-2 rounded-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500" />
@@ -111,7 +111,7 @@ export default function ControlPanel({
 
       {layer === 'risk' && (
         <div className="mb-4">
-          <label className="block text-sm text-slate-400 mb-2">Transition Risk</label>
+          <label className="block text-sm text-slate-400 mb-2">Risk Level</label>
           <div className="flex items-center gap-1">
             <span className="text-xs text-slate-500">Low</span>
             <div className="flex-1 h-2 rounded-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500" />

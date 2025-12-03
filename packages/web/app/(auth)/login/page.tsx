@@ -209,12 +209,12 @@ function LoginFallback() {
 }
 
 const DIFFERENTIATORS = [
-  { icon: Brain, title: 'Cognitive Intelligence', desc: 'AI that thinks like an analyst. Context-aware reasoning.' },
-  { icon: Target, title: '72% Accuracy', desc: 'Detect phase transitions 30 days early.' },
-  { icon: Globe, title: '195 Countries', desc: 'Real-time multi-lingual OSINT coverage.' },
-  { icon: Zap, title: 'Instant Intel', desc: 'Raw data to actionable briefings in seconds.' },
-  { icon: TrendingUp, title: 'Temporal Analysis', desc: 'Historical patterns to projected futures.' },
-  { icon: Shield, title: 'Encrypted', desc: 'AES-256. Your data never trains our models.' },
+  { icon: Brain, title: 'AI Analysis', desc: 'Reads thousands of news sources so you don\'t have to.' },
+  { icon: Target, title: '72% Accurate', desc: 'Catches 7 out of 10 major changes a month early.' },
+  { icon: Globe, title: '195 Countries', desc: 'Every nation, every language, every day.' },
+  { icon: Zap, title: 'Daily Briefings', desc: 'Morning summary of what matters right now.' },
+  { icon: TrendingUp, title: 'Spot Trends', desc: 'See where things are heading before headlines break.' },
+  { icon: Shield, title: 'Private & Secure', desc: 'Your data stays yours. Always encrypted.' },
 ];
 
 export default function LoginPage() {
@@ -299,13 +299,13 @@ export default function LoginPage() {
         <div className="absolute bottom-0 left-0 right-0 p-8 xl:p-12 bg-gradient-to-t from-[rgba(10,10,15,0.95)] via-[rgba(10,10,15,0.8)] to-transparent">
           <div className="max-w-xl">
             <h2 className="text-2xl xl:text-3xl font-bold text-white mb-3">
-              Intelligence that sees
+              See what&apos;s coming
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400">
-                {' '}around corners
+                {' '}before it hits the news
               </span>
             </h2>
             <p className="text-slate-400 text-sm mb-6">
-              When headlines are too late and hunches aren&apos;t enough.
+              AI watches the world so you can make better decisions.
             </p>
 
             {/* Feature pills */}
