@@ -34,6 +34,8 @@ def main():
         "insurance_realestate_training.json",
         "telecom_space_training.json",
         "ux_ui_extended_training.json",
+        # Factual context with real data
+        "factual_context_training.json",
     ]
 
     all_examples = []
