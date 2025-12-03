@@ -32,19 +32,21 @@ export default function OnboardingGate({
   userTier,
   hasCompletedOnboarding,
 }: OnboardingGateProps) {
+  // Trust the database - hasCompletedOnboarding comes from server
+  // Only show wizard if database says not completed
   const [showWizard, setShowWizard] = useState(!hasCompletedOnboarding);
   const [isCompleting, setIsCompleting] = useState(false);
 
   // Convert auth tier to power tier if needed
   const powerTier: UserTier = isAuthTier(userTier) ? authTierToPowerTier(userTier) : userTier;
 
-  // Check localStorage for skip (dev/testing only - should be removed in prod)
+  // Sync localStorage with database state (for faster subsequent checks)
   useEffect(() => {
-    const skipOnboarding = localStorage.getItem('latticeforge_skip_onboarding');
-    if (skipOnboarding === 'true' && process.env.NODE_ENV === 'development') {
+    if (hasCompletedOnboarding) {
+      localStorage.setItem('latticeforge_onboarding_complete', 'true');
       setShowWizard(false);
     }
-  }, []);
+  }, [hasCompletedOnboarding]);
 
   const handleComplete = async (config: OnboardingConfig) => {
     setIsCompleting(true);

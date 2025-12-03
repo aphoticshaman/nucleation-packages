@@ -206,14 +206,13 @@ export default function ConsumerDashboard() {
   const { wasm, loading: wasmLoading } = useWasm();
   const { nations: allNations, edges: allEdges, loading: dataLoading } = useSupabaseNations();
   const [selectedPreset, setSelectedPreset] = useState('global');
-  // Intel briefing - lazy load, don't auto-fetch on page load
-  const { briefings, metadata, loading: intelLoading, refetch: loadBriefing } = useIntelBriefing(selectedPreset);
-  const [hasRequestedBriefing, setHasRequestedBriefing] = useState(false);
+  // Intel briefing - auto-fetch from cache on page load (cron keeps cache warm)
+  const { briefings, metadata, loading: intelLoading, refetch: loadBriefing } = useIntelBriefing(selectedPreset, { autoFetch: true });
 
-  // Handler for explicit briefing load
-  const handleLoadBriefing = async () => {
-    setHasRequestedBriefing(true);
-    await loadBriefing();
+  // Refetch when preset changes
+  const handlePresetChange = (preset: string) => {
+    setSelectedPreset(preset);
+    void loadBriefing();
   };
   const [selectedLayer, setSelectedLayer] = useState<'basin' | 'risk' | 'regime'>('basin');
   const [skillLevel, setSkillLevel] = useState<SkillLevel>('standard');
@@ -340,7 +339,7 @@ export default function ConsumerDashboard() {
           {PRESETS.map((preset) => (
             <button
               key={preset.id}
-              onClick={() => setSelectedPreset(preset.id)}
+              onClick={() => handlePresetChange(preset.id)}
               className={`flex-shrink-0 w-28 sm:w-32 md:w-auto p-3 md:p-4 2xl:p-5 rounded-xl border text-left transition-all ${
                 selectedPreset === preset.id
                   ? 'bg-blue-600 border-blue-500 text-white'
@@ -386,23 +385,8 @@ export default function ConsumerDashboard() {
               )}
             </div>
 
-            {/* Show load button if no briefing requested yet */}
-            {!hasRequestedBriefing && !briefings ? (
-              <div className="text-center py-8">
-                <p className="text-slate-400 text-sm mb-4">
-                  Intel briefing available for {currentPreset.fullName}
-                </p>
-                <button
-                  onClick={() => void handleLoadBriefing()}
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors"
-                >
-                  Load Intel Briefing
-                </button>
-                <p className="text-xs text-slate-500 mt-3">
-                  Uses 1 API credit • Cached for 10 min
-                </p>
-              </div>
-            ) : intelLoading ? (
+            {/* Briefing content - auto-loads from cache */}
+            {intelLoading ? (
               <div className="space-y-4">
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="space-y-2 animate-pulse">
