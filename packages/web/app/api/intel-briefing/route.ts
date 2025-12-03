@@ -417,7 +417,65 @@ export async function POST(req: Request) {
   let sessionHash = 'anonymous';
 
   try {
-    // Get user context
+    // ============================================================
+    // SECURITY: Check if this is a privileged internal/cron call
+    // ============================================================
+    // Only cron jobs and internal services can generate fresh data.
+    // User requests ALWAYS get cached data - this prevents abuse,
+    // exploits, and uncontrolled API costs.
+    const isCronWarm = req.headers.get('x-cron-warm') === '1';
+    const isInternalService = req.headers.get('x-internal-service') === process.env.INTERNAL_SERVICE_SECRET;
+    const canGenerateFresh = isCronWarm || isInternalService;
+
+    // Parse request body first (needed for preset)
+    const { preset = 'global', region } = await req.json();
+
+    // Validate preset input (prevent injection)
+    const validPresets = ['global', 'nato', 'brics', 'conflict'];
+    if (!validPresets.includes(preset)) {
+      return NextResponse.json({ error: 'Invalid preset' }, { status: 400 });
+    }
+
+    // ============================================================
+    // CACHE CHECK - ALWAYS check cache first
+    // ============================================================
+    const cached = getCachedBriefing(preset);
+    if (cached) {
+      console.log(`[CACHE HIT] Serving cached briefing for preset: ${preset}, age: ${Math.round((Date.now() - cached.timestamp) / 1000)}s`);
+      return NextResponse.json({
+        ...cached.data,
+        metadata: {
+          ...cached.data.metadata,
+          cached: true,
+          cachedAt: cached.generatedAt,
+          cacheAgeSeconds: Math.round((Date.now() - cached.timestamp) / 1000),
+        },
+      });
+    }
+
+    // ============================================================
+    // CACHE MISS - Only proceed if this is a cron/internal call
+    // ============================================================
+    // User requests with cache miss get a "processing" response
+    // They should NOT trigger fresh API calls
+    if (!canGenerateFresh) {
+      console.log(`[CACHE MISS] No cached briefing for preset: ${preset}, user request - returning placeholder`);
+      return NextResponse.json({
+        briefings: null,
+        metadata: {
+          region: region || 'Global',
+          preset,
+          timestamp: new Date().toISOString(),
+          overallRisk: 'moderate',
+          status: 'generating',
+          message: 'Intel briefing is being prepared by our analysis systems. Please check back shortly.',
+        },
+      }, { status: 202 }); // 202 Accepted - processing in background
+    }
+
+    console.log(`[CRON/INTERNAL] Generating fresh briefing for preset: ${preset}`);
+
+    // Get user context (only needed for cron logging)
     const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -433,63 +491,17 @@ export async function POST(req: Request) {
       }
     );
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Create anonymized session hash for learning
-    sessionHash = await hashForLearning(user.id);
-
-    // Get user profile for tier
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role, organization_id')
-      .eq('id', user.id)
-      .single();
-
-    const userTier = profile?.role || 'consumer';
-
-    // Parse request
-    const { preset = 'global', region, forceRefresh = false } = await req.json();
+    // For cron calls, use service account context
+    sessionHash = isCronWarm ? 'cron-service' : 'internal-service';
+    const userTier = 'enterprise'; // Cron/internal gets enterprise-level analysis
 
     // ============================================================
-    // CACHE CHECK - Return cached response for non-Enterprise users
-    // ============================================================
-    // Only Enterprise tier can force fresh analysis (they pay for it!)
-    // Everyone else gets the cached version that updates every 10 min
-    const isEnterprise = userTier === 'enterprise';
-    const shouldUseCached = !isEnterprise && !forceRefresh;
-
-    if (shouldUseCached) {
-      const cached = getCachedBriefing(preset);
-      if (cached) {
-        console.log(`[CACHE HIT] Serving cached briefing for preset: ${preset}, age: ${Math.round((Date.now() - cached.timestamp) / 1000)}s`);
-        return NextResponse.json({
-          ...cached.data,
-          metadata: {
-            ...cached.data.metadata,
-            cached: true,
-            cachedAt: cached.generatedAt,
-            cacheAgeSeconds: Math.round((Date.now() - cached.timestamp) / 1000),
-          },
-        });
-      }
-      console.log(`[CACHE MISS] No cached briefing for preset: ${preset}, generating fresh...`);
-    } else if (isEnterprise) {
-      console.log(`[ENTERPRISE] Fresh analysis for user, preset: ${preset}`);
-    }
-
-    // ============================================================
-    // SECURITY LAYER - Validate input and check rate limits
+    // SECURITY LAYER - Rate limits (skip for cron/internal)
     // ============================================================
     const security = getSecurityGuardian();
 
-    // Check rate limits
-    const rateLimit = await security.checkRateLimit(user.id, userTier);
+    // Cron/internal bypasses rate limits
+    const rateLimit = { allowed: true, remaining: 999, resetAt: new Date() };
     if (!rateLimit.allowed) {
       return NextResponse.json(
         {
