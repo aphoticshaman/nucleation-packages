@@ -10,7 +10,11 @@ interface ConsumerNavProps {
 }
 
 const navItems = [
-  { href: '/app', label: 'Explore', icon: '🌍' },
+  { href: '/app', label: 'Globe', icon: '🌍' },
+  { href: '/app/dashboards', label: 'Dashboards', icon: '📊' },
+  { href: '/app/briefings', label: 'Briefings', icon: '📡' },
+  { href: '/app/packages', label: 'Packages', icon: '📦' },
+  { href: '/app/signals', label: 'Signals', icon: '📈' },
   { href: '/app/saved', label: 'Saved', icon: '💾' },
   { href: '/app/settings', label: 'Settings', icon: '⚙️' },
 ];
