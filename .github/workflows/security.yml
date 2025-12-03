@@ -115,15 +115,9 @@ jobs:
         with:
           scan-type: 'fs'
           scan-ref: 'packages/research/inference/'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+          format: 'table'
           severity: 'CRITICAL,HIGH'
-
-      - name: Upload Trivy results
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: 'trivy-results.sarif'
+          # Note: SARIF upload removed - requires GitHub Advanced Security (paid for private repos)
 
   # 5. Infrastructure as Code scan
   iac-scan:
