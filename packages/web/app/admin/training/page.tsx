@@ -71,6 +71,8 @@ export default function TrainingDataPage() {
     output: string;
     quality_score: number;
     created_at: string;
+    prompt?: string;
+    completion?: string;
   }>>([]);
 
   // Settings state
