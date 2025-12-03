@@ -136,13 +136,13 @@ export default function PricingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push('/app')}
             className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back
+            Back to App
           </button>
           <button
             onClick={() => router.push('/')}
@@ -151,7 +151,7 @@ export default function PricingPage() {
             LatticeForge
           </button>
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push('/app')}
             className="text-slate-400 hover:text-white transition-colors"
           >
             Dashboard

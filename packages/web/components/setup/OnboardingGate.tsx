@@ -82,15 +82,10 @@ export default function OnboardingGate({
     }
   };
 
-  // First-time users MUST complete onboarding (no skip on first visit)
-  // Return users who skipped can skip again
-  const canSkip = hasCompletedOnboarding || localStorage.getItem('latticeforge_onboarding_skipped') === 'true';
-
+  // Allow ALL users to skip - onboarding should feel valuable, not forced
   const handleSkip = () => {
-    if (canSkip) {
-      localStorage.setItem('latticeforge_onboarding_skipped', 'true');
-      setShowWizard(false);
-    }
+    localStorage.setItem('latticeforge_onboarding_skipped', 'true');
+    setShowWizard(false);
   };
 
   if (showWizard) {
@@ -98,7 +93,7 @@ export default function OnboardingGate({
       <OnboardingWizard
         userTier={powerTier}
         onComplete={handleComplete}
-        onSkip={canSkip ? handleSkip : undefined}
+        onSkip={handleSkip}
       />
     );
   }
