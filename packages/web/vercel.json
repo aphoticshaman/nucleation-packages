@@ -3,6 +3,10 @@
   "outputDirectory": ".next",
   "crons": [
     {
+      "path": "/api/cron/warm-cache",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/ingest/gdelt",
       "schedule": "0 */4 * * *"
     },
