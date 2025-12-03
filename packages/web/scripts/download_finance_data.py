@@ -21,7 +21,7 @@ def deduplicate(examples):
     seen = set()
     unique = []
     for ex in examples:
-        key = hashlib.md5(ex.get('instruction', '')[:100].encode()).hexdigest()
+        key = hashlib.sha256(ex.get('instruction', '')[:100].encode()).hexdigest()
         if key not in seen:
             seen.add(key)
             unique.append(ex)

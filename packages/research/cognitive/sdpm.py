@@ -264,7 +264,7 @@ def text_to_sdpm(
     # Add persona-specific variation if seed provided
     if persona_seed:
         # Deterministic variation from seed
-        seed_hash = int(hashlib.md5(persona_seed.encode()).hexdigest()[:8], 16)
+        seed_hash = int(hashlib.sha256(persona_seed.encode()).hexdigest()[:8], 16)
         np.random.seed(seed_hash)
         persona_offset = np.random.randn(SDPM_DIM) * 0.1
         embedding += persona_offset
