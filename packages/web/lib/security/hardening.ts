@@ -69,7 +69,7 @@ export function detectInjection(input: string): { safe: boolean; type?: string }
     { regex: /['";]\s*(?:OR|AND|UNION|SELECT|INSERT|UPDATE|DELETE|DROP)/i, type: 'sql' },
     { regex: /\$\{.*\}/i, type: 'template' },
     { regex: /\{\{.*\}\}/i, type: 'template' },
-    { regex: /<!--.*-->/s, type: 'html_comment' },
+    { regex: /<!--[\s\S]*?-->/, type: 'html_comment' },
     { regex: /\beval\s*\(/i, type: 'code_exec' },
     { regex: /\bFunction\s*\(/i, type: 'code_exec' },
     // Prompt injection patterns
