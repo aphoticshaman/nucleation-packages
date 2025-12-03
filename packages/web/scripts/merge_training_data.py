@@ -21,6 +21,7 @@ def main():
         "energy_materials_training.json",
         "freedom_coercion_training.json",
         "tech_materials_systems_training.json",
+        "meta_compression_training.json",
     ]
 
     all_examples = []
