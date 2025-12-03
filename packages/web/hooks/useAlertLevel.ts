@@ -6,16 +6,12 @@
  */
 
 import { useMemo } from 'react';
+import type { Nation } from '@/types';
 
 export type AlertLevel = 'normal' | 'elevated' | 'high' | 'critical';
 
-export interface NationState {
-  code: string;
-  name: string;
-  basin_strength: number;
-  transition_risk: number;
-  regime: number;
-}
+// Re-export Nation as NationState for backwards compatibility
+export type NationState = Nation;
 
 export interface AlertInfo {
   level: AlertLevel;
@@ -27,7 +23,7 @@ export interface AlertInfo {
 /**
  * Compute alert level from nation states
  */
-export function computeAlertLevel(nations: NationState[]): AlertInfo {
+export function computeAlertLevel(nations: Nation[]): AlertInfo {
   if (!nations || nations.length === 0) {
     return {
       level: 'normal',
@@ -81,7 +77,7 @@ export function computeAlertLevel(nations: NationState[]): AlertInfo {
 /**
  * Hook for reactive alert level computation
  */
-export function useAlertLevel(nations: NationState[]): AlertInfo {
+export function useAlertLevel(nations: Nation[]): AlertInfo {
   return useMemo(() => computeAlertLevel(nations), [nations]);
 }
 
