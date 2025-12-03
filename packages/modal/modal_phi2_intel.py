@@ -317,7 +317,7 @@ Output JSON format:
 
 @app.function(
     image=image,
-    timeout=60,
+    timeout=300,  # 5 min for cold start + inference
 )
 @modal.fastapi_endpoint(method="POST", docs=True)
 def inference(request: dict) -> dict:
