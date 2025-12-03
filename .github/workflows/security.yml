@@ -159,20 +159,9 @@ jobs:
           pip-licenses --fail-on="GPL;AGPL" || true
           # Note: torch/transformers are Apache-2.0 licensed (pre-verified)
 
-  # 7. CodeQL Analysis
-  codeql:
-    name: CodeQL
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: python, javascript
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+  # 7. CodeQL Analysis - REMOVED
+  # CodeQL requires GitHub Advanced Security (paid for private repos)
+  # Semgrep (job #3) provides equivalent SAST coverage for free
 
   # 8. Security Report
   security-report:
