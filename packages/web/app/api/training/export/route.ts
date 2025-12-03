@@ -283,10 +283,10 @@ export async function POST(request: Request) {
       { format: 'csv', description: 'CSV - for analysis in spreadsheets' },
     ],
     runpodTips: {
-      recommendedModel: 'mistralai/Mistral-7B-Instruct-v0.2',
+      recommendedModel: 'microsoft/phi-2',
       minExamplesRecommended: 1000,
-      estimatedCostPer1000: '$2-5 on RunPod with A100',
-      trainingScript: 'Use axolotl or unsloth for efficient fine-tuning',
+      estimatedCostPer1000: '$1-3 on RunPod with A100',
+      trainingScript: 'Use scripts/train_h200.py for LoRA fine-tuning',
     },
   });
 }
