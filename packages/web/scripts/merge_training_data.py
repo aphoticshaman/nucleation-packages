@@ -17,6 +17,8 @@ def main():
         "deep_intel_training.json",
         "market_intel_training.json",
         "geopolitical_risk_training.json",
+        "cascade_history_training.json",
+        "energy_materials_training.json",
     ]
 
     all_examples = []
