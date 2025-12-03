@@ -1,18 +1,9 @@
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
-
-function getServiceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 // POST: Rollback to a specific backup
 export async function POST(request: Request) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createClient();
 
   // Verify admin
   const { data: { user } } = await supabase.auth.getUser();
@@ -33,7 +24,7 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { backupId, action } = body;
 
-  const serviceClient = getServiceClient();
+  const serviceClient = createAdminClient();
 
   try {
     switch (action) {
@@ -180,7 +171,7 @@ export async function POST(request: Request) {
 
 // GET: List quarantined items
 export async function GET(request: Request) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createClient();
   const { searchParams } = new URL(request.url);
 
   const { data: { user } } = await supabase.auth.getUser();

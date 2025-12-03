@@ -1,19 +1,9 @@
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
-
-// Service role client for admin operations
-function getServiceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 // GET: List nation changes history
 export async function GET(request: Request) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createClient();
   const { searchParams } = new URL(request.url);
 
   // Verify admin
@@ -61,7 +51,7 @@ export async function GET(request: Request) {
 
 // POST: Process a nation change
 export async function POST(request: Request) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createClient();
 
   // Verify admin
   const { data: { user } } = await supabase.auth.getUser();
@@ -82,7 +72,7 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { changeType, ...params } = body;
 
-  const serviceClient = getServiceClient();
+  const serviceClient = createAdminClient();
 
   try {
     let result;
