@@ -53,7 +53,12 @@ function LoginForm() {
       {/* Logo */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-white">LatticeForge</h1>
-        <p className="text-slate-400 mt-2">Intelligence that sees around corners</p>
+        <p className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 mt-2">
+          Know what happens next.
+        </p>
+        <p className="text-slate-500 text-sm mt-1">
+          AI-powered geopolitical intelligence
+        </p>
       </div>
 
       {/* Form */}
