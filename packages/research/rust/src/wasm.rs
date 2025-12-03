@@ -7,6 +7,7 @@ use crate::particles::{Swarm, SwarmConfig, SwarmMetrics};
 use crate::persistence::{compute_persistence, persistent_entropy, PersistenceDiagram};
 use crate::q_matrix::{analyze_q, build_q_matrix, QMatrixAnalysis};
 use crate::geodesics::{integrate_geodesic, fisher_metric_gaussian, GeodesicTrajectory};
+use crate::geospatial::{GeospatialSystem, GeospatialConfig, AttractorLayer};
 
 #[cfg(feature = "wasm")]
 use console_error_panic_hook;
@@ -251,4 +252,196 @@ pub fn wasm_distance_matrix(points_flat: &[f64], n_points: usize) -> Vec<f64> {
 
     let d = crate::persistence::distance_matrix(&points);
     d.into_raw_vec()
+}
+
+// ============================================================
+// Geospatial System WASM Interface
+// ============================================================
+
+/// WASM-friendly geospatial system wrapper
+#[wasm_bindgen]
+pub struct WasmGeospatialSystem {
+    system: GeospatialSystem,
+}
+
+#[wasm_bindgen]
+impl WasmGeospatialSystem {
+    /// Create new geospatial system
+    #[wasm_bindgen(constructor)]
+    pub fn new(
+        n_dims: usize,
+        interaction_decay: f64,
+        min_influence: f64,
+        dt: f64,
+        diffusion: f64,
+    ) -> WasmGeospatialSystem {
+        let config = GeospatialConfig {
+            n_dims,
+            interaction_decay,
+            min_influence,
+            dt,
+            diffusion,
+        };
+
+        WasmGeospatialSystem {
+            system: GeospatialSystem::new(config),
+        }
+    }
+
+    /// Create with default configuration
+    #[wasm_bindgen]
+    pub fn with_defaults() -> WasmGeospatialSystem {
+        WasmGeospatialSystem {
+            system: GeospatialSystem::new(GeospatialConfig::default()),
+        }
+    }
+
+    /// Add a nation to the system
+    #[wasm_bindgen]
+    pub fn add_nation(
+        &mut self,
+        code: &str,
+        name: &str,
+        lat: f64,
+        lon: f64,
+        regime: usize,
+    ) {
+        self.system.add_nation(code, name, lat, lon, None, regime);
+    }
+
+    /// Add a nation with initial position in attractor space
+    #[wasm_bindgen]
+    pub fn add_nation_with_position(
+        &mut self,
+        code: &str,
+        name: &str,
+        lat: f64,
+        lon: f64,
+        position: Vec<f64>,
+        regime: usize,
+    ) {
+        self.system.add_nation(code, name, lat, lon, Some(position), regime);
+    }
+
+    /// Set esteem relationship between nations
+    #[wasm_bindgen]
+    pub fn set_esteem(&mut self, source: &str, target: &str, esteem: f64) {
+        self.system.set_esteem(source, target, esteem);
+    }
+
+    /// Get esteem from source to target
+    #[wasm_bindgen]
+    pub fn get_esteem(&self, source: &str, target: &str) -> f64 {
+        self.system.get_esteem(source, target)
+    }
+
+    /// Run one simulation step
+    #[wasm_bindgen]
+    pub fn step(&mut self) {
+        self.system.step();
+    }
+
+    /// Run multiple simulation steps
+    #[wasm_bindgen]
+    pub fn run(&mut self, n_steps: usize) {
+        self.system.run(n_steps);
+    }
+
+    /// Get current simulation time
+    #[wasm_bindgen]
+    pub fn get_time(&self) -> f64 {
+        self.system.time
+    }
+
+    /// Get number of nations
+    #[wasm_bindgen]
+    pub fn get_nation_count(&self) -> usize {
+        self.system.nations.len()
+    }
+
+    /// Get number of influence edges
+    #[wasm_bindgen]
+    pub fn get_edge_count(&self) -> usize {
+        self.system.edges.len()
+    }
+
+    /// Export to GeoJSON for basin strength visualization
+    #[wasm_bindgen]
+    pub fn to_geojson_basin(&self) -> JsValue {
+        let geojson = self.system.to_geojson(AttractorLayer::BasinStrength);
+        serde_wasm_bindgen::to_value(&geojson).unwrap_or(JsValue::NULL)
+    }
+
+    /// Export to GeoJSON for transition risk visualization
+    #[wasm_bindgen]
+    pub fn to_geojson_risk(&self) -> JsValue {
+        let geojson = self.system.to_geojson(AttractorLayer::TransitionRisk);
+        serde_wasm_bindgen::to_value(&geojson).unwrap_or(JsValue::NULL)
+    }
+
+    /// Export to GeoJSON for influence flow visualization
+    #[wasm_bindgen]
+    pub fn to_geojson_influence(&self) -> JsValue {
+        let geojson = self.system.to_geojson(AttractorLayer::InfluenceFlow);
+        serde_wasm_bindgen::to_value(&geojson).unwrap_or(JsValue::NULL)
+    }
+
+    /// Export to GeoJSON for regime cluster visualization
+    #[wasm_bindgen]
+    pub fn to_geojson_regime(&self) -> JsValue {
+        let geojson = self.system.to_geojson(AttractorLayer::RegimeCluster);
+        serde_wasm_bindgen::to_value(&geojson).unwrap_or(JsValue::NULL)
+    }
+
+    /// Compare two nations
+    #[wasm_bindgen]
+    pub fn compare_nations(&self, code1: &str, code2: &str) -> JsValue {
+        match self.system.get_comparison(code1, code2) {
+            Some(comparison) => serde_wasm_bindgen::to_value(&comparison).unwrap_or(JsValue::NULL),
+            None => JsValue::NULL,
+        }
+    }
+
+    /// Get nation data as JSON
+    #[wasm_bindgen]
+    pub fn get_nation(&self, code: &str) -> JsValue {
+        match self.system.nations.get(code) {
+            Some(nation) => serde_wasm_bindgen::to_value(nation).unwrap_or(JsValue::NULL),
+            None => JsValue::NULL,
+        }
+    }
+
+    /// Get all nations as JSON array
+    #[wasm_bindgen]
+    pub fn get_all_nations(&self) -> JsValue {
+        let nations: Vec<_> = self.system.nations.values().collect();
+        serde_wasm_bindgen::to_value(&nations).unwrap_or(JsValue::NULL)
+    }
+
+    /// Get all edges as JSON array
+    #[wasm_bindgen]
+    pub fn get_all_edges(&self) -> JsValue {
+        serde_wasm_bindgen::to_value(&self.system.edges).unwrap_or(JsValue::NULL)
+    }
+
+    /// Serialize entire system state
+    #[wasm_bindgen]
+    pub fn serialize(&self) -> Result<String, JsValue> {
+        serde_json::to_string(&self.system)
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    /// Deserialize system state
+    #[wasm_bindgen]
+    pub fn deserialize(json: &str) -> Result<WasmGeospatialSystem, JsValue> {
+        let system: GeospatialSystem = serde_json::from_str(json)
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        Ok(WasmGeospatialSystem { system })
+    }
+}
+
+/// Compute haversine distance between two points (WASM)
+#[wasm_bindgen]
+pub fn wasm_haversine_distance(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
+    crate::geospatial::haversine_distance(lat1, lon1, lat2, lon2)
 }
