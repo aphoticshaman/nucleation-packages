@@ -1,0 +1,602 @@
+[
+  {
+    "instruction": "What are the key indicators of food security?",
+    "input": "",
+    "output": "[Food security analysis: availability factors, access constraints, price dynamics, and stability implications.]"
+  },
+  {
+    "instruction": "How do food price spikes affect political stability?",
+    "input": "",
+    "output": "[Food security analysis: availability factors, access constraints, price dynamics, and stability implications.]"
+  },
+  {
+    "instruction": "What are the main drivers of global food insecurity?",
+    "input": "",
+    "output": "[Food security analysis: availability factors, access constraints, price dynamics, and stability implications.]"
+  },
+  {
+    "instruction": "How does climate change threaten food production?",
+    "input": "",
+    "output": "[Food security analysis: availability factors, access constraints, price dynamics, and stability implications.]"
+  },
+  {
+    "instruction": "What role do strategic grain reserves play in food security?",
+    "input": "",
+    "output": "[Food security analysis: availability factors, access constraints, price dynamics, and stability implications.]"
+  },
+  {
+    "instruction": "How do export bans cascade through food markets?",
+    "input": "",
+    "output": "[Food security analysis: availability factors, access constraints, price dynamics, and stability implications.]"
+  },
+  {
+    "instruction": "What is the relationship between energy prices and food prices?",
+    "input": "",
+    "output": "[Food security analysis: availability factors, access constraints, price dynamics, and stability implications.]"
+  },
+  {
+    "instruction": "How does food insecurity contribute to migration?",
+    "input": "",
+    "output": "[Food security analysis: availability factors, access constraints, price dynamics, and stability implications.]"
+  },
+  {
+    "instruction": "What role does food aid play in geopolitics?",
+    "input": "",
+    "output": "[Food security analysis: availability factors, access constraints, price dynamics, and stability implications.]"
+  },
+  {
+    "instruction": "How do sanctions affect food security in target countries?",
+    "input": "",
+    "output": "[Food security analysis: availability factors, access constraints, price dynamics, and stability implications.]"
+  },
+  {
+    "instruction": "What is the global distribution of food surplus and deficit?",
+    "input": "",
+    "output": "[Food security analysis: availability factors, access constraints, price dynamics, and stability implications.]"
+  },
+  {
+    "instruction": "How do supply chain disruptions affect food availability?",
+    "input": "",
+    "output": "[Food security analysis: availability factors, access constraints, price dynamics, and stability implications.]"
+  },
+  {
+    "instruction": "What is the role of speculation in food price volatility?",
+    "input": "",
+    "output": "[Food security analysis: availability factors, access constraints, price dynamics, and stability implications.]"
+  },
+  {
+    "instruction": "How does food insecurity affect conflict and instability?",
+    "input": "",
+    "output": "[Food security analysis: availability factors, access constraints, price dynamics, and stability implications.]"
+  },
+  {
+    "instruction": "What are the regional food security hotspots?",
+    "input": "",
+    "output": "[Food security analysis: availability factors, access constraints, price dynamics, and stability implications.]"
+  },
+  {
+    "instruction": "How is global crop production distributed geographically?",
+    "input": "",
+    "output": "[Agriculture systems analysis: production geography, input dependencies, trade flows, and sustainability considerations.]"
+  },
+  {
+    "instruction": "What are the major agricultural trade flows?",
+    "input": "",
+    "output": "[Agriculture systems analysis: production geography, input dependencies, trade flows, and sustainability considerations.]"
+  },
+  {
+    "instruction": "How do fertilizer supply chains affect food production?",
+    "input": "",
+    "output": "[Agriculture systems analysis: production geography, input dependencies, trade flows, and sustainability considerations.]"
+  },
+  {
+    "instruction": "What is the role of seeds and genetics in agriculture?",
+    "input": "",
+    "output": "[Agriculture systems analysis: production geography, input dependencies, trade flows, and sustainability considerations.]"
+  },
+  {
+    "instruction": "How is precision agriculture transforming farming?",
+    "input": "",
+    "output": "[Agriculture systems analysis: production geography, input dependencies, trade flows, and sustainability considerations.]"
+  },
+  {
+    "instruction": "What are the economics of different farming systems?",
+    "input": "",
+    "output": "[Agriculture systems analysis: production geography, input dependencies, trade flows, and sustainability considerations.]"
+  },
+  {
+    "instruction": "How do agricultural subsidies distort global markets?",
+    "input": "",
+    "output": "[Agriculture systems analysis: production geography, input dependencies, trade flows, and sustainability considerations.]"
+  },
+  {
+    "instruction": "What is the state of soil health globally?",
+    "input": "",
+    "output": "[Agriculture systems analysis: production geography, input dependencies, trade flows, and sustainability considerations.]"
+  },
+  {
+    "instruction": "How does irrigation water availability affect agriculture?",
+    "input": "",
+    "output": "[Agriculture systems analysis: production geography, input dependencies, trade flows, and sustainability considerations.]"
+  },
+  {
+    "instruction": "What are the implications of farming consolidation?",
+    "input": "",
+    "output": "[Agriculture systems analysis: production geography, input dependencies, trade flows, and sustainability considerations.]"
+  },
+  {
+    "instruction": "How do labor conditions affect agricultural production?",
+    "input": "",
+    "output": "[Agriculture systems analysis: production geography, input dependencies, trade flows, and sustainability considerations.]"
+  },
+  {
+    "instruction": "What is the role of commodity traders in food systems?",
+    "input": "",
+    "output": "[Agriculture systems analysis: production geography, input dependencies, trade flows, and sustainability considerations.]"
+  },
+  {
+    "instruction": "How does storage and logistics affect food availability?",
+    "input": "",
+    "output": "[Agriculture systems analysis: production geography, input dependencies, trade flows, and sustainability considerations.]"
+  },
+  {
+    "instruction": "What are the environmental impacts of industrial agriculture?",
+    "input": "",
+    "output": "[Agriculture systems analysis: production geography, input dependencies, trade flows, and sustainability considerations.]"
+  },
+  {
+    "instruction": "How is organic and regenerative agriculture evolving?",
+    "input": "",
+    "output": "[Agriculture systems analysis: production geography, input dependencies, trade flows, and sustainability considerations.]"
+  },
+  {
+    "instruction": "What drives wheat price volatility?",
+    "input": "",
+    "output": "[Commodity analysis: production dynamics, trade patterns, price drivers, and substitution effects.]"
+  },
+  {
+    "instruction": "How does rice production and trade flow globally?",
+    "input": "",
+    "output": "[Commodity analysis: production dynamics, trade patterns, price drivers, and substitution effects.]"
+  },
+  {
+    "instruction": "What is the state of corn/maize markets?",
+    "input": "",
+    "output": "[Commodity analysis: production dynamics, trade patterns, price drivers, and substitution effects.]"
+  },
+  {
+    "instruction": "How does soybean production affect land use?",
+    "input": "",
+    "output": "[Commodity analysis: production dynamics, trade patterns, price drivers, and substitution effects.]"
+  },
+  {
+    "instruction": "What are the dynamics of palm oil production and trade?",
+    "input": "",
+    "output": "[Commodity analysis: production dynamics, trade patterns, price drivers, and substitution effects.]"
+  },
+  {
+    "instruction": "How does coffee production respond to climate change?",
+    "input": "",
+    "output": "[Commodity analysis: production dynamics, trade patterns, price drivers, and substitution effects.]"
+  },
+  {
+    "instruction": "What is the state of global meat and protein markets?",
+    "input": "",
+    "output": "[Commodity analysis: production dynamics, trade patterns, price drivers, and substitution effects.]"
+  },
+  {
+    "instruction": "How do dairy markets function internationally?",
+    "input": "",
+    "output": "[Commodity analysis: production dynamics, trade patterns, price drivers, and substitution effects.]"
+  },
+  {
+    "instruction": "What are the dynamics of sugar markets?",
+    "input": "",
+    "output": "[Commodity analysis: production dynamics, trade patterns, price drivers, and substitution effects.]"
+  },
+  {
+    "instruction": "How does cocoa production concentrate and why?",
+    "input": "",
+    "output": "[Commodity analysis: production dynamics, trade patterns, price drivers, and substitution effects.]"
+  },
+  {
+    "instruction": "What is the state of fisheries and aquaculture?",
+    "input": "",
+    "output": "[Commodity analysis: production dynamics, trade patterns, price drivers, and substitution effects.]"
+  },
+  {
+    "instruction": "How do fruit and vegetable supply chains work?",
+    "input": "",
+    "output": "[Commodity analysis: production dynamics, trade patterns, price drivers, and substitution effects.]"
+  },
+  {
+    "instruction": "What are the dynamics of edible oil markets?",
+    "input": "",
+    "output": "[Commodity analysis: production dynamics, trade patterns, price drivers, and substitution effects.]"
+  },
+  {
+    "instruction": "How does feed grain demand affect food markets?",
+    "input": "",
+    "output": "[Commodity analysis: production dynamics, trade patterns, price drivers, and substitution effects.]"
+  },
+  {
+    "instruction": "What is the relationship between biofuels and food?",
+    "input": "",
+    "output": "[Commodity analysis: production dynamics, trade patterns, price drivers, and substitution effects.]"
+  },
+  {
+    "instruction": "What is the global distribution of freshwater resources?",
+    "input": "",
+    "output": "[Water resources analysis: supply distribution, depletion trends, infrastructure status, and allocation challenges.]"
+  },
+  {
+    "instruction": "How does groundwater depletion affect long-term water security?",
+    "input": "",
+    "output": "[Water resources analysis: supply distribution, depletion trends, infrastructure status, and allocation challenges.]"
+  },
+  {
+    "instruction": "What are the major transboundary water disputes?",
+    "input": "",
+    "output": "[Water resources analysis: supply distribution, depletion trends, infrastructure status, and allocation challenges.]"
+  },
+  {
+    "instruction": "How do dams affect downstream water availability?",
+    "input": "",
+    "output": "[Water resources analysis: supply distribution, depletion trends, infrastructure status, and allocation challenges.]"
+  },
+  {
+    "instruction": "What is the state of aquifer depletion globally?",
+    "input": "",
+    "output": "[Water resources analysis: supply distribution, depletion trends, infrastructure status, and allocation challenges.]"
+  },
+  {
+    "instruction": "How does water pricing affect usage and allocation?",
+    "input": "",
+    "output": "[Water resources analysis: supply distribution, depletion trends, infrastructure status, and allocation challenges.]"
+  },
+  {
+    "instruction": "What is the water-energy nexus?",
+    "input": "",
+    "output": "[Water resources analysis: supply distribution, depletion trends, infrastructure status, and allocation challenges.]"
+  },
+  {
+    "instruction": "How does urbanization affect water resources?",
+    "input": "",
+    "output": "[Water resources analysis: supply distribution, depletion trends, infrastructure status, and allocation challenges.]"
+  },
+  {
+    "instruction": "What is the state of water infrastructure investment?",
+    "input": "",
+    "output": "[Water resources analysis: supply distribution, depletion trends, infrastructure status, and allocation challenges.]"
+  },
+  {
+    "instruction": "How does water scarcity affect industrial production?",
+    "input": "",
+    "output": "[Water resources analysis: supply distribution, depletion trends, infrastructure status, and allocation challenges.]"
+  },
+  {
+    "instruction": "What is the role of desalination in water security?",
+    "input": "",
+    "output": "[Water resources analysis: supply distribution, depletion trends, infrastructure status, and allocation challenges.]"
+  },
+  {
+    "instruction": "How does water pollution affect usable supply?",
+    "input": "",
+    "output": "[Water resources analysis: supply distribution, depletion trends, infrastructure status, and allocation challenges.]"
+  },
+  {
+    "instruction": "What are the implications of glacier melt for water supply?",
+    "input": "",
+    "output": "[Water resources analysis: supply distribution, depletion trends, infrastructure status, and allocation challenges.]"
+  },
+  {
+    "instruction": "How do water markets and trading function?",
+    "input": "",
+    "output": "[Water resources analysis: supply distribution, depletion trends, infrastructure status, and allocation challenges.]"
+  },
+  {
+    "instruction": "What is the virtual water trade and why does it matter?",
+    "input": "",
+    "output": "[Water resources analysis: supply distribution, depletion trends, infrastructure status, and allocation challenges.]"
+  },
+  {
+    "instruction": "How does water scarcity contribute to conflict?",
+    "input": "",
+    "output": "[Hydropolitics analysis: basin dynamics, treaty frameworks, conflict potential, and cooperation opportunities.]"
+  },
+  {
+    "instruction": "What are the major river basins with geopolitical tensions?",
+    "input": "",
+    "output": "[Hydropolitics analysis: basin dynamics, treaty frameworks, conflict potential, and cooperation opportunities.]"
+  },
+  {
+    "instruction": "How does the Nile water dispute affect regional dynamics?",
+    "input": "",
+    "output": "[Hydropolitics analysis: basin dynamics, treaty frameworks, conflict potential, and cooperation opportunities.]"
+  },
+  {
+    "instruction": "What are the implications of Chinese dam building on the Mekong?",
+    "input": "",
+    "output": "[Hydropolitics analysis: basin dynamics, treaty frameworks, conflict potential, and cooperation opportunities.]"
+  },
+  {
+    "instruction": "How does India-Pakistan water sharing affect relations?",
+    "input": "",
+    "output": "[Hydropolitics analysis: basin dynamics, treaty frameworks, conflict potential, and cooperation opportunities.]"
+  },
+  {
+    "instruction": "What is the state of water cooperation in Central Asia?",
+    "input": "",
+    "output": "[Hydropolitics analysis: basin dynamics, treaty frameworks, conflict potential, and cooperation opportunities.]"
+  },
+  {
+    "instruction": "How do water disputes affect Middle East geopolitics?",
+    "input": "",
+    "output": "[Hydropolitics analysis: basin dynamics, treaty frameworks, conflict potential, and cooperation opportunities.]"
+  },
+  {
+    "instruction": "What role does water play in the India-China relationship?",
+    "input": "",
+    "output": "[Hydropolitics analysis: basin dynamics, treaty frameworks, conflict potential, and cooperation opportunities.]"
+  },
+  {
+    "instruction": "How does Turkey's GAP project affect downstream countries?",
+    "input": "",
+    "output": "[Hydropolitics analysis: basin dynamics, treaty frameworks, conflict potential, and cooperation opportunities.]"
+  },
+  {
+    "instruction": "What are the dynamics of Colorado River water allocation?",
+    "input": "",
+    "output": "[Hydropolitics analysis: basin dynamics, treaty frameworks, conflict potential, and cooperation opportunities.]"
+  },
+  {
+    "instruction": "How does water stress affect sub-Saharan African stability?",
+    "input": "",
+    "output": "[Hydropolitics analysis: basin dynamics, treaty frameworks, conflict potential, and cooperation opportunities.]"
+  },
+  {
+    "instruction": "What is the role of international water law?",
+    "input": "",
+    "output": "[Hydropolitics analysis: basin dynamics, treaty frameworks, conflict potential, and cooperation opportunities.]"
+  },
+  {
+    "instruction": "How do water treaties hold up under stress?",
+    "input": "",
+    "output": "[Hydropolitics analysis: basin dynamics, treaty frameworks, conflict potential, and cooperation opportunities.]"
+  },
+  {
+    "instruction": "What are the risks of water conflict escalation?",
+    "input": "",
+    "output": "[Hydropolitics analysis: basin dynamics, treaty frameworks, conflict potential, and cooperation opportunities.]"
+  },
+  {
+    "instruction": "How can water cooperation build peace?",
+    "input": "",
+    "output": "[Hydropolitics analysis: basin dynamics, treaty frameworks, conflict potential, and cooperation opportunities.]"
+  },
+  {
+    "instruction": "How concentrated is the fertilizer industry?",
+    "input": "",
+    "output": "[Agricultural inputs analysis: supply concentration, price transmission, availability constraints, and farmer economics.]"
+  },
+  {
+    "instruction": "What are the ammonia production and trade dynamics?",
+    "input": "",
+    "output": "[Agricultural inputs analysis: supply concentration, price transmission, availability constraints, and farmer economics.]"
+  },
+  {
+    "instruction": "How does potash supply chain concentration affect agriculture?",
+    "input": "",
+    "output": "[Agricultural inputs analysis: supply concentration, price transmission, availability constraints, and farmer economics.]"
+  },
+  {
+    "instruction": "What is the phosphate rock supply situation?",
+    "input": "",
+    "output": "[Agricultural inputs analysis: supply concentration, price transmission, availability constraints, and farmer economics.]"
+  },
+  {
+    "instruction": "How do pesticide and herbicide markets function?",
+    "input": "",
+    "output": "[Agricultural inputs analysis: supply concentration, price transmission, availability constraints, and farmer economics.]"
+  },
+  {
+    "instruction": "What is the state of agricultural machinery supply?",
+    "input": "",
+    "output": "[Agricultural inputs analysis: supply concentration, price transmission, availability constraints, and farmer economics.]"
+  },
+  {
+    "instruction": "How do seed markets and IP affect farmers?",
+    "input": "",
+    "output": "[Agricultural inputs analysis: supply concentration, price transmission, availability constraints, and farmer economics.]"
+  },
+  {
+    "instruction": "What is the role of agricultural credit in production?",
+    "input": "",
+    "output": "[Agricultural inputs analysis: supply concentration, price transmission, availability constraints, and farmer economics.]"
+  },
+  {
+    "instruction": "How does diesel availability affect farming operations?",
+    "input": "",
+    "output": "[Agricultural inputs analysis: supply concentration, price transmission, availability constraints, and farmer economics.]"
+  },
+  {
+    "instruction": "What are the dynamics of animal feed markets?",
+    "input": "",
+    "output": "[Agricultural inputs analysis: supply concentration, price transmission, availability constraints, and farmer economics.]"
+  },
+  {
+    "instruction": "How does veterinary pharmaceutical supply affect livestock?",
+    "input": "",
+    "output": "[Agricultural inputs analysis: supply concentration, price transmission, availability constraints, and farmer economics.]"
+  },
+  {
+    "instruction": "What is the state of agricultural technology adoption?",
+    "input": "",
+    "output": "[Agricultural inputs analysis: supply concentration, price transmission, availability constraints, and farmer economics.]"
+  },
+  {
+    "instruction": "How do input price spikes affect farmer economics?",
+    "input": "",
+    "output": "[Agricultural inputs analysis: supply concentration, price transmission, availability constraints, and farmer economics.]"
+  },
+  {
+    "instruction": "What is the relationship between sanctions and agricultural inputs?",
+    "input": "",
+    "output": "[Agricultural inputs analysis: supply concentration, price transmission, availability constraints, and farmer economics.]"
+  },
+  {
+    "instruction": "How does the natural gas price affect fertilizer production?",
+    "input": "",
+    "output": "[Agricultural inputs analysis: supply concentration, price transmission, availability constraints, and farmer economics.]"
+  },
+  {
+    "instruction": "How did the 2008 food price crisis unfold?",
+    "input": "",
+    "output": "[Food shock analysis: trigger events, transmission mechanisms, vulnerability factors, and cascading effects.]"
+  },
+  {
+    "instruction": "What was the impact of the Ukraine war on food systems?",
+    "input": "",
+    "output": "[Food shock analysis: trigger events, transmission mechanisms, vulnerability factors, and cascading effects.]"
+  },
+  {
+    "instruction": "How do droughts cascade through food systems?",
+    "input": "",
+    "output": "[Food shock analysis: trigger events, transmission mechanisms, vulnerability factors, and cascading effects.]"
+  },
+  {
+    "instruction": "What happens when major exporters impose food export bans?",
+    "input": "",
+    "output": "[Food shock analysis: trigger events, transmission mechanisms, vulnerability factors, and cascading effects.]"
+  },
+  {
+    "instruction": "How do disease outbreaks affect livestock and food supply?",
+    "input": "",
+    "output": "[Food shock analysis: trigger events, transmission mechanisms, vulnerability factors, and cascading effects.]"
+  },
+  {
+    "instruction": "What is the impact of port closures on food trade?",
+    "input": "",
+    "output": "[Food shock analysis: trigger events, transmission mechanisms, vulnerability factors, and cascading effects.]"
+  },
+  {
+    "instruction": "How do currency crises affect food affordability?",
+    "input": "",
+    "output": "[Food shock analysis: trigger events, transmission mechanisms, vulnerability factors, and cascading effects.]"
+  },
+  {
+    "instruction": "What happens when fertilizer supply is disrupted?",
+    "input": "",
+    "output": "[Food shock analysis: trigger events, transmission mechanisms, vulnerability factors, and cascading effects.]"
+  },
+  {
+    "instruction": "How do fuel shortages affect food production and distribution?",
+    "input": "",
+    "output": "[Food shock analysis: trigger events, transmission mechanisms, vulnerability factors, and cascading effects.]"
+  },
+  {
+    "instruction": "What is the impact of extreme heat on crop yields?",
+    "input": "",
+    "output": "[Food shock analysis: trigger events, transmission mechanisms, vulnerability factors, and cascading effects.]"
+  },
+  {
+    "instruction": "How do floods affect food production and infrastructure?",
+    "input": "",
+    "output": "[Food shock analysis: trigger events, transmission mechanisms, vulnerability factors, and cascading effects.]"
+  },
+  {
+    "instruction": "What happens when cold storage and logistics fail?",
+    "input": "",
+    "output": "[Food shock analysis: trigger events, transmission mechanisms, vulnerability factors, and cascading effects.]"
+  },
+  {
+    "instruction": "How do labor shortages affect food systems?",
+    "input": "",
+    "output": "[Food shock analysis: trigger events, transmission mechanisms, vulnerability factors, and cascading effects.]"
+  },
+  {
+    "instruction": "What is the impact of containerization disruptions on food?",
+    "input": "",
+    "output": "[Food shock analysis: trigger events, transmission mechanisms, vulnerability factors, and cascading effects.]"
+  },
+  {
+    "instruction": "How do multiple shocks compound in food systems?",
+    "input": "",
+    "output": "[Food shock analysis: trigger events, transmission mechanisms, vulnerability factors, and cascading effects.]"
+  },
+  {
+    "instruction": "How will climate change affect global food production geography?",
+    "input": "",
+    "output": "[Future food systems analysis: technology potential, climate adaptation, sustainability pathways, and resilience strategies.]"
+  },
+  {
+    "instruction": "What is the potential of vertical farming and controlled environment agriculture?",
+    "input": "",
+    "output": "[Future food systems analysis: technology potential, climate adaptation, sustainability pathways, and resilience strategies.]"
+  },
+  {
+    "instruction": "How might alternative proteins affect food systems?",
+    "input": "",
+    "output": "[Future food systems analysis: technology potential, climate adaptation, sustainability pathways, and resilience strategies.]"
+  },
+  {
+    "instruction": "What is the future of food trade under deglobalization?",
+    "input": "",
+    "output": "[Future food systems analysis: technology potential, climate adaptation, sustainability pathways, and resilience strategies.]"
+  },
+  {
+    "instruction": "How will water scarcity reshape agriculture?",
+    "input": "",
+    "output": "[Future food systems analysis: technology potential, climate adaptation, sustainability pathways, and resilience strategies.]"
+  },
+  {
+    "instruction": "What is the potential of precision fermentation?",
+    "input": "",
+    "output": "[Future food systems analysis: technology potential, climate adaptation, sustainability pathways, and resilience strategies.]"
+  },
+  {
+    "instruction": "How might gene editing transform crop development?",
+    "input": "",
+    "output": "[Future food systems analysis: technology potential, climate adaptation, sustainability pathways, and resilience strategies.]"
+  },
+  {
+    "instruction": "What is the trajectory of agricultural automation?",
+    "input": "",
+    "output": "[Future food systems analysis: technology potential, climate adaptation, sustainability pathways, and resilience strategies.]"
+  },
+  {
+    "instruction": "How will changing diets affect food demand?",
+    "input": "",
+    "output": "[Future food systems analysis: technology potential, climate adaptation, sustainability pathways, and resilience strategies.]"
+  },
+  {
+    "instruction": "What is the future of smallholder farming?",
+    "input": "",
+    "output": "[Future food systems analysis: technology potential, climate adaptation, sustainability pathways, and resilience strategies.]"
+  },
+  {
+    "instruction": "How might carbon pricing affect agriculture?",
+    "input": "",
+    "output": "[Future food systems analysis: technology potential, climate adaptation, sustainability pathways, and resilience strategies.]"
+  },
+  {
+    "instruction": "What is the potential of ocean farming?",
+    "input": "",
+    "output": "[Future food systems analysis: technology potential, climate adaptation, sustainability pathways, and resilience strategies.]"
+  },
+  {
+    "instruction": "How will soil degradation be addressed?",
+    "input": "",
+    "output": "[Future food systems analysis: technology potential, climate adaptation, sustainability pathways, and resilience strategies.]"
+  },
+  {
+    "instruction": "What is the future of food system resilience?",
+    "input": "",
+    "output": "[Future food systems analysis: technology potential, climate adaptation, sustainability pathways, and resilience strategies.]"
+  },
+  {
+    "instruction": "How might food systems achieve sustainability?",
+    "input": "",
+    "output": "[Future food systems analysis: technology potential, climate adaptation, sustainability pathways, and resilience strategies.]"
+  }
+]
