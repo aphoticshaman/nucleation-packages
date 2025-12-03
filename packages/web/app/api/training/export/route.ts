@@ -230,7 +230,7 @@ export async function POST(request: Request) {
   const { data: domainCounts } = await serviceClient
     .from('training_examples')
     .select('domain')
-    .then(result => {
+    .then((result: { data: { domain: string }[] | null; error: unknown }) => {
       if (!result.data) return { data: [] };
       const counts: Record<string, number> = {};
       result.data.forEach((r: { domain: string }) => {
