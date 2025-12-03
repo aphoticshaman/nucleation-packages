@@ -48,14 +48,26 @@ export interface IntelMetadata {
   overallRisk: 'low' | 'moderate' | 'elevated' | 'high' | 'critical';
 }
 
+export interface UseIntelBriefingOptions {
+  /** If true, fetch briefing on mount. Default: false (prevents unwanted API calls on page load) */
+  autoFetch?: boolean;
+  /** If true, enable pulse polling. Default: false (prevents background API calls) */
+  enablePulse?: boolean;
+}
+
 interface UseIntelBriefingResult {
   briefings: IntelBriefings | null;
   metadata: IntelMetadata | null;
   loading: boolean;
   error: Error | null;
+  /** Call this to explicitly fetch/refresh the briefing */
   refetch: () => Promise<void>;
   pulse: PulseResult | null;
   pulseLoading: boolean;
+  /** Call this to start pulse polling (if not auto-enabled) */
+  startPulse: () => void;
+  /** Call this to stop pulse polling */
+  stopPulse: () => void;
 }
 
 // Cache briefings for 5 minutes (server-side cache is 10 min, this is backup)
@@ -68,17 +80,33 @@ const cache: Map<
 // Pulse check interval: 30 seconds
 const PULSE_INTERVAL = 30 * 1000;
 
-export function useIntelBriefing(preset: string = 'global'): UseIntelBriefingResult {
+/**
+ * Hook for fetching intel briefings.
+ *
+ * IMPORTANT: By default, this hook does NOT auto-fetch on mount to prevent
+ * unwanted Anthropic API calls on page load/refresh. Call `refetch()` explicitly
+ * when the user initiates an action.
+ *
+ * @param preset - The preset to fetch ('global', 'nato', 'brics', 'conflict')
+ * @param options - Configuration options
+ * @param options.autoFetch - If true, fetch on mount. Default: false
+ * @param options.enablePulse - If true, enable background pulse polling. Default: false
+ */
+export function useIntelBriefing(
+  preset: string = 'global',
+  options: UseIntelBriefingOptions = {}
+): UseIntelBriefingResult {
+  const { autoFetch = false, enablePulse = false } = options;
+
   const [briefings, setBriefings] = useState<IntelBriefings | null>(null);
   const [metadata, setMetadata] = useState<IntelMetadata | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start false - only true when actually fetching
   const [error, setError] = useState<Error | null>(null);
   const [pulse, setPulse] = useState<PulseResult | null>(null);
   const [pulseLoading, setPulseLoading] = useState(false);
+  const [pulseEnabled, setPulseEnabled] = useState(enablePulse);
   const pulseIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Track if we need to force refresh due to breaking news
-  const forceRefreshRef = useRef(false);
+  const hasFetchedRef = useRef(false); // Track if we've ever fetched
 
   const fetchBriefing = useCallback(async () => {
     const cacheKey = preset;
@@ -128,12 +156,18 @@ export function useIntelBriefing(preset: string = 'global'): UseIntelBriefingRes
     }
   }, [preset]);
 
+  // Only auto-fetch if explicitly enabled (default: false)
   useEffect(() => {
-    void fetchBriefing();
-  }, [fetchBriefing]);
+    if (autoFetch && !hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      void fetchBriefing();
+    }
+  }, [autoFetch, fetchBriefing]);
 
-  // Pulse check - runs every 30 seconds for breaking news
+  // Pulse check - runs every 30 seconds for breaking news (only if enabled)
   const checkPulse = useCallback(async () => {
+    if (!pulseEnabled) return;
+
     try {
       setPulseLoading(true);
       const response = await fetch('/api/intel-briefing/pulse');
@@ -141,8 +175,8 @@ export function useIntelBriefing(preset: string = 'global'): UseIntelBriefingRes
         const data = await response.json();
         setPulse(data);
 
-        // If breaking news detected, force refresh briefing
-        if (data.breaking && (data.severity === 'major' || data.severity === 'critical')) {
+        // If breaking news detected, force refresh briefing (only if we've already fetched once)
+        if (hasFetchedRef.current && data.breaking && (data.severity === 'major' || data.severity === 'critical')) {
           console.log('[PULSE] Breaking news detected, refreshing briefing...');
           cache.delete(preset); // Clear local cache
           void fetchBriefing(); // Refresh briefing
@@ -153,24 +187,44 @@ export function useIntelBriefing(preset: string = 'global'): UseIntelBriefingRes
     } finally {
       setPulseLoading(false);
     }
-  }, [preset, fetchBriefing]);
+  }, [preset, fetchBriefing, pulseEnabled]);
 
-  // Start pulse polling on mount
+  // Start/stop pulse polling based on pulseEnabled state
   useEffect(() => {
-    // Initial pulse check
-    void checkPulse();
+    // Clear any existing interval first
+    if (pulseIntervalRef.current) {
+      clearInterval(pulseIntervalRef.current);
+      pulseIntervalRef.current = null;
+    }
 
-    // Set up interval for 30-second pulse checks
-    pulseIntervalRef.current = setInterval(() => {
+    // Only start polling if pulse is enabled
+    if (pulseEnabled) {
+      // Initial pulse check
       void checkPulse();
-    }, PULSE_INTERVAL);
+
+      // Set up interval for 30-second pulse checks
+      pulseIntervalRef.current = setInterval(() => {
+        void checkPulse();
+      }, PULSE_INTERVAL);
+    }
 
     return () => {
       if (pulseIntervalRef.current) {
         clearInterval(pulseIntervalRef.current);
+        pulseIntervalRef.current = null;
       }
     };
-  }, [checkPulse]);
+  }, [checkPulse, pulseEnabled]);
+
+  // Control functions for pulse polling
+  const startPulse = useCallback(() => {
+    setPulseEnabled(true);
+  }, []);
+
+  const stopPulse = useCallback(() => {
+    setPulseEnabled(false);
+    setPulse(null);
+  }, []);
 
   return {
     briefings,
@@ -180,6 +234,8 @@ export function useIntelBriefing(preset: string = 'global'): UseIntelBriefingRes
     refetch: fetchBriefing,
     pulse,
     pulseLoading,
+    startPulse,
+    stopPulse,
   };
 }
 
