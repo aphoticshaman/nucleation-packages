@@ -7,9 +7,8 @@ Run: python train_h200.py
 import json
 import torch
 from datasets import Dataset
-from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
+from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer, DataCollatorForLanguageModeling
 from peft import LoraConfig, get_peft_model
-from trl import SFTTrainer
 
 # Load training data
 print("Loading training data...")
@@ -53,12 +52,26 @@ lora_config = LoraConfig(
 model = get_peft_model(model, lora_config)
 model.print_trainable_parameters()
 
+# Tokenize dataset
+def tokenize_fn(examples):
+    return tokenizer(
+        examples["text"],
+        truncation=True,
+        max_length=1024,
+    )
+
+print("Tokenizing dataset...")
+tokenized = dataset.map(tokenize_fn, batched=True, remove_columns=["text"])
+
+# Data collator for causal LM
+data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+
 # Training args optimized for H200
 training_args = TrainingArguments(
     output_dir="/workspace/latticeforge-phi2-lora",
     num_train_epochs=3,
-    per_device_train_batch_size=16,
-    gradient_accumulation_steps=2,
+    per_device_train_batch_size=8,
+    gradient_accumulation_steps=4,
     learning_rate=2e-4,
     bf16=True,
     logging_steps=50,
@@ -66,15 +79,15 @@ training_args = TrainingArguments(
     save_total_limit=3,
     warmup_ratio=0.03,
     optim="adamw_torch",
-    report_to="none"
+    report_to="none",
+    dataloader_num_workers=4,
 )
 
-trainer = SFTTrainer(
+trainer = Trainer(
     model=model,
-    train_dataset=dataset,
     args=training_args,
-    processing_class=tokenizer,
-    max_seq_length=2048
+    train_dataset=tokenized,
+    data_collator=data_collator,
 )
 
 print("Starting training...")
