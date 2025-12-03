@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { Shield, Zap, Brain, Target, Globe, TrendingUp } from 'lucide-react';
 
 function LoginForm() {
   const router = useRouter();
@@ -48,15 +49,15 @@ function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-md">
+    <div className="w-full max-w-md relative z-10">
       {/* Logo */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-white">LatticeForge</h1>
-        <p className="text-slate-400 mt-2">Sign in to your account</p>
+        <p className="text-slate-400 mt-2">Intelligence that sees around corners</p>
       </div>
 
       {/* Form */}
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-8">
+      <div className="bg-slate-900/90 backdrop-blur-xl rounded-xl border border-slate-700/50 p-8 shadow-2xl">
         {error && (
           <div className="mb-6 p-4 bg-red-900/20 border border-red-800 rounded-lg text-red-400 text-sm">
             {error}
@@ -122,7 +123,7 @@ function LoginForm() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               placeholder="you@example.com"
               required
             />
@@ -134,7 +135,7 @@ function LoginForm() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               placeholder="••••••••"
               required
             />
@@ -153,10 +154,10 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3 rounded-lg font-medium transition-colors ${
+            className={`w-full py-3 rounded-lg font-medium transition-all ${
               loading
                 ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-500'
+                : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-500 hover:to-cyan-500 shadow-lg shadow-blue-500/25'
             }`}
           >
             {loading ? 'Signing in...' : 'Sign in'}
@@ -168,7 +169,7 @@ function LoginForm() {
       <p className="text-center text-slate-400 mt-6">
         Don&apos;t have an account?{' '}
         <Link href="/signup" className="text-blue-400 hover:text-blue-300">
-          Sign up
+          Sign up free
         </Link>
       </p>
     </div>
@@ -177,12 +178,12 @@ function LoginForm() {
 
 function LoginFallback() {
   return (
-    <div className="w-full max-w-md animate-pulse">
+    <div className="w-full max-w-md animate-pulse relative z-10">
       <div className="text-center mb-8">
         <div className="h-9 bg-slate-800 rounded w-48 mx-auto mb-2"></div>
         <div className="h-5 bg-slate-800 rounded w-40 mx-auto"></div>
       </div>
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-8">
+      <div className="bg-slate-900/90 backdrop-blur-xl rounded-xl border border-slate-700/50 p-8">
         <div className="space-y-3 mb-6">
           <div className="h-12 bg-slate-800 rounded-lg"></div>
           <div className="h-12 bg-slate-800 rounded-lg"></div>
@@ -192,31 +193,121 @@ function LoginFallback() {
   );
 }
 
+// Marketing content
+const DIFFERENTIATORS = [
+  {
+    icon: Brain,
+    title: 'Cognitive Intelligence',
+    description: 'AI that thinks like an analyst, not a search engine. Context-aware reasoning across 200+ dimensions.',
+  },
+  {
+    icon: Target,
+    title: '72% Predictive Accuracy',
+    description: 'Detect phase transitions 30 days before they happen. Early warning when it matters most.',
+  },
+  {
+    icon: Globe,
+    title: 'Global Coverage',
+    description: 'Real-time monitoring across 195 countries. Multi-lingual OSINT from 10,000+ sources.',
+  },
+  {
+    icon: Zap,
+    title: 'Instant Briefings',
+    description: 'Executive summaries on-demand. From raw data to actionable intelligence in seconds.',
+  },
+  {
+    icon: TrendingUp,
+    title: 'Temporal Analysis',
+    description: 'Navigate intel across time. Historical patterns, current state, projected futures.',
+  },
+  {
+    icon: Shield,
+    title: 'Enterprise Security',
+    description: 'SOC 2 compliant. AES-256 encryption. Your data never trains our models.',
+  },
+];
+
 export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-950 flex">
-      {/* Left side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 py-12">
+      {/* Left side - Hero visual with form overlay */}
+      <div className="flex-1 relative flex items-center justify-center px-8 py-12">
+        {/* Background image */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="/images/hero/simulation-globe.png"
+            alt=""
+            className="w-full h-full object-cover opacity-30"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-slate-950/60" />
+        </div>
+
+        {/* Animated gradient accent */}
+        <div className="absolute top-1/4 -left-32 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 left-1/4 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+
+        {/* Form */}
         <Suspense fallback={<LoginFallback />}>
           <LoginForm />
         </Suspense>
       </div>
 
-      {/* Right side - Hero image (hidden on mobile) */}
-      <div className="hidden lg:flex flex-1 items-center justify-center p-12 bg-gradient-to-br from-slate-900 to-slate-950 border-l border-slate-800">
-        <div className="max-w-lg text-center">
-          <img
-            src="/images/hero/simulation-globe.png"
-            alt="Global simulation visualization"
-            className="w-full h-auto rounded-2xl shadow-2xl shadow-cyan-500/20 mb-8"
-          />
-          <h2 className="text-2xl font-bold text-white mb-3">
-            Early warning for phase transitions
+      {/* Right side - Marketing content (hidden on mobile) */}
+      <div className="hidden lg:flex flex-1 flex-col justify-center p-12 xl:p-16 bg-slate-900/50 border-l border-slate-800">
+        <div className="max-w-xl">
+          {/* Headline */}
+          <h2 className="text-3xl xl:text-4xl font-bold text-white mb-4">
+            Intelligence that sees
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
+              {' '}around corners
+            </span>
           </h2>
-          <p className="text-slate-400">
-            Detect the calm before the storm. Our attractor dynamics model predicts geopolitical
-            shifts with 72% accuracy at a 30-day horizon.
+          <p className="text-lg text-slate-400 mb-10">
+            When headlines are too late and hunches aren&apos;t enough, LatticeForge gives you the
+            analytical edge. Understand what&apos;s happening, why it matters, and what comes next.
           </p>
+
+          {/* Feature grid */}
+          <div className="grid grid-cols-2 gap-6">
+            {DIFFERENTIATORS.map((item, idx) => (
+              <div key={idx} className="group">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-slate-800/50 rounded-lg group-hover:bg-blue-500/20 transition-colors">
+                    <item.icon className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white text-sm">{item.title}</h3>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">{item.description}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Social proof placeholder */}
+          <div className="mt-10 pt-8 border-t border-slate-800">
+            <p className="text-sm text-slate-500 italic">
+              &ldquo;We&apos;ll have a customer quote here soon. For now, know that we built this
+              because existing tools weren&apos;t cutting it.&rdquo;
+            </p>
+            <p className="text-xs text-slate-600 mt-2">- The LatticeForge Team</p>
+          </div>
+
+          {/* Trust badges */}
+          <div className="flex items-center gap-6 mt-8">
+            <div className="flex items-center gap-2 text-xs text-slate-500">
+              <Shield className="w-4 h-4" />
+              <span>SOC 2 Type II</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-slate-500">
+              <Globe className="w-4 h-4" />
+              <span>195 Countries</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-slate-500">
+              <Zap className="w-4 h-4" />
+              <span>Real-time</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
