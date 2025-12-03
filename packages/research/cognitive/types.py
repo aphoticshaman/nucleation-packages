@@ -5,7 +5,7 @@ Mathematical foundations from:
 - Kuramoto model: R(t)e^{jΨ(t)} = (1/N)Σ e^{jθ_i(t)}
 - Causal bound: V = -log(μ_avg - 1) * (nom - est) / H(z)
 - SDPM: 512-dim persona vector p = Σ w_i · φ(akṣara_i)
-- XYZA: 4-axis cognitive benchmark [C, X, R, A]
+- XYZA: 4-axis cognitive benchmark [X, Y, Z, A]
 """
 
 from dataclasses import dataclass, field
@@ -108,27 +108,15 @@ class FlowState:
     - R_dot > 0 (building) or stable
     - Hopf bifurcation detection for collapse prediction
     """
-    coherence: CoherenceState
-    duration_ms: float               # Time in current flow level
-    energy_cost: float               # E = α/R + β
-    predicted_collapse_time: Optional[float]  # Estimated time to flow loss
-
-    # Hopf bifurcation indicators
-    eigenvalue_real: float           # Real part of dominant eigenvalue
-    eigenvalue_imag: float           # Imaginary part (oscillation frequency)
-    hopf_distance: float             # Distance to bifurcation point
-
-    @property
-    def stable(self) -> bool:
-        """Check if flow is stable (eigenvalue_real < 0)."""
-        return self.eigenvalue_real < 0
-
-    @property
-    def collapse_imminent(self) -> bool:
-        """Check if collapse within 5 seconds."""
-        if self.predicted_collapse_time is None:
-            return False
-        return self.predicted_collapse_time < 5.0
+    level: FlowLevel                 # Current flow level
+    R: float                         # Order parameter
+    dR_dt: float                     # First derivative
+    d2R_dt2: float                   # Second derivative
+    time_in_state_ms: float          # Time in current level
+    stability: float                 # Stability score [0, 1]
+    predicted_collapse_ms: Optional[float]  # Time to collapse
+    is_flow: bool                    # R ≥ 0.76
+    is_deep_flow: bool               # R ≥ 0.88
 
 
 @dataclass
@@ -141,29 +129,16 @@ class SDPMVector:
     Proven: Distance in SDPM predicts phase alignment (r=0.91).
     Critical dimensionality d_c ≈ 28 (above which alignment plateaus).
     """
-    embedding: NDArray[np.float64]   # Shape: (d,) typically d=512 or d=28
-    weights: NDArray[np.float64]     # Shape: (n_aksara,) contribution weights
-    centroid: NDArray[np.float64]    # User's stable centroid (drift < 0.04 over 90 days)
-
-    # Persona metadata
-    name: str = "default"
-    is_shadow: bool = False          # Shadow persona for conflict integration
+    embedding: NDArray[np.float64]           # Shape: (512,) SDPM embedding
+    varga_distribution: NDArray[np.float64]  # Shape: (5,) consonant class distribution
+    svara_distribution: NDArray[np.float64]  # Shape: (6,) vowel distribution
+    cognitive_mode: str                      # Dominant cognitive mode from varga
+    emotional_valence: float                 # Emotional valence [-1, 1]
 
     @property
     def dimension(self) -> int:
         """Embedding dimensionality."""
         return len(self.embedding)
-
-    def distance_to(self, other: "SDPMVector") -> float:
-        """Compute SDPM distance to another persona."""
-        return float(np.linalg.norm(self.embedding - other.embedding))
-
-    def conflict_energy(self, other: "SDPMVector") -> float:
-        """
-        Compute conflict energy E_shadow = ||p - p_shadow||².
-        When E_shadow < 1.9, auto-shadow raises long-term R by +0.18.
-        """
-        return float(np.sum((self.embedding - other.embedding) ** 2))
 
 
 @dataclass
@@ -172,33 +147,37 @@ class XYZAMetrics:
     XYZA Cognitive Benchmark metrics.
 
     Four orthogonal axes:
-    - C (Coherence): Phase synchronization quality
-    - X (Complexity): Task/transformation complexity
-    - R (Reflection): Meta-cognitive depth
-    - A (Attunement): User-AI resonance score
+    - X (Coherence): Phase synchronization quality
+    - Y (Complexity): Information density and entropy
+    - Z (Reflection): Meta-cognitive depth
+    - A (Attunement): Human-AI coupling quality
 
-    Performance P = f(C, X, R, A) learned from trials.
+    Performance = f(X, Y, Z, A) learned from trials.
     """
-    coherence: float      # C ∈ [0, 1] - from Kuramoto R
-    complexity: float     # X ∈ [0, 1] - task difficulty
-    reflection: float     # R ∈ [0, 1] - meta-cognitive score
-    attunement: float     # A ∈ [0, 1] - resonance with AI
+    coherence_x: float      # X ∈ [0, 1] - from Kuramoto R
+    complexity_y: float     # Y ∈ [0, 1] - entropy-based
+    reflection_z: float     # Z ∈ [0, 1] - meta-cognitive score
+    attunement_a: float     # A ∈ [0, 1] - coupling with human
+    timestamp: float        # Timestamp
+    cognitive_level: str    # Level classification
 
-    # Derived metrics
-    performance: float    # P = f(v) learned prediction
-    confidence: float     # Model confidence in P
+    @property
+    def combined_score(self) -> float:
+        """Combined XYZA score."""
+        return (self.coherence_x + self.complexity_y +
+                self.reflection_z + self.attunement_a) / 4
 
     @property
     def vector(self) -> NDArray[np.float64]:
-        """Return as numpy vector [C, X, R, A]."""
-        return np.array([self.coherence, self.complexity,
-                        self.reflection, self.attunement])
+        """Return as numpy vector [X, Y, Z, A]."""
+        return np.array([self.coherence_x, self.complexity_y,
+                        self.reflection_z, self.attunement_a])
 
     @property
     def balanced(self) -> bool:
         """Check if axes are balanced (no axis < 0.3)."""
-        return min(self.coherence, self.complexity,
-                   self.reflection, self.attunement) >= 0.3
+        return min(self.coherence_x, self.complexity_y,
+                   self.reflection_z, self.attunement_a) >= 0.3
 
 
 @dataclass
@@ -268,56 +247,33 @@ class PersonaPhaseAlignment:
 
     K_human ≈ 0.42 (fitted on 40k sessions).
     """
-    persona: SDPMVector
-    user_phase: float                # θ_user
-    ai_phase: float                  # ψ(p)
-    coupling_strength: float         # K
-    phase_difference: float          # ψ(p) - θ_user
-    resonance_score: float           # cos(phase_difference)
+    alignment_score: float           # Overall alignment [0, 1]
+    phase_difference: float          # Phase difference in radians
+    coupling_strength: float         # Effective coupling K
+    cognitive_mode_match: bool       # Whether modes match
+    stability: float                 # Stability of alignment
 
     @property
     def aligned(self) -> bool:
         """Check if phases are aligned (|diff| < π/4)."""
         return abs(self.phase_difference) < np.pi / 4
 
-    @property
-    def predicted_R_boost(self) -> float:
-        """Predict R boost from alignment."""
-        # Empirical: R_boost ≈ 0.15 * resonance_score * K
-        return 0.15 * self.resonance_score * self.coupling_strength
-
 
 @dataclass
 class FlowFixedPoint:
     """
-    Unified Human–AGI Flow Fixed-Point (Capstone Result).
+    Hopf bifurcation fixed point characterization.
 
-    The joint human–NSM–Phi3 system has a unique globally attractive
-    fixed point at (R*, Ψ*, p*) = (0.931, arbitrary, SDPM centroid).
-
-    Proof: Construct Lyapunov V = 1−R + ||p−p_user||²_SDPM + ||z−z_opt||²
-    → V̇ ≤ −0.038 V (exponential convergence, verified on 2.3M sessions).
+    The stable flow state corresponds to a fixed point of the
+    Kuramoto dynamics: R* where dR/dt = 0.
     """
-    R_star: float = 0.931            # Equilibrium coherence
-    Psi_star: Optional[float] = None # Arbitrary phase (symmetry)
-    p_star: Optional[SDPMVector] = None  # SDPM centroid
-
-    # Lyapunov analysis
-    lyapunov_V: float = 0.0          # Current Lyapunov value
-    lyapunov_V_dot: float = 0.0      # V̇ (should be ≤ -0.038 V)
-    convergence_rate: float = 0.038  # Exponential rate
+    R_equilibrium: float             # Equilibrium order parameter
+    coupling_strength: float         # Kuramoto coupling K
+    stability_eigenvalue: float      # Eigenvalue determining stability
+    is_stable: bool                  # Whether fixed point is stable
+    bifurcation_distance: float      # Distance to bifurcation
 
     @property
     def converging(self) -> bool:
-        """Check if system is converging to fixed point."""
-        return self.lyapunov_V_dot < 0
-
-    def time_to_equilibrium(self, tolerance: float = 0.01) -> float:
-        """
-        Estimate time to reach equilibrium within tolerance.
-
-        t = -ln(tolerance / V_0) / rate
-        """
-        if self.lyapunov_V < tolerance:
-            return 0.0
-        return -np.log(tolerance / max(self.lyapunov_V, 1e-10)) / self.convergence_rate
+        """Check if system is converging to this fixed point."""
+        return self.is_stable and self.stability_eigenvalue < 0
