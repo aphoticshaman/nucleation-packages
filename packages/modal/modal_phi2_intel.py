@@ -90,7 +90,7 @@ class Phi2IntelModel:
 
             # Fallback: Load from HuggingFace (your uploaded model)
             # Replace with your actual HuggingFace model ID
-            hf_model_id = "aphoticshaman/phi2-intel-60k"  # <-- UPDATE THIS
+            hf_model_id = "aphoticshaman/latticeforge-unified"
 
             self.tokenizer = AutoTokenizer.from_pretrained(
                 hf_model_id,
