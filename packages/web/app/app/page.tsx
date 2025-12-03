@@ -206,7 +206,15 @@ export default function ConsumerDashboard() {
   const { wasm, loading: wasmLoading } = useWasm();
   const { nations: allNations, edges: allEdges, loading: dataLoading } = useSupabaseNations();
   const [selectedPreset, setSelectedPreset] = useState('global');
-  const { briefings, metadata, loading: intelLoading } = useIntelBriefing(selectedPreset);
+  // Intel briefing - lazy load, don't auto-fetch on page load
+  const { briefings, metadata, loading: intelLoading, refetch: loadBriefing } = useIntelBriefing(selectedPreset);
+  const [hasRequestedBriefing, setHasRequestedBriefing] = useState(false);
+
+  // Handler for explicit briefing load
+  const handleLoadBriefing = async () => {
+    setHasRequestedBriefing(true);
+    await loadBriefing();
+  };
   const [selectedLayer, setSelectedLayer] = useState<'basin' | 'risk' | 'regime'>('basin');
   const [skillLevel, setSkillLevel] = useState<SkillLevel>('standard');
   const [isSimulating, setIsSimulating] = useState(false);
@@ -378,7 +386,23 @@ export default function ConsumerDashboard() {
               )}
             </div>
 
-            {intelLoading ? (
+            {/* Show load button if no briefing requested yet */}
+            {!hasRequestedBriefing && !briefings ? (
+              <div className="text-center py-8">
+                <p className="text-slate-400 text-sm mb-4">
+                  Intel briefing available for {currentPreset.fullName}
+                </p>
+                <button
+                  onClick={() => void handleLoadBriefing()}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors"
+                >
+                  Load Intel Briefing
+                </button>
+                <p className="text-xs text-slate-500 mt-3">
+                  Uses 1 API credit • Cached for 10 min
+                </p>
+              </div>
+            ) : intelLoading ? (
               <div className="space-y-4">
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="space-y-2 animate-pulse">
