@@ -280,7 +280,7 @@ export function decryptData(ciphertext: string, key: string): string | null {
     const iv = Buffer.from(ivStr, 'base64');
     const authTag = Buffer.from(authTagStr, 'base64');
 
-    const decipher = crypto.createDecipheriv(ALGORITHM, keyBuffer, iv);
+    const decipher = crypto.createDecipheriv(ALGORITHM, keyBuffer, iv, { authTagLength: 16 });
     decipher.setAuthTag(authTag);
     decipher.setAAD(Buffer.from('latticeforge-v1'));
 

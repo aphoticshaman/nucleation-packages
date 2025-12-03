@@ -19,7 +19,15 @@ RUN pip install --no-cache-dir -r requirements-inference.txt
 
 # Copy inference code
 COPY . /app/research/inference/
-COPY ../cognitive /app/research/cognitive/
+
+# Note: cognitive module should be copied from build context
+# When building from repo root, use: docker build -f packages/research/inference/Dockerfile .
+# Or copy cognitive folder into inference/ before building
+
+# Create non-root user for security
+RUN useradd --create-home --shell /bin/bash appuser && \
+    chown -R appuser:appuser /app
+USER appuser
 
 # Environment
 ENV PYTHONPATH=/app
