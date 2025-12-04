@@ -89,57 +89,53 @@ export async function getUser(): Promise<UserProfile | null> {
 
   if (!user) return null;
 
-  // Try to get existing profile - but don't fail if profiles table has issues
-  try {
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
+  // Try to get existing profile
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
 
-    // If profile exists, return it
-    if (profile) {
-      return profile as UserProfile;
-    }
-
-    // If profile doesn't exist (new OAuth user), try to create one
-    if (error?.code === 'PGRST116') {
-      // PGRST116 = "JSON object requested, multiple (or no) rows returned"
-      const newProfile: Omit<UserProfile, 'last_seen_at' | 'onboarding_completed_at'> & { last_seen_at: string; onboarding_completed_at: null } = {
-        id: user.id,
-        email: user.email || '',
-        full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
-        avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-        role: 'consumer',
-        tier: 'free',
-        organization_id: null,
-        is_active: true,
-        last_seen_at: new Date().toISOString(),
-        onboarding_completed_at: null,
-      };
-
-      const { data: createdProfile, error: insertError } = await supabase
-        .from('profiles')
-        .insert(newProfile)
-        .select()
-        .single();
-
-      if (!insertError && createdProfile) {
-        return createdProfile as UserProfile;
-      }
-
-      // Insert failed - fall through to return minimal profile
-      console.error('Failed to create user profile:', insertError);
-    } else if (error) {
-      // Some other error (RLS, table missing, etc)
-      console.error('Error fetching user profile:', error);
-    }
-  } catch (e) {
-    console.error('Exception in profile fetch:', e);
+  // If profile exists, return it with correct role/tier from DB
+  if (profile) {
+    return profile as UserProfile;
   }
 
-  // ALWAYS return a minimal profile if we have a valid Supabase user
-  // This prevents redirect loops when profiles table has issues
+  // If profile doesn't exist (new OAuth user), try to create one
+  if (error?.code === 'PGRST116') {
+    // PGRST116 = "JSON object requested, multiple (or no) rows returned"
+    const newProfile: Omit<UserProfile, 'last_seen_at' | 'onboarding_completed_at'> & { last_seen_at: string; onboarding_completed_at: null } = {
+      id: user.id,
+      email: user.email || '',
+      full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+      avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+      role: 'consumer',
+      tier: 'free',
+      organization_id: null,
+      is_active: true,
+      last_seen_at: new Date().toISOString(),
+      onboarding_completed_at: null,
+    };
+
+    const { data: createdProfile, error: insertError } = await supabase
+      .from('profiles')
+      .insert(newProfile)
+      .select()
+      .single();
+
+    if (!insertError && createdProfile) {
+      return createdProfile as UserProfile;
+    }
+
+    console.error('Failed to create user profile:', insertError);
+  } else if (error) {
+    // Log the actual error so we can debug RLS issues
+    console.error('Profile fetch error:', error.code, error.message, 'for user:', user.id);
+  }
+
+  // Only fall back to minimal profile if we truly couldn't get/create one
+  // This should be rare - indicates RLS or table issues
+  console.warn('Falling back to minimal profile for user:', user.id);
   return {
     id: user.id,
     email: user.email || '',
