@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Ensure profile exists
+    // Ensure profile exists and record sign in
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -69,9 +69,30 @@ export async function GET(request: NextRequest) {
             full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
             avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
             role: 'consumer',
-            tier: 'free',
             is_active: true,
           });
+        }
+
+        // Record sign in with device info
+        const rememberMe = requestUrl.searchParams.get('remember') === 'true';
+        const userAgent = request.headers.get('user-agent') || '';
+        const forwardedFor = request.headers.get('x-forwarded-for');
+        const realIp = request.headers.get('x-real-ip');
+        const ipAddress = forwardedFor?.split(',')[0] || realIp || null;
+
+        try {
+          await supabase.rpc('record_sign_in', {
+            p_user_id: user.id,
+            p_device_info: {
+              user_agent: userAgent,
+              platform: userAgent.includes('Mobile') ? 'mobile' : 'desktop',
+            },
+            p_ip_address: ipAddress,
+            p_remember_me: rememberMe,
+          });
+        } catch (signInErr) {
+          console.error('Failed to record sign in:', signInErr);
+          // Don't block login if recording fails
         }
       }
     } catch (err) {

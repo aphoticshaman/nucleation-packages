@@ -1,12 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import TierBadge, { TierType } from '@/components/TierBadge';
-import { Check, ArrowLeft, Zap, Shield, Globe, Users } from 'lucide-react';
+import { Check, ArrowLeft, Zap, Shield, Globe, Users, Crown } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
+import { supabase } from '@/lib/supabase';
+
+interface UserStatus {
+  isLoggedIn: boolean;
+  role?: string;
+  tier?: string;
+  orgPlan?: string;
+  canPurchase: boolean;
+}
 
 const VISIBLE_PLANS: {
   id: string;
@@ -113,8 +122,52 @@ const FAQ = [
 export default function PricingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
+  const [userStatus, setUserStatus] = useState<UserStatus>({
+    isLoggedIn: false,
+    canPurchase: true,
+  });
+
+  useEffect(() => {
+    async function checkUserStatus() {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        setUserStatus({ isLoggedIn: false, canPurchase: true });
+        return;
+      }
+
+      // Get profile with role and org info
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, organizations(plan)')
+        .eq('id', user.id)
+        .single();
+
+      const role = profile?.role || 'consumer';
+      const orgPlan = (profile?.organizations as { plan?: string } | null)?.plan || 'free';
+
+      // Blocked roles can't purchase - they already have full access
+      const blockedRoles = ['admin', 'enterprise', 'support'];
+      const canPurchase = !blockedRoles.includes(role) && orgPlan !== 'enterprise';
+
+      setUserStatus({
+        isLoggedIn: true,
+        role,
+        orgPlan,
+        canPurchase,
+      });
+    }
+
+    checkUserStatus();
+  }, []);
 
   const handleSelectPlan = async (plan: (typeof VISIBLE_PLANS)[0]) => {
+    // Check if user can't purchase
+    if (!userStatus.canPurchase && userStatus.isLoggedIn) {
+      alert('Your account already has full access. No purchase required.');
+      return;
+    }
+
     if (plan.href) {
       if (plan.href.startsWith('mailto:')) {
         window.location.href = plan.href;
@@ -148,6 +201,16 @@ export default function PricingPage() {
     } finally {
       setLoading(null);
     }
+  };
+
+  // Get display text for user's current access level
+  const getAccessLevelText = () => {
+    if (!userStatus.isLoggedIn) return null;
+    if (userStatus.role === 'admin') return 'Administrator';
+    if (userStatus.role === 'enterprise') return 'Enterprise';
+    if (userStatus.role === 'support') return 'Support Staff';
+    if (userStatus.orgPlan === 'enterprise') return 'Enterprise Plan';
+    return null;
   };
 
   return (
@@ -229,6 +292,36 @@ export default function PricingPage() {
           </p>
         </div>
 
+        {/* Full access banner for admin/enterprise/support users */}
+        {!userStatus.canPurchase && userStatus.isLoggedIn && (
+          <GlassCard
+            blur="heavy"
+            className="mb-12 border-amber-500/30 bg-amber-500/5"
+          >
+            <div className="flex items-center gap-4 text-center sm:text-left flex-col sm:flex-row">
+              <div className="flex-shrink-0 p-3 rounded-full bg-amber-500/20">
+                <Crown className="w-8 h-8 text-amber-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-white mb-1">
+                  You already have full access
+                </h3>
+                <p className="text-slate-400">
+                  As {getAccessLevelText()}, you have unlimited access to all features.
+                  No purchase necessary.
+                </p>
+              </div>
+              <GlassButton
+                variant="secondary"
+                onClick={() => router.push('/app')}
+                className="border-amber-500/30 text-amber-300 hover:bg-amber-500/10"
+              >
+                Go to Dashboard
+              </GlassButton>
+            </div>
+          </GlassCard>
+        )}
+
         {/* Plans grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-20">
           {VISIBLE_PLANS.map((plan) => (
@@ -271,14 +364,16 @@ export default function PricingPage() {
 
               <GlassButton
                 variant={plan.popular ? 'primary' : plan.id === 'enterprise' ? 'secondary' : 'secondary'}
-                glow={plan.popular}
+                glow={plan.popular && userStatus.canPurchase}
                 fullWidthMobile
                 onClick={() => void handleSelectPlan(plan)}
-                disabled={loading === plan.id}
+                disabled={loading === plan.id || (!userStatus.canPurchase && userStatus.isLoggedIn && !plan.href)}
                 loading={loading === plan.id}
-                className={`w-full ${plan.id === 'enterprise' ? 'border-amber-500/30 text-amber-300' : ''}`}
+                className={`w-full ${plan.id === 'enterprise' ? 'border-amber-500/30 text-amber-300' : ''} ${
+                  !userStatus.canPurchase && userStatus.isLoggedIn && !plan.href ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
-                {plan.cta}
+                {!userStatus.canPurchase && userStatus.isLoggedIn && !plan.href ? 'Already Included' : plan.cta}
               </GlassButton>
             </GlassCard>
           ))}

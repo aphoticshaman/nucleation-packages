@@ -23,6 +23,8 @@ import {
   Check,
   X,
   Loader2,
+  Mail,
+  Send,
 } from 'lucide-react';
 
 // Import real intelligence data
@@ -933,6 +935,16 @@ export function PackageBuilder({
   const [templateName, setTemplateName] = useState('');
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [emailAddress, setEmailAddress] = useState('');
+  const [emailOptions, setEmailOptions] = useState({
+    includeTextBody: true,
+    includePdfAttachment: false,
+    includeJsonAttachment: false,
+    includeMarkdownAttachment: true,
+  });
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   // Mobile accordion state
@@ -1038,6 +1050,56 @@ export function PackageBuilder({
       setShowExportDialog(false);
     }
   }, [components, selectedAudience, onExport]);
+
+  // Email export
+  const handleEmailSend = useCallback(async () => {
+    if (components.length === 0) {
+      alert('Please add at least one component to your package before emailing.');
+      return;
+    }
+
+    if (!emailAddress.trim()) {
+      alert('Please enter an email address.');
+      return;
+    }
+
+    setEmailSending(true);
+    try {
+      const packageContent = generatePackageContent(components, selectedAudience);
+      const response = await fetch('/api/export/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipientEmail: emailAddress,
+          subject: `LatticeForge Intelligence Package - ${AUDIENCE_PRESETS[selectedAudience].name}`,
+          includeTextBody: emailOptions.includeTextBody,
+          includePdfAttachment: emailOptions.includePdfAttachment,
+          includeJsonAttachment: emailOptions.includeJsonAttachment,
+          includeMarkdownAttachment: emailOptions.includeMarkdownAttachment,
+          packageContent,
+          audience: AUDIENCE_PRESETS[selectedAudience].name,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send email');
+      }
+
+      setEmailSent(true);
+      setTimeout(() => {
+        setShowEmailDialog(false);
+        setEmailSent(false);
+        setEmailAddress('');
+      }, 2000);
+    } catch (error) {
+      console.error('Email send error:', error);
+      alert(error instanceof Error ? error.message : 'Failed to send email. Please try again.');
+    } finally {
+      setEmailSending(false);
+    }
+  }, [components, selectedAudience, emailAddress, emailOptions]);
 
   // Component count by enabled status
   const enabledCount = useMemo(() => components.length, [components]);
@@ -1674,7 +1736,25 @@ export function PackageBuilder({
                 </button>
               ))}
             </div>
-            <div className="flex justify-end">
+
+            {/* Email Export Option */}
+            <div className="border-t border-slate-700 pt-4 mt-4">
+              <button
+                onClick={() => {
+                  setShowExportDialog(false);
+                  setShowEmailDialog(true);
+                }}
+                className="w-full flex items-center justify-center gap-2 p-3 bg-cyan-600/20 border border-cyan-500/30 rounded-lg hover:bg-cyan-600/30 transition-colors text-cyan-300"
+              >
+                <Mail className="w-4 h-4" />
+                <span className="font-medium">Send via Email</span>
+              </button>
+              <p className="text-xs text-slate-500 text-center mt-2">
+                Email package with text and/or file attachments
+              </p>
+            </div>
+
+            <div className="flex justify-end mt-4">
               <button
                 onClick={() => setShowExportDialog(false)}
                 className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
@@ -1682,6 +1762,137 @@ export function PackageBuilder({
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email Export Dialog */}
+      {showEmailDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-md shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Mail className="w-5 h-5 text-cyan-400" />
+                Email Package
+              </h3>
+              <button
+                onClick={() => setShowEmailDialog(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {emailSent ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Check className="w-8 h-8 text-emerald-400" />
+                </div>
+                <h4 className="text-lg font-medium text-white mb-2">Sent!</h4>
+                <p className="text-slate-400">Package sent to {emailAddress}</p>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-4">
+                  {/* Recipient Email */}
+                  <div>
+                    <label className="text-sm font-medium text-slate-300 block mb-2">
+                      Recipient Email
+                    </label>
+                    <input
+                      type="email"
+                      value={emailAddress}
+                      onChange={(e) => setEmailAddress(e.target.value)}
+                      placeholder="colleague@example.com"
+                      className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+
+                  {/* Content Options */}
+                  <div>
+                    <label className="text-sm font-medium text-slate-300 block mb-3">
+                      Include in Email
+                    </label>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-slate-800/50">
+                        <input
+                          type="checkbox"
+                          checked={emailOptions.includeTextBody}
+                          onChange={(e) => setEmailOptions(prev => ({ ...prev, includeTextBody: e.target.checked }))}
+                          className="rounded bg-slate-800 border-slate-600 w-4 h-4 text-cyan-500"
+                        />
+                        <div>
+                          <span className="text-sm text-slate-300">Full text in email body</span>
+                          <p className="text-xs text-slate-500">Readable directly in email</p>
+                        </div>
+                      </label>
+                      <label className="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-slate-800/50">
+                        <input
+                          type="checkbox"
+                          checked={emailOptions.includeMarkdownAttachment}
+                          onChange={(e) => setEmailOptions(prev => ({ ...prev, includeMarkdownAttachment: e.target.checked }))}
+                          className="rounded bg-slate-800 border-slate-600 w-4 h-4 text-cyan-500"
+                        />
+                        <div>
+                          <span className="text-sm text-slate-300">Markdown file (.md)</span>
+                          <p className="text-xs text-slate-500">Formatted document attachment</p>
+                        </div>
+                      </label>
+                      <label className="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-slate-800/50">
+                        <input
+                          type="checkbox"
+                          checked={emailOptions.includeJsonAttachment}
+                          onChange={(e) => setEmailOptions(prev => ({ ...prev, includeJsonAttachment: e.target.checked }))}
+                          className="rounded bg-slate-800 border-slate-600 w-4 h-4 text-cyan-500"
+                        />
+                        <div>
+                          <span className="text-sm text-slate-300">JSON data file (.json)</span>
+                          <p className="text-xs text-slate-500">Structured data for import</p>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Package Summary */}
+                  <div className="bg-slate-800/50 rounded-lg p-3 text-sm">
+                    <div className="flex justify-between text-slate-400 mb-1">
+                      <span>Package:</span>
+                      <span className="text-white">{AUDIENCE_PRESETS[selectedAudience].name}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-400">
+                      <span>Sections:</span>
+                      <span className="text-white">{components.length}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => setShowEmailDialog(false)}
+                    className="flex-1 px-4 py-3 text-slate-400 hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleEmailSend}
+                    disabled={emailSending || !emailAddress.trim()}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {emailSending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        Send Package
+                      </>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
