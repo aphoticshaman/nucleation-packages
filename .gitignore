@@ -5,9 +5,6 @@ node_modules/
 dist/
 *.tsbuildinfo
 
-#BIG MODEL/LLM
-latticeforge-unified/adapter_model.safetensors
-
 # Test coverage
 coverage/
 
@@ -45,3 +42,6 @@ temp/
 .husky/_/
 .vercel
 .env*.local
+phi2/adapter_model.safetensors
+phi2/*.safetensors
+*.safetensors
