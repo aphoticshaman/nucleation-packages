@@ -1,6 +1,7 @@
 import { requireConsumer } from '@/lib/auth';
 import ConsumerNav from './components/ConsumerNav';
 import OnboardingGate from '@/components/setup/OnboardingGate';
+import { IntelDisclaimer } from '@/components/IntelDisclaimer';
 import '@/styles/dark-glass.css';
 
 export default async function ConsumerLayout({ children }: { children: React.ReactNode }) {
@@ -51,7 +52,10 @@ export default async function ConsumerLayout({ children }: { children: React.Rea
       >
         <ConsumerNav user={user} />
         <main className="pt-16 relative z-10">
-          <div className="px-4 lg:px-6 xl:px-8 py-6">{children}</div>
+          <div className="px-4 lg:px-6 xl:px-8 py-6">
+            {children}
+            <IntelDisclaimer compact />
+          </div>
         </main>
       </OnboardingGate>
     </div>
