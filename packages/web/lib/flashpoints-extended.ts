@@ -10,7 +10,7 @@
  * - International organizations
  */
 
-import type { TerritorialDispute, BorderDomain, ConditionalThreatAssessment } from './territorial-status';
+import type { TerritorialDispute, BorderDomain, RegimeThreatAssessment } from './territorial-status';
 import type { DomesticInstability, TransnationalThreat, IntelligenceAgency } from './global-flashpoints';
 
 // ============================================
@@ -1729,7 +1729,7 @@ export const EXTENDED_INTEL_AGENCIES: Record<string, IntelligenceAgency> = {
 // VENEZUELA CONDITIONAL THREAT ASSESSMENT
 // ============================================
 
-export const VENEZUELA_THREAT_ASSESSMENT: ConditionalThreatAssessment = {
+export const VENEZUELA_THREAT_ASSESSMENT: RegimeThreatAssessment = {
   target: 'Venezuela / Maduro Regime',
   threatActor: 'United States (Trump Administration)',
   baseAssessment: {
