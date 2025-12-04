@@ -45,13 +45,27 @@ export default function OnboardingGate({
   // Convert auth tier to power tier if needed
   const powerTier: UserTier = isAuthTier(userTier) ? authTierToPowerTier(userTier) : userTier;
 
-  // Sync localStorage with database state (for faster subsequent checks)
+  // Sync localStorage with database state and fetch preferences if needed
   useEffect(() => {
-    if (hasCompletedOnboarding) {
+    // If DB says completed, sync to localStorage and hide wizard
+    if (hasCompletedOnboarding || isAdmin) {
       localStorage.setItem('latticeforge_onboarding_complete', 'true');
       setShowWizard(false);
+
+      // Also fetch saved preferences from DB if not in localStorage
+      const localPrefs = localStorage.getItem('latticeforge_user_preferences');
+      if (!localPrefs && !isAdmin) {
+        fetch('/api/user/preferences')
+          .then(res => res.json())
+          .then(data => {
+            if (data.preferences?.preferences) {
+              localStorage.setItem('latticeforge_user_preferences', JSON.stringify(data.preferences.preferences));
+            }
+          })
+          .catch(err => console.error('Failed to fetch preferences:', err));
+      }
     }
-  }, [hasCompletedOnboarding]);
+  }, [hasCompletedOnboarding, isAdmin]);
 
   const handleComplete = async (config: OnboardingConfig) => {
     setIsCompleting(true);
