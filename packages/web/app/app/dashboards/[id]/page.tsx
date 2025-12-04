@@ -73,11 +73,32 @@ export default function DashboardDetailPage() {
   // Fetch briefing data based on focus template
   const preset = dashboard?.focusTemplate === 'china-watch'
     ? 'brics'
-    : dashboard?.focusTemplate === 'us-equities'
-    ? 'nato'
-    : 'global';
+    : 'global'; // US markets uses global preset for broader coverage
 
   const { briefings, metadata, loading, refetch } = useIntelBriefing(preset, { autoFetch: true });
+
+  // Determine which briefing domains to show based on dashboard focus
+  const getRelevantDomains = () => {
+    if (dashboard?.focusTemplate === 'us-equities') {
+      return {
+        primary: ['markets', 'financial', 'economic'],
+        secondary: ['employment', 'housing', 'crypto', 'energy'],
+      };
+    }
+    if (dashboard?.focusTemplate === 'china-watch') {
+      return {
+        primary: ['political', 'economic', 'security'],
+        secondary: ['military', 'cyber', 'industry', 'minerals'],
+      };
+    }
+    // Global/default
+    return {
+      primary: ['political', 'security', 'economic'],
+      secondary: ['military', 'cyber', 'resources', 'emerging'],
+    };
+  };
+
+  const domains = getRelevantDomains();
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -167,34 +188,72 @@ export default function DashboardDetailPage() {
 
       {/* Main Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Primary Widget - 2 cols */}
+        {/* Primary Widget - 2 cols - Deep Dive Content */}
         <GlassCard blur="heavy" className="lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               <Activity className="w-5 h-5 text-cyan-400" />
-              Situational Overview
+              {dashboard.focusTemplate === 'us-equities' ? 'Market Intelligence Deep Dive' :
+               dashboard.focusTemplate === 'china-watch' ? 'Strategic Analysis Deep Dive' :
+               'Geopolitical Intelligence Deep Dive'}
             </h2>
             <span className="text-xs text-slate-500">
-              {loading ? 'Updating...' : 'Real-time'}
+              {loading ? 'Updating...' : 'Real-time Analysis'}
             </span>
           </div>
 
           {loading ? (
-            <div className="animate-pulse space-y-3">
-              <div className="h-4 bg-white/5 rounded w-3/4"></div>
-              <div className="h-4 bg-white/5 rounded w-1/2"></div>
-              <div className="h-4 bg-white/5 rounded w-2/3"></div>
+            <div className="animate-pulse space-y-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <div className="h-3 bg-white/5 rounded w-24"></div>
+                  <div className="h-4 bg-white/5 rounded w-full"></div>
+                  <div className="h-4 bg-white/5 rounded w-5/6"></div>
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="space-y-4">
-              <p className="text-slate-300 leading-relaxed">
-                {briefings?.summary || 'Loading intelligence briefing...'}
-              </p>
-              {briefings?.political && (
-                <p className="text-sm text-slate-400 leading-relaxed">
-                  {briefings.political}
+            <div className="space-y-5">
+              {/* Executive Summary */}
+              <div>
+                <h4 className="text-xs font-medium text-cyan-400 uppercase tracking-wider mb-2">
+                  Executive Summary
+                </h4>
+                <p className="text-slate-300 leading-relaxed">
+                  {briefings?.summary || 'Loading intelligence briefing...'}
                 </p>
-              )}
+              </div>
+
+              {/* Primary Domain Briefings */}
+              {domains.primary.map((domain) => {
+                const content = briefings?.[domain as keyof typeof briefings];
+                if (!content) return null;
+                const domainLabels: Record<string, string> = {
+                  markets: 'Market Dynamics',
+                  financial: 'Financial Systems',
+                  economic: 'Economic Indicators',
+                  political: 'Political Landscape',
+                  security: 'Security Environment',
+                  military: 'Military Assessment',
+                  employment: 'Labor Markets',
+                  housing: 'Real Estate & Housing',
+                  crypto: 'Digital Assets',
+                  energy: 'Energy Sector',
+                  cyber: 'Cyber Threats',
+                  industry: 'Industrial Activity',
+                  minerals: 'Critical Minerals',
+                };
+                return (
+                  <div key={domain} className="border-t border-white/5 pt-4">
+                    <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">
+                      {domainLabels[domain] || domain}
+                    </h4>
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                      {content}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           )}
         </GlassCard>
@@ -298,22 +357,75 @@ export default function DashboardDetailPage() {
         </GlassCard>
       </div>
 
-      {/* Widget Grid - Placeholder for actual widgets */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {dashboard.widgets.map((widget) => (
-          <GlassCard key={widget} blur="light" compact>
-            <div className="text-center py-6">
-              <div className="w-10 h-10 mx-auto mb-3 rounded-lg bg-white/5 flex items-center justify-center">
-                <LayoutDashboard className="w-5 h-5 text-slate-500" />
+      {/* Secondary Intelligence Domains */}
+      <GlassCard blur="heavy">
+        <h3 className="text-sm font-medium text-slate-400 mb-4">
+          Extended Analysis
+        </h3>
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="animate-pulse space-y-2 p-4 bg-white/[0.02] rounded-lg">
+                <div className="h-3 bg-white/5 rounded w-20"></div>
+                <div className="h-4 bg-white/5 rounded w-full"></div>
+                <div className="h-4 bg-white/5 rounded w-3/4"></div>
               </div>
-              <p className="text-sm text-slate-400">
-                {widget.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-              </p>
-              <p className="text-xs text-slate-600 mt-1">Widget placeholder</p>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {domains.secondary.map((domain) => {
+              const content = briefings?.[domain as keyof typeof briefings];
+              if (!content) return null;
+              const domainLabels: Record<string, { label: string; icon: string }> = {
+                employment: { label: 'Labor Markets', icon: '👥' },
+                housing: { label: 'Real Estate', icon: '🏠' },
+                crypto: { label: 'Digital Assets', icon: '₿' },
+                energy: { label: 'Energy Sector', icon: '⚡' },
+                military: { label: 'Military', icon: '🎖️' },
+                cyber: { label: 'Cyber', icon: '🔒' },
+                industry: { label: 'Industry', icon: '🏭' },
+                minerals: { label: 'Critical Minerals', icon: '⛏️' },
+                resources: { label: 'Resources', icon: '🌍' },
+                emerging: { label: 'Emerging Tech', icon: '🔬' },
+              };
+              const meta = domainLabels[domain] || { label: domain, icon: '📊' };
+              return (
+                <div key={domain} className="p-4 bg-white/[0.02] rounded-lg border border-white/5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">{meta.icon}</span>
+                    <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                      {meta.label}
+                    </h4>
+                  </div>
+                  <p className="text-sm text-slate-300 leading-relaxed">
+                    {content}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </GlassCard>
+
+      {/* Next Strategic Move */}
+      {briefings?.nsm && (
+        <GlassCard blur="heavy" className="border-l-4 border-cyan-500">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-cyan-500/20 rounded-lg">
+              <Zap className="w-5 h-5 text-cyan-400" />
             </div>
-          </GlassCard>
-        ))}
-      </div>
+            <div>
+              <h3 className="text-sm font-medium text-cyan-400 uppercase tracking-wider mb-2">
+                Next Strategic Move
+              </h3>
+              <p className="text-slate-300 leading-relaxed">
+                {briefings.nsm}
+              </p>
+            </div>
+          </div>
+        </GlassCard>
+      )}
     </div>
   );
 }
