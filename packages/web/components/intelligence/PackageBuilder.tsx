@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import {
   FileText,
   Presentation,
@@ -22,6 +22,7 @@ import {
   ChevronRight,
   Check,
   X,
+  Loader2,
 } from 'lucide-react';
 
 /**
@@ -279,6 +280,333 @@ const EXPORT_FORMATS: { format: ExportFormat; label: string; icon: React.ReactNo
   { format: 'html', label: 'HTML', icon: <FileText className="w-4 h-4" />, description: 'Web-ready report' },
 ];
 
+// === EXPORT UTILITIES ===
+
+function downloadFile(content: string | Blob, filename: string, mimeType: string) {
+  const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function generatePackageContent(components: PackageComponent[], audience: AudiencePreset): {
+  title: string;
+  subtitle: string;
+  generatedAt: string;
+  sections: { id: string; title: string; icon: string; content: string; config: ComponentConfig }[];
+} {
+  const presetInfo = AUDIENCE_PRESETS[audience];
+  const now = new Date();
+
+  return {
+    title: 'LatticeForge Intelligence Package',
+    subtitle: `${presetInfo.name} - Generated ${now.toLocaleDateString()}`,
+    generatedAt: now.toISOString(),
+    sections: components.sort((a, b) => a.order - b.order).map(c => ({
+      id: c.id,
+      title: c.label,
+      icon: c.icon,
+      content: generateSectionContent(c),
+      config: c.config,
+    })),
+  };
+}
+
+function generateSectionContent(component: PackageComponent): string {
+  // Generate placeholder content based on component type
+  const contentMap: Record<ComponentType, string> = {
+    executive_summary: `Executive Summary\n\nThis intelligence package provides a comprehensive analysis of current geopolitical and market conditions. Key findings indicate elevated risk levels in monitored regions with potential for cascading effects across interconnected systems.\n\nConfidence Level: ${component.config.showConfidence ? 'HIGH (85%)' : 'See methodology'}`,
+    bluf: `BOTTOM LINE UP FRONT\n\nElevated monitoring recommended. Multiple indicators suggest potential regime shift within 30-90 day window. Primary drivers: economic pressure, political instability, and external actor involvement.`,
+    threat_matrix: `Threat Assessment Matrix\n\n| Threat | Severity | Probability | Timeframe |\n|--------|----------|-------------|----------|\n| Economic Instability | HIGH | 75% | 30 days |\n| Political Disruption | MEDIUM | 60% | 60 days |\n| Cascade Event | MEDIUM | 45% | 90 days |`,
+    key_developments: `Key Developments (Last 7 Days)\n\n1. [PRIORITY] Economic indicators show stress signals\n2. [WATCH] Political rhetoric escalating in target region\n3. [INFO] New sanctions package announced\n4. [INFO] Military repositioning observed`,
+    risk_gauge: `Overall Risk Assessment: ELEVATED (7.2/10)\n\nTrend: Increasing (+0.8 from previous period)\nConfidence Interval: 6.5 - 7.9`,
+    map_view: `Geographic Analysis\n\nPrimary Areas of Interest:\n- Region Alpha: High activity\n- Region Beta: Moderate monitoring\n- Region Gamma: Baseline normal`,
+    network_graph: `Network Analysis\n\nKey Entities Identified: 12\nRelationship Clusters: 4\nInfluence Score (Primary Actor): 0.87`,
+    causal_chain: `Causal Chain Analysis\n\nRoot Cause → Economic Pressure\n  └─→ Currency Devaluation\n      └─→ Social Unrest\n          └─→ Political Response\n              └─→ Potential Escalation`,
+    timeline: `Event Timeline\n\nT-90: Initial indicators detected\nT-60: Trend confirmation\nT-30: Acceleration phase\nT-0: Current state\nT+30: Projected critical window`,
+    data_table: `Supporting Data\n\n| Metric | Value | Change | Status |\n|--------|-------|--------|--------|\n| Index A | 127.3 | +5.2% | Warning |\n| Index B | 89.1 | -2.1% | Normal |\n| Index C | 156.8 | +12.4% | Critical |`,
+    recommendations: `Recommendations\n\n1. [HIGH PRIORITY] Increase monitoring frequency\n2. [MEDIUM] Prepare contingency protocols\n3. [STANDARD] Update stakeholder briefings\n4. [ONGOING] Continue baseline collection`,
+    sources: `Sources and Methods\n\nOSINT Sources: 47\nReliability Rating: B (Generally Reliable)\nCollection Period: 2024-11-01 to present\n\nNote: All information derived from open sources. No classified materials.`,
+    appendix: `Appendix\n\nA. Methodology Notes\nB. Data Collection Parameters\nC. Historical Comparisons\nD. Glossary of Terms`,
+    custom_section: component.config.customNotes || 'Custom section content',
+  };
+
+  return contentMap[component.type] || 'Section content';
+}
+
+function exportAsJSON(components: PackageComponent[], audience: AudiencePreset): void {
+  const content = generatePackageContent(components, audience);
+  const json = JSON.stringify(content, null, 2);
+  downloadFile(json, `latticeforge-package-${Date.now()}.json`, 'application/json');
+}
+
+function exportAsCSV(components: PackageComponent[], audience: AudiencePreset): void {
+  const content = generatePackageContent(components, audience);
+  const headers = ['Section', 'Title', 'Content', 'Detail Level', 'Show Confidence', 'Show Sources'];
+  const rows = content.sections.map(s => [
+    s.id,
+    s.title,
+    s.content.replace(/\n/g, ' ').replace(/,/g, ';'),
+    s.config.detailLevel || 'standard',
+    s.config.showConfidence ? 'Yes' : 'No',
+    s.config.showSources ? 'Yes' : 'No',
+  ]);
+
+  const csv = [
+    headers.join(','),
+    ...rows.map(r => r.map(cell => `"${cell}"`).join(',')),
+  ].join('\n');
+
+  downloadFile(csv, `latticeforge-package-${Date.now()}.csv`, 'text/csv');
+}
+
+function exportAsHTML(components: PackageComponent[], audience: AudiencePreset): void {
+  const content = generatePackageContent(components, audience);
+  const presetInfo = AUDIENCE_PRESETS[audience];
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${content.title}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.6; padding: 2rem; }
+    .container { max-width: 900px; margin: 0 auto; }
+    header { border-bottom: 1px solid #334155; padding-bottom: 1rem; margin-bottom: 2rem; }
+    h1 { font-size: 1.75rem; color: #f8fafc; margin-bottom: 0.5rem; }
+    .subtitle { color: #94a3b8; font-size: 0.875rem; }
+    .meta { display: flex; gap: 1rem; margin-top: 0.5rem; font-size: 0.75rem; color: #64748b; }
+    section { background: #1e293b; border: 1px solid #334155; border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1rem; }
+    section h2 { font-size: 1.125rem; color: #f8fafc; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    section pre { white-space: pre-wrap; font-family: inherit; color: #cbd5e1; font-size: 0.875rem; }
+    .badge { display: inline-block; padding: 0.125rem 0.5rem; background: #334155; border-radius: 0.25rem; font-size: 0.625rem; color: #94a3b8; margin-left: auto; }
+    footer { text-align: center; color: #475569; font-size: 0.75rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #334155; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>${content.title}</h1>
+      <p class="subtitle">${presetInfo.name}</p>
+      <div class="meta">
+        <span>Generated: ${new Date(content.generatedAt).toLocaleString()}</span>
+        <span>Sections: ${content.sections.length}</span>
+        <span>Classification: OSINT / UNCLASSIFIED</span>
+      </div>
+    </header>
+    ${content.sections.map(s => `
+    <section>
+      <h2><span>${s.icon}</span> ${s.title} <span class="badge">${s.config.detailLevel || 'standard'}</span></h2>
+      <pre>${s.content}</pre>
+    </section>`).join('')}
+    <footer>
+      LatticeForge Intelligence Platform | ${new Date().getFullYear()} | OSINT Only
+    </footer>
+  </div>
+</body>
+</html>`;
+
+  downloadFile(html, `latticeforge-package-${Date.now()}.html`, 'text/html');
+}
+
+function exportAsPDF(components: PackageComponent[], audience: AudiencePreset): void {
+  // Generate HTML and use browser print to PDF
+  const content = generatePackageContent(components, audience);
+  const presetInfo = AUDIENCE_PRESETS[audience];
+
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    alert('Please allow popups to export PDF');
+    return;
+  }
+
+  printWindow.document.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${content.title}</title>
+  <style>
+    @media print {
+      @page { margin: 1in; size: letter; }
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Times New Roman', serif; color: #1a1a1a; line-height: 1.5; padding: 0; }
+    .container { max-width: 100%; }
+    header { border-bottom: 2px solid #1a1a1a; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    h1 { font-size: 1.5rem; font-weight: bold; margin-bottom: 0.25rem; }
+    .subtitle { font-size: 1rem; color: #444; }
+    .meta { display: flex; gap: 2rem; margin-top: 0.5rem; font-size: 0.75rem; color: #666; }
+    .classification { text-align: center; font-weight: bold; padding: 0.5rem; background: #e5e5e5; margin-bottom: 1rem; font-size: 0.875rem; }
+    section { page-break-inside: avoid; margin-bottom: 1.5rem; }
+    section h2 { font-size: 1.125rem; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 0.25rem; margin-bottom: 0.75rem; }
+    section pre { white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 0.8125rem; color: #333; }
+    .badge { display: inline-block; padding: 0.125rem 0.5rem; background: #e5e5e5; border-radius: 0.25rem; font-size: 0.625rem; margin-left: 0.5rem; }
+    footer { text-align: center; color: #666; font-size: 0.75rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="classification">UNCLASSIFIED // OSINT</div>
+    <header>
+      <h1>${content.title}</h1>
+      <p class="subtitle">${presetInfo.name}</p>
+      <div class="meta">
+        <span>Generated: ${new Date(content.generatedAt).toLocaleString()}</span>
+        <span>Sections: ${content.sections.length}</span>
+      </div>
+    </header>
+    ${content.sections.map(s => `
+    <section>
+      <h2>${s.icon} ${s.title} <span class="badge">${s.config.detailLevel || 'standard'}</span></h2>
+      <pre>${s.content}</pre>
+    </section>`).join('')}
+    <footer>
+      LatticeForge Intelligence Platform | ${new Date().getFullYear()} | OSINT Only - No Classification Authority
+    </footer>
+    <div class="classification" style="margin-top: 1rem;">UNCLASSIFIED // OSINT</div>
+  </div>
+  <script>
+    window.onload = function() {
+      setTimeout(function() {
+        window.print();
+        window.onafterprint = function() { window.close(); };
+      }, 250);
+    };
+  </script>
+</body>
+</html>`);
+  printWindow.document.close();
+}
+
+function exportAsDOCX(components: PackageComponent[], audience: AudiencePreset): void {
+  // Generate a simple .doc (HTML-based) that Word can open
+  const content = generatePackageContent(components, audience);
+  const presetInfo = AUDIENCE_PRESETS[audience];
+
+  const doc = `<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
+<head>
+  <meta charset="UTF-8">
+  <title>${content.title}</title>
+  <style>
+    body { font-family: Calibri, sans-serif; font-size: 11pt; }
+    h1 { font-size: 18pt; color: #1a1a1a; }
+    h2 { font-size: 14pt; color: #333; border-bottom: 1pt solid #ccc; padding-bottom: 4pt; margin-top: 16pt; }
+    pre { font-family: Consolas, monospace; font-size: 10pt; white-space: pre-wrap; background: #f5f5f5; padding: 8pt; }
+    .meta { color: #666; font-size: 9pt; }
+    .header { border-bottom: 2pt solid #1a1a1a; padding-bottom: 8pt; margin-bottom: 16pt; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>${content.title}</h1>
+    <p><strong>${presetInfo.name}</strong></p>
+    <p class="meta">Generated: ${new Date(content.generatedAt).toLocaleString()} | Classification: OSINT / UNCLASSIFIED</p>
+  </div>
+  ${content.sections.map(s => `
+  <h2>${s.icon} ${s.title}</h2>
+  <pre>${s.content}</pre>`).join('')}
+  <p style="margin-top: 24pt; text-align: center; color: #666; font-size: 9pt;">
+    LatticeForge Intelligence Platform | OSINT Only
+  </p>
+</body>
+</html>`;
+
+  const blob = new Blob([doc], { type: 'application/msword' });
+  downloadFile(blob, `latticeforge-package-${Date.now()}.doc`, 'application/msword');
+}
+
+function exportAsPPTX(components: PackageComponent[], audience: AudiencePreset): void {
+  // Generate HTML-based presentation that can be opened and converted
+  const content = generatePackageContent(components, audience);
+  const presetInfo = AUDIENCE_PRESETS[audience];
+
+  // Create an HTML presentation format
+  const slides = content.sections.map((s, i) => `
+    <div class="slide">
+      <div class="slide-number">${i + 1}</div>
+      <h2>${s.icon} ${s.title}</h2>
+      <pre>${s.content}</pre>
+    </div>
+  `);
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${content.title} - Presentation</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; }
+    .slide { width: 100%; min-height: 100vh; padding: 3rem; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #e2e8f0; page-break-after: always; position: relative; }
+    .slide-number { position: absolute; bottom: 2rem; right: 2rem; font-size: 0.875rem; color: #64748b; }
+    .title-slide { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+    .title-slide h1 { font-size: 3rem; color: #f8fafc; margin-bottom: 1rem; }
+    .title-slide .subtitle { font-size: 1.5rem; color: #94a3b8; }
+    .title-slide .meta { margin-top: 2rem; font-size: 1rem; color: #64748b; }
+    h2 { font-size: 2rem; color: #f8fafc; margin-bottom: 2rem; border-bottom: 2px solid #3b82f6; padding-bottom: 0.5rem; }
+    pre { font-family: inherit; white-space: pre-wrap; font-size: 1.125rem; line-height: 1.8; color: #cbd5e1; }
+    @media print {
+      .slide { height: 100vh; overflow: hidden; }
+    }
+  </style>
+</head>
+<body>
+  <div class="slide title-slide">
+    <h1>${content.title}</h1>
+    <p class="subtitle">${presetInfo.name}</p>
+    <p class="meta">Generated ${new Date(content.generatedAt).toLocaleDateString()}</p>
+    <div class="slide-number">Title</div>
+  </div>
+  ${slides.join('')}
+  <div class="slide title-slide">
+    <h1>Questions?</h1>
+    <p class="subtitle">LatticeForge Intelligence Platform</p>
+    <p class="meta">OSINT Only - No Classification Authority</p>
+    <div class="slide-number">End</div>
+  </div>
+</body>
+</html>`;
+
+  downloadFile(html, `latticeforge-presentation-${Date.now()}.html`, 'text/html');
+
+  // Also alert user about conversion
+  setTimeout(() => {
+    alert('Presentation downloaded as HTML. For PowerPoint format:\n\n1. Open the HTML file in your browser\n2. Use Print → Save as PDF\n3. Or import into Google Slides / PowerPoint');
+  }, 500);
+}
+
+function performExport(format: ExportFormat, components: PackageComponent[], audience: AudiencePreset): void {
+  switch (format) {
+    case 'json':
+      exportAsJSON(components, audience);
+      break;
+    case 'csv':
+      exportAsCSV(components, audience);
+      break;
+    case 'html':
+      exportAsHTML(components, audience);
+      break;
+    case 'pdf':
+      exportAsPDF(components, audience);
+      break;
+    case 'docx':
+      exportAsDOCX(components, audience);
+      break;
+    case 'pptx':
+      exportAsPPTX(components, audience);
+      break;
+  }
+}
+
 // === MAIN COMPONENT ===
 
 export function PackageBuilder({
@@ -297,6 +625,7 @@ export function PackageBuilder({
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Apply audience preset
   const applyPreset = useCallback((preset: AudiencePreset) => {
@@ -375,9 +704,25 @@ export function PackageBuilder({
 
   // Export package
   const handleExport = useCallback((format: ExportFormat) => {
-    onExport?.(format, components);
-    setShowExportDialog(false);
-  }, [components, onExport]);
+    if (components.length === 0) {
+      alert('Please add at least one component to your package before exporting.');
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      // Perform the actual export
+      performExport(format, components, selectedAudience);
+      // Also call optional callback if provided
+      onExport?.(format, components);
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Export failed. Please try again.');
+    } finally {
+      setIsExporting(false);
+      setShowExportDialog(false);
+    }
+  }, [components, selectedAudience, onExport]);
 
   // Component count by enabled status
   const enabledCount = useMemo(() => components.length, [components]);
@@ -484,8 +829,66 @@ export function PackageBuilder({
           </div>
         </div>
 
-        {/* Center Panel - Package Arrangement */}
-        <div className="flex-1 p-4">
+        {/* Center Panel - Package Arrangement OR Preview */}
+        <div className="flex-1 p-4 overflow-y-auto max-h-[600px]">
+          {previewMode ? (
+            /* Preview Mode - Show actual content */
+            <div className="space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-slate-300">
+                  Preview - {AUDIENCE_PRESETS[selectedAudience].name}
+                </h3>
+                <span className="text-xs text-slate-500">
+                  {components.length} sections
+                </span>
+              </div>
+
+              {components.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-slate-700 rounded-lg">
+                  <div className="text-4xl mb-3">👁️</div>
+                  <p className="text-slate-400 text-sm">No components to preview</p>
+                  <p className="text-slate-500 text-xs mt-1">Add components or select a preset first</p>
+                </div>
+              ) : (
+                <div className="bg-slate-950 border border-slate-700 rounded-lg overflow-hidden">
+                  {/* Preview Header */}
+                  <div className="bg-slate-800 px-4 py-3 border-b border-slate-700">
+                    <h2 className="text-lg font-bold text-white">LatticeForge Intelligence Package</h2>
+                    <p className="text-sm text-slate-400">{AUDIENCE_PRESETS[selectedAudience].name}</p>
+                    <div className="flex gap-4 mt-2 text-xs text-slate-500">
+                      <span>Generated: {new Date().toLocaleDateString()}</span>
+                      <span>Classification: OSINT / UNCLASSIFIED</span>
+                    </div>
+                  </div>
+
+                  {/* Preview Sections */}
+                  <div className="divide-y divide-slate-800">
+                    {components.sort((a, b) => a.order - b.order).map(component => (
+                      <div key={component.id} className="p-4">
+                        <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-2">
+                          <span>{component.icon}</span>
+                          {component.label}
+                          <span className="ml-auto text-xs px-2 py-0.5 bg-slate-800 text-slate-400 rounded">
+                            {component.config.detailLevel || 'standard'}
+                          </span>
+                        </h3>
+                        <pre className="text-xs text-slate-400 whitespace-pre-wrap font-mono bg-slate-900/50 p-3 rounded">
+                          {generateSectionContent(component)}
+                        </pre>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Preview Footer */}
+                  <div className="bg-slate-800 px-4 py-2 text-center text-xs text-slate-500">
+                    LatticeForge Intelligence Platform | OSINT Only
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+          /* Edit Mode - Package Layout */
+          <>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-slate-300">
               Package Layout
@@ -579,6 +982,8 @@ export function PackageBuilder({
                   </div>
                 ))}
             </div>
+          )}
+          </>
           )}
         </div>
 
