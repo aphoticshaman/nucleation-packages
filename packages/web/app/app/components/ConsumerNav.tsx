@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import type { UserProfile, UserTier } from '@/lib/auth';
+import ExecBriefButton from '@/components/ExecBriefButton';
 
 interface ConsumerNavProps {
   user: UserProfile;
@@ -113,6 +114,11 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
               {tierDisplay.name}
             </span>
           </Link>
+
+          {/* Executive Brief Button - prominent red */}
+          <div className="hidden sm:block ml-4">
+            <ExecBriefButton variant="compact" />
+          </div>
 
           {/* Desktop navigation */}
           <div className="hidden lg:flex items-center gap-1">
