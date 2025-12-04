@@ -935,6 +935,8 @@ export function PackageBuilder({
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  // Mobile accordion state
+  const [mobileSection, setMobileSection] = useState<'audience' | 'components' | 'layout' | 'config' | null>('audience');
 
   // Apply audience preset
   const applyPreset = useCallback((preset: AudiencePreset) => {
@@ -950,6 +952,10 @@ export function PackageBuilder({
 
     setComponents(newComponents);
     setSelectedAudience(preset);
+    // On mobile, auto-advance to layout after selecting preset
+    if (window.innerWidth < 1024) {
+      setMobileSection('layout');
+    }
   }, []);
 
   // Toggle component
@@ -1036,45 +1042,254 @@ export function PackageBuilder({
   // Component count by enabled status
   const enabledCount = useMemo(() => components.length, [components]);
 
+  // Mobile accordion section component
+  const MobileAccordion = ({ id, title, icon, children, badge }: { id: 'audience' | 'components' | 'layout' | 'config'; title: string; icon: React.ReactNode; children: React.ReactNode; badge?: string }) => (
+    <div className="border-b border-slate-800 lg:hidden">
+      <button
+        onClick={() => setMobileSection(mobileSection === id ? null : id)}
+        className="w-full flex items-center justify-between p-4 text-left"
+      >
+        <div className="flex items-center gap-3">
+          {icon}
+          <span className="font-medium text-white">{title}</span>
+          {badge && <span className="text-xs px-2 py-0.5 bg-blue-600/20 text-blue-400 rounded-full">{badge}</span>}
+        </div>
+        <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${mobileSection === id ? 'rotate-180' : ''}`} />
+      </button>
+      {mobileSection === id && (
+        <div className="px-4 pb-4">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
-      {/* Header */}
-      <div className="p-4 border-b border-slate-800">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <span>📦</span>
-              <span>Deliverable Package Builder</span>
+      {/* Header - Sticky on mobile */}
+      <div className="sticky top-0 z-20 bg-slate-900/95 backdrop-blur-sm p-4 border-b border-slate-800">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+              <span className="hidden sm:inline">📦</span>
+              <span className="truncate">Package Builder</span>
             </h2>
-            <p className="text-xs text-slate-500 mt-1">
-              Configure, arrange, and export intelligence packages for your audience
+            <p className="text-xs text-slate-500 mt-0.5 hidden sm:block">
+              Configure, arrange, and export intelligence packages
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => setPreviewMode(!previewMode)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+              className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded text-xs font-medium transition-colors ${
                 previewMode
                   ? 'bg-blue-600 text-white'
                   : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
-              Preview
+              <span className="hidden sm:inline">Preview</span>
             </button>
             <button
               onClick={() => setShowExportDialog(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded text-xs font-medium hover:bg-emerald-500 transition-colors"
+              className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 bg-emerald-600 text-white rounded text-xs font-medium hover:bg-emerald-500 transition-colors"
             >
               <Download className="w-3.5 h-3.5" />
-              Export
+              <span className="hidden sm:inline">Export</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex">
+      {/* Mobile Layout - Accordion sections */}
+      <div className="lg:hidden">
+        {/* Audience Preset Accordion */}
+        <MobileAccordion id="audience" title="Audience" icon={<Users className="w-4 h-4 text-blue-400" />} badge={AUDIENCE_PRESETS[selectedAudience].name}>
+          <div className="space-y-2">
+            {Object.entries(AUDIENCE_PRESETS).map(([key, preset]) => (
+              <button
+                key={key}
+                onClick={() => applyPreset(key as AudiencePreset)}
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-left transition-colors ${
+                  selectedAudience === key
+                    ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
+                    : 'bg-slate-800/50 text-slate-400 active:bg-slate-800 border border-transparent'
+                }`}
+              >
+                {preset.icon}
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium">{preset.name}</div>
+                  <div className="text-xs text-slate-500 truncate">{preset.description}</div>
+                </div>
+                {selectedAudience === key && <Check className="w-4 h-4 text-blue-400" />}
+              </button>
+            ))}
+          </div>
+        </MobileAccordion>
+
+        {/* Components Accordion */}
+        <MobileAccordion id="components" title="Components" icon={<Layout className="w-4 h-4 text-emerald-400" />} badge={`${enabledCount} selected`}>
+          <div className="grid grid-cols-2 gap-2">
+            {COMPONENT_LIBRARY.map(component => {
+              const isEnabled = components.some(c => c.id === component.id);
+              return (
+                <button
+                  key={component.id}
+                  onClick={() => toggleComponent(component.id)}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                    isEnabled
+                      ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30'
+                      : 'bg-slate-800/50 text-slate-400 active:bg-slate-800 border border-transparent'
+                  }`}
+                >
+                  <span className="text-lg">{component.icon}</span>
+                  <span className="text-xs font-medium truncate flex-1">{component.label}</span>
+                  {isEnabled && <Check className="w-3 h-3 text-emerald-400 shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        </MobileAccordion>
+
+        {/* Layout Accordion */}
+        <MobileAccordion id="layout" title="Layout" icon={<GripVertical className="w-4 h-4 text-amber-400" />} badge={`${components.length} sections`}>
+          {previewMode ? (
+            /* Mobile Preview */
+            <div className="space-y-3">
+              {components.length === 0 ? (
+                <div className="text-center py-8 text-slate-500 text-sm">
+                  No components selected
+                </div>
+              ) : (
+                <div className="bg-slate-950 border border-slate-700 rounded-lg overflow-hidden max-h-[60vh] overflow-y-auto">
+                  <div className="bg-slate-800 px-3 py-2 border-b border-slate-700">
+                    <h3 className="text-sm font-bold text-white">Package Preview</h3>
+                    <p className="text-xs text-slate-400">{AUDIENCE_PRESETS[selectedAudience].name}</p>
+                  </div>
+                  <div className="divide-y divide-slate-800">
+                    {components.sort((a, b) => a.order - b.order).map(component => (
+                      <div key={component.id} className="p-3">
+                        <h4 className="text-xs font-bold text-white flex items-center gap-2 mb-2">
+                          <span>{component.icon}</span>
+                          {component.label}
+                        </h4>
+                        <pre className="text-[10px] text-slate-400 whitespace-pre-wrap font-mono bg-slate-900/50 p-2 rounded max-h-32 overflow-y-auto">
+                          {generateSectionContent(component).slice(0, 500)}...
+                        </pre>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Mobile Layout Editor */
+            <div className="space-y-2">
+              {components.length === 0 ? (
+                <div className="text-center py-8 text-slate-500 text-sm">
+                  Select components above
+                </div>
+              ) : (
+                components.sort((a, b) => a.order - b.order).map((component, index) => (
+                  <div
+                    key={component.id}
+                    className="flex items-center gap-2 p-3 bg-slate-800/50 border border-slate-700 rounded-lg"
+                  >
+                    <div className="flex flex-col gap-1">
+                      <button
+                        onClick={() => index > 0 && moveComponent(index, index - 1)}
+                        disabled={index === 0}
+                        className="p-1 text-slate-500 hover:text-white disabled:opacity-30"
+                      >
+                        <ChevronDown className="w-3 h-3 rotate-180" />
+                      </button>
+                      <button
+                        onClick={() => index < components.length - 1 && moveComponent(index, index + 1)}
+                        disabled={index === components.length - 1}
+                        className="p-1 text-slate-500 hover:text-white disabled:opacity-30"
+                      >
+                        <ChevronDown className="w-3 h-3" />
+                      </button>
+                    </div>
+                    <span className="text-lg">{component.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-white truncate">{component.label}</div>
+                    </div>
+                    <button
+                      onClick={() => setSelectedComponent(selectedComponent === component.id ? null : component.id)}
+                      className="p-1.5 text-slate-400 hover:text-blue-400"
+                    >
+                      <Settings className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => toggleComponent(component.id)}
+                      className="p-1.5 text-slate-400 hover:text-red-400"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </MobileAccordion>
+
+        {/* Config Accordion - only show when component selected */}
+        {selectedComponent && (
+          <MobileAccordion id="config" title="Settings" icon={<Settings className="w-4 h-4 text-purple-400" />}>
+            {(() => {
+              const component = components.find(c => c.id === selectedComponent);
+              if (!component) return <p className="text-sm text-slate-500">Select a component</p>;
+
+              return (
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-medium text-slate-400 block mb-2">Detail Level</label>
+                    <div className="flex gap-1">
+                      {(['summary', 'standard', 'detailed'] as const).map(level => (
+                        <button
+                          key={level}
+                          onClick={() => updateComponentConfig(component.id, { detailLevel: level })}
+                          className={`flex-1 px-2 py-2 text-xs rounded capitalize transition-colors ${
+                            component.config.detailLevel === level
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-slate-800 text-slate-400'
+                          }`}
+                        >
+                          {level}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-3 cursor-pointer py-1">
+                      <input
+                        type="checkbox"
+                        checked={component.config.showConfidence ?? false}
+                        onChange={(e) => updateComponentConfig(component.id, { showConfidence: e.target.checked })}
+                        className="rounded bg-slate-800 border-slate-600 w-5 h-5"
+                      />
+                      <span className="text-sm text-slate-300">Show confidence</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer py-1">
+                      <input
+                        type="checkbox"
+                        checked={component.config.showSources ?? false}
+                        onChange={(e) => updateComponentConfig(component.id, { showSources: e.target.checked })}
+                        className="rounded bg-slate-800 border-slate-600 w-5 h-5"
+                      />
+                      <span className="text-sm text-slate-300">Show sources</span>
+                    </label>
+                  </div>
+                </div>
+              );
+            })()}
+          </MobileAccordion>
+        )}
+      </div>
+
+      {/* Desktop Layout - 3 column */}
+      <div className="hidden lg:flex">
         {/* Left Panel - Component Library */}
         <div className="w-64 border-r border-slate-800 p-4">
           {/* Audience Presets */}
