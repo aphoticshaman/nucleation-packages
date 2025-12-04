@@ -86,7 +86,8 @@ serve(async (req) => {
         tokens_used: brief.tokens_used,
         metadata: {
           type: 'intel_brief',
-          classification: 'UNCLASSIFIED // FOUO',
+          // No classification authority - all content is open source intelligence
+          source_type: 'OSINT',
           forecasts: brief.forecasts,
           key_judgments: brief.key_judgments,
         },
@@ -194,8 +195,8 @@ ${recentContext || 'No prior assessments available'}
 ## Your Task
 Produce an intelligence brief with the following structure:
 
-### CLASSIFICATION
-UNCLASSIFIED // FOR OFFICIAL USE ONLY
+### SOURCE TYPE
+Open Source Intelligence (OSINT)
 
 ### KEY JUDGMENTS
 List 3-5 key judgments, each prefaced with confidence level. These are the most important takeaways. Example:
