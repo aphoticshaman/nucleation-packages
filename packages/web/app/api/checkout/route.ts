@@ -63,12 +63,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    // Get or create organization for user
+    // Get user profile with role and org info
     const { data: profile } = await supabase
       .from('profiles')
-      .select('organization_id, full_name')
+      .select('organization_id, full_name, role, organizations(plan)')
       .eq('id', user.id)
       .single();
+
+    // Block admin, enterprise, and support users from purchasing
+    const blockedRoles = ['admin', 'enterprise', 'support'];
+    if (profile?.role && blockedRoles.includes(profile.role)) {
+      return NextResponse.json(
+        { error: 'Your account type already has full access. No purchase required.' },
+        { status: 403 }
+      );
+    }
+
+    // Block users who already have enterprise plan
+    const orgPlan = (profile?.organizations as { plan?: string } | null)?.plan;
+    if (orgPlan === 'enterprise') {
+      return NextResponse.json(
+        { error: 'Your organization already has an enterprise plan.' },
+        { status: 403 }
+      );
+    }
 
     let organizationId = profile?.organization_id;
 

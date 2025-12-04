@@ -14,6 +14,7 @@ function LoginForm() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,7 +23,7 @@ function LoginForm() {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -33,14 +34,39 @@ function LoginForm() {
       return;
     }
 
+    // Record sign in with session tracking
+    if (data.user) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.rpc as any)('record_sign_in', {
+          p_user_id: data.user.id,
+          p_device_info: {
+            user_agent: navigator.userAgent,
+            platform: /Mobile|Android|iPhone|iPad/.test(navigator.userAgent) ? 'mobile' : 'desktop',
+          },
+          p_ip_address: null, // Can't get IP from client side
+          p_remember_me: rememberMe,
+        });
+      } catch (signInErr) {
+        console.error('Failed to record sign in:', signInErr);
+        // Don't block login if recording fails
+      }
+    }
+
     router.push(redirect);
   };
 
   const handleOAuthLogin = async (provider: 'google' | 'github') => {
+    const callbackUrl = new URL('/auth/callback', window.location.origin);
+    callbackUrl.searchParams.set('redirect', redirect);
+    if (rememberMe) {
+      callbackUrl.searchParams.set('remember', 'true');
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?redirect=${redirect}`,
+        redirectTo: callbackUrl.toString(),
       },
     });
 
@@ -157,9 +183,16 @@ function LoginForm() {
           </div>
 
           <div className="flex items-center justify-between text-sm">
-            <label className="flex items-center gap-2 text-slate-400 cursor-pointer min-h-[44px]">
-              <input type="checkbox" className="rounded bg-black/30 border-white/20" />
-              Remember me
+            <label className="flex items-center gap-2 text-slate-400 cursor-pointer min-h-[44px] select-none group">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded bg-black/30 border-white/20 text-blue-500 focus:ring-blue-500/30 focus:ring-offset-0"
+              />
+              <span className="group-hover:text-slate-300 transition-colors">
+                Remember me for 30 days
+              </span>
             </label>
             <Link href="/forgot-password" className="text-blue-400 hover:text-blue-300 min-h-[44px] flex items-center">
               Forgot password?

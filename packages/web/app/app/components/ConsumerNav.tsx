@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
@@ -26,7 +26,11 @@ function hasTierAccess(userTier: UserTier, requiredTier: UserTier, userRole?: st
   return TIER_ORDER.indexOf(userTier) >= TIER_ORDER.indexOf(requiredTier);
 }
 
-function getTierDisplay(tier: UserTier): { name: string; color: string; bg: string } {
+function getTierDisplay(tier: UserTier, role?: string): { name: string; color: string; bg: string } {
+  // Admins always show as Enterprise
+  if (role === 'admin') {
+    return { name: 'Admin', color: 'text-amber-400', bg: 'bg-amber-500/20' };
+  }
   switch (tier) {
     case 'free':
       return { name: 'Free', color: 'text-slate-300', bg: 'bg-slate-700/50' };
@@ -39,6 +43,33 @@ function getTierDisplay(tier: UserTier): { name: string; color: string; bg: stri
     default:
       return { name: 'Free', color: 'text-slate-300', bg: 'bg-slate-700/50' };
   }
+}
+
+// Page-specific quick actions for LF menu
+const PAGE_ACTIONS: Record<string, { label: string; icon: string; action?: string }[]> = {
+  '/app': [
+    { label: 'Refresh Map', icon: '🔄' },
+    { label: 'Filter Nations', icon: '🔍' },
+    { label: 'Export View', icon: '📤' },
+  ],
+  '/app/briefings': [
+    { label: 'Generate New', icon: '📡' },
+    { label: 'Change Preset', icon: '🎯' },
+    { label: 'Export Brief', icon: '📤' },
+  ],
+  '/app/packages': [
+    { label: 'New Package', icon: '📦' },
+    { label: 'Load Template', icon: '📂' },
+    { label: 'Export', icon: '📤' },
+  ],
+  '/app/dashboards': [
+    { label: 'Create Dashboard', icon: '➕' },
+    { label: 'Refresh All', icon: '🔄' },
+  ],
+  '/app/signals': [
+    { label: 'New Signal', icon: '📈' },
+    { label: 'Alert Settings', icon: '🔔' },
+  ],
 }
 
 // Core navigation - mobile-optimized (fewer items visible)
@@ -57,8 +88,16 @@ const navItems: NavItem[] = [
 export default function ConsumerNav({ user }: ConsumerNavProps) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [lfMenuOpen, setLfMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const tierDisplay = getTierDisplay(user.tier);
+  const lfMenuRef = useRef<HTMLDivElement>(null);
+  const tierDisplay = getTierDisplay(user.tier, user.role);
+
+  // Check if user should see upgrade prompts (not admin, and on free tier)
+  const showUpgrade = user.tier === 'free' && user.role !== 'admin';
+
+  // Get page-specific actions
+  const pageActions = PAGE_ACTIONS[pathname] || PAGE_ACTIONS['/app'] || [];
 
   // Enhance navbar on scroll
   useEffect(() => {
@@ -72,6 +111,17 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
     document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [mobileMenuOpen]);
+
+  // Close LF menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (lfMenuRef.current && !lfMenuRef.current.contains(event.target as Node)) {
+        setLfMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const accessibleItems = navItems.filter(
     (item) => !item.minTier || hasTierAccess(user.tier, item.minTier, user.role)
@@ -98,24 +148,92 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
         }}
       >
         <div className="h-full px-3 sm:px-4 lg:px-6 flex items-center justify-between">
-          {/* Logo + Tier */}
-          <Link href="/app" className="flex items-center gap-2 min-w-0">
-            <Image
-              src="/images/brand/monogram.png"
-              alt="LatticeForge"
-              width={28}
-              height={28}
-              className="w-7 h-7 sm:w-8 sm:h-8"
-            />
-            <span className="text-lg sm:text-xl font-bold text-white hidden xs:inline">
-              LatticeForge
-            </span>
+          {/* Logo with dropdown menu */}
+          <div className="relative flex items-center gap-2 min-w-0" ref={lfMenuRef}>
+            <button
+              onClick={() => setLfMenuOpen(!lfMenuOpen)}
+              className="flex items-center gap-2 p-1 -m-1 rounded-lg hover:bg-white/5 transition-colors"
+            >
+              <Image
+                src="/images/brand/monogram.png"
+                alt="LatticeForge"
+                width={28}
+                height={28}
+                className="w-7 h-7 sm:w-8 sm:h-8"
+              />
+              <span className="text-lg sm:text-xl font-bold text-white hidden xs:inline">
+                LatticeForge
+              </span>
+              <svg className={`w-4 h-4 text-slate-400 transition-transform ${lfMenuOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
             <span
               className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full ${tierDisplay.bg} ${tierDisplay.color} border border-current/20`}
             >
               {tierDisplay.name}
             </span>
-          </Link>
+
+            {/* LF Dropdown Menu */}
+            {lfMenuOpen && (
+              <div className="absolute top-full left-0 mt-2 w-56 bg-[rgba(15,15,20,0.98)] backdrop-blur-xl border border-white/[0.08] rounded-xl shadow-2xl overflow-hidden z-50">
+                {/* Page Actions */}
+                <div className="p-2 border-b border-white/[0.06]">
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider px-2 py-1 font-medium">
+                    Page Actions
+                  </p>
+                  {pageActions.map((action, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setLfMenuOpen(false)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-300 hover:bg-white/5 rounded-lg transition-colors"
+                    >
+                      <span>{action.icon}</span>
+                      {action.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Quick Nav */}
+                <div className="p-2 border-b border-white/[0.06]">
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider px-2 py-1 font-medium">
+                    Quick Navigation
+                  </p>
+                  <Link
+                    href="/app"
+                    onClick={() => setLfMenuOpen(false)}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-300 hover:bg-white/5 rounded-lg transition-colors"
+                  >
+                    <span>🌍</span> Globe View
+                  </Link>
+                  <Link
+                    href="/app/briefings"
+                    onClick={() => setLfMenuOpen(false)}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-300 hover:bg-white/5 rounded-lg transition-colors"
+                  >
+                    <span>📡</span> Intel Briefings
+                  </Link>
+                  <Link
+                    href="/app/packages"
+                    onClick={() => setLfMenuOpen(false)}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-300 hover:bg-white/5 rounded-lg transition-colors"
+                  >
+                    <span>📦</span> Packages
+                  </Link>
+                </div>
+
+                {/* Profile Link (cross-link) */}
+                <div className="p-2">
+                  <button
+                    onClick={() => { setLfMenuOpen(false); setMobileMenuOpen(true); }}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-400 hover:bg-white/5 rounded-lg transition-colors"
+                  >
+                    <span>👤</span> Account & Settings
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Executive Brief Button - prominent red */}
           <div className="hidden sm:block ml-4">
@@ -145,7 +263,7 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
                 </Link>
               );
             })}
-            {lockedItems.length > 0 && user.tier === 'free' && user.role !== 'admin' && (
+            {lockedItems.length > 0 && showUpgrade && (
               <Link
                 href="/pricing"
                 className="px-3 py-2 rounded-lg text-sm text-slate-500 hover:text-slate-300 flex items-center gap-1"
@@ -164,8 +282,26 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
 
           {/* Right side actions */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Admin button - always visible for admins */}
+            {user.role === 'admin' && (
+              <Link
+                href="/admin"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                  bg-gradient-to-r from-amber-600 to-orange-600 text-white
+                  shadow-[0_0_15px_rgba(245,158,11,0.3)]
+                  hover:shadow-[0_0_20px_rgba(245,158,11,0.4)]
+                  transition-all duration-200"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>Admin</span>
+              </Link>
+            )}
+
             {/* Upgrade - desktop only, hide for admins */}
-            {user.tier === 'free' && user.role !== 'admin' && (
+            {showUpgrade && (
               <Link
                 href="/pricing"
                 className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
@@ -332,7 +468,7 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </Link>
-          ) : user.tier === 'free' ? (
+          ) : showUpgrade ? (
             <Link
               href="/pricing"
               onClick={() => setMobileMenuOpen(false)}

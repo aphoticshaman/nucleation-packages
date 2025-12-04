@@ -7,6 +7,10 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/cron/rolling-country-update",
+      "schedule": "15,45 * * * *"
+    },
+    {
       "path": "/api/ingest/gdelt",
       "schedule": "0 */4 * * *"
     },
