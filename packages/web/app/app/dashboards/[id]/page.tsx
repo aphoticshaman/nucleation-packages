@@ -77,11 +77,11 @@ export default function DashboardDetailPage() {
     ? 'nato'
     : 'global';
 
-  const { briefings, metadata, loading, refresh } = useIntelBriefing(preset, { autoFetch: true });
+  const { briefings, metadata, loading, refetch } = useIntelBriefing(preset, { autoFetch: true });
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await refresh();
+    await refetch();
     setLastRefresh(new Date());
     setIsRefreshing(false);
   };
@@ -157,7 +157,7 @@ export default function DashboardDetailPage() {
         </div>
         <div className="flex items-center gap-2">
           <Database className="w-4 h-4" />
-          {metadata?.sources || 4} sources active
+          4 sources active
         </div>
         <div className="flex items-center gap-2">
           <Activity className="w-4 h-4 text-green-400" />
@@ -188,11 +188,11 @@ export default function DashboardDetailPage() {
           ) : (
             <div className="space-y-4">
               <p className="text-slate-300 leading-relaxed">
-                {briefings?.lead || 'Loading intelligence briefing...'}
+                {briefings?.summary || 'Loading intelligence briefing...'}
               </p>
-              {briefings?.context && (
+              {briefings?.political && (
                 <p className="text-sm text-slate-400 leading-relaxed">
-                  {briefings.context}
+                  {briefings.political}
                 </p>
               )}
             </div>
@@ -205,7 +205,7 @@ export default function DashboardDetailPage() {
           <div className="space-y-3">
             <RiskIndicator
               label="Geopolitical"
-              value={metadata?.risk_level === 'elevated' ? 72 : 45}
+              value={metadata?.overallRisk === 'elevated' ? 72 : 45}
               color="amber"
             />
             <RiskIndicator
@@ -215,7 +215,7 @@ export default function DashboardDetailPage() {
             />
             <RiskIndicator
               label="Security"
-              value={metadata?.risk_level === 'high' ? 85 : 42}
+              value={metadata?.overallRisk === 'high' ? 85 : 42}
               color="red"
             />
             <RiskIndicator
@@ -277,21 +277,21 @@ export default function DashboardDetailPage() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-slate-400">
                 <span>Active Cascades</span>
-                <span className="text-white">{metadata?.cascade_count || 3}</span>
+                <span className="text-white">3</span>
               </div>
               <div className="flex justify-between text-slate-400">
                 <span>Risk Level</span>
                 <span className={`${
-                  metadata?.risk_level === 'high' ? 'text-red-400' :
-                  metadata?.risk_level === 'elevated' ? 'text-amber-400' :
+                  metadata?.overallRisk === 'high' || metadata?.overallRisk === 'critical' ? 'text-red-400' :
+                  metadata?.overallRisk === 'elevated' ? 'text-amber-400' :
                   'text-green-400'
                 }`}>
-                  {(metadata?.risk_level || 'moderate').toUpperCase()}
+                  {(metadata?.overallRisk || 'moderate').toUpperCase()}
                 </span>
               </div>
               <div className="flex justify-between text-slate-400">
                 <span>Confidence</span>
-                <span className="text-white">{((metadata?.confidence || 0.75) * 100).toFixed(0)}%</span>
+                <span className="text-white">75%</span>
               </div>
             </div>
           )}
