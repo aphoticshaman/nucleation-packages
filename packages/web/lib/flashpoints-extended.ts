@@ -1246,8 +1246,8 @@ export const EXTENDED_DOMESTIC_INSTABILITY: Record<string, DomesticInstability> 
       { name: 'Organized Crime Expansion', description: 'PCC now in all states, international', riskLevel: 'high' },
     ],
     recentEvents: [
-      { date: '2024-11-13', description: 'PCC-linked bomb plot at Supreme Court foiled', impact: 'major' },
-      { date: '2023-01-08', description: 'Brasília riots (J8) - Brazilian J6', impact: 'major' },
+      { date: '2024-11-13', event: 'PCC-linked bomb plot at Supreme Court foiled', impact: 'major' },
+      { date: '2023-01-08', event: 'Brasília riots (J8) - Brazilian J6', impact: 'major' },
     ],
     analystNotes: `
 Lula stabilizing but polarization remains.
@@ -1279,9 +1279,9 @@ Economy recovering but debt concerns.
       { name: 'Chiapas Violence', description: 'Migration + cartel nexus', riskLevel: 'moderate' },
     ],
     recentEvents: [
-      { date: '2024-09-15', description: 'Judicial reform passes despite protests', impact: 'major' },
-      { date: '2024-07-25', description: 'Zambada captured, Sinaloa civil war begins', impact: 'major' },
-      { date: '2024-10-01', description: 'Sheinbaum inaugurated', impact: 'moderate' },
+      { date: '2024-09-15', event: 'Judicial reform passes despite protests', impact: 'major' },
+      { date: '2024-07-25', event: 'Zambada captured, Sinaloa civil war begins', impact: 'major' },
+      { date: '2024-10-01', event: 'Sheinbaum inaugurated', impact: 'moderate' },
     ],
     analystNotes: `
 AMLO's "hugs not bullets" failed - violence unchanged.
@@ -1313,8 +1313,8 @@ State capacity eroding in multiple regions.
       { name: 'Xenophobic Violence', description: 'Anti-immigrant sentiment', riskLevel: 'moderate' },
     ],
     recentEvents: [
-      { date: '2024-06-14', description: 'ANC loses majority, GNU formed with DA', impact: 'major' },
-      { date: '2024-03-01', description: 'Loadshedding reaches Stage 6 (10+ hours/day)', impact: 'major' },
+      { date: '2024-06-14', event: 'ANC loses majority, GNU formed with DA', impact: 'major' },
+      { date: '2024-03-01', event: 'Loadshedding reaches Stage 6 (10+ hours/day)', impact: 'major' },
     ],
     analystNotes: `
 ANC below 50% first time since 1994 - coalition government.
@@ -1346,8 +1346,8 @@ Bright spot: GNU may force reforms ANC wouldn't do alone.
       { name: 'Erdogan Succession', description: 'No clear successor, 2028 election', riskLevel: 'moderate' },
     ],
     recentEvents: [
-      { date: '2024-03-31', description: 'Opposition wins Istanbul, Ankara in local elections', impact: 'moderate' },
-      { date: '2024-10-23', description: 'PKK attack on defense company, 5 killed', impact: 'moderate' },
+      { date: '2024-03-31', event: 'Opposition wins Istanbul, Ankara in local elections', impact: 'moderate' },
+      { date: '2024-10-23', event: 'PKK attack on defense company, 5 killed', impact: 'moderate' },
     ],
     analystNotes: `
 Erdogan's grip firm but economic pain testing support.
@@ -1379,8 +1379,8 @@ Key question: succession planning (Erdogan 70).
       { name: 'West Bank Settler Violence', description: 'US sanctions on extremists', riskLevel: 'moderate' },
     ],
     recentEvents: [
-      { date: '2024-10-07', description: 'Oct 7 anniversary, war continues', impact: 'major' },
-      { date: '2024-09-01', description: 'Hostage deal protests intensify', impact: 'moderate' },
+      { date: '2024-10-07', event: 'Oct 7 anniversary, war continues', impact: 'major' },
+      { date: '2024-09-01', event: 'Hostage deal protests intensify', impact: 'moderate' },
     ],
     analystNotes: `
 Pre-Oct 7 judicial reform crisis paused but not resolved.
@@ -1412,8 +1412,8 @@ Post-war political reckoning will be severe.
       { name: 'Economic Collapse', description: 'Oil revenue dependent on China', riskLevel: 'moderate' },
     ],
     recentEvents: [
-      { date: '2024-07-28', description: 'Pezeshkian elected president (reformist facade)', impact: 'moderate' },
-      { date: '2024-05-19', description: 'Raisi helicopter crash, succession questions', impact: 'moderate' },
+      { date: '2024-07-28', event: 'Pezeshkian elected president (reformist facade)', impact: 'moderate' },
+      { date: '2024-05-19', event: 'Raisi helicopter crash, succession questions', impact: 'moderate' },
     ],
     analystNotes: `
 Regime survived 2022 Woman Life Freedom protests.
@@ -1446,8 +1446,8 @@ Regional wars (Israel, Hezbollah) divert attention.
       { name: 'Economic Pressure', description: 'Inflation, labor shortage', riskLevel: 'moderate' },
     ],
     recentEvents: [
-      { date: '2024-03-17', description: 'Putin reelected (87%) in managed vote', impact: 'minor' },
-      { date: '2024-08-06', description: 'Ukraine Kursk incursion humiliation', impact: 'moderate' },
+      { date: '2024-03-17', event: 'Putin reelected (87%) in managed vote', impact: 'minor' },
+      { date: '2024-08-06', event: 'Ukraine Kursk incursion humiliation', impact: 'moderate' },
     ],
     analystNotes: `
 Regime stable - repression works, opposition crushed.
@@ -1479,8 +1479,8 @@ Best guess: stable until Putin dies/incapacitated, then chaos.
       { name: 'Hong Kong', description: 'Crushed but emigration wave', riskLevel: 'low' },
     ],
     recentEvents: [
-      { date: '2024-09-26', description: 'Stimulus announcement after months of drift', impact: 'moderate' },
-      { date: '2024-07-15', description: 'Third Plenum: no bold reforms', impact: 'moderate' },
+      { date: '2024-09-26', event: 'Stimulus announcement after months of drift', impact: 'moderate' },
+      { date: '2024-07-15', event: 'Third Plenum: no bold reforms', impact: 'moderate' },
     ],
     analystNotes: `
 Xi has more power than any leader since Mao.
