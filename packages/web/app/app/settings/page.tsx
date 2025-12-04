@@ -6,6 +6,173 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
 import { GlassInput, GlassSelect, GlassToggle } from '@/components/ui/GlassInput';
 import { supabase } from '@/lib/supabase';
+import { useAccessibility, type AccessibilitySettings } from '@/contexts/AccessibilityContext';
+
+// Colorblind mode options
+const COLORBLIND_OPTIONS: { value: AccessibilitySettings['colorblindMode']; label: string; description: string }[] = [
+  { value: 'none', label: 'Standard Colors', description: 'Default color scheme' },
+  { value: 'deuteranopia', label: 'Deuteranopia', description: 'Red-green colorblindness (most common)' },
+  { value: 'protanopia', label: 'Protanopia', description: 'Red colorblindness' },
+  { value: 'tritanopia', label: 'Tritanopia', description: 'Blue-yellow colorblindness' },
+  { value: 'monochrome', label: 'Monochrome', description: 'Grayscale for maximum contrast' },
+];
+
+// Accessibility settings card component
+function AccessibilitySettingsCard() {
+  // Try to use accessibility context, fall back gracefully
+  let accessibilityContext: ReturnType<typeof useAccessibility> | null = null;
+  try {
+    accessibilityContext = useAccessibility();
+  } catch {
+    // Context not available
+  }
+
+  if (!accessibilityContext) {
+    return (
+      <GlassCard>
+        <h2 className="text-lg font-medium text-white mb-5">Accessibility</h2>
+        <p className="text-slate-400 text-sm">
+          Accessibility settings are not available on this page.
+        </p>
+      </GlassCard>
+    );
+  }
+
+  const { settings, updateSetting, resetSettings, isColorblindMode } = accessibilityContext;
+
+  return (
+    <GlassCard>
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-lg font-medium text-white">Accessibility</h2>
+        {(isColorblindMode || settings.highContrast || settings.reducedMotion || settings.largeText) && (
+          <button
+            onClick={resetSettings}
+            className="text-xs text-slate-400 hover:text-white transition-colors"
+          >
+            Reset to defaults
+          </button>
+        )}
+      </div>
+
+      <div className="space-y-5">
+        {/* Colorblind Mode */}
+        <div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex-1">
+              <p className="text-white text-sm sm:text-base">Color Vision</p>
+              <p className="text-xs sm:text-sm text-slate-400">
+                Adjust colors for your vision type
+              </p>
+            </div>
+            <GlassSelect
+              className="sm:w-48"
+              value={settings.colorblindMode}
+              onChange={(e) => updateSetting('colorblindMode', e.target.value as AccessibilitySettings['colorblindMode'])}
+            >
+              {COLORBLIND_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </GlassSelect>
+          </div>
+          {settings.colorblindMode !== 'none' && (
+            <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <div className="flex items-start gap-2">
+                <span className="text-blue-400 text-lg">i</span>
+                <div>
+                  <p className="text-blue-300 text-sm font-medium">
+                    {COLORBLIND_OPTIONS.find(o => o.value === settings.colorblindMode)?.label} Mode Active
+                  </p>
+                  <p className="text-blue-200/70 text-xs mt-0.5">
+                    Maps, charts, and risk indicators now use an optimized color palette.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Color Preview */}
+        <div className="border-t border-white/[0.06] pt-5">
+          <p className="text-white text-sm mb-3">Color Preview</p>
+          <div className="flex flex-wrap gap-2">
+            {['critical', 'high', 'moderate', 'low', 'safe'].map((level) => {
+              const colors = {
+                standard: { critical: '#DC2626', high: '#EA580C', moderate: '#CA8A04', low: '#0891B2', safe: '#059669' },
+                colorblind: { critical: '#CC3311', high: '#EE7733', moderate: '#CCBB44', low: '#33BBEE', safe: '#0077BB' },
+                monochrome: { critical: '#1F2937', high: '#4B5563', moderate: '#6B7280', low: '#9CA3AF', safe: '#D1D5DB' },
+              };
+              const palette = settings.colorblindMode === 'none' ? 'standard' :
+                settings.colorblindMode === 'monochrome' ? 'monochrome' : 'colorblind';
+              const color = colors[palette][level as keyof typeof colors.standard];
+
+              return (
+                <div key={level} className="flex flex-col items-center">
+                  <div
+                    className="w-10 h-10 rounded-full border-2 border-white/20"
+                    style={{ backgroundColor: color }}
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 capitalize">{level}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* High Contrast */}
+        <div className="border-t border-white/[0.06] pt-5">
+          <GlassToggle
+            checked={settings.highContrast}
+            onChange={(checked) => updateSetting('highContrast', checked)}
+            label="High Contrast"
+            description="Increase text and border contrast"
+          />
+        </div>
+
+        {/* Reduced Motion */}
+        <div className="border-t border-white/[0.06] pt-5">
+          <GlassToggle
+            checked={settings.reducedMotion}
+            onChange={(checked) => updateSetting('reducedMotion', checked)}
+            label="Reduced Motion"
+            description="Minimize animations and transitions"
+          />
+        </div>
+
+        {/* Large Text */}
+        <div className="border-t border-white/[0.06] pt-5">
+          <GlassToggle
+            checked={settings.largeText}
+            onChange={(checked) => updateSetting('largeText', checked)}
+            label="Larger Text"
+            description="Increase default text size throughout the app"
+          />
+        </div>
+
+        {/* Simplified UI */}
+        <div className="border-t border-white/[0.06] pt-5">
+          <GlassToggle
+            checked={settings.simplifiedUI}
+            onChange={(checked) => updateSetting('simplifiedUI', checked)}
+            label="Simplified Interface"
+            description="Hide advanced features for a cleaner experience"
+          />
+        </div>
+
+        {/* Auto Glossary */}
+        <div className="border-t border-white/[0.06] pt-5">
+          <GlassToggle
+            checked={settings.autoGlossary}
+            onChange={(checked) => updateSetting('autoGlossary', checked)}
+            label="Show Definitions"
+            description="Explain technical terms on hover"
+          />
+        </div>
+      </div>
+    </GlassCard>
+  );
+}
 
 // Plan display component that fetches user role/tier from DB
 function PlanCard() {
@@ -223,6 +390,9 @@ export default function ConsumerSettingsPage() {
           </div>
         </div>
       </GlassCard>
+
+      {/* Accessibility */}
+      <AccessibilitySettingsCard />
 
       {/* Integrations */}
       <Suspense
