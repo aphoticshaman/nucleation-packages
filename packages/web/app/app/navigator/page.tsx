@@ -4,6 +4,8 @@ import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useIntelBriefing } from '@/hooks/useIntelBriefing';
 import { briefingsToTreeNodes, type IntelNode } from '@/components/intelligence/TreeNavigator3D';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 
 // Dynamic import to avoid SSR issues with Three.js
 const TreeNavigator3D = dynamic(
@@ -44,17 +46,14 @@ export default function NavigatorPage() {
         {/* Preset selector */}
         <div className="flex items-center gap-2">
           {['global', 'nato', 'brics', 'conflict'].map((preset) => (
-            <button
+            <GlassButton
               key={preset}
+              variant={selectedPreset === preset ? 'primary' : 'ghost'}
+              size="sm"
               onClick={() => setSelectedPreset(preset)}
-              className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                selectedPreset === preset
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
-              }`}
             >
               {preset.charAt(0).toUpperCase() + preset.slice(1)}
-            </button>
+            </GlassButton>
           ))}
         </div>
 
@@ -69,7 +68,7 @@ export default function NavigatorPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* 3D View */}
-        <div className="lg:col-span-3 bg-slate-900 rounded-xl border border-slate-800 overflow-hidden h-[calc(100vh-12rem)]">
+        <GlassCard blur="heavy" className="lg:col-span-3 overflow-hidden h-[calc(100vh-12rem)] !p-0">
           {loading ? (
             <div className="w-full h-full flex items-center justify-center">
               <div className="text-center">
@@ -88,10 +87,10 @@ export default function NavigatorPage() {
               <p className="text-slate-500">No data available. Check back soon.</p>
             </div>
           )}
-        </div>
+        </GlassCard>
 
         {/* Details Panel */}
-        <div className="lg:col-span-1 bg-slate-900 rounded-xl border border-slate-800 p-4">
+        <GlassCard blur="heavy" className="lg:col-span-1">
           <h3 className="text-white font-medium mb-4">Node Details</h3>
           {selectedNode ? (
             <div className="space-y-3">
@@ -122,7 +121,7 @@ export default function NavigatorPage() {
           ) : (
             <p className="text-slate-500 text-sm">Select a node to view details</p>
           )}
-        </div>
+        </GlassCard>
       </div>
     </div>
   );

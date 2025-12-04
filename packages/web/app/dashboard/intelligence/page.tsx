@@ -14,6 +14,7 @@ import {
   CommandPalette,
   useCommandPalette,
 } from '@/components/intelligence';
+import { GlassCard } from '@/components/ui/GlassCard';
 
 export default function IntelligenceDashboard() {
   const router = useRouter();
@@ -60,7 +61,7 @@ export default function IntelligenceDashboard() {
       {/* Main Layout */}
       <div className="flex flex-col md:flex-row h-[calc(100dvh-48px)]">
         {/* Desktop Sidebar - hidden on mobile */}
-        <aside className="hidden md:flex w-16 bg-slate-900/80 border-r border-slate-800 flex-col items-center py-4 gap-2">
+        <aside className="hidden md:flex w-16 bg-[rgba(18,18,26,0.8)] backdrop-blur-xl border-r border-white/[0.06] flex-col items-center py-4 gap-2">
           {/* Logo */}
           <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold mb-4">
             LF
@@ -106,7 +107,7 @@ export default function IntelligenceDashboard() {
         {/* Main Content */}
         <main className="flex-1 flex flex-col overflow-hidden">
           {/* Top Bar */}
-          <header className="h-14 px-3 md:px-6 bg-slate-900/50 border-b border-slate-800 flex items-center justify-between">
+          <header className="h-14 px-3 md:px-6 bg-[rgba(18,18,26,0.6)] backdrop-blur-xl border-b border-white/[0.06] flex items-center justify-between">
             <div className="flex items-center gap-2 md:gap-4">
               <h1 className="text-base md:text-lg font-semibold truncate">
                 {selectedView === 'feed' && 'Signal Feed'}
@@ -148,8 +149,8 @@ export default function IntelligenceDashboard() {
             {selectedView === 'feed' && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                 {/* Signal Feed - 2 cols */}
-                <div className="lg:col-span-2 bg-slate-900/50 rounded-xl border border-slate-800 overflow-hidden">
-                  <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+                <div className="lg:col-span-2 bg-[rgba(18,18,26,0.6)] backdrop-blur-xl rounded-xl border border-white/[0.06] overflow-hidden">
+                  <div className="p-4 border-b border-white/[0.06] flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <h2 className="font-medium">Live Signals</h2>
                       <span className="text-xs text-slate-500">
@@ -171,7 +172,7 @@ export default function IntelligenceDashboard() {
                 {/* Stats Panel - 1 col */}
                 <div className="space-y-4">
                   {/* Domain breakdown */}
-                  <div className="bg-slate-900/50 rounded-xl border border-slate-800 p-4">
+                  <div className="bg-[rgba(18,18,26,0.6)] backdrop-blur-xl rounded-xl border border-white/[0.06] p-4">
                     <h3 className="text-sm font-medium text-slate-400 mb-3">Domain Activity</h3>
                     <div className="space-y-2">
                       <DomainBar domain="Cyber" count={23} total={100} color="bg-red-500" />
@@ -183,7 +184,7 @@ export default function IntelligenceDashboard() {
                   </div>
 
                   {/* Risk summary */}
-                  <div className="bg-slate-900/50 rounded-xl border border-slate-800 p-4">
+                  <div className="bg-[rgba(18,18,26,0.6)] backdrop-blur-xl rounded-xl border border-white/[0.06] p-4">
                     <h3 className="text-sm font-medium text-slate-400 mb-3">Risk Summary</h3>
                     <div className="grid grid-cols-2 gap-3">
                       <RiskCard level="CRITICAL" count={2} />
@@ -194,7 +195,7 @@ export default function IntelligenceDashboard() {
                   </div>
 
                   {/* Active cascades */}
-                  <div className="bg-slate-900/50 rounded-xl border border-slate-800 p-4">
+                  <div className="bg-[rgba(18,18,26,0.6)] backdrop-blur-xl rounded-xl border border-white/[0.06] p-4">
                     <h3 className="text-sm font-medium text-slate-400 mb-3">Active Cascades</h3>
                     <div className="space-y-2">
                       <CascadeItem
@@ -232,7 +233,7 @@ export default function IntelligenceDashboard() {
             )}
 
             {selectedView === 'map' && (
-              <div className="h-full bg-slate-900/50 rounded-xl border border-slate-800 flex items-center justify-center">
+              <div className="h-full bg-[rgba(18,18,26,0.6)] backdrop-blur-xl rounded-xl border border-white/[0.06] flex items-center justify-center">
                 <div className="text-center text-slate-500">
                   <span className="text-4xl mb-4 block">🗺️</span>
                   <p>Hexbin Risk Map</p>
@@ -244,7 +245,7 @@ export default function IntelligenceDashboard() {
         </main>
 
         {/* Mobile Bottom Navigation - 44px+ touch targets */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-sm border-t border-slate-800 px-2 pb-safe">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[rgba(18,18,26,0.95)] backdrop-blur-xl border-t border-white/[0.06] px-2 pb-safe">
           <div className="flex items-center justify-around h-16">
             <MobileNavButton
               icon="📡"
@@ -295,8 +296,8 @@ function NavButton({
       className={`
         w-11 h-11 rounded-lg flex items-center justify-center transition-all
         ${isActive
-          ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.3)]'
-          : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+          ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.3)] border border-cyan-500/30'
+          : 'text-slate-400 hover:bg-black/30 hover:text-white border border-transparent hover:border-white/[0.06]'
         }
       `}
       title={label}
@@ -323,8 +324,8 @@ function MobileNavButton({
       className={`
         min-w-[56px] h-12 px-3 rounded-lg flex flex-col items-center justify-center gap-0.5 transition-all
         ${isActive
-          ? 'bg-cyan-500/20 text-cyan-400'
-          : 'text-slate-400 active:bg-slate-800 active:text-white'
+          ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+          : 'text-slate-400 active:bg-black/30 active:text-white border border-transparent'
         }
       `}
     >
@@ -341,7 +342,7 @@ function FilterChip({ label, isActive = false }: { label: string; isActive?: boo
         px-3 py-1 rounded-full text-xs font-medium transition-colors
         ${isActive
           ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-          : 'bg-slate-800 text-slate-400 border border-slate-700 hover:border-slate-600'
+          : 'bg-black/30 text-slate-400 border border-white/[0.06] hover:border-white/[0.12]'
         }
       `}
     >
@@ -365,7 +366,7 @@ function DomainBar({
   return (
     <div className="flex items-center gap-3">
       <span className="text-xs text-slate-400 w-20 truncate">{domain}</span>
-      <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+      <div className="flex-1 h-2 bg-black/30 rounded-full overflow-hidden border border-white/[0.04]">
         <div
           className={`h-full ${color} transition-all duration-500`}
           style={{ width: `${pct}%` }}
@@ -410,7 +411,7 @@ function CascadeItem({
       <div className="flex-1" />
       <span className="text-slate-500">+{lag}</span>
       <div
-        className="w-12 h-1.5 bg-slate-700 rounded-full overflow-hidden"
+        className="w-12 h-1.5 bg-black/30 rounded-full overflow-hidden border border-white/[0.04]"
         title={`${(strength * 100).toFixed(0)}% correlation`}
       >
         <div
