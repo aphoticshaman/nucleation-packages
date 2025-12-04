@@ -37,11 +37,10 @@ CREATE POLICY "Admin full access to training_quarantine" ON training_quarantine
     EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.role = 'admin')
   );
 
--- spatial_ref_sys - PostGIS system table, read-only for authenticated users
-ALTER TABLE IF EXISTS spatial_ref_sys ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Read access to spatial_ref_sys" ON spatial_ref_sys;
-CREATE POLICY "Read access to spatial_ref_sys" ON spatial_ref_sys
-  FOR SELECT USING (true);
+-- spatial_ref_sys - PostGIS system table
+-- SKIPPED: This table is owned by the PostGIS extension and cannot have RLS
+-- applied by regular users. It's a read-only reference table for coordinate
+-- systems and doesn't contain user data, so this is acceptable.
 
 -- =============================================
 -- PART 2: Fix SECURITY DEFINER views
