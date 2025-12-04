@@ -226,10 +226,10 @@ const AUDIENCE_PRESETS: Record<AudiencePreset, {
 }> = {
   dod: {
     name: 'DoD / IC Briefing',
-    description: 'Classified-ready format with full ODNI tradecraft standards',
+    description: 'ODNI tradecraft standards format (OSINT only)',
     icon: <Shield className="w-4 h-4" />,
     defaultComponents: ['exec_summary', 'bluf', 'threat_matrix', 'key_devs', 'map', 'causal', 'recommendations', 'sources'],
-    defaultConfig: { classification: 'FOUO', showConfidence: true, showSources: true, detailLevel: 'detailed' },
+    defaultConfig: { classification: 'UNCLASSIFIED', showConfidence: true, showSources: true, detailLevel: 'detailed' },
   },
   ngo: {
     name: 'NGO / Humanitarian',
