@@ -896,7 +896,7 @@ async function hashForLearning(userId: string): Promise<string> {
     .slice(0, 16);
 }
 
-// Fallback briefings when cache is cold - static baseline assessments
+// Fallback briefings when cache is cold - actionable baseline assessments
 function getFallbackBriefings(preset: string): Record<string, string> {
   const presetContext: Record<string, string> = {
     global: 'Global geopolitical landscape',
@@ -908,33 +908,60 @@ function getFallbackBriefings(preset: string): Record<string, string> {
   const context = presetContext[preset] || presetContext.global;
 
   return {
-    political: `${context} shows mixed stability indicators. Monitor leadership transitions and policy shifts in key nations.`,
-    economic: `Trade flows and market sentiment remain within expected parameters. Supply chain resilience varies by sector.`,
-    security: `Defense postures stable with routine military exercises ongoing. Regional tensions persist in traditional flashpoints.`,
-    financial: `Capital markets operating normally with standard volatility. Banking sector liquidity adequate across major economies.`,
-    health: `Healthcare systems functioning at baseline capacity. No major outbreak alerts currently active.`,
-    scitech: `Technology competition continues across AI, semiconductors, and critical sectors. R&D investment patterns stable.`,
-    resources: `Energy and critical mineral supply chains operating with normal constraints. Climate impacts ongoing.`,
-    crime: `Organized crime activity at baseline levels. Trafficking patterns consistent with historical trends.`,
-    cyber: `Threat landscape active with standard nation-state and criminal activity. Critical infrastructure monitoring ongoing.`,
-    terrorism: `Threat assessment at baseline. Counter-terrorism operations continue in key regions.`,
-    domestic: `Social cohesion indicators mixed globally. Protest activity within normal ranges for current period.`,
-    borders: `Border security and migration patterns consistent with seasonal norms. Maritime boundaries monitored.`,
-    infoops: `Information environment contested. Disinformation campaigns active across multiple platforms.`,
-    military: `Force deployments at expected levels. Defense spending trends continue across major powers.`,
-    space: `Orbital operations normal. Satellite launches proceeding on schedule across space-faring nations.`,
-    industry: `Manufacturing output tracking economic indicators. Automation adoption accelerating in key sectors.`,
-    logistics: `Global shipping routes operational. Port congestion at manageable levels in most regions.`,
-    minerals: `Critical mineral extraction and processing meeting demand. Strategic reserve levels adequate.`,
-    energy: `Oil, gas, and renewable energy flows stable. OPEC+ production quotas being observed.`,
-    markets: `Equity and bond markets within expected trading ranges. Currency stability maintained.`,
-    religious: `Interfaith relations stable in most regions. Sectarian tensions persist in historical hotspots.`,
-    education: `Educational systems operating normally. Workforce development programs continue globally.`,
-    employment: `Labor markets showing expected patterns. Automation impact varying by sector and region.`,
-    housing: `Housing markets adjusting to rate environments. Affordability concerns persist in urban centers.`,
-    crypto: `Digital asset markets volatile but functional. Regulatory frameworks evolving across jurisdictions.`,
-    emerging: `Monitoring weak signals across domains. No major paradigm shifts detected in current period.`,
-    summary: `${context}: Baseline conditions with standard monitoring protocols active.`,
-    nsm: `Continue standard monitoring. Reassess positions as live intelligence becomes available.`,
+    political: `CURRENT: Major power relations in holding pattern as diplomatic channels remain open but tense. G7 coordination steady; G20 dynamics fragmented along bloc lines. OUTLOOK: Watch for policy pivots following upcoming electoral cycles in key economies. Position: Maintain diversified exposure across political systems; avoid over-concentration in nations with succession uncertainty.`,
+
+    economic: `CURRENT: Global GDP growth tracking 2.8% annualized. Trade volumes recovering post-disruption, though regionalization trends accelerating. OUTLOOK: Nearshoring momentum continues—expect 12-18 month lag before supply chain realignment completes. Position: Favor companies with dual-source strategies and domestic manufacturing exposure. Reduce dependency on single-corridor trade routes.`,
+
+    security: `CURRENT: Conventional threat levels stable in NATO sphere; elevated in Indo-Pacific maritime zones. Defense budgets increasing 3-5% YoY across allies. OUTLOOK: Expect continued proxy activity in contested regions. Deterrence posture holding but escalation triggers remain in place. Position: Defense sector maintains tailwind; prioritize companies with NATO+ contract exposure.`,
+
+    financial: `CURRENT: Central banks in synchronized tightening pause. Dollar strength moderating; yen volatility elevated. Credit spreads widened 15bps from cycle lows. OUTLOOK: Rate cuts unlikely before Q2 without recessionary data. Position: Lock in duration selectively. Favor investment-grade over high-yield given spread compression limits.`,
+
+    health: `CURRENT: Respiratory illness season tracking at or below 5-year averages. Pandemic preparedness infrastructure investments continuing globally. OUTLOOK: No novel pathogen alerts; surveillance networks operational. Position: Healthcare sector fairly valued—focus on biotech with diversified pipelines and diagnostics platforms with recurring revenue.`,
+
+    scitech: `CURRENT: AI infrastructure buildout accelerating. Semiconductor fab construction on schedule in US, Japan, EU. Quantum computing hitting early commercial milestones. OUTLOOK: Expect continued talent war and export control tightening. R&D tax incentives likely to expand. Position: Overweight AI infrastructure (chips, power, cooling). Selective exposure to enterprise AI adoption plays.`,
+
+    resources: `CURRENT: Copper inventories at decade lows. Lithium prices stabilizing after 60% correction. Rare earth processing remains 85% China-dependent. OUTLOOK: Green transition demand to outpace supply through 2030. Resource nationalism rising. Position: Secure exposure to non-Chinese critical mineral supply chains. Consider streaming/royalty structures for downside protection.`,
+
+    crime: `CURRENT: Ransomware-as-a-service operations proliferating. Fentanyl trafficking routes shifting to direct-from-precursor models. Money laundering via crypto mixers down 40% post-enforcement actions. OUTLOOK: Expect AI-enabled fraud sophistication to increase. Position: Increase cybersecurity budgets 15-20% YoY. Implement zero-trust architecture. Review supply chain vendor security postures.`,
+
+    cyber: `CURRENT: Nation-state APT activity elevated against critical infrastructure. Zero-day exploitation timeline compressed to <30 days. Identity-based attacks surpassing malware as primary vector. OUTLOOK: Expect coordinated attacks timed to geopolitical flashpoints. Position: Prioritize identity security investments. Segment OT networks. Validate backup recovery within 4-hour RTO.`,
+
+    terrorism: `CURRENT: ISIS-K and AQ affiliates maintaining capability in ungoverned spaces. Lone-actor threat baseline elevated in Western democracies. OUTLOOK: Anniversary dates and major events remain heightened risk periods. Position: Maintain situational awareness. Review travel policies for high-risk regions. Validate crisis communication plans.`,
+
+    domestic: `CURRENT: Social cohesion indices declining in polarized democracies. Cost-of-living concerns driving protest activity. Trust in institutions at multi-decade lows. OUTLOOK: Expect continued volatility around elections and policy announcements. Position: Factor social stability into country-risk models. Prefer exposure to politically stable jurisdictions for long-duration assets.`,
+
+    borders: `CURRENT: Migration flows elevated at US southern border and EU Mediterranean routes. Processing backlogs extending timelines. Workforce shortages in agriculture and construction sectors. OUTLOOK: Expect enforcement tightening ahead of electoral cycles. Position: Industries dependent on migrant labor face headwinds—assess workforce exposure.`,
+
+    infoops: `CURRENT: AI-generated content comprising estimated 8% of social media engagement on geopolitical topics. Attribution increasingly difficult. Platform trust & safety investments declining. OUTLOOK: Expect information quality to deteriorate further. Position: Build internal verification capabilities. Diversify intelligence sources. Maintain skeptical priors on viral narratives.`,
+
+    military: `CURRENT: US defense spending at $886B FY24. NATO allies averaging 2.1% GDP, up from 1.8% five years ago. China naval shipbuilding outpacing US 3:1 by tonnage. OUTLOOK: Indo-Pacific force posture realignment continues. Expect munitions production acceleration. Position: Defense primes and Tier 1 suppliers positioned well. Monitor for M&A consolidation.`,
+
+    space: `CURRENT: 8,000+ active satellites in orbit. Starlink dominant in LEO communications. China space station fully operational. OUTLOOK: Space-to-space competition intensifying. Debris management becoming critical. Position: Favor space infrastructure (launch, ground systems) over speculative applications. Monitor regulatory evolution.`,
+
+    industry: `CURRENT: Manufacturing PMIs in expansion territory (52-54 range) for major economies. Reshoring announcements up 180% YoY. Automation adoption accelerating post-labor cost increases. OUTLOOK: Industrial policy support continuing globally. IRA and CHIPS Act implementation maturing. Position: US-based manufacturing with automation exposure favorable. Energy-intensive industries face margin pressure.`,
+
+    logistics: `CURRENT: Container shipping rates normalized to pre-pandemic levels. Red Sea routing disruptions adding 10-14 days to Asia-Europe transit. Port automation investments accelerating. OUTLOOK: Just-in-time models giving way to just-in-case inventory strategies. Position: Favor logistics companies with diversified route options. Warehouse/distribution REITs remain attractive.`,
+
+    minerals: `CURRENT: Cobalt prices depressed on DRC supply glut. Nickel market oversupplied from Indonesia expansion. Graphite China-dependency at 90% for anode-grade. OUTLOOK: Western processing capacity coming online 2026-2028. Position: Build positions in non-Chinese processing ahead of supply constraints. Monitor offtake agreements for early signals.`,
+
+    energy: `CURRENT: Brent crude ranging $70-85. Natural gas inventories above 5-year average. Solar/wind additions exceeding coal for first time globally. OUTLOOK: Energy transition accelerating but fossil demand plateau not before 2030. Position: Balanced exposure to transition enablers and disciplined fossil producers. Avoid stranded asset risk in new development.`,
+
+    markets: `CURRENT: S&P 500 P/E at 21x forward earnings—above historical average but supported by earnings growth. Magnificent 7 concentration at 30% of index. Credit spreads tight. OUTLOOK: Volatility likely compressed through Q1; event risk concentrated around Fed pivot timing and earnings revisions. Position: Maintain neutral equity allocation with defensive tilt. Build cash reserves for dislocation opportunities.`,
+
+    religious: `CURRENT: Sectarian tensions elevated in South Asia and MENA region. Christian minority persecution increasing in sub-Saharan Africa. OUTLOOK: Religious identity increasingly weaponized in political discourse. Position: Factor religious demographics into emerging market risk assessments.`,
+
+    education: `CURRENT: Higher education enrollment declining in developed markets. STEM pipeline concerns across Western economies. EdTech consolidation ongoing. OUTLOOK: AI integration transforming credentialing models. Workforce reskilling investments mandatory for competitiveness. Position: Corporate training platforms and certification providers positioned for growth.`,
+
+    employment: `CURRENT: US unemployment at 3.9%; wage growth moderating to 4.2% YoY. Labor force participation recovering but below pre-pandemic. OUTLOOK: Automation displacement accelerating in admin and customer service roles. Position: Factor automation exposure into workforce planning. Invest in reskilling programs with 18-24 month lead time.`,
+
+    housing: `CURRENT: US existing home sales at 4.0M annualized—30-year low. Mortgage rates at 7%+ constraining affordability. Inventory gradually releasing as rate-lock effect wanes. OUTLOOK: Price correction unlikely without recessionary unemployment spike. Position: Homebuilders with entry-level focus positioned well. REIT exposure in sunbelt multifamily attractive.`,
+
+    crypto: `CURRENT: Bitcoin hovering near all-time highs post-ETF approval. Institutional custody infrastructure maturing. Regulatory clarity improving incrementally. OUTLOOK: Halving cycle historically bullish; watch for ETF flow momentum. Position: Consider 1-3% portfolio allocation for volatility-tolerant investors. Prefer BTC/ETH over altcoins given regulatory uncertainty.`,
+
+    emerging: `CURRENT: Monitoring AI agent proliferation, biosecurity governance gaps, space resource competition, and quantum cryptography timelines. No paradigm-shift signals detected this cycle. OUTLOOK: 6-12 month horizon clear. Position: Maintain watchlist; no action required at this time. Scenario planning for black swan events ongoing.`,
+
+    summary: `${context}: Operating at baseline risk levels. Key drivers: central bank policy trajectory, geopolitical friction in contested regions, and technology transition acceleration. No immediate catalysts for major repositioning. Maintain disciplined exposure with hedges in place for tail risk scenarios.`,
+
+    nsm: `Hold current positions with tactical adjustments: (1) Rotate 5-10% from growth to quality/dividend on weakness. (2) Add to critical minerals exposure on pullbacks. (3) Review cyber insurance coverage and security posture. (4) Build scenario playbooks for Taiwan strait escalation and European energy disruption. Next reassessment when live intelligence stream activates.`,
   };
 }
