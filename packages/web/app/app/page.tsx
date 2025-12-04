@@ -149,58 +149,35 @@ const KEY_INSIGHTS = [
 ];
 
 // Preset filters - ISO 3166-1 alpha-3 country codes
+// EXPANDED to include more countries of interest
 const PRESET_FILTERS: Record<string, string[] | null> = {
   global: null, // null = show all
   nato: [
-    'USA',
-    'CAN',
-    'GBR',
-    'FRA',
-    'DEU',
-    'ITA',
-    'ESP',
-    'POL',
-    'NLD',
-    'BEL',
-    'PRT',
-    'GRC',
-    'TUR',
-    'NOR',
-    'DNK',
-    'CZE',
-    'HUN',
-    'ROU',
-    'BGR',
-    'SVK',
-    'HRV',
-    'SVN',
-    'LVA',
-    'LTU',
-    'EST',
-    'ALB',
-    'MNE',
-    'MKD',
-    'FIN',
-    'SWE',
-    'ISL',
-    'LUX',
+    'USA', 'CAN', 'GBR', 'FRA', 'DEU', 'ITA', 'ESP', 'POL', 'NLD', 'BEL',
+    'PRT', 'GRC', 'TUR', 'NOR', 'DNK', 'CZE', 'HUN', 'ROU', 'BGR', 'SVK',
+    'HRV', 'SVN', 'LVA', 'LTU', 'EST', 'ALB', 'MNE', 'MKD', 'FIN', 'SWE',
+    'ISL', 'LUX',
+    // Key NATO partners
+    'UKR', 'GEO', 'MDA', 'JPN', 'KOR', 'AUS', 'NZL',
   ],
-  brics: ['BRA', 'RUS', 'IND', 'CHN', 'ZAF', 'IRN', 'EGY', 'ETH', 'SAU', 'ARE'],
+  brics: [
+    'BRA', 'RUS', 'IND', 'CHN', 'ZAF',
+    // New BRICS members
+    'IRN', 'EGY', 'ETH', 'SAU', 'ARE',
+    // Aspiring/associated
+    'ARG', 'MEX', 'TUR', 'IDN', 'NGA', 'DZA', 'PAK', 'VNM', 'THA', 'MYS',
+  ],
   conflict: [
-    'UKR',
-    'RUS',
-    'ISR',
-    'PSE',
-    'LBN',
-    'SYR',
-    'YEM',
-    'SDN',
-    'MMR',
-    'AFG',
-    'TWN',
-    'CHN',
-    'PRK',
-    'KOR',
+    // Europe/Russia
+    'UKR', 'RUS', 'BLR', 'MDA', 'GEO',
+    // Middle East - full region
+    'ISR', 'PSE', 'LBN', 'SYR', 'JOR', 'IRQ', 'IRN', 'YEM', 'SAU', 'ARE', 'QAT', 'KWT', 'BHR', 'OMN',
+    // Africa flashpoints
+    'SDN', 'SSD', 'ETH', 'SOM', 'LBY', 'NGA', 'MLI', 'BFA', 'NER', 'TCD', 'CAF', 'COD', 'MOZ',
+    // Asia-Pacific
+    'TWN', 'CHN', 'PRK', 'KOR', 'JPN', 'PHL', 'VNM', 'MMR', 'AFG', 'PAK', 'IND',
+    // Americas
+    'VEN', 'COL', 'MEX', 'HTI', 'NIC', 'CUB',
   ],
 };
 
