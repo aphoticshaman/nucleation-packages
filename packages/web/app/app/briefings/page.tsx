@@ -11,7 +11,6 @@ import Glossary from '@/components/Glossary';
 import HelpTip from '@/components/HelpTip';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
-import { IntelDisclaimer } from '@/components/IntelDisclaimer';
 
 const PRESETS = [
   { id: 'global', name: 'Global Overview', icon: Globe, desc: 'All 195 nations' },
@@ -450,9 +449,6 @@ export default function BriefingsPage() {
           </div>
         </div>
       )}
-
-      {/* Disclaimer */}
-      <IntelDisclaimer />
 
       {/* Glossary Modal */}
       <Glossary
