@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 
 interface UserProfile {
   id: string;
@@ -143,27 +145,31 @@ function UserRow({
       <td className="py-4 px-4">
         {editing ? (
           <div className="flex gap-2">
-            <button
+            <GlassButton
+              variant="primary"
+              size="sm"
               onClick={handleSave}
               disabled={saving}
-              className="px-3 py-1 bg-green-600 hover:bg-green-500 rounded text-sm text-white disabled:opacity-50"
+              loading={saving}
             >
-              {saving ? 'Saving...' : 'Save'}
-            </button>
-            <button
+              Save
+            </GlassButton>
+            <GlassButton
+              variant="secondary"
+              size="sm"
               onClick={handleCancel}
-              className="px-3 py-1 bg-slate-600 hover:bg-slate-500 rounded text-sm text-white"
             >
               Cancel
-            </button>
+            </GlassButton>
           </div>
         ) : (
-          <button
+          <GlassButton
+            variant="secondary"
+            size="sm"
             onClick={() => setEditing(true)}
-            className="px-3 py-1 bg-blue-600 hover:bg-blue-500 rounded text-sm text-white"
           >
             Edit
-          </button>
+          </GlassButton>
         )}
       </td>
     </tr>
@@ -240,26 +246,26 @@ export default function AdminUsersPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-5 gap-4 mb-8">
-        <div className="bg-[rgba(18,18,26,0.7)] rounded-lg p-4 border border-white/[0.06]">
+        <GlassCard compact>
           <p className="text-2xl font-bold text-white">{stats.total}</p>
           <p className="text-sm text-slate-400">Total Users</p>
-        </div>
-        <div className="bg-[rgba(18,18,26,0.7)] rounded-lg p-4 border border-white/[0.06]">
+        </GlassCard>
+        <GlassCard compact>
           <p className="text-2xl font-bold text-purple-400">{stats.admins}</p>
           <p className="text-sm text-slate-400">Admins</p>
-        </div>
-        <div className="bg-[rgba(18,18,26,0.7)] rounded-lg p-4 border border-white/[0.06]">
+        </GlassCard>
+        <GlassCard compact>
           <p className="text-2xl font-bold text-blue-400">{stats.enterprise}</p>
           <p className="text-sm text-slate-400">Enterprise</p>
-        </div>
-        <div className="bg-[rgba(18,18,26,0.7)] rounded-lg p-4 border border-white/[0.06]">
+        </GlassCard>
+        <GlassCard compact>
           <p className="text-2xl font-bold text-slate-300">{stats.consumers}</p>
           <p className="text-sm text-slate-400">Consumers</p>
-        </div>
-        <div className="bg-[rgba(18,18,26,0.7)] rounded-lg p-4 border border-white/[0.06]">
+        </GlassCard>
+        <GlassCard compact>
           <p className="text-2xl font-bold text-green-400">{stats.active}</p>
           <p className="text-sm text-slate-400">Active</p>
-        </div>
+        </GlassCard>
       </div>
 
       {/* Filters */}
@@ -281,16 +287,13 @@ export default function AdminUsersPage() {
           <option value="enterprise">Enterprise</option>
           <option value="consumer">Consumers</option>
         </select>
-        <button
-          onClick={loadUsers}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white"
-        >
+        <GlassButton variant="primary" onClick={loadUsers}>
           Refresh
-        </button>
+        </GlassButton>
       </div>
 
       {/* Users Table */}
-      <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl border border-white/[0.06]">
+      <GlassCard blur="heavy" className="p-0 overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-slate-400">Loading users...</div>
         ) : (
@@ -321,7 +324,7 @@ export default function AdminUsersPage() {
             </table>
           </div>
         )}
-      </div>
+      </GlassCard>
     </div>
   );
 }

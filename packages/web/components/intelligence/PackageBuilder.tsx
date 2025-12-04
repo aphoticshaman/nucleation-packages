@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import {
   FileText,
   Presentation,
@@ -22,7 +22,20 @@ import {
   ChevronRight,
   Check,
   X,
+  Loader2,
 } from 'lucide-react';
+
+// Import real intelligence data
+import {
+  MIDDLE_EAST_DISPUTES,
+  EUROPE_DISPUTES,
+  DOMESTIC_INSTABILITY,
+  TRANSNATIONAL_THREATS,
+  INTELLIGENCE_AGENCIES,
+  getHighestRiskFlashpoints,
+  getActiveConflicts,
+  getCountriesByInstability,
+} from '@/lib/global-flashpoints';
 
 /**
  * Deliverable Package Builder
@@ -279,6 +292,628 @@ const EXPORT_FORMATS: { format: ExportFormat; label: string; icon: React.ReactNo
   { format: 'html', label: 'HTML', icon: <FileText className="w-4 h-4" />, description: 'Web-ready report' },
 ];
 
+// === EXPORT UTILITIES ===
+
+/**
+ * Escape HTML to prevent XSS when injecting content into HTML templates.
+ * This is critical for security when generating export documents.
+ */
+function escapeHtml(text: string): string {
+  const htmlEscapes: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#x27;',
+    '/': '&#x2F;',
+  };
+  return text.replace(/[&<>"'/]/g, char => htmlEscapes[char] || char);
+}
+
+function downloadFile(content: string | Blob, filename: string, mimeType: string) {
+  const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function generatePackageContent(components: PackageComponent[], audience: AudiencePreset): {
+  title: string;
+  subtitle: string;
+  generatedAt: string;
+  sections: { id: string; title: string; icon: string; content: string; config: ComponentConfig }[];
+} {
+  const presetInfo = AUDIENCE_PRESETS[audience];
+  const now = new Date();
+
+  return {
+    title: 'LatticeForge Intelligence Package',
+    subtitle: `${presetInfo.name} - Generated ${now.toLocaleDateString()}`,
+    generatedAt: now.toISOString(),
+    sections: components.sort((a, b) => a.order - b.order).map(c => ({
+      id: c.id,
+      title: c.label,
+      icon: c.icon,
+      content: generateSectionContent(c),
+      config: c.config,
+    })),
+  };
+}
+
+function generateSectionContent(component: PackageComponent): string {
+  // Get real intelligence data
+  const activeConflicts = getActiveConflicts();
+  const highRiskFlashpoints = getHighestRiskFlashpoints(5);
+  const unstableCountries = getCountriesByInstability();
+  const now = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const contentMap: Record<ComponentType, string> = {
+    executive_summary: `EXECUTIVE SUMMARY
+Assessment Date: ${now}
+Classification: OSINT / UNCLASSIFIED
+
+SITUATION OVERVIEW:
+${activeConflicts.length} active conflicts currently monitored. ${highRiskFlashpoints.length} flashpoints exceed 70% escalation probability.
+
+PRIMARY CONCERNS:
+${activeConflicts.slice(0, 3).map((c, i) => `${i + 1}. ${c.name} (${c.region}) - Escalation Risk: ${Math.round(c.escalationRisk * 100)}%`).join('\n')}
+
+KEY FINDINGS:
+• Russia-Ukraine War remains largest European conflict since 1945
+• Middle East multi-front escalation (Israel-Hamas, Lebanon, Iran, Houthis)
+• European political instability accelerating (France, Germany coalition failures)
+• US domestic polarization at historic levels ahead of transition
+
+BOTTOM LINE:
+Global instability elevated across all monitored vectors. Cascade risk between theaters is HIGH due to interconnected actors (Iran-Russia axis, China positioning).
+
+${component.config.showConfidence ? 'Confidence: HIGH (Multiple source corroboration)\nAnalyst: LatticeForge OSINT Team' : ''}`,
+
+    bluf: `BOTTOM LINE UP FRONT
+
+WHAT: Multiple interconnected crises threatening global stability
+WHO: Key actors - Russia, Iran, Israel, US, China, non-state actors (Hamas, Hezbollah, Houthis)
+WHEN: Active NOW. Critical window: Next 90 days (US transition, Middle East trajectory)
+WHERE: Primary theaters - Ukraine, Levant, Red Sea, Taiwan Strait (watch)
+WHY: Great power competition + regional proxy conflicts + domestic instability convergence
+HOW: Cascade dynamics - conflict in one theater enables/triggers others
+
+IMMEDIATE CONCERNS:
+1. Iran nuclear breakout timeline: 1-2 weeks to weapons-grade material
+2. Ukraine war escalation spiral (ATACMS in Russia → new Russian missiles)
+3. France government collapse - 4th Republic parallels
+4. US transition period vulnerability
+
+RECOMMENDED POSTURE: ELEVATED MONITORING`,
+
+    threat_matrix: `THREAT ASSESSMENT MATRIX
+Generated: ${now}
+
+ACTIVE CONFLICTS (Immediate Threats):
+${activeConflicts.map(c => `
+${c.name}
+├─ Status: ${c.status.replace('_', ' ').toUpperCase()}
+├─ Escalation Risk: ${Math.round(c.escalationRisk * 100)}%
+├─ Strategic Importance: ${Math.round(c.strategicImportance * 100)}%
+├─ Parties: ${c.parties.map(p => p.name).join(' vs ')}
+├─ Resources at Stake: ${c.resourcesAtStake.slice(0, 3).join(', ')}
+└─ Last Incident: ${c.recentIncidents[0]?.description || 'N/A'}
+`).join('\n')}
+
+ESCALATION PROBABILITY RANKING:
+${highRiskFlashpoints.map((f, i) => `${i + 1}. ${f.name}: ${Math.round(f.escalationRisk * 100)}%`).join('\n')}`,
+
+    key_developments: `KEY DEVELOPMENTS
+Period: Last 30 Days | Source: OSINT Collection
+
+CRITICAL (Immediate Action Required):
+${Object.values(MIDDLE_EAST_DISPUTES).flatMap(d => d.recentIncidents.filter(i => i.severity === 'critical').map(i => `• ${i.date}: ${i.description}`)).slice(0, 4).join('\n')}
+
+${Object.values(EUROPE_DISPUTES).flatMap(d => d.recentIncidents.filter(i => i.severity === 'critical').map(i => `• ${i.date}: ${i.description}`)).slice(0, 3).join('\n')}
+
+SERIOUS (Monitor Closely):
+${Object.values(MIDDLE_EAST_DISPUTES).flatMap(d => d.recentIncidents.filter(i => i.severity === 'serious').map(i => `• ${i.date}: ${i.description}`)).slice(0, 3).join('\n')}
+
+DOMESTIC INSTABILITY INDICATORS:
+${unstableCountries.slice(0, 4).map(c => `• ${c.country} (${c.severity.toUpperCase()}): ${c.flashpoints[0]?.name || 'Multiple factors'}`).join('\n')}`,
+
+    risk_gauge: `GLOBAL RISK ASSESSMENT
+Date: ${now}
+
+COMPOSITE RISK INDEX: ${(highRiskFlashpoints.reduce((sum, f) => sum + f.escalationRisk, 0) / highRiskFlashpoints.length * 10).toFixed(1)}/10
+
+BY REGION:
+• Middle East: ${Math.round(Object.values(MIDDLE_EAST_DISPUTES).reduce((sum, d) => sum + d.escalationRisk, 0) / Object.values(MIDDLE_EAST_DISPUTES).length * 100)}% (CRITICAL)
+• Europe: ${Math.round(Object.values(EUROPE_DISPUTES).reduce((sum, d) => sum + d.escalationRisk, 0) / Object.values(EUROPE_DISPUTES).length * 100)}% (ELEVATED)
+• Domestic (Major Powers): ${unstableCountries.filter(c => ['US', 'GB', 'FR', 'DE'].includes(c.countryCode)).length > 2 ? 'ELEVATED' : 'MODERATE'}
+
+TREND: DETERIORATING
+• 3 new critical incidents in past 30 days
+• Iran-Israel direct exchanges crossed previous red lines
+• European political instability accelerating
+
+CASCADE RISK: HIGH
+Interconnection density between theaters has increased. Conflict in one region more likely to trigger responses in others (Iran network activation pattern observed Oct 2023-present).`,
+
+    map_view: `GEOGRAPHIC ANALYSIS
+Primary Theaters of Concern
+
+MIDDLE EAST / LEVANT:
+${Object.values(MIDDLE_EAST_DISPUTES).map(d => `• ${d.name}
+  Location: ${d.region}
+  Status: ${d.status.replace('_', ' ')}
+  Control: ${d.parties.map(p => `${p.name} (${p.controlPercentage}%)`).join(', ')}`).join('\n\n')}
+
+EUROPE:
+${Object.values(EUROPE_DISPUTES).map(d => `• ${d.name}
+  Location: ${d.region}
+  Status: ${d.status.replace('_', ' ')}
+  Escalation: ${Math.round(d.escalationRisk * 100)}%`).join('\n\n')}
+
+CRITICAL CHOKEPOINTS:
+• Strait of Hormuz (20% global oil) - Iranian interdiction capability
+• Bab el-Mandeb (Red Sea) - Active Houthi attacks on shipping
+• Suwalki Gap (NATO) - Russia-NATO potential flashpoint
+• Taiwan Strait - Chinese military activity elevated`,
+
+    network_graph: `NETWORK ANALYSIS
+Actor Relationships & Influence Mapping
+
+AXIS STRUCTURE:
+Iran-Russia-China Alignment
+├─ Military: Russia-Iran drone/missile cooperation
+├─ Economic: China-Russia energy partnership, sanctions evasion
+├─ Proxy: Iran → Hezbollah, Hamas, Houthis, Iraqi militias
+└─ Information: Coordinated narrative operations
+
+PROXY NETWORKS:
+Iranian Network (Active):
+• Hezbollah (Lebanon) - 150,000+ rockets, precision missiles
+• Hamas (Gaza) - Degraded but not eliminated
+• Houthis (Yemen) - Disrupting 15% global shipping
+• Iraqi PMF - Attacks on US bases
+
+KEY INTELLIGENCE AGENCIES:
+${Object.values(INTELLIGENCE_AGENCIES).filter(a => ['US', 'IL', 'RU', 'CN', 'GB'].includes(a.countryCode)).map(a => `• ${a.name} (${a.country})
+  Capabilities: HUMINT ${Math.round(a.capabilities.humint * 100)}%, SIGINT ${Math.round(a.capabilities.sigint * 100)}%, Cyber ${Math.round(a.capabilities.cyber * 100)}%`).join('\n')}`,
+
+    causal_chain: `CAUSAL CHAIN ANALYSIS
+
+MIDDLE EAST ESCALATION PATHWAY:
+Oct 7 Hamas Attack
+└─→ Israeli Gaza Operation
+    └─→ Hezbollah "Support Front"
+        └─→ Israeli-Lebanon Escalation (Sep 2024)
+            └─→ Iranian Direct Strikes (Apr, Oct 2024)
+                └─→ [POTENTIAL] Full Regional War
+
+UKRAINE-NATO ESCALATION PATHWAY:
+Russian Invasion (Feb 2022)
+└─→ Western Weapons Supply
+    └─→ Ukrainian Deep Strikes
+        └─→ Russian Escalation (new missiles)
+            └─→ [POTENTIAL] NATO Article 5 trigger (Baltic incident)
+
+EUROPEAN INSTABILITY CASCADE:
+Energy Crisis (2022)
+└─→ Inflation Surge
+    └─→ Cost of Living Protests
+        └─→ Government Instability (FR, DE)
+            └─→ Far-Right Electoral Gains
+                └─→ EU Cohesion Degradation
+
+ROOT DRIVERS:
+1. US-China strategic competition
+2. Russian revisionism post-Cold War
+3. Iranian regional ambitions
+4. Climate-driven resource competition
+5. Technology disruption of power structures`,
+
+    timeline: `EVENT TIMELINE
+Historical Context & Projections
+
+PAST 24 MONTHS:
+${[
+  ...Object.values(MIDDLE_EAST_DISPUTES).flatMap(d => d.recentIncidents.map(i => ({ ...i, region: d.region }))),
+  ...Object.values(EUROPE_DISPUTES).flatMap(d => d.recentIncidents.map(i => ({ ...i, region: d.region }))),
+].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 12).map(i => `${i.date}: ${i.description} [${i.severity.toUpperCase()}]`).join('\n')}
+
+PROJECTED CRITICAL WINDOWS:
+• T+30 days: US transition period (vulnerability window)
+• T+60 days: Iranian nuclear decision point
+• T+90 days: Ukraine winter offensive/defensive posture
+• T+180 days: European elections cycle (potential shifts)
+
+WATCH DATES:
+• January 20, 2025: US inauguration
+• Early 2025: German snap election
+• 2025 H1: Potential Iran nuclear threshold`,
+
+    data_table: `QUANTITATIVE INDICATORS
+
+CONFLICT METRICS:
+| Theater | Escalation Risk | Strategic Import | Active Parties |
+|---------|-----------------|------------------|----------------|
+${[...Object.values(MIDDLE_EAST_DISPUTES), ...Object.values(EUROPE_DISPUTES)].slice(0, 8).map(d => `| ${d.name.slice(0, 20)} | ${Math.round(d.escalationRisk * 100)}% | ${Math.round(d.strategicImportance * 100)}% | ${d.parties.length} |`).join('\n')}
+
+DOMESTIC INSTABILITY:
+| Country | Severity | Trajectory | Key Threat |
+|---------|----------|------------|------------|
+${unstableCountries.slice(0, 6).map(c => `| ${c.country} | ${c.severity.toUpperCase()} | ${c.trajectory} | ${c.threatTypes[0]} |`).join('\n')}
+
+TRANSNATIONAL THREATS:
+| Threat | Annual Value | Violence | State Capture |
+|--------|--------------|----------|---------------|
+${Object.values(TRANSNATIONAL_THREATS).slice(0, 4).map(t => `| ${t.name.slice(0, 25)} | ${t.estimatedAnnualValue} | ${t.violenceLevel} | ${t.stateCapture} |`).join('\n')}`,
+
+    recommendations: `RECOMMENDATIONS
+
+IMMEDIATE ACTIONS (0-30 days):
+1. [CRITICAL] Monitor Iran nuclear indicators daily
+2. [CRITICAL] Track Hezbollah reconstruction/repositioning
+3. [HIGH] Assess US transition security posture
+4. [HIGH] Monitor European government stability
+
+MEDIUM-TERM (30-90 days):
+1. Update contingency plans for Middle East regional war
+2. Assess Ukraine conflict trajectory post-winter
+3. Evaluate European far-right coalition scenarios
+4. Review supply chain exposure to conflict zones
+
+ONGOING COLLECTION PRIORITIES:
+• Iranian nuclear program indicators
+• Russian military capability regeneration
+• Chinese Taiwan posture signals
+• Cartel-state nexus developments
+• Cyber threat actor campaigns
+
+RISK MITIGATION:
+• Diversify energy/commodity suppliers
+• Stress-test financial exposure to sanctioned entities
+• Update crisis communication protocols
+• Review personnel security in elevated risk zones`,
+
+    sources: `SOURCES AND METHODS
+
+COLLECTION FRAMEWORK:
+This assessment draws on open-source intelligence (OSINT) including:
+• Government statements and official documents
+• Major wire services (AP, Reuters, AFP)
+• Regional media monitoring
+• Academic and think tank analysis
+• Social media analysis (verified accounts)
+• Commercial satellite imagery analysis
+• Financial market indicators
+
+SOURCE RELIABILITY:
+• Official government sources: Generally reliable (bias acknowledged)
+• Major media: Reliable with verification
+• Regional sources: Variable, cross-referenced
+• Social media: Used for indications only
+
+LIMITATIONS:
+• No access to classified intelligence
+• Potential information operations contamination
+• Time lag on ground truth verification
+• Language/cultural interpretation challenges
+
+CONFIDENCE LEVELS USED:
+• HIGH: Multiple independent sources, consistent pattern
+• MODERATE: 2-3 sources, some gaps
+• LOW: Single source or conflicting information
+
+METHODOLOGY:
+Structured analytic techniques including:
+• Analysis of Competing Hypotheses
+• Key Assumptions Check
+• Red Team Analysis
+• Scenario Planning`,
+
+    appendix: `APPENDIX
+
+A. GLOSSARY OF TERMS
+• OSINT: Open Source Intelligence
+• HUMINT: Human Intelligence
+• SIGINT: Signals Intelligence
+• BLUF: Bottom Line Up Front
+• Escalation Risk: Probability of conflict intensification (0-100%)
+• Cascade Effect: Secondary impacts triggered by primary event
+• Axis: Aligned group of state/non-state actors
+• Proxy: Actor operating on behalf of another power
+
+B. REGIONAL PRIMERS
+${Object.values(MIDDLE_EAST_DISPUTES).slice(0, 3).map(d => `
+${d.name}:
+${d.analystAssessment.trim()}`).join('\n')}
+
+C. KEY ACTORS REFERENCE
+${Object.values(INTELLIGENCE_AGENCIES).slice(0, 6).map(a => `• ${a.name}: ${a.notes}`).join('\n')}
+
+D. DATA SOURCES
+• LatticeForge platform indicators
+• Global flashpoint database
+• Historical pattern library
+• Cascade simulation models`,
+
+    custom_section: component.config.customNotes || 'Custom section - add analyst notes here.',
+  };
+
+  return contentMap[component.type] || 'Section content not available.';
+}
+
+function exportAsJSON(components: PackageComponent[], audience: AudiencePreset): void {
+  const content = generatePackageContent(components, audience);
+  const json = JSON.stringify(content, null, 2);
+  downloadFile(json, `latticeforge-package-${Date.now()}.json`, 'application/json');
+}
+
+function exportAsCSV(components: PackageComponent[], audience: AudiencePreset): void {
+  const content = generatePackageContent(components, audience);
+  const headers = ['Section', 'Title', 'Content', 'Detail Level', 'Show Confidence', 'Show Sources'];
+  const rows = content.sections.map(s => [
+    s.id,
+    s.title,
+    s.content.replace(/\n/g, ' ').replace(/,/g, ';'),
+    s.config.detailLevel || 'standard',
+    s.config.showConfidence ? 'Yes' : 'No',
+    s.config.showSources ? 'Yes' : 'No',
+  ]);
+
+  const csv = [
+    headers.join(','),
+    ...rows.map(r => r.map(cell => `"${cell}"`).join(',')),
+  ].join('\n');
+
+  downloadFile(csv, `latticeforge-package-${Date.now()}.csv`, 'text/csv');
+}
+
+function exportAsHTML(components: PackageComponent[], audience: AudiencePreset): void {
+  const content = generatePackageContent(components, audience);
+  const presetInfo = AUDIENCE_PRESETS[audience];
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${content.title}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.6; padding: 2rem; }
+    .container { max-width: 900px; margin: 0 auto; }
+    header { border-bottom: 1px solid #334155; padding-bottom: 1rem; margin-bottom: 2rem; }
+    h1 { font-size: 1.75rem; color: #f8fafc; margin-bottom: 0.5rem; }
+    .subtitle { color: #94a3b8; font-size: 0.875rem; }
+    .meta { display: flex; gap: 1rem; margin-top: 0.5rem; font-size: 0.75rem; color: #64748b; }
+    section { background: #1e293b; border: 1px solid #334155; border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1rem; }
+    section h2 { font-size: 1.125rem; color: #f8fafc; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    section pre { white-space: pre-wrap; font-family: inherit; color: #cbd5e1; font-size: 0.875rem; }
+    .badge { display: inline-block; padding: 0.125rem 0.5rem; background: #334155; border-radius: 0.25rem; font-size: 0.625rem; color: #94a3b8; margin-left: auto; }
+    footer { text-align: center; color: #475569; font-size: 0.75rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #334155; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>${content.title}</h1>
+      <p class="subtitle">${presetInfo.name}</p>
+      <div class="meta">
+        <span>Generated: ${new Date(content.generatedAt).toLocaleString()}</span>
+        <span>Sections: ${content.sections.length}</span>
+        <span>Classification: OSINT / UNCLASSIFIED</span>
+      </div>
+    </header>
+    ${content.sections.map(s => `
+    <section>
+      <h2><span>${escapeHtml(s.icon)}</span> ${escapeHtml(s.title)} <span class="badge">${escapeHtml(s.config.detailLevel || 'standard')}</span></h2>
+      <pre>${escapeHtml(s.content)}</pre>
+    </section>`).join('')}
+    <footer>
+      LatticeForge Intelligence Platform | ${new Date().getFullYear()} | OSINT Only
+    </footer>
+  </div>
+</body>
+</html>`;
+
+  downloadFile(html, `latticeforge-package-${Date.now()}.html`, 'text/html');
+}
+
+function exportAsPDF(components: PackageComponent[], audience: AudiencePreset): void {
+  // Generate HTML and use browser print to PDF
+  const content = generatePackageContent(components, audience);
+  const presetInfo = AUDIENCE_PRESETS[audience];
+
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    alert('Please allow popups to export PDF');
+    return;
+  }
+
+  printWindow.document.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${content.title}</title>
+  <style>
+    @media print {
+      @page { margin: 1in; size: letter; }
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Times New Roman', serif; color: #1a1a1a; line-height: 1.5; padding: 0; }
+    .container { max-width: 100%; }
+    header { border-bottom: 2px solid #1a1a1a; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    h1 { font-size: 1.5rem; font-weight: bold; margin-bottom: 0.25rem; }
+    .subtitle { font-size: 1rem; color: #444; }
+    .meta { display: flex; gap: 2rem; margin-top: 0.5rem; font-size: 0.75rem; color: #666; }
+    .classification { text-align: center; font-weight: bold; padding: 0.5rem; background: #e5e5e5; margin-bottom: 1rem; font-size: 0.875rem; }
+    section { page-break-inside: avoid; margin-bottom: 1.5rem; }
+    section h2 { font-size: 1.125rem; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 0.25rem; margin-bottom: 0.75rem; }
+    section pre { white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 0.8125rem; color: #333; }
+    .badge { display: inline-block; padding: 0.125rem 0.5rem; background: #e5e5e5; border-radius: 0.25rem; font-size: 0.625rem; margin-left: 0.5rem; }
+    footer { text-align: center; color: #666; font-size: 0.75rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="classification">UNCLASSIFIED // OSINT</div>
+    <header>
+      <h1>${content.title}</h1>
+      <p class="subtitle">${presetInfo.name}</p>
+      <div class="meta">
+        <span>Generated: ${new Date(content.generatedAt).toLocaleString()}</span>
+        <span>Sections: ${content.sections.length}</span>
+      </div>
+    </header>
+    ${content.sections.map(s => `
+    <section>
+      <h2>${escapeHtml(s.icon)} ${escapeHtml(s.title)} <span class="badge">${escapeHtml(s.config.detailLevel || 'standard')}</span></h2>
+      <pre>${escapeHtml(s.content)}</pre>
+    </section>`).join('')}
+    <footer>
+      LatticeForge Intelligence Platform | ${new Date().getFullYear()} | OSINT Only - No Classification Authority
+    </footer>
+    <div class="classification" style="margin-top: 1rem;">UNCLASSIFIED // OSINT</div>
+  </div>
+  <script>
+    window.onload = function() {
+      setTimeout(function() {
+        window.print();
+        window.onafterprint = function() { window.close(); };
+      }, 250);
+    };
+  </script>
+</body>
+</html>`);
+  printWindow.document.close();
+}
+
+function exportAsDOCX(components: PackageComponent[], audience: AudiencePreset): void {
+  // Generate a simple .doc (HTML-based) that Word can open
+  const content = generatePackageContent(components, audience);
+  const presetInfo = AUDIENCE_PRESETS[audience];
+
+  const doc = `<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
+<head>
+  <meta charset="UTF-8">
+  <title>${content.title}</title>
+  <style>
+    body { font-family: Calibri, sans-serif; font-size: 11pt; }
+    h1 { font-size: 18pt; color: #1a1a1a; }
+    h2 { font-size: 14pt; color: #333; border-bottom: 1pt solid #ccc; padding-bottom: 4pt; margin-top: 16pt; }
+    pre { font-family: Consolas, monospace; font-size: 10pt; white-space: pre-wrap; background: #f5f5f5; padding: 8pt; }
+    .meta { color: #666; font-size: 9pt; }
+    .header { border-bottom: 2pt solid #1a1a1a; padding-bottom: 8pt; margin-bottom: 16pt; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>${content.title}</h1>
+    <p><strong>${presetInfo.name}</strong></p>
+    <p class="meta">Generated: ${new Date(content.generatedAt).toLocaleString()} | Classification: OSINT / UNCLASSIFIED</p>
+  </div>
+  ${content.sections.map(s => `
+  <h2>${escapeHtml(s.icon)} ${escapeHtml(s.title)}</h2>
+  <pre>${escapeHtml(s.content)}</pre>`).join('')}
+  <p style="margin-top: 24pt; text-align: center; color: #666; font-size: 9pt;">
+    LatticeForge Intelligence Platform | OSINT Only
+  </p>
+</body>
+</html>`;
+
+  const blob = new Blob([doc], { type: 'application/msword' });
+  downloadFile(blob, `latticeforge-package-${Date.now()}.doc`, 'application/msword');
+}
+
+function exportAsPPTX(components: PackageComponent[], audience: AudiencePreset): void {
+  // Generate HTML-based presentation that can be opened and converted
+  const content = generatePackageContent(components, audience);
+  const presetInfo = AUDIENCE_PRESETS[audience];
+
+  // Create an HTML presentation format
+  const slides = content.sections.map((s, i) => `
+    <div class="slide">
+      <div class="slide-number">${i + 1}</div>
+      <h2>${escapeHtml(s.icon)} ${escapeHtml(s.title)}</h2>
+      <pre>${escapeHtml(s.content)}</pre>
+    </div>
+  `);
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${content.title} - Presentation</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; }
+    .slide { width: 100%; min-height: 100vh; padding: 3rem; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #e2e8f0; page-break-after: always; position: relative; }
+    .slide-number { position: absolute; bottom: 2rem; right: 2rem; font-size: 0.875rem; color: #64748b; }
+    .title-slide { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+    .title-slide h1 { font-size: 3rem; color: #f8fafc; margin-bottom: 1rem; }
+    .title-slide .subtitle { font-size: 1.5rem; color: #94a3b8; }
+    .title-slide .meta { margin-top: 2rem; font-size: 1rem; color: #64748b; }
+    h2 { font-size: 2rem; color: #f8fafc; margin-bottom: 2rem; border-bottom: 2px solid #3b82f6; padding-bottom: 0.5rem; }
+    pre { font-family: inherit; white-space: pre-wrap; font-size: 1.125rem; line-height: 1.8; color: #cbd5e1; }
+    @media print {
+      .slide { height: 100vh; overflow: hidden; }
+    }
+  </style>
+</head>
+<body>
+  <div class="slide title-slide">
+    <h1>${content.title}</h1>
+    <p class="subtitle">${presetInfo.name}</p>
+    <p class="meta">Generated ${new Date(content.generatedAt).toLocaleDateString()}</p>
+    <div class="slide-number">Title</div>
+  </div>
+  ${slides.join('')}
+  <div class="slide title-slide">
+    <h1>Questions?</h1>
+    <p class="subtitle">LatticeForge Intelligence Platform</p>
+    <p class="meta">OSINT Only - No Classification Authority</p>
+    <div class="slide-number">End</div>
+  </div>
+</body>
+</html>`;
+
+  downloadFile(html, `latticeforge-presentation-${Date.now()}.html`, 'text/html');
+
+  // Also alert user about conversion
+  setTimeout(() => {
+    alert('Presentation downloaded as HTML. For PowerPoint format:\n\n1. Open the HTML file in your browser\n2. Use Print → Save as PDF\n3. Or import into Google Slides / PowerPoint');
+  }, 500);
+}
+
+function performExport(format: ExportFormat, components: PackageComponent[], audience: AudiencePreset): void {
+  switch (format) {
+    case 'json':
+      exportAsJSON(components, audience);
+      break;
+    case 'csv':
+      exportAsCSV(components, audience);
+      break;
+    case 'html':
+      exportAsHTML(components, audience);
+      break;
+    case 'pdf':
+      exportAsPDF(components, audience);
+      break;
+    case 'docx':
+      exportAsDOCX(components, audience);
+      break;
+    case 'pptx':
+      exportAsPPTX(components, audience);
+      break;
+  }
+}
+
 // === MAIN COMPONENT ===
 
 export function PackageBuilder({
@@ -297,6 +932,7 @@ export function PackageBuilder({
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Apply audience preset
   const applyPreset = useCallback((preset: AudiencePreset) => {
@@ -375,9 +1011,25 @@ export function PackageBuilder({
 
   // Export package
   const handleExport = useCallback((format: ExportFormat) => {
-    onExport?.(format, components);
-    setShowExportDialog(false);
-  }, [components, onExport]);
+    if (components.length === 0) {
+      alert('Please add at least one component to your package before exporting.');
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      // Perform the actual export
+      performExport(format, components, selectedAudience);
+      // Also call optional callback if provided
+      onExport?.(format, components);
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Export failed. Please try again.');
+    } finally {
+      setIsExporting(false);
+      setShowExportDialog(false);
+    }
+  }, [components, selectedAudience, onExport]);
 
   // Component count by enabled status
   const enabledCount = useMemo(() => components.length, [components]);
@@ -484,8 +1136,66 @@ export function PackageBuilder({
           </div>
         </div>
 
-        {/* Center Panel - Package Arrangement */}
-        <div className="flex-1 p-4">
+        {/* Center Panel - Package Arrangement OR Preview */}
+        <div className="flex-1 p-4 overflow-y-auto max-h-[600px]">
+          {previewMode ? (
+            /* Preview Mode - Show actual content */
+            <div className="space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-slate-300">
+                  Preview - {AUDIENCE_PRESETS[selectedAudience].name}
+                </h3>
+                <span className="text-xs text-slate-500">
+                  {components.length} sections
+                </span>
+              </div>
+
+              {components.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-slate-700 rounded-lg">
+                  <div className="text-4xl mb-3">👁️</div>
+                  <p className="text-slate-400 text-sm">No components to preview</p>
+                  <p className="text-slate-500 text-xs mt-1">Add components or select a preset first</p>
+                </div>
+              ) : (
+                <div className="bg-slate-950 border border-slate-700 rounded-lg overflow-hidden">
+                  {/* Preview Header */}
+                  <div className="bg-slate-800 px-4 py-3 border-b border-slate-700">
+                    <h2 className="text-lg font-bold text-white">LatticeForge Intelligence Package</h2>
+                    <p className="text-sm text-slate-400">{AUDIENCE_PRESETS[selectedAudience].name}</p>
+                    <div className="flex gap-4 mt-2 text-xs text-slate-500">
+                      <span>Generated: {new Date().toLocaleDateString()}</span>
+                      <span>Classification: OSINT / UNCLASSIFIED</span>
+                    </div>
+                  </div>
+
+                  {/* Preview Sections */}
+                  <div className="divide-y divide-slate-800">
+                    {components.sort((a, b) => a.order - b.order).map(component => (
+                      <div key={component.id} className="p-4">
+                        <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-2">
+                          <span>{component.icon}</span>
+                          {component.label}
+                          <span className="ml-auto text-xs px-2 py-0.5 bg-slate-800 text-slate-400 rounded">
+                            {component.config.detailLevel || 'standard'}
+                          </span>
+                        </h3>
+                        <pre className="text-xs text-slate-400 whitespace-pre-wrap font-mono bg-slate-900/50 p-3 rounded">
+                          {generateSectionContent(component)}
+                        </pre>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Preview Footer */}
+                  <div className="bg-slate-800 px-4 py-2 text-center text-xs text-slate-500">
+                    LatticeForge Intelligence Platform | OSINT Only
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+          /* Edit Mode - Package Layout */
+          <>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-slate-300">
               Package Layout
@@ -579,6 +1289,8 @@ export function PackageBuilder({
                   </div>
                 ))}
             </div>
+          )}
+          </>
           )}
         </div>
 

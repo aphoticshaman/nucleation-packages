@@ -1,10 +1,137 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
 import { GlassInput, GlassSelect, GlassToggle } from '@/components/ui/GlassInput';
+import { supabase } from '@/lib/supabase';
+
+// Plan display component that fetches user role/tier from DB
+function PlanCard() {
+  const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string>('consumer');
+  const [userTier, setUserTier] = useState<string>('free');
+
+  useEffect(() => {
+    async function fetchUserPlan() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role, tier')
+          .eq('id', user.id)
+          .single();
+
+        if (profile) {
+          const p = profile as { role?: string; tier?: string };
+          setUserRole(p.role || 'consumer');
+          setUserTier(p.tier || 'free');
+        }
+      } catch (err) {
+        console.error('Failed to fetch user plan:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    void fetchUserPlan();
+  }, []);
+
+  if (loading) {
+    return (
+      <GlassCard>
+        <div className="animate-pulse">
+          <div className="h-6 w-24 bg-white/10 rounded mb-2" />
+          <div className="h-4 w-48 bg-white/5 rounded" />
+        </div>
+      </GlassCard>
+    );
+  }
+
+  // Admin users - show admin status, no upgrade
+  if (userRole === 'admin') {
+    return (
+      <GlassCard className="relative overflow-hidden border-amber-500/30">
+        <div
+          className="absolute -right-20 -top-20 w-40 h-40 rounded-full opacity-20 pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, rgba(245, 158, 11, 0.8) 0%, transparent 70%)',
+          }}
+        />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 relative">
+          <div>
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-medium text-white">Administrator</h2>
+              <span className="text-[10px] px-2 py-0.5 bg-amber-500/20 rounded-full text-amber-400 uppercase tracking-wider">
+                Full Access
+              </span>
+            </div>
+            <p className="text-slate-400 mt-1 text-sm">Unlimited access to all features</p>
+          </div>
+          <GlassButton
+            variant="secondary"
+            fullWidthMobile
+            onClick={() => (window.location.href = '/admin')}
+          >
+            Admin Panel
+          </GlassButton>
+        </div>
+      </GlassCard>
+    );
+  }
+
+  // Paid tiers
+  const tierDisplay: Record<string, { name: string; color: string; bg: string; limits: string }> = {
+    free: { name: 'Free Plan', color: 'text-slate-300', bg: 'bg-slate-700/50', limits: '10 simulations/day, 5 save slots' },
+    starter: { name: 'Pro Plan', color: 'text-blue-400', bg: 'bg-blue-500/20', limits: '50 simulations/day, 25 save slots' },
+    pro: { name: 'Team Plan', color: 'text-purple-400', bg: 'bg-purple-500/20', limits: 'Unlimited simulations, API access' },
+    enterprise_tier: { name: 'Enterprise', color: 'text-amber-400', bg: 'bg-amber-500/20', limits: 'Custom limits, dedicated support' },
+  };
+
+  const display = tierDisplay[userTier] || tierDisplay.free;
+
+  return (
+    <GlassCard accent={userTier !== 'free'} glow={userTier !== 'free'} className="relative overflow-hidden">
+      <div
+        className="absolute -right-20 -top-20 w-40 h-40 rounded-full opacity-20 pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.8) 0%, transparent 70%)',
+        }}
+      />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 relative">
+        <div>
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-medium text-white">{display.name}</h2>
+            <span className={`text-[10px] px-2 py-0.5 ${display.bg} rounded-full ${display.color} uppercase tracking-wider`}>
+              Current
+            </span>
+          </div>
+          <p className="text-slate-400 mt-1 text-sm">{display.limits}</p>
+        </div>
+        {userTier === 'free' ? (
+          <GlassButton
+            variant="primary"
+            glow
+            fullWidthMobile
+            onClick={() => (window.location.href = '/pricing')}
+          >
+            Upgrade
+          </GlassButton>
+        ) : (
+          <GlassButton
+            variant="secondary"
+            fullWidthMobile
+            onClick={() => (window.location.href = '/pricing')}
+          >
+            Manage Plan
+          </GlassButton>
+        )}
+      </div>
+    </GlassCard>
+  );
+}
 
 // Dynamic import for integrations (uses useSearchParams)
 const IntegrationsSettings = dynamic(
@@ -144,36 +271,8 @@ export default function ConsumerSettingsPage() {
         </div>
       </GlassCard>
 
-      {/* Plan */}
-      <GlassCard accent glow className="relative overflow-hidden">
-        {/* Background glow effect */}
-        <div
-          className="absolute -right-20 -top-20 w-40 h-40 rounded-full opacity-20 pointer-events-none"
-          style={{
-            background: 'radial-gradient(circle, rgba(59, 130, 246, 0.8) 0%, transparent 70%)',
-          }}
-        />
-
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 relative">
-          <div>
-            <div className="flex items-center gap-3">
-              <h2 className="text-lg font-medium text-white">Free Plan</h2>
-              <span className="text-[10px] px-2 py-0.5 bg-slate-700/50 rounded-full text-slate-300 uppercase tracking-wider">
-                Current
-              </span>
-            </div>
-            <p className="text-slate-400 mt-1 text-sm">10 simulations/day, 5 save slots</p>
-          </div>
-          <GlassButton
-            variant="primary"
-            glow
-            fullWidthMobile
-            onClick={() => (window.location.href = '/pricing')}
-          >
-            Upgrade
-          </GlassButton>
-        </div>
-      </GlassCard>
+      {/* Plan - fetched from user context */}
+      <PlanCard />
 
       {/* Danger zone */}
       <GlassCard className="border-red-900/30">
