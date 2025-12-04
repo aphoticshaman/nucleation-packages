@@ -62,7 +62,8 @@ interface ComponentConfig {
   showSources?: boolean;
   showTimestamps?: boolean;
   detailLevel?: 'summary' | 'standard' | 'detailed';
-  classification?: 'UNCLASSIFIED' | 'FOUO' | 'CONFIDENTIAL' | 'SECRET';
+  // Classification stubbed - no authority to classify. All content is OSINT.
+  classification?: 'UNCLASSIFIED';
   customNotes?: string;
 }
 
@@ -225,10 +226,10 @@ const AUDIENCE_PRESETS: Record<AudiencePreset, {
 }> = {
   dod: {
     name: 'DoD / IC Briefing',
-    description: 'Classified-ready format with full ODNI tradecraft standards',
+    description: 'ODNI tradecraft standards format (OSINT only)',
     icon: <Shield className="w-4 h-4" />,
     defaultComponents: ['exec_summary', 'bluf', 'threat_matrix', 'key_devs', 'map', 'causal', 'recommendations', 'sources'],
-    defaultConfig: { classification: 'FOUO', showConfidence: true, showSources: true, detailLevel: 'detailed' },
+    defaultConfig: { classification: 'UNCLASSIFIED', showConfidence: true, showSources: true, detailLevel: 'detailed' },
   },
   ngo: {
     name: 'NGO / Humanitarian',
@@ -622,23 +623,15 @@ export function PackageBuilder({
                     </div>
                   </div>
 
-                  {/* Classification */}
+                  {/* Classification - STUBBED (no authority) */}
                   <div>
                     <label className="text-xs font-medium text-slate-400 block mb-2">
                       Classification
                     </label>
-                    <select
-                      value={component.config.classification || 'UNCLASSIFIED'}
-                      onChange={(e) => updateComponentConfig(component.id, {
-                        classification: e.target.value as ComponentConfig['classification']
-                      })}
-                      className="w-full bg-slate-800 border border-slate-700 text-slate-300 text-sm rounded px-3 py-2"
-                    >
-                      <option value="UNCLASSIFIED">UNCLASSIFIED</option>
-                      <option value="FOUO">FOUO</option>
-                      <option value="CONFIDENTIAL">CONFIDENTIAL</option>
-                      <option value="SECRET">SECRET</option>
-                    </select>
+                    <div className="w-full bg-slate-800/50 border border-slate-700 text-slate-500 text-sm rounded px-3 py-2">
+                      OSINT Only (Open Source)
+                    </div>
+                    <p className="text-xs text-slate-600 mt-1">No classification authority</p>
                   </div>
 
                   {/* Toggles */}

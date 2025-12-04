@@ -5,22 +5,22 @@ import type { IntelBriefings, IntelMetadata } from '@/hooks/useIntelBriefing';
 import { getRiskBadgeStyle } from '@/hooks/useIntelBriefing';
 
 /**
- * POTUS-Style Executive Summary
+ * Executive Summary Component
  *
- * Designed to satisfy both:
- * - Three-letter agencies: Deep drill-down, classification markers, confidence intervals
- * - Civilians: Clean summary, actionable insights, plain language option
- *
- * Structure mirrors real intelligence briefings:
+ * Structure:
  * 1. BLUF (Bottom Line Up Front)
  * 2. Key Developments (priority ordered)
  * 3. Threat Assessment
  * 4. Opportunities
  * 5. Recommended Actions
  * 6. Deep Dive (expandable)
+ *
+ * NOTE: Classification system stubbed out - no authority to classify.
+ * All content is UNCLASSIFIED open-source intelligence only.
  */
 
-type ClassificationLevel = 'UNCLASSIFIED' | 'FOUO' | 'CONFIDENTIAL' | 'SECRET' | 'TOP_SECRET';
+// Classification stubbed - no authority to classify
+type ClassificationLevel = 'UNCLASSIFIED';
 
 interface ExecutiveSummaryProps {
   briefings: IntelBriefings | null;
@@ -115,21 +115,11 @@ function extractKeyDevelopments(briefings: IntelBriefings): KeyDevelopment[] {
   return developments.sort((a, b) => urgencyOrder[a.urgency] - urgencyOrder[b.urgency]);
 }
 
-// Classification banner component
-function ClassificationBanner({ level }: { level: ClassificationLevel }) {
-  const styles: Record<ClassificationLevel, string> = {
-    UNCLASSIFIED: 'bg-green-600 text-white',
-    FOUO: 'bg-green-700 text-white',
-    CONFIDENTIAL: 'bg-blue-600 text-white',
-    SECRET: 'bg-red-600 text-white',
-    TOP_SECRET: 'bg-amber-500 text-black',
-  };
-
-  return (
-    <div className={`text-center text-xs font-bold py-1 ${styles[level]}`}>
-      {level.replace('_', ' ')}
-    </div>
-  );
+// Classification banner - STUBBED (no authority to classify)
+// Returns null - all content is open-source unclassified intelligence
+function ClassificationBanner({ level: _level }: { level: ClassificationLevel }) {
+  // No classification banners - we don't have authority to classify
+  return null;
 }
 
 // BLUF (Bottom Line Up Front) section
