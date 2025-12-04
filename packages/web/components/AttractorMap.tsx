@@ -11,21 +11,21 @@ interface AttractorMapProps {
   onNationSelect?: (nation: Nation) => void;
 }
 
-// Color scales for different layers
+// Color scales for different layers - LOWERED THRESHOLDS for more green dots
 const BASIN_COLORS = [
-  { threshold: 0.2, color: '#EF4444' }, // Low stability - red
-  { threshold: 0.4, color: '#F59E0B' }, // Medium-low - orange
-  { threshold: 0.6, color: '#FBBF24' }, // Medium - yellow
-  { threshold: 0.8, color: '#84CC16' }, // Medium-high - lime
-  { threshold: 1.0, color: '#10B981' }, // High stability - green
+  { threshold: 0.15, color: '#EF4444' }, // Critical instability - red
+  { threshold: 0.30, color: '#F59E0B' }, // Unstable - orange
+  { threshold: 0.45, color: '#FBBF24' }, // Moderate risk - yellow
+  { threshold: 0.60, color: '#84CC16' }, // Stable - lime
+  { threshold: 1.0, color: '#166534' },  // Very stable - dark green (forest)
 ];
 
 const RISK_COLORS = [
-  { threshold: 0.2, color: '#10B981' }, // Low risk - green
-  { threshold: 0.4, color: '#84CC16' },
-  { threshold: 0.6, color: '#FBBF24' },
-  { threshold: 0.8, color: '#F59E0B' },
-  { threshold: 1.0, color: '#EF4444' }, // High risk - red
+  { threshold: 0.2, color: '#166534' }, // Very low risk - dark green
+  { threshold: 0.4, color: '#84CC16' }, // Low risk - lime
+  { threshold: 0.6, color: '#FBBF24' }, // Moderate - yellow
+  { threshold: 0.8, color: '#F59E0B' }, // High - orange
+  { threshold: 1.0, color: '#EF4444' }, // Critical - red
 ];
 
 function getColorForValue(value: number, scale: typeof BASIN_COLORS): string {
@@ -141,62 +141,64 @@ export default function AttractorMap({ nations, edges, layer, onNationSelect }: 
         title: nation.name,
       });
 
-      // Click handler
+      // Click handler - LAYMAN-FRIENDLY tooltips
       marker.addListener('click', () => {
         if (infoWindow) {
-          // Convert basin strength to human-readable stability description
-          const stabilityLevel = nation.basin_strength >= 0.8 ? 'Very High' :
-            nation.basin_strength >= 0.6 ? 'High' :
-            nation.basin_strength >= 0.4 ? 'Moderate' :
-            nation.basin_strength >= 0.2 ? 'Low' : 'Critical';
+          // Simple stability labels (adjusted for lowered thresholds)
+          const stabilityLevel = nation.basin_strength >= 0.60 ? 'Very Stable' :
+            nation.basin_strength >= 0.45 ? 'Stable' :
+            nation.basin_strength >= 0.30 ? 'Some Concerns' :
+            nation.basin_strength >= 0.15 ? 'Unstable' : 'In Crisis';
 
-          const stabilityDesc = nation.basin_strength >= 0.8 ? 'Highly resilient institutions with strong governance' :
-            nation.basin_strength >= 0.6 ? 'Stable governance with good institutional capacity' :
-            nation.basin_strength >= 0.4 ? 'Functioning institutions with some vulnerabilities' :
-            nation.basin_strength >= 0.2 ? 'Weakened institutions facing significant pressures' :
-            'Fragile state with severe institutional breakdown';
+          // Plain English descriptions
+          const stabilityDesc = nation.basin_strength >= 0.60 ? 'Strong government, economy working well' :
+            nation.basin_strength >= 0.45 ? 'Generally doing okay, minor issues' :
+            nation.basin_strength >= 0.30 ? 'Having some problems to watch' :
+            nation.basin_strength >= 0.15 ? 'Facing serious challenges' :
+            'Major crisis or breakdown happening';
 
-          // Convert risk to human-readable assessment
-          const riskLevel = nation.transition_risk >= 0.8 ? 'Critical' :
-            nation.transition_risk >= 0.6 ? 'High' :
-            nation.transition_risk >= 0.4 ? 'Elevated' :
-            nation.transition_risk >= 0.2 ? 'Low' : 'Minimal';
+          // Simple risk labels
+          const riskLevel = nation.transition_risk >= 0.7 ? 'High Risk' :
+            nation.transition_risk >= 0.5 ? 'Elevated' :
+            nation.transition_risk >= 0.3 ? 'Moderate' :
+            nation.transition_risk >= 0.15 ? 'Low' : 'Very Low';
 
-          const riskDesc = nation.transition_risk >= 0.8 ? 'Immediate risk of major political upheaval' :
-            nation.transition_risk >= 0.6 ? 'Significant likelihood of destabilizing events' :
-            nation.transition_risk >= 0.4 ? 'Moderate chance of political volatility' :
-            nation.transition_risk >= 0.2 ? 'Minor instability indicators present' :
-            'Stable outlook with no significant risks detected';
+          // Plain English risk descriptions
+          const riskDesc = nation.transition_risk >= 0.7 ? 'Big changes likely soon' :
+            nation.transition_risk >= 0.5 ? 'Situation could shift' :
+            nation.transition_risk >= 0.3 ? 'Worth keeping an eye on' :
+            nation.transition_risk >= 0.15 ? 'Mostly stable outlook' :
+            'No major changes expected';
 
           const content = `
-            <div style="color: #0f172a; padding: 12px; min-width: 260px; font-family: system-ui, sans-serif;">
-              <h3 style="margin: 0 0 12px; font-weight: 600; font-size: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+            <div style="color: #0f172a; padding: 14px; min-width: 240px; font-family: system-ui, sans-serif;">
+              <h3 style="margin: 0 0 14px; font-weight: 700; font-size: 18px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
                 ${nation.name}
               </h3>
-              <div style="font-size: 13px; line-height: 1.7;">
-                <div style="margin-bottom: 12px;">
-                  <div style="font-weight: 500; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
-                    Stability Assessment
+              <div style="font-size: 14px; line-height: 1.6;">
+                <div style="margin-bottom: 14px;">
+                  <div style="font-weight: 600; color: #374151; font-size: 13px; margin-bottom: 4px;">
+                    How Stable?
                   </div>
-                  <div style="color: ${getColorForValue(nation.basin_strength, BASIN_COLORS)}; font-weight: 600;">
+                  <div style="color: ${getColorForValue(nation.basin_strength, BASIN_COLORS)}; font-weight: 700; font-size: 16px;">
                     ${stabilityLevel}
                   </div>
-                  <div style="color: #475569; font-size: 12px;">${stabilityDesc}</div>
+                  <div style="color: #6b7280; font-size: 13px; margin-top: 2px;">${stabilityDesc}</div>
                 </div>
-                <div style="margin-bottom: 12px;">
-                  <div style="font-weight: 500; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
-                    Transition Risk
+                <div style="margin-bottom: 14px;">
+                  <div style="font-weight: 600; color: #374151; font-size: 13px; margin-bottom: 4px;">
+                    Chance of Change?
                   </div>
-                  <div style="color: ${getColorForValue(nation.transition_risk, RISK_COLORS)}; font-weight: 600;">
+                  <div style="color: ${getColorForValue(nation.transition_risk, RISK_COLORS)}; font-weight: 700; font-size: 16px;">
                     ${riskLevel}
                   </div>
-                  <div style="color: #475569; font-size: 12px;">${riskDesc}</div>
+                  <div style="color: #6b7280; font-size: 13px; margin-top: 2px;">${riskDesc}</div>
                 </div>
                 <div>
-                  <div style="font-weight: 500; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
+                  <div style="font-weight: 600; color: #374151; font-size: 13px; margin-bottom: 4px;">
                     Government Type
                   </div>
-                  <div style="color: ${REGIMES[nation.regime]?.color || '#6B7280'}; font-weight: 600;">
+                  <div style="color: ${REGIMES[nation.regime]?.color || '#6B7280'}; font-weight: 600; font-size: 15px;">
                     ${REGIMES[nation.regime]?.name || 'Unknown'}
                   </div>
                 </div>
