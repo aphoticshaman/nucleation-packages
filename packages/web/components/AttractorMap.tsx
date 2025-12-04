@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
 import { Nation, InfluenceEdge, MapLayer, REGIMES } from '@/types';
+import { useAccessibility } from '@/contexts/AccessibilityContext';
 
 interface AttractorMapProps {
   nations: Nation[];
@@ -11,22 +12,62 @@ interface AttractorMapProps {
   onNationSelect?: (nation: Nation) => void;
 }
 
-// Color scales for different layers - LOWERED THRESHOLDS for more green dots
+// Color scales for different layers
+// DISTINCT COLORS - easy to tell apart even at a glance
 const BASIN_COLORS = [
-  { threshold: 0.15, color: '#EF4444' }, // Critical instability - red
-  { threshold: 0.30, color: '#F59E0B' }, // Unstable - orange
-  { threshold: 0.45, color: '#FBBF24' }, // Moderate risk - yellow
-  { threshold: 0.60, color: '#84CC16' }, // Stable - lime
-  { threshold: 1.0, color: '#166534' },  // Very stable - dark green (forest)
+  { threshold: 0.15, color: '#DC2626' }, // Critical - bright red
+  { threshold: 0.30, color: '#EA580C' }, // Unstable - orange
+  { threshold: 0.45, color: '#CA8A04' }, // Moderate - gold/yellow
+  { threshold: 0.60, color: '#0891B2' }, // Stable - cyan/teal (distinct from green)
+  { threshold: 1.0, color: '#059669' },  // Very stable - emerald green
 ];
 
 const RISK_COLORS = [
-  { threshold: 0.2, color: '#166534' }, // Very low risk - dark green
-  { threshold: 0.4, color: '#84CC16' }, // Low risk - lime
-  { threshold: 0.6, color: '#FBBF24' }, // Moderate - yellow
-  { threshold: 0.8, color: '#F59E0B' }, // High - orange
-  { threshold: 1.0, color: '#EF4444' }, // Critical - red
+  { threshold: 0.2, color: '#059669' },  // Very low risk - emerald green
+  { threshold: 0.4, color: '#0891B2' },  // Low risk - cyan/teal
+  { threshold: 0.6, color: '#CA8A04' },  // Moderate - gold/yellow
+  { threshold: 0.8, color: '#EA580C' },  // High - orange
+  { threshold: 1.0, color: '#DC2626' },  // Critical - bright red
 ];
+
+// COLORBLIND-FRIENDLY PALETTE (Deuteranopia/Protanopia/Tritanopia safe)
+// Uses shapes + patterns in addition to color
+const COLORBLIND_BASIN_COLORS = [
+  { threshold: 0.15, color: '#CC3311' }, // Critical - vermillion red
+  { threshold: 0.30, color: '#EE7733' }, // Unstable - orange
+  { threshold: 0.45, color: '#CCBB44' }, // Moderate - yellow
+  { threshold: 0.60, color: '#33BBEE' }, // Stable - sky blue
+  { threshold: 1.0, color: '#0077BB' },  // Very stable - strong blue
+];
+
+const COLORBLIND_RISK_COLORS = [
+  { threshold: 0.2, color: '#0077BB' },  // Very low - strong blue
+  { threshold: 0.4, color: '#33BBEE' },  // Low - sky blue
+  { threshold: 0.6, color: '#CCBB44' },  // Moderate - yellow
+  { threshold: 0.8, color: '#EE7733' },  // High - orange
+  { threshold: 1.0, color: '#CC3311' },  // Critical - vermillion red
+];
+
+// Stale data color - dark gray/black for data older than 24 hours
+const STALE_DATA_COLOR = '#1F2937';  // slate-800
+const NO_DATA_COLOR = '#111827';     // slate-900 (almost black)
+
+// Helper to check if data is stale (>24 hours old)
+function isDataStale(updatedAt?: string): boolean {
+  if (!updatedAt) return true;  // No timestamp = stale
+  const updated = new Date(updatedAt);
+  const now = new Date();
+  const hoursDiff = (now.getTime() - updated.getTime()) / (1000 * 60 * 60);
+  return hoursDiff > 24;
+}
+
+// Get hours since last update
+function getHoursSinceUpdate(updatedAt?: string): number | null {
+  if (!updatedAt) return null;
+  const updated = new Date(updatedAt);
+  const now = new Date();
+  return Math.round((now.getTime() - updated.getTime()) / (1000 * 60 * 60));
+}
 
 function getColorForValue(value: number, scale: typeof BASIN_COLORS): string {
   for (const { threshold, color } of scale) {
@@ -41,6 +82,21 @@ export default function AttractorMap({ nations, edges, layer, onNationSelect }: 
   const [markers, setMarkers] = useState<google.maps.marker.AdvancedMarkerElement[]>([]);
   const [polylines, setPolylines] = useState<google.maps.Polyline[]>([]);
   const [infoWindow, setInfoWindow] = useState<google.maps.InfoWindow | null>(null);
+
+  // Get accessibility settings for colorblind mode
+  let accessibilitySettings;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    accessibilitySettings = useAccessibility();
+  } catch {
+    // Context not available (e.g., in dashboard outside consumer app)
+    accessibilitySettings = { isColorblindMode: false, settings: { colorblindMode: 'none' } };
+  }
+  const isColorblind = accessibilitySettings.isColorblindMode;
+
+  // Select color palettes based on accessibility mode
+  const basinColors = isColorblind ? COLORBLIND_BASIN_COLORS : BASIN_COLORS;
+  const riskColors = isColorblind ? COLORBLIND_RISK_COLORS : RISK_COLORS;
 
   // Initialize map
   useEffect(() => {
@@ -96,30 +152,39 @@ export default function AttractorMap({ nations, edges, layer, onNationSelect }: 
     const newMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
 
     nations.forEach((nation) => {
-      // Determine color based on layer
+      // Check for stale data first (>24 hours old = dark gray/black)
+      const stale = isDataStale(nation.updated_at);
+
+      // Determine color based on layer (using accessibility-aware palettes)
       let color: string;
       let size: number;
 
-      switch (layer) {
-        case 'basin':
-          color = getColorForValue(nation.basin_strength, BASIN_COLORS);
-          size = 12 + nation.basin_strength * 8;
-          break;
-        case 'risk':
-          color = getColorForValue(nation.transition_risk, RISK_COLORS);
-          size = 12 + nation.transition_risk * 12;
-          break;
-        case 'regime':
-          color = REGIMES[nation.regime]?.color || '#6B7280';
-          size = 16;
-          break;
-        case 'influence':
-          color = '#3B82F6';
-          size = 12 + nation.influence_radius * 4;
-          break;
-        default:
-          color = '#3B82F6';
-          size = 14;
+      // If data is stale, show dark indicator regardless of layer
+      if (stale) {
+        color = nation.updated_at ? STALE_DATA_COLOR : NO_DATA_COLOR;
+        size = 14;
+      } else {
+        switch (layer) {
+          case 'basin':
+            color = getColorForValue(nation.basin_strength, basinColors);
+            size = 12 + nation.basin_strength * 8;
+            break;
+          case 'risk':
+            color = getColorForValue(nation.transition_risk, riskColors);
+            size = 12 + nation.transition_risk * 12;
+            break;
+          case 'regime':
+            color = REGIMES[nation.regime]?.color || '#6B7280';
+            size = 16;
+            break;
+          case 'influence':
+            color = isColorblind ? '#0077BB' : '#3B82F6';
+            size = 12 + nation.influence_radius * 4;
+            break;
+          default:
+            color = isColorblind ? '#0077BB' : '#3B82F6';
+            size = 14;
+        }
       }
 
       // Create marker element
@@ -144,6 +209,10 @@ export default function AttractorMap({ nations, edges, layer, onNationSelect }: 
       // Click handler - LAYMAN-FRIENDLY tooltips
       marker.addListener('click', () => {
         if (infoWindow) {
+          // Check data freshness
+          const hoursSinceUpdate = getHoursSinceUpdate(nation.updated_at);
+          const isStale = stale;
+
           // Simple stability labels (adjusted for lowered thresholds)
           const stabilityLevel = nation.basin_strength >= 0.60 ? 'Very Stable' :
             nation.basin_strength >= 0.45 ? 'Stable' :
@@ -170,29 +239,42 @@ export default function AttractorMap({ nations, edges, layer, onNationSelect }: 
             nation.transition_risk >= 0.15 ? 'Mostly stable outlook' :
             'No major changes expected';
 
+          // Stale data warning banner
+          const staleWarning = isStale ? `
+            <div style="background: #1F2937; color: #F59E0B; padding: 8px 10px; margin: -14px -14px 14px -14px; border-radius: 4px 4px 0 0; font-size: 12px; font-weight: 600;">
+              ⚠️ ${hoursSinceUpdate === null ? 'No data available' : `Data is ${hoursSinceUpdate}+ hours old`} - may be outdated
+            </div>
+          ` : '';
+
+          // Last updated info
+          const lastUpdated = nation.updated_at
+            ? new Date(nation.updated_at).toLocaleString()
+            : 'Never';
+
           const content = `
-            <div style="color: #0f172a; padding: 14px; min-width: 240px; font-family: system-ui, sans-serif;">
+            <div style="color: #0f172a; padding: 14px; min-width: 260px; font-family: system-ui, sans-serif;">
+              ${staleWarning}
               <h3 style="margin: 0 0 14px; font-weight: 700; font-size: 18px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
                 ${nation.name}
               </h3>
               <div style="font-size: 14px; line-height: 1.6;">
-                <div style="margin-bottom: 14px;">
+                <div style="margin-bottom: 14px; ${isStale ? 'opacity: 0.6;' : ''}">
                   <div style="font-weight: 600; color: #374151; font-size: 13px; margin-bottom: 4px;">
                     How Stable?
                   </div>
-                  <div style="color: ${getColorForValue(nation.basin_strength, BASIN_COLORS)}; font-weight: 700; font-size: 16px;">
-                    ${stabilityLevel}
+                  <div style="color: ${isStale ? '#6B7280' : getColorForValue(nation.basin_strength, basinColors)}; font-weight: 700; font-size: 16px;">
+                    ${isStale ? 'Unknown' : stabilityLevel}
                   </div>
-                  <div style="color: #6b7280; font-size: 13px; margin-top: 2px;">${stabilityDesc}</div>
+                  <div style="color: #6b7280; font-size: 13px; margin-top: 2px;">${isStale ? 'Data too old to assess' : stabilityDesc}</div>
                 </div>
-                <div style="margin-bottom: 14px;">
+                <div style="margin-bottom: 14px; ${isStale ? 'opacity: 0.6;' : ''}">
                   <div style="font-weight: 600; color: #374151; font-size: 13px; margin-bottom: 4px;">
                     Chance of Change?
                   </div>
-                  <div style="color: ${getColorForValue(nation.transition_risk, RISK_COLORS)}; font-weight: 700; font-size: 16px;">
-                    ${riskLevel}
+                  <div style="color: ${isStale ? '#6B7280' : getColorForValue(nation.transition_risk, riskColors)}; font-weight: 700; font-size: 16px;">
+                    ${isStale ? 'Unknown' : riskLevel}
                   </div>
-                  <div style="color: #6b7280; font-size: 13px; margin-top: 2px;">${riskDesc}</div>
+                  <div style="color: #6b7280; font-size: 13px; margin-top: 2px;">${isStale ? 'Data too old to assess' : riskDesc}</div>
                 </div>
                 <div>
                   <div style="font-weight: 600; color: #374151; font-size: 13px; margin-bottom: 4px;">
@@ -201,6 +283,9 @@ export default function AttractorMap({ nations, edges, layer, onNationSelect }: 
                   <div style="color: ${REGIMES[nation.regime]?.color || '#6B7280'}; font-weight: 600; font-size: 15px;">
                     ${REGIMES[nation.regime]?.name || 'Unknown'}
                   </div>
+                </div>
+                <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #9CA3AF;">
+                  Last updated: ${lastUpdated}
                 </div>
               </div>
             </div>
@@ -215,7 +300,7 @@ export default function AttractorMap({ nations, edges, layer, onNationSelect }: 
     });
 
     setMarkers(newMarkers);
-  }, [map, nations, layer, infoWindow, onNationSelect]);
+  }, [map, nations, layer, infoWindow, onNationSelect, basinColors, riskColors, isColorblind]);
 
   // Update influence edges (polylines)
   useEffect(() => {

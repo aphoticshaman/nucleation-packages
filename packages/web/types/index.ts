@@ -11,6 +11,9 @@ export interface Nation {
   transition_risk: number;
   regime: number;
   influence_radius: number;
+  // Data freshness
+  updated_at?: string;           // ISO timestamp of last data update
+  data_source?: string;          // Where the data came from (AI analysis, manual, etc.)
   // Extended fields for territorial status
   sovereignty_status?: 'recognized' | 'disputed' | 'unrecognized' | 'occupied';
   de_facto_controller?: string;  // ISO code if different from legal sovereign
