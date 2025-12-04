@@ -236,17 +236,19 @@ export async function POST(req: Request) {
     if (!resendApiKey) {
       // Email service not configured - save to database for manual processing
       // and return success with note
-      await supabase.from('email_export_queue').insert({
-        user_id: user.id,
-        recipient_email: recipientEmail,
-        subject: subject || `LatticeForge Intelligence Package - ${audience}`,
-        html_content: htmlContent,
-        text_content: includeTextBody ? textContent : null,
-        attachments: JSON.stringify(attachments),
-        status: 'pending',
-      }).then(() => {}).catch(() => {
+      try {
+        await supabase.from('email_export_queue').insert({
+          user_id: user.id,
+          recipient_email: recipientEmail,
+          subject: subject || `LatticeForge Intelligence Package - ${audience}`,
+          html_content: htmlContent,
+          text_content: includeTextBody ? textContent : null,
+          attachments: JSON.stringify(attachments),
+          status: 'pending',
+        });
+      } catch {
         // Table might not exist yet
-      });
+      }
 
       return NextResponse.json({
         success: true,
