@@ -52,13 +52,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Ensure profile exists and record sign in
+    let userRole = 'consumer';
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         // Check if profile exists, create if not
         const { data: profile } = await supabase
           .from('profiles')
-          .select('id')
+          .select('id, role')
           .eq('id', user.id)
           .single();
 
@@ -71,6 +72,9 @@ export async function GET(request: NextRequest) {
             role: 'consumer',
             is_active: true,
           });
+        } else {
+          // Get user role for redirect
+          userRole = profile.role || 'consumer';
         }
 
         // Record sign in with device info
@@ -99,6 +103,10 @@ export async function GET(request: NextRequest) {
       console.error('Profile ensure error:', err);
       // Continue anyway - profile will be created by trigger or next request
     }
+
+    // Admin users go to admin panel, others go to app (or their intended redirect)
+    const finalRedirect = userRole === 'admin' ? '/admin' : redirect;
+    return NextResponse.redirect(new URL(finalRedirect, requestUrl.origin));
   }
 
   // Redirect to the intended destination
