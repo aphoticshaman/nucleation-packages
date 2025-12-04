@@ -1,0 +1,85 @@
+{
+  "name": "LatticeForge Training Data Repository",
+  "version": "1.0.0",
+  "description": "Curated training data for geopolitical intelligence and financial analysis models",
+  "total_size_mb": 120,
+  "format": "alpaca",
+  "recommended_model": "microsoft/phi-2",
+  "categories": {
+    "geopolitical": {
+      "path": "geopolitical/",
+      "description": "Geopolitical risk analysis, cascade dynamics, and intelligence training data",
+      "files": [
+        {"name": "cascade_dynamics.json", "examples": 50, "quality": "high", "topics": ["phase transitions", "attractor dynamics", "system stability"]},
+        {"name": "geopolitical_risk_training.json", "examples": 500, "quality": "high", "topics": ["country risk", "political stability", "conflict analysis"]},
+        {"name": "global_intel_training.json", "examples": 1500, "quality": "high", "topics": ["intelligence analysis", "strategic assessment"]},
+        {"name": "deep_intel_training.json", "examples": 800, "quality": "high", "topics": ["advanced analysis", "pattern recognition"]},
+        {"name": "cascade_history_training.json", "examples": 300, "quality": "high", "topics": ["historical cascades", "contagion events"]},
+        {"name": "historical_cases_training.json", "examples": 200, "quality": "high", "topics": ["case studies", "historical analysis"]},
+        {"name": "market_intel_training.json", "examples": 600, "quality": "medium-high", "topics": ["market intelligence", "economic indicators"]},
+        {"name": "specialized_intel_training.json", "examples": 400, "quality": "high", "topics": ["specialized domains", "sector analysis"]},
+        {"name": "news_osint_training.json", "examples": 200, "quality": "medium", "topics": ["news analysis", "OSINT"]},
+        {"name": "freedom_coercion_training.json", "examples": 300, "quality": "high", "topics": ["political freedom", "coercion dynamics"]}
+      ]
+    },
+    "finance": {
+      "path": "finance/",
+      "description": "Financial analysis, trading, and economic intelligence",
+      "files": [
+        {"name": "finance_training_data.json", "examples": 15000, "quality": "medium", "topics": ["general finance Q&A"]},
+        {"name": "finance_general_finance.json", "examples": 8000, "quality": "medium", "topics": ["personal finance", "investing"]},
+        {"name": "finance_stocks.json", "examples": 4000, "quality": "medium-high", "topics": ["equities", "stock analysis"]},
+        {"name": "finance_derivatives.json", "examples": 3500, "quality": "high", "topics": ["options", "futures", "swaps"]},
+        {"name": "finance_risk.json", "examples": 800, "quality": "high", "topics": ["risk management", "VaR", "hedging"]},
+        {"name": "finance_banking.json", "examples": 600, "quality": "medium", "topics": ["banking", "lending"]},
+        {"name": "finance_commodities.json", "examples": 500, "quality": "medium-high", "topics": ["commodities", "futures"]},
+        {"name": "finance_economics.json", "examples": 400, "quality": "high", "topics": ["macroeconomics", "policy"]},
+        {"name": "finance_regulations.json", "examples": 700, "quality": "medium", "topics": ["compliance", "regulations"]},
+        {"name": "finance_bonds.json", "examples": 400, "quality": "medium-high", "topics": ["fixed income", "credit"]},
+        {"name": "finance_crypto.json", "examples": 400, "quality": "medium", "topics": ["cryptocurrency", "blockchain"]},
+        {"name": "finance_funds.json", "examples": 300, "quality": "medium", "topics": ["mutual funds", "ETFs", "hedge funds"]},
+        {"name": "finance_trading.json", "examples": 200, "quality": "medium-high", "topics": ["trading strategies", "technical analysis"]},
+        {"name": "finance_analysis.json", "examples": 250, "quality": "high", "topics": ["financial analysis", "valuation"]}
+      ]
+    },
+    "specialized": {
+      "path": "specialized/",
+      "description": "Domain-specific training data for specialized analysis",
+      "files": [
+        {"name": "energy_materials_training.json", "examples": 800, "quality": "high", "topics": ["energy markets", "critical materials", "supply chains"]},
+        {"name": "biotech_pharma_training.json", "examples": 300, "quality": "high", "topics": ["biotechnology", "pharmaceuticals", "healthcare"]},
+        {"name": "climate_demographics_training.json", "examples": 250, "quality": "high", "topics": ["climate risk", "demographics", "migration"]},
+        {"name": "tech_materials_systems_training.json", "examples": 400, "quality": "high", "topics": ["technology", "semiconductors", "systems"]},
+        {"name": "food_water_training.json", "examples": 200, "quality": "high", "topics": ["food security", "water scarcity"]},
+        {"name": "telecom_space_training.json", "examples": 200, "quality": "high", "topics": ["telecommunications", "space systems"]},
+        {"name": "legal_regulatory_training.json", "examples": 250, "quality": "medium", "topics": ["legal", "regulatory compliance"]},
+        {"name": "insurance_realestate_training.json", "examples": 200, "quality": "medium", "topics": ["insurance", "real estate"]},
+        {"name": "quant_stats_training.json", "examples": 250, "quality": "high", "topics": ["quantitative methods", "statistics"]},
+        {"name": "reasoning_patterns_training.json", "examples": 200, "quality": "high", "topics": ["analytical reasoning", "logic"]},
+        {"name": "meta_compression_training.json", "examples": 300, "quality": "high", "topics": ["information compression", "summarization"]},
+        {"name": "factual_context_training.json", "examples": 150, "quality": "medium-high", "topics": ["factual grounding", "context"]},
+        {"name": "ux_ui_extended_training.json", "examples": 100, "quality": "medium", "topics": ["UX/UI design", "user experience"]}
+      ]
+    },
+    "combined": {
+      "path": "combined/",
+      "description": "Pre-combined and external data sources",
+      "files": [
+        {"name": "training_data_bigquery_alpaca.json", "examples": 25000, "quality": "medium", "source": "BigQuery GDELT"},
+        {"name": "training_data_from_bigquery.json", "examples": 20000, "quality": "medium", "source": "BigQuery raw"},
+        {"name": "combined_intel_training.json", "examples": 2000, "quality": "high", "source": "merged intelligence"},
+        {"name": "gdelt_alpaca.json", "examples": 1000, "quality": "low-medium", "source": "GDELT news headlines"},
+        {"name": "grok_data.json", "examples": 500, "quality": "medium", "source": "external"}
+      ]
+    }
+  },
+  "runpod_recommendations": {
+    "budget_90": {
+      "estimated_hours": "18-45",
+      "recommended_datasets": ["geopolitical/*", "specialized/*", "finance/finance_risk.json", "finance/finance_derivatives.json"],
+      "estimated_examples": 8000,
+      "model": "microsoft/phi-2",
+      "method": "LoRA with train_h200.py"
+    }
+  }
+}
