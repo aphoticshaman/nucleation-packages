@@ -2,7 +2,7 @@ import { createClient, requireEnterprise } from '@/lib/auth';
 import { Suspense } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
-import { TrendingUp, TrendingDown, Key, Link2, Users, FileText } from 'lucide-react';
+import { TrendingUp, TrendingDown, Key, Link2, Users, FileText, type LucideIcon } from 'lucide-react';
 
 // Stat card - responsive with glass design
 function StatCard({
@@ -78,7 +78,7 @@ function EndpointCard({
 }
 
 // Quick action button - responsive with glass design
-function QuickAction({ icon: Icon, label, href }: { icon: React.ElementType; label: string; href: string }) {
+function QuickAction({ icon: Icon, label, href }: { icon: LucideIcon; label: string; href: string }) {
   return (
     <a
       href={href}
