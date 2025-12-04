@@ -53,9 +53,7 @@
     "url": "https://github.com/aphoticshaman/regime-shift/issues"
   },
   "homepage": "https://github.com/aphoticshaman/regime-shift#readme",
-  "dependencies": {
-    "nucleation-wasm": "^0.2.0"
-  },
+  "dependencies": {},
   "engines": {
     "node": ">=18.0.0"
   }

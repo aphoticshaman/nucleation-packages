@@ -34,9 +34,7 @@
     "url": "https://github.com/aphoticshaman/nucleation-packages.git",
     "directory": "packages/core"
   },
-  "dependencies": {
-    "nucleation-wasm": "^0.2.0"
-  },
+  "dependencies": {},
   "engines": {
     "node": ">=18.0.0"
   }
