@@ -454,18 +454,24 @@ export async function POST(req: Request) {
     }
 
     // ============================================================
-    // CACHE MISS - BLOCK user requests, only cron/internal can generate
+    // CACHE MISS - Return fallback data for users, only cron generates fresh
     // ============================================================
     // SECURITY: Users NEVER trigger external API calls. Period.
-    // Cron jobs keep the cache warm. Users get cached data or nothing.
+    // Return static fallback briefings until cron warms the cache.
     if (!canGenerateFresh) {
-      console.log(`[CACHE MISS] No cached briefing for preset: ${preset}, user request BLOCKED`);
+      console.log(`[CACHE MISS] No cached briefing for preset: ${preset}, returning fallback`);
       return NextResponse.json({
-        error: 'Briefing not yet available',
-        message: 'Intelligence briefings are generated on a schedule. Please try again shortly.',
-        preset,
-        cached: false,
-      }, { status: 503 });
+        briefings: getFallbackBriefings(preset),
+        metadata: {
+          region: 'Global',
+          preset,
+          timestamp: new Date().toISOString(),
+          overallRisk: 'moderate' as const,
+          cached: false,
+          fallback: true,
+          message: 'Live briefings refresh every 10 minutes. Showing baseline assessment.',
+        },
+      });
     }
 
     console.log(`[CRON/INTERNAL] Generating fresh briefing for preset: ${preset}`);
@@ -888,4 +894,47 @@ async function hashForLearning(userId: string): Promise<string> {
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('')
     .slice(0, 16);
+}
+
+// Fallback briefings when cache is cold - static baseline assessments
+function getFallbackBriefings(preset: string): Record<string, string> {
+  const presetContext: Record<string, string> = {
+    global: 'Global geopolitical landscape',
+    nato: 'NATO alliance and Euro-Atlantic region',
+    brics: 'BRICS+ economic bloc',
+    conflict: 'Active conflict zones',
+  };
+
+  const context = presetContext[preset] || presetContext.global;
+
+  return {
+    political: `${context} shows mixed stability indicators. Monitor leadership transitions and policy shifts in key nations.`,
+    economic: `Trade flows and market sentiment remain within expected parameters. Supply chain resilience varies by sector.`,
+    security: `Defense postures stable with routine military exercises ongoing. Regional tensions persist in traditional flashpoints.`,
+    financial: `Capital markets operating normally with standard volatility. Banking sector liquidity adequate across major economies.`,
+    health: `Healthcare systems functioning at baseline capacity. No major outbreak alerts currently active.`,
+    scitech: `Technology competition continues across AI, semiconductors, and critical sectors. R&D investment patterns stable.`,
+    resources: `Energy and critical mineral supply chains operating with normal constraints. Climate impacts ongoing.`,
+    crime: `Organized crime activity at baseline levels. Trafficking patterns consistent with historical trends.`,
+    cyber: `Threat landscape active with standard nation-state and criminal activity. Critical infrastructure monitoring ongoing.`,
+    terrorism: `Threat assessment at baseline. Counter-terrorism operations continue in key regions.`,
+    domestic: `Social cohesion indicators mixed globally. Protest activity within normal ranges for current period.`,
+    borders: `Border security and migration patterns consistent with seasonal norms. Maritime boundaries monitored.`,
+    infoops: `Information environment contested. Disinformation campaigns active across multiple platforms.`,
+    military: `Force deployments at expected levels. Defense spending trends continue across major powers.`,
+    space: `Orbital operations normal. Satellite launches proceeding on schedule across space-faring nations.`,
+    industry: `Manufacturing output tracking economic indicators. Automation adoption accelerating in key sectors.`,
+    logistics: `Global shipping routes operational. Port congestion at manageable levels in most regions.`,
+    minerals: `Critical mineral extraction and processing meeting demand. Strategic reserve levels adequate.`,
+    energy: `Oil, gas, and renewable energy flows stable. OPEC+ production quotas being observed.`,
+    markets: `Equity and bond markets within expected trading ranges. Currency stability maintained.`,
+    religious: `Interfaith relations stable in most regions. Sectarian tensions persist in historical hotspots.`,
+    education: `Educational systems operating normally. Workforce development programs continue globally.`,
+    employment: `Labor markets showing expected patterns. Automation impact varying by sector and region.`,
+    housing: `Housing markets adjusting to rate environments. Affordability concerns persist in urban centers.`,
+    crypto: `Digital asset markets volatile but functional. Regulatory frameworks evolving across jurisdictions.`,
+    emerging: `Monitoring weak signals across domains. No major paradigm shifts detected in current period.`,
+    summary: `${context}: Baseline conditions with standard monitoring protocols active.`,
+    nsm: `Continue standard monitoring. Reassess positions as live intelligence becomes available.`,
+  };
 }

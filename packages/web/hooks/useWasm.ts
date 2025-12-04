@@ -1,7 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { loadWasm, WasmCore } from '@/lib/wasm';
+
+// Stub interface - WASM removed, but keep interface for future use
+export interface WasmCore {
+  // Placeholder - WASM functionality removed
+  available: boolean;
+}
 
 interface UseWasmResult {
   wasm: WasmCore | null;
@@ -9,35 +14,23 @@ interface UseWasmResult {
   error: Error | null;
 }
 
+/**
+ * WASM hook - currently returns stub since nucleation-wasm was removed.
+ * The app runs without WASM; simulation features are disabled.
+ */
 export function useWasm(): UseWasmResult {
-  const [wasm, setWasm] = useState<WasmCore | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
-
-    async function init() {
-      try {
-        const module = await loadWasm();
-        if (mounted) {
-          setWasm(module);
-          setLoading(false);
-        }
-      } catch (err) {
-        if (mounted) {
-          setError(err instanceof Error ? err : new Error('Failed to load WASM'));
-          setLoading(false);
-        }
-      }
-    }
-
-    void init();
-
-    return () => {
-      mounted = false;
-    };
+    // Simulate brief loading state for UI consistency
+    const timer = setTimeout(() => setReady(true), 100);
+    return () => clearTimeout(timer);
   }, []);
 
-  return { wasm, loading, error };
+  // Return stub - WASM not available
+  return {
+    wasm: ready ? { available: false } : null,
+    loading: !ready,
+    error: null,
+  };
 }
