@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/auth';
 import { Suspense } from 'react';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 
 function StatCard({
   label,
@@ -19,11 +21,11 @@ function StatCard({
   };
 
   return (
-    <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl p-6 border border-white/[0.06]">
+    <GlassCard blur="heavy">
       <p className="text-sm text-slate-400">{label}</p>
       <p className="text-3xl font-bold text-white mt-2">{value}</p>
       {change && <p className={`text-sm mt-2 ${changeColors[changeType]}`}>{change}</p>}
-    </div>
+    </GlassCard>
   );
 }
 
@@ -165,18 +167,15 @@ async function DashboardContent() {
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Enterprise Customers */}
-        <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl border border-white/[0.06]">
+        <GlassCard blur="heavy" className="p-0 overflow-hidden">
           <div className="p-6 border-b border-white/[0.06] flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold text-white">Enterprise Customers</h2>
               <p className="text-sm text-slate-400">API usage and status</p>
             </div>
-            <a
-              href="/admin/customers?type=enterprise"
-              className="text-sm text-blue-400 hover:text-blue-300 min-h-[44px] flex items-center"
-            >
+            <GlassButton variant="ghost" size="sm" onClick={() => window.location.href = '/admin/customers?type=enterprise'}>
               View all
-            </a>
+            </GlassButton>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -200,21 +199,18 @@ async function DashboardContent() {
               </tbody>
             </table>
           </div>
-        </div>
+        </GlassCard>
 
         {/* Consumer Users */}
-        <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl border border-white/[0.06]">
+        <GlassCard blur="heavy" className="p-0 overflow-hidden">
           <div className="p-6 border-b border-white/[0.06] flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold text-white">Consumer Users</h2>
               <p className="text-sm text-slate-400">Recent activity</p>
             </div>
-            <a
-              href="/admin/customers?type=consumer"
-              className="text-sm text-blue-400 hover:text-blue-300 min-h-[44px] flex items-center"
-            >
+            <GlassButton variant="ghost" size="sm" onClick={() => window.location.href = '/admin/customers?type=consumer'}>
               View all
-            </a>
+            </GlassButton>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -237,11 +233,11 @@ async function DashboardContent() {
               </tbody>
             </table>
           </div>
-        </div>
+        </GlassCard>
       </div>
 
       {/* System Health */}
-      <div className="mt-8 bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl border border-white/[0.06] p-6">
+      <GlassCard blur="heavy" className="mt-8">
         <h2 className="text-lg font-bold text-white mb-4">System Health</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="flex items-center gap-4">
@@ -266,7 +262,7 @@ async function DashboardContent() {
             </div>
           </div>
         </div>
-      </div>
+      </GlassCard>
     </>
   );
 }
