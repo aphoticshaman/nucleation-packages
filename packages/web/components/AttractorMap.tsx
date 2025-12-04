@@ -144,14 +144,62 @@ export default function AttractorMap({ nations, edges, layer, onNationSelect }: 
       // Click handler
       marker.addListener('click', () => {
         if (infoWindow) {
+          // Convert basin strength to human-readable stability description
+          const stabilityLevel = nation.basin_strength >= 0.8 ? 'Very High' :
+            nation.basin_strength >= 0.6 ? 'High' :
+            nation.basin_strength >= 0.4 ? 'Moderate' :
+            nation.basin_strength >= 0.2 ? 'Low' : 'Critical';
+
+          const stabilityDesc = nation.basin_strength >= 0.8 ? 'Highly resilient institutions with strong governance' :
+            nation.basin_strength >= 0.6 ? 'Stable governance with good institutional capacity' :
+            nation.basin_strength >= 0.4 ? 'Functioning institutions with some vulnerabilities' :
+            nation.basin_strength >= 0.2 ? 'Weakened institutions facing significant pressures' :
+            'Fragile state with severe institutional breakdown';
+
+          // Convert risk to human-readable assessment
+          const riskLevel = nation.transition_risk >= 0.8 ? 'Critical' :
+            nation.transition_risk >= 0.6 ? 'High' :
+            nation.transition_risk >= 0.4 ? 'Elevated' :
+            nation.transition_risk >= 0.2 ? 'Low' : 'Minimal';
+
+          const riskDesc = nation.transition_risk >= 0.8 ? 'Immediate risk of major political upheaval' :
+            nation.transition_risk >= 0.6 ? 'Significant likelihood of destabilizing events' :
+            nation.transition_risk >= 0.4 ? 'Moderate chance of political volatility' :
+            nation.transition_risk >= 0.2 ? 'Minor instability indicators present' :
+            'Stable outlook with no significant risks detected';
+
           const content = `
-            <div style="color: #0f172a; padding: 8px; min-width: 200px;">
-              <h3 style="margin: 0 0 8px; font-weight: bold;">${nation.name} (${nation.code})</h3>
-              <div style="font-size: 12px; line-height: 1.6;">
-                <div><strong>Basin Strength:</strong> ${(nation.basin_strength * 100).toFixed(1)}%</div>
-                <div><strong>Transition Risk:</strong> ${(nation.transition_risk * 100).toFixed(1)}%</div>
-                <div><strong>Regime:</strong> ${REGIMES[nation.regime]?.name || 'Unknown'}</div>
-                <div><strong>Position:</strong> [${nation.position.map((p) => p.toFixed(2)).join(', ')}]</div>
+            <div style="color: #0f172a; padding: 12px; min-width: 260px; font-family: system-ui, sans-serif;">
+              <h3 style="margin: 0 0 12px; font-weight: 600; font-size: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+                ${nation.name}
+              </h3>
+              <div style="font-size: 13px; line-height: 1.7;">
+                <div style="margin-bottom: 12px;">
+                  <div style="font-weight: 500; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Stability Assessment
+                  </div>
+                  <div style="color: ${getColorForValue(nation.basin_strength, BASIN_COLORS)}; font-weight: 600;">
+                    ${stabilityLevel}
+                  </div>
+                  <div style="color: #475569; font-size: 12px;">${stabilityDesc}</div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                  <div style="font-weight: 500; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Transition Risk
+                  </div>
+                  <div style="color: ${getColorForValue(nation.transition_risk, RISK_COLORS)}; font-weight: 600;">
+                    ${riskLevel}
+                  </div>
+                  <div style="color: #475569; font-size: 12px;">${riskDesc}</div>
+                </div>
+                <div>
+                  <div style="font-weight: 500; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Government Type
+                  </div>
+                  <div style="color: ${REGIMES[nation.regime]?.color || '#6B7280'}; font-weight: 600;">
+                    ${REGIMES[nation.regime]?.name || 'Unknown'}
+                  </div>
+                </div>
               </div>
             </div>
           `;
