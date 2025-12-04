@@ -454,14 +454,18 @@ export async function POST(req: Request) {
     }
 
     // ============================================================
-    // CACHE MISS - Allow generation for any request
+    // CACHE MISS - BLOCK user requests, only cron/internal can generate
     // ============================================================
-    // Note: In production, cron jobs keep cache warm so most requests hit cache.
-    // For development/first-time access, we allow generation to ensure good UX.
-    // Rate limiting at Anthropic API level prevents abuse.
+    // SECURITY: Users NEVER trigger external API calls. Period.
+    // Cron jobs keep the cache warm. Users get cached data or nothing.
     if (!canGenerateFresh) {
-      console.log(`[CACHE MISS] No cached briefing for preset: ${preset}, generating fresh...`);
-      // Fall through to generation - the cache will be set for subsequent requests
+      console.log(`[CACHE MISS] No cached briefing for preset: ${preset}, user request BLOCKED`);
+      return NextResponse.json({
+        error: 'Briefing not yet available',
+        message: 'Intelligence briefings are generated on a schedule. Please try again shortly.',
+        preset,
+        cached: false,
+      }, { status: 503 });
     }
 
     console.log(`[CRON/INTERNAL] Generating fresh briefing for preset: ${preset}`);

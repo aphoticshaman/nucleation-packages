@@ -92,6 +92,18 @@ export async function POST(req: Request) {
   const startTime = Date.now();
 
   try {
+    // ============================================================
+    // SECURITY: Only cron/internal can trigger critical analysis
+    // ============================================================
+    const isCronWarm = req.headers.get('x-cron-warm') === '1';
+    const isInternalService = req.headers.get('x-internal-service') === process.env.INTERNAL_SERVICE_SECRET;
+    const isVercelCron = req.headers.get('x-vercel-cron') === '1';
+
+    if (!isCronWarm && !isInternalService && !isVercelCron) {
+      console.log('[CRITICAL] Unauthorized request blocked');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
     const { severity, headline, preset = 'global' } = await req.json();
 
     // Only process major/critical events
