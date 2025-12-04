@@ -8,6 +8,7 @@ import { BookOpen } from 'lucide-react';
 import type { UserProfile } from '@/lib/auth';
 import ViewAsSwitcher from '@/components/admin/ViewAsSwitcher';
 import Glossary from '@/components/Glossary';
+import ExecBriefButton from '@/components/ExecBriefButton';
 
 interface AdminNavProps {
   user: UserProfile;
@@ -56,6 +57,10 @@ export default function AdminNav({ user }: AdminNavProps) {
             <h1 className="text-lg font-bold text-white">LatticeForge</h1>
             <p className="text-[10px] text-orange-400 uppercase tracking-wider font-medium">Admin Console</p>
           </div>
+        </div>
+        {/* Exec Brief Button */}
+        <div className="mt-4">
+          <ExecBriefButton variant="compact" className="w-full justify-center" />
         </div>
       </div>
 
