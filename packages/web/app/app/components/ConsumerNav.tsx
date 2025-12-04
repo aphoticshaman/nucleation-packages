@@ -20,7 +20,9 @@ interface NavItem {
 
 const TIER_ORDER: UserTier[] = ['free', 'starter', 'pro', 'enterprise_tier'];
 
-function hasTierAccess(userTier: UserTier, requiredTier: UserTier): boolean {
+function hasTierAccess(userTier: UserTier, requiredTier: UserTier, userRole?: string): boolean {
+  // Admins have access to everything
+  if (userRole === 'admin') return true;
   return TIER_ORDER.indexOf(userTier) >= TIER_ORDER.indexOf(requiredTier);
 }
 
@@ -72,10 +74,10 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
   }, [mobileMenuOpen]);
 
   const accessibleItems = navItems.filter(
-    (item) => !item.minTier || hasTierAccess(user.tier, item.minTier)
+    (item) => !item.minTier || hasTierAccess(user.tier, item.minTier, user.role)
   );
   const lockedItems = navItems.filter(
-    (item) => item.minTier && !hasTierAccess(user.tier, item.minTier)
+    (item) => item.minTier && !hasTierAccess(user.tier, item.minTier, user.role)
   );
 
   return (
@@ -143,7 +145,7 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
                 </Link>
               );
             })}
-            {lockedItems.length > 0 && user.tier === 'free' && (
+            {lockedItems.length > 0 && user.tier === 'free' && user.role !== 'admin' && (
               <Link
                 href="/pricing"
                 className="px-3 py-2 rounded-lg text-sm text-slate-500 hover:text-slate-300 flex items-center gap-1"
@@ -162,8 +164,8 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
 
           {/* Right side actions */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Upgrade - desktop only */}
-            {user.tier === 'free' && (
+            {/* Upgrade - desktop only, hide for admins */}
+            {user.tier === 'free' && user.role !== 'admin' && (
               <Link
                 href="/pricing"
                 className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
@@ -315,7 +317,22 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
 
         {/* Bottom actions - safe area aware */}
         <div className="p-4 border-t border-white/[0.06] space-y-3 pb-safe">
-          {user.tier === 'free' ? (
+          {user.role === 'admin' ? (
+            <Link
+              href="/admin"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl
+                bg-gradient-to-r from-amber-600 to-orange-600 text-white font-medium
+                shadow-[0_0_20px_rgba(245,158,11,0.3)]
+                active:scale-[0.98] transition-transform touch-manipulation min-h-[52px]"
+            >
+              <span>Admin Dashboard</span>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </Link>
+          ) : user.tier === 'free' ? (
             <Link
               href="/pricing"
               onClick={() => setMobileMenuOpen(false)}
