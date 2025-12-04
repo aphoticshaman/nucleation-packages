@@ -224,6 +224,52 @@ export interface ConditionalThreatAssessment {
   lastUpdated: string;
 }
 
+// Regime Threat Assessment - for specific actor-to-target threat analysis
+export interface RegimeThreatAssessment {
+  target: string;
+  threatActor: string;
+  baseAssessment: {
+    level: 'low' | 'moderate' | 'elevated' | 'high' | 'critical';
+    timeframe: string;
+    confidence: number;
+    basis: string;
+  };
+  conditionalScenarios: {
+    id: string;
+    name: string;
+    description: string;
+    conditions: string[];
+    probability: number;
+    probabilityOverTime: {
+      months: number;
+      probability: number;
+    }[];
+    warningIndicators: string[];
+    outcome: string;
+  }[];
+  actorDependencies: {
+    actor: string;
+    influence: number;
+    currentStance: string;
+    possibleShifts: string[];
+  }[];
+  historicalAnalogs: {
+    name: string;
+    relevance: number;
+    lessons: string;
+  }[];
+  keyDates: {
+    date: string;
+    event: string;
+  }[];
+  analystConfidence: {
+    overall: number;
+    dataQuality: string;
+    keyUncertainties: string[];
+  };
+  lastUpdated: string;
+}
+
 // Taiwan - Detailed Conditional Threat Assessment
 export const TAIWAN_THREAT_ASSESSMENT: ConditionalThreatAssessment = {
   baseScenario: 'status_quo',
