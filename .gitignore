@@ -42,3 +42,6 @@ temp/
 .husky/_/
 .vercel
 .env*.local
+phi2/adapter_model.safetensors
+phi2/*.safetensors
+*.safetensors
