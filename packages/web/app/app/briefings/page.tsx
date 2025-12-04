@@ -2,7 +2,11 @@
 
 import { useState } from 'react';
 import { useIntelBriefing, getRiskBadgeStyle } from '@/hooks/useIntelBriefing';
-import { Globe, Shield, TrendingUp, AlertTriangle, RefreshCw, Target, BookOpen } from 'lucide-react';
+import {
+  Globe, Shield, TrendingUp, AlertTriangle, RefreshCw, Target, BookOpen,
+  Landmark, DollarSign, Lock, Factory, Cpu, Zap, Clock, ChevronRight,
+  FileText, Users, Building2, Plane, Radio, Rocket
+} from 'lucide-react';
 import Glossary from '@/components/Glossary';
 import HelpTip from '@/components/HelpTip';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -15,36 +19,165 @@ const PRESETS = [
   { id: 'conflict', name: 'Hot Spots', icon: AlertTriangle, desc: 'Active tension zones' },
 ];
 
+// Domain categories for organized display
+const DOMAIN_CATEGORIES = {
+  'Political & Security': {
+    icon: Landmark,
+    color: 'text-red-400',
+    bgColor: 'bg-red-500/10',
+    borderColor: 'border-red-500/20',
+    domains: ['political', 'security', 'military', 'terrorism', 'borders'],
+  },
+  'Economic & Markets': {
+    icon: DollarSign,
+    color: 'text-emerald-400',
+    bgColor: 'bg-emerald-500/10',
+    borderColor: 'border-emerald-500/20',
+    domains: ['economic', 'financial', 'markets', 'employment', 'housing'],
+  },
+  'Tech & Cyber': {
+    icon: Cpu,
+    color: 'text-cyan-400',
+    bgColor: 'bg-cyan-500/10',
+    borderColor: 'border-cyan-500/20',
+    domains: ['scitech', 'cyber', 'crypto', 'space', 'emerging'],
+  },
+  'Resources & Industry': {
+    icon: Factory,
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-500/10',
+    borderColor: 'border-amber-500/20',
+    domains: ['energy', 'minerals', 'resources', 'industry', 'logistics'],
+  },
+  'Society & Information': {
+    icon: Users,
+    color: 'text-purple-400',
+    bgColor: 'bg-purple-500/10',
+    borderColor: 'border-purple-500/20',
+    domains: ['domestic', 'infoops', 'crime', 'health', 'education', 'religious'],
+  },
+};
+
+const DOMAIN_LABELS: Record<string, string> = {
+  political: 'Geopolitics',
+  economic: 'Economy',
+  security: 'Security',
+  financial: 'Finance',
+  health: 'Public Health',
+  scitech: 'Science & Tech',
+  resources: 'Resources',
+  crime: 'Crime',
+  cyber: 'Cyber',
+  terrorism: 'Terrorism',
+  domestic: 'Civil Society',
+  borders: 'Borders & Migration',
+  infoops: 'Information Ops',
+  military: 'Defense',
+  space: 'Space',
+  industry: 'Industry',
+  logistics: 'Logistics',
+  minerals: 'Critical Minerals',
+  energy: 'Energy',
+  markets: 'Markets',
+  religious: 'Religious Affairs',
+  education: 'Education',
+  employment: 'Labor',
+  housing: 'Housing',
+  crypto: 'Digital Assets',
+  emerging: 'Emerging Threats',
+};
+
+// Parse briefing text into structured sections (5Ws+H + OUTLOOK + Position)
+function parseBriefing(text: string) {
+  const sections: { type: string; content: string }[] = [];
+
+  // 5Ws + H pattern matching
+  const whatMatch = text.match(/WHAT:([^]*?)(?=WHO:|WHERE:|WHEN:|WHY:|US IMPACT:|OUTLOOK:|Position:|$)/i);
+  const whoMatch = text.match(/WHO:([^]*?)(?=WHERE:|WHEN:|WHY:|US IMPACT:|OUTLOOK:|Position:|$)/i);
+  const whereMatch = text.match(/WHERE:([^]*?)(?=WHEN:|WHY:|US IMPACT:|OUTLOOK:|Position:|$)/i);
+  const whenMatch = text.match(/WHEN:([^]*?)(?=WHY:|US IMPACT:|OUTLOOK:|Position:|$)/i);
+  const whyMatch = text.match(/WHY:([^]*?)(?=US IMPACT:|OUTLOOK:|Position:|$)/i);
+  const usImpactMatch = text.match(/US IMPACT:([^]*?)(?=OUTLOOK:|Position:|$)/i);
+  const outlookMatch = text.match(/OUTLOOK:([^]*?)(?=Position:|$)/i);
+  const positionMatch = text.match(/Position:([^]*?)$/i);
+
+  // Legacy format support
+  const currentMatch = text.match(/CURRENT:([^]*?)(?=OUTLOOK:|Position:|$)/i);
+
+  // Add sections in display order
+  if (whatMatch) sections.push({ type: 'what', content: whatMatch[1].trim() });
+  if (whoMatch) sections.push({ type: 'who', content: whoMatch[1].trim() });
+  if (whereMatch) sections.push({ type: 'where', content: whereMatch[1].trim() });
+  if (whenMatch) sections.push({ type: 'when', content: whenMatch[1].trim() });
+  if (whyMatch) sections.push({ type: 'why', content: whyMatch[1].trim() });
+  if (usImpactMatch) sections.push({ type: 'usimpact', content: usImpactMatch[1].trim() });
+  if (currentMatch && !whatMatch) sections.push({ type: 'current', content: currentMatch[1].trim() });
+  if (outlookMatch) sections.push({ type: 'outlook', content: outlookMatch[1].trim() });
+  if (positionMatch) sections.push({ type: 'position', content: positionMatch[1].trim() });
+
+  // If no structured format, return as-is
+  if (sections.length === 0) {
+    sections.push({ type: 'content', content: text });
+  }
+
+  return sections;
+}
+
 export default function BriefingsPage() {
   const [selectedPreset, setSelectedPreset] = useState('global');
   const { briefings, metadata, loading, refetch } = useIntelBriefing(selectedPreset);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [showGlossary, setShowGlossary] = useState(false);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>('Political & Security');
 
   const handleLoad = async () => {
     setHasLoaded(true);
     await refetch();
   };
 
+  const formatTimestamp = (ts: string) => {
+    const date = new Date(ts);
+    return date.toLocaleString('en-US', {
+      month: 'numeric',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
+      {/* Header - News Masthead Style */}
+      <div className="flex items-start justify-between border-b border-white/[0.06] pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Intel Briefings</h1>
-          <p className="text-slate-400 mt-1">AI-generated intelligence summaries across all domains</p>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-cyan-500/20 rounded-lg">
+              <Radio className="w-5 h-5 text-cyan-400" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white tracking-tight">Intelligence Briefing</h1>
+              <p className="text-slate-500 text-sm flex items-center gap-2">
+                <Clock className="w-3 h-3" />
+                Multi-source fusion • Real-time analysis • Actionable intelligence
+              </p>
+            </div>
+          </div>
         </div>
-        <button
-          onClick={() => setShowGlossary(true)}
-          className="flex items-center gap-2 px-3 py-2 min-h-[44px] bg-[rgba(18,18,26,0.7)] backdrop-blur-sm rounded-xl border border-white/[0.06] text-slate-400 hover:text-white hover:border-white/[0.12] transition-all"
-        >
-          <BookOpen className="w-4 h-4" />
-          <span className="text-sm">Terms</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowGlossary(true)}
+            className="flex items-center gap-2 px-3 py-2 min-h-[44px] bg-[rgba(18,18,26,0.7)] backdrop-blur-sm rounded-xl border border-white/[0.06] text-slate-400 hover:text-white hover:border-white/[0.12] transition-all"
+          >
+            <BookOpen className="w-4 h-4" />
+            <span className="text-sm">Glossary</span>
+          </button>
+        </div>
       </div>
 
-      {/* Preset selector */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Preset selector - tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2">
         {PRESETS.map((preset) => {
           const Icon = preset.icon;
           return (
@@ -54,15 +187,14 @@ export default function BriefingsPage() {
                 setSelectedPreset(preset.id);
                 setHasLoaded(false);
               }}
-              className={`p-4 rounded-xl border text-left transition-all min-h-[100px] ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border whitespace-nowrap transition-all ${
                 selectedPreset === preset.id
-                  ? 'bg-blue-500/20 border-blue-500/50 text-white'
-                  : 'bg-[rgba(18,18,26,0.7)] backdrop-blur-sm border-white/[0.06] text-slate-300 hover:border-white/[0.12] hover:bg-[rgba(18,18,26,0.8)]'
+                  ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300'
+                  : 'bg-[rgba(18,18,26,0.7)] border-white/[0.06] text-slate-400 hover:border-white/[0.12]'
               }`}
             >
-              <Icon className={`w-6 h-6 mb-2 ${selectedPreset === preset.id ? 'text-blue-400' : 'text-slate-500'}`} />
-              <p className="font-medium">{preset.name}</p>
-              <p className="text-xs text-slate-400 mt-1">{preset.desc}</p>
+              <Icon className="w-4 h-4" />
+              <span className="text-sm font-medium">{preset.name}</span>
             </button>
           );
         })}
@@ -71,81 +203,251 @@ export default function BriefingsPage() {
       {/* Load button or briefing content */}
       {!hasLoaded ? (
         <GlassCard blur="heavy" className="p-8 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 flex items-center justify-center">
-            <RefreshCw className="w-8 h-8 text-blue-400" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-cyan-500/20 flex items-center justify-center">
+            <FileText className="w-8 h-8 text-cyan-400" />
           </div>
-          <p className="text-slate-400 mb-4">Ready to generate briefing for {PRESETS.find(p => p.id === selectedPreset)?.name}</p>
+          <h2 className="text-lg font-semibold text-white mb-2">
+            {PRESETS.find(p => p.id === selectedPreset)?.name} Intel Brief
+          </h2>
+          <p className="text-slate-400 mb-6 max-w-md mx-auto">
+            Generate a comprehensive intelligence assessment covering political, economic, security, technology, and social domains.
+          </p>
           <GlassButton
             variant="primary"
             glow
             onClick={() => void handleLoad()}
+            className="px-6"
           >
-            Generate Intel Briefing
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Generate Briefing
           </GlassButton>
-          <p className="text-xs text-slate-500 mt-3">Cached for 10 minutes • Uses AI analysis</p>
+          <p className="text-xs text-slate-600 mt-4">
+            Synthesized from wire services, OSINT, institutional research, and proprietary analysis
+          </p>
         </GlassCard>
       ) : loading ? (
-        <GlassCard blur="heavy" className="p-8">
-          <div className="animate-pulse space-y-4">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="space-y-2">
-                <div className="h-4 bg-white/10 rounded w-32" />
+        <div className="space-y-4">
+          <GlassCard blur="heavy" className="p-6">
+            <div className="animate-pulse space-y-4">
+              <div className="h-6 bg-white/10 rounded w-1/3" />
+              <div className="h-4 bg-white/10 rounded w-full" />
+              <div className="h-4 bg-white/10 rounded w-5/6" />
+            </div>
+          </GlassCard>
+          {[...Array(3)].map((_, i) => (
+            <GlassCard key={i} blur="light" className="p-4">
+              <div className="animate-pulse space-y-3">
+                <div className="h-4 bg-white/10 rounded w-40" />
                 <div className="h-3 bg-white/10 rounded w-full" />
+                <div className="h-3 bg-white/10 rounded w-4/5" />
               </div>
-            ))}
-          </div>
-        </GlassCard>
+            </GlassCard>
+          ))}
+        </div>
       ) : (
-        <GlassCard blur="heavy" className="p-6 space-y-6">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
-            <div>
-              <h2 className="text-lg font-semibold text-white">
-                {PRESETS.find(p => p.id === selectedPreset)?.name} Briefing
-              </h2>
-              <p className="text-xs text-slate-400 mt-1">
-                Generated {metadata?.timestamp ? new Date(metadata.timestamp).toLocaleString() : 'now'}
-              </p>
-            </div>
-            {metadata && (
-              <div className="flex items-center gap-1">
-                <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${getRiskBadgeStyle(metadata.overallRisk)}`}>
-                  {metadata.overallRisk?.toUpperCase()} RISK
-                </span>
-                <HelpTip term="Transition Risk" skillLevel="standard" size={10} />
+        <div className="space-y-6">
+          {/* Executive Summary - Lead Story */}
+          <GlassCard blur="heavy" className="p-6 border-l-4 border-cyan-500">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-medium text-cyan-400 uppercase tracking-wider">
+                    Executive Summary
+                  </span>
+                  <span className="text-xs text-slate-600">•</span>
+                  <span className="text-xs text-slate-500">
+                    {metadata?.timestamp ? formatTimestamp(metadata.timestamp) : 'Just now'}
+                  </span>
+                </div>
+                <h2 className="text-xl font-semibold text-white leading-tight">
+                  {PRESETS.find(p => p.id === selectedPreset)?.name}: Situation Assessment
+                </h2>
               </div>
-            )}
+              {metadata && (
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className={`px-3 py-1.5 rounded-lg text-sm font-bold uppercase tracking-wide ${getRiskBadgeStyle(metadata.overallRisk)}`}>
+                    {metadata.overallRisk} Risk
+                  </span>
+                </div>
+              )}
+            </div>
+            <p className="text-slate-300 leading-relaxed text-[15px]">
+              {briefings?.summary}
+            </p>
+          </GlassCard>
+
+          {/* Domain Categories - Accordion */}
+          <div className="space-y-3">
+            {Object.entries(DOMAIN_CATEGORIES).map(([category, config]) => {
+              const CategoryIcon = config.icon;
+              const isExpanded = expandedCategory === category;
+              const categoryDomains = config.domains.filter(d => briefings?.[d as keyof typeof briefings]);
+
+              if (categoryDomains.length === 0) return null;
+
+              return (
+                <div key={category} className="rounded-xl overflow-hidden border border-white/[0.06]">
+                  {/* Category Header */}
+                  <button
+                    onClick={() => setExpandedCategory(isExpanded ? null : category)}
+                    className={`w-full flex items-center justify-between p-4 transition-colors ${
+                      isExpanded ? `${config.bgColor}` : 'bg-[rgba(18,18,26,0.7)] hover:bg-[rgba(18,18,26,0.9)]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <CategoryIcon className={`w-5 h-5 ${config.color}`} />
+                      <span className="font-semibold text-white">{category}</span>
+                      <span className="text-xs text-slate-500">
+                        {categoryDomains.length} domains
+                      </span>
+                    </div>
+                    <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                  </button>
+
+                  {/* Expanded Content */}
+                  {isExpanded && (
+                    <div className={`border-t ${config.borderColor} bg-black/20`}>
+                      {categoryDomains.map((domain, idx) => {
+                        const content = briefings?.[domain as keyof typeof briefings] as string;
+                        const parsed = parseBriefing(content);
+
+                        return (
+                          <div
+                            key={domain}
+                            className={`p-4 ${idx !== categoryDomains.length - 1 ? 'border-b border-white/[0.04]' : ''}`}
+                          >
+                            <h4 className={`text-sm font-medium ${config.color} mb-3 uppercase tracking-wider`}>
+                              {DOMAIN_LABELS[domain] || domain}
+                            </h4>
+
+                            {parsed.map((section, sIdx) => (
+                              <div key={sIdx} className={sIdx > 0 ? 'mt-3' : ''}>
+                                {/* 5Ws+H Sections */}
+                                {section.type === 'what' && (
+                                  <p className="text-sm text-slate-200 leading-relaxed">{section.content}</p>
+                                )}
+                                {section.type === 'who' && (
+                                  <div className="flex items-start gap-2 text-sm">
+                                    <span className="text-[10px] font-bold text-blue-400 bg-blue-500/20 px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">
+                                      Actors
+                                    </span>
+                                    <p className="text-slate-400 leading-relaxed">{section.content}</p>
+                                  </div>
+                                )}
+                                {section.type === 'where' && (
+                                  <div className="flex items-start gap-2 text-sm">
+                                    <span className="text-[10px] font-bold text-purple-400 bg-purple-500/20 px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">
+                                      Where
+                                    </span>
+                                    <p className="text-slate-400 leading-relaxed">{section.content}</p>
+                                  </div>
+                                )}
+                                {section.type === 'when' && (
+                                  <div className="flex items-start gap-2 text-sm">
+                                    <span className="text-[10px] font-bold text-orange-400 bg-orange-500/20 px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">
+                                      When
+                                    </span>
+                                    <p className="text-slate-400 leading-relaxed">{section.content}</p>
+                                  </div>
+                                )}
+                                {section.type === 'why' && (
+                                  <div className="flex items-start gap-2 text-sm">
+                                    <span className="text-[10px] font-bold text-pink-400 bg-pink-500/20 px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">
+                                      Why
+                                    </span>
+                                    <p className="text-slate-400 leading-relaxed">{section.content}</p>
+                                  </div>
+                                )}
+                                {section.type === 'usimpact' && (
+                                  <div className="mt-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                                    <div className="flex items-start gap-2">
+                                      <span className="text-[10px] font-bold text-red-400 bg-red-500/20 px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">
+                                        🇺🇸 US
+                                      </span>
+                                      <p className="text-sm text-red-200 leading-relaxed">{section.content}</p>
+                                    </div>
+                                  </div>
+                                )}
+                                {/* Legacy and standard sections */}
+                                {section.type === 'current' && (
+                                  <div className="flex items-start gap-2">
+                                    <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/20 px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">
+                                      Now
+                                    </span>
+                                    <p className="text-sm text-slate-300 leading-relaxed">{section.content}</p>
+                                  </div>
+                                )}
+                                {section.type === 'outlook' && (
+                                  <div className="flex items-start gap-2 mt-2">
+                                    <span className="text-[10px] font-bold text-amber-500 bg-amber-500/20 px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">
+                                      Outlook
+                                    </span>
+                                    <p className="text-sm text-amber-200/80 leading-relaxed">{section.content}</p>
+                                  </div>
+                                )}
+                                {section.type === 'position' && (
+                                  <div className="flex items-start gap-2 mt-2 p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
+                                    <span className="text-[10px] font-bold text-cyan-400 bg-cyan-500/20 px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">
+                                      Action
+                                    </span>
+                                    <p className="text-sm text-cyan-200 leading-relaxed">{section.content}</p>
+                                  </div>
+                                )}
+                                {section.type === 'content' && (
+                                  <p className="text-sm text-slate-300 leading-relaxed">{section.content}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
-          {/* Briefing sections */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {briefings && Object.entries(briefings).filter(([key]) => !['summary', 'nsm'].includes(key)).map(([key, value]) => (
-              <div key={key} className="bg-black/20 rounded-lg border border-white/[0.04] p-4">
-                <h3 className="text-sm font-medium text-blue-400 capitalize mb-2">{key.replace(/_/g, ' ')}</h3>
-                <p className="text-sm text-slate-300">{value as string}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Summary & NSM */}
-          {briefings?.summary && (
-            <div className="border-t border-white/[0.06] pt-4">
-              <p className="text-slate-400 italic">{briefings.summary}</p>
-            </div>
-          )}
+          {/* NSM - Call to Action */}
           {briefings?.nsm && (
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Target className="w-4 h-4 text-blue-400" />
-                <h3 className="text-sm font-medium text-blue-300">
-                  Next Strategic Move
-                  <HelpTip term="NSM (Next Strategic Move)" skillLevel="standard" size={10} />
-                </h3>
+            <GlassCard blur="heavy" className="p-6 border-2 border-cyan-500/30 bg-gradient-to-r from-cyan-500/10 to-blue-500/10">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-cyan-500/20 rounded-xl shrink-0">
+                  <Target className="w-6 h-6 text-cyan-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-lg font-semibold text-cyan-300">
+                      Next Strategic Move
+                    </h3>
+                    <HelpTip term="NSM (Next Strategic Move)" skillLevel="standard" size={12} />
+                  </div>
+                  <p className="text-slate-300 leading-relaxed whitespace-pre-line">
+                    {briefings.nsm}
+                  </p>
+                </div>
               </div>
-              <p className="text-sm text-blue-200">{briefings.nsm}</p>
-            </div>
+            </GlassCard>
           )}
-        </GlassCard>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between text-xs text-slate-600 px-2">
+            <div className="flex items-center gap-2">
+              <span>Sources: Wire services, OSINT, institutional research, proprietary signals</span>
+            </div>
+            <GlassButton
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setHasLoaded(false);
+                setTimeout(() => void handleLoad(), 100);
+              }}
+            >
+              <RefreshCw className="w-3 h-3 mr-1" />
+              Refresh
+            </GlassButton>
+          </div>
+        </div>
       )}
 
       {/* Glossary Modal */}
