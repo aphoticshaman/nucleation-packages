@@ -98,23 +98,35 @@ export async function getUser(): Promise<UserProfile | null> {
 
   // If profile exists, return it with correct role/tier from DB
   if (profile) {
+    // Update last_seen_at in background (don't await)
+    supabase
+      .from('profiles')
+      .update({ last_seen_at: new Date().toISOString() })
+      .eq('id', user.id)
+      .then(() => {});
+
     return profile as UserProfile;
   }
 
   // If profile doesn't exist (new OAuth user), try to create one
   if (error?.code === 'PGRST116') {
     // PGRST116 = "JSON object requested, multiple (or no) rows returned"
-    const newProfile: Omit<UserProfile, 'last_seen_at' | 'onboarding_completed_at'> & { last_seen_at: string; onboarding_completed_at: null } = {
+
+    // Check if this is an admin based on email pattern (env-configurable)
+    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
+    const isAdmin = adminEmails.includes(user.email?.toLowerCase() || '');
+
+    const newProfile: Omit<UserProfile, 'last_seen_at' | 'onboarding_completed_at'> & { last_seen_at: string; onboarding_completed_at: string | null } = {
       id: user.id,
       email: user.email || '',
       full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
       avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-      role: 'consumer',
-      tier: 'free',
+      role: isAdmin ? 'admin' : 'consumer',
+      tier: isAdmin ? 'enterprise_tier' : 'free',
       organization_id: null,
       is_active: true,
       last_seen_at: new Date().toISOString(),
-      onboarding_completed_at: null,
+      onboarding_completed_at: isAdmin ? new Date().toISOString() : null, // Admins skip onboarding
     };
 
     const { data: createdProfile, error: insertError } = await supabase
@@ -136,17 +148,22 @@ export async function getUser(): Promise<UserProfile | null> {
   // Only fall back to minimal profile if we truly couldn't get/create one
   // This should be rare - indicates RLS or table issues
   console.warn('Falling back to minimal profile for user:', user.id);
+
+  // Even in fallback, check for admin status via email
+  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
+  const isAdminFallback = adminEmails.includes(user.email?.toLowerCase() || '');
+
   return {
     id: user.id,
     email: user.email || '',
     full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
     avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-    role: 'consumer',
-    tier: 'free',
+    role: isAdminFallback ? 'admin' : 'consumer',
+    tier: isAdminFallback ? 'enterprise_tier' : 'free',
     organization_id: null,
     is_active: true,
     last_seen_at: null,
-    onboarding_completed_at: null,
+    onboarding_completed_at: isAdminFallback ? new Date().toISOString() : null,
   };
 }
 
