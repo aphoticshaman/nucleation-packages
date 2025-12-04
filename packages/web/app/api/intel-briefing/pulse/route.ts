@@ -81,16 +81,35 @@ async function triggerCriticalAnalysis(pulse: PulseResult): Promise<void> {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   const now = Date.now();
 
-  // Return cached pulse if checked recently
+  // ============================================================
+  // SECURITY: Only cron/internal can trigger pulse check
+  // ============================================================
+  const isCronWarm = req.headers.get('x-cron-warm') === '1';
+  const isInternalService = req.headers.get('x-internal-service') === process.env.INTERNAL_SERVICE_SECRET;
+  const isVercelCron = req.headers.get('x-vercel-cron') === '1';
+  const canGenerateFresh = isCronWarm || isInternalService || isVercelCron;
+
+  // Return cached pulse if checked recently (safe for all users)
   if (lastPulseCheck && (now - lastPulseCheck.timestamp) < PULSE_INTERVAL_MS) {
     return NextResponse.json({
       ...lastPulseCheck.result,
       cached: true,
       checkAgeSeconds: Math.round((now - lastPulseCheck.timestamp) / 1000),
     });
+  }
+
+  // SECURITY: If no cache and not authorized, block
+  if (!canGenerateFresh) {
+    return NextResponse.json({
+      breaking: false,
+      severity: 'none',
+      timestamp: new Date().toISOString(),
+      cached: false,
+      message: 'Pulse check not yet available',
+    }, { status: 503 });
   }
 
   try {

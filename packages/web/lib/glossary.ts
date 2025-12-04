@@ -228,6 +228,93 @@ export function getRelatedTerms(termName: string): GlossaryTerm[] {
   return GLOSSARY.filter(t => term.related!.includes(t.term));
 }
 
+// ===== QUANT & FINANCIAL TERMS =====
+const QUANT_TERMS: GlossaryTerm[] = [
+  {
+    term: 'Sharpe Ratio',
+    category: 'metrics',
+    simple: 'How much return you get for the risk you take. Higher is better.',
+    standard: 'Return per unit of volatility. Measures risk-adjusted performance. Above 1 is good, above 2 is excellent.',
+    detailed: 'Excess return over risk-free rate divided by standard deviation: (Rp - Rf) / σp. Assumes normal returns (problematic for fat tails). Annualize by multiplying by √252 for daily data.',
+    related: ['Volatility', 'Alpha', 'Risk-Adjusted Return'],
+  },
+  {
+    term: 'Value at Risk',
+    category: 'metrics',
+    simple: 'The most you could lose on a bad day (95% of the time).',
+    standard: 'Maximum expected loss at a confidence level. 95% 1-day VaR means 19 of 20 days, losses stay below this number.',
+    detailed: 'Quantile of P&L distribution at specified confidence (typically 95% or 99%). Does not capture tail severity. Supplement with CVaR/Expected Shortfall for tail risk.',
+    related: ['Volatility', 'Drawdown', 'Tail Risk'],
+  },
+  {
+    term: 'Correlation',
+    category: 'metrics',
+    simple: 'How two things move together. +1 = same direction, -1 = opposite, 0 = no relationship.',
+    standard: 'Measure of co-movement between assets. Diversification needs low or negative correlations.',
+    detailed: 'Pearson correlation coefficient ρ = Cov(X,Y) / (σX × σY). Ranges [-1, +1]. Warning: correlations spike in crises ("all correlations go to 1"). Use rolling windows and regime-switching models.',
+    related: ['Diversification', 'Contagion', 'Beta'],
+  },
+  {
+    term: 'Volatility',
+    category: 'metrics',
+    simple: 'How much prices swing around. High volatility = wild swings.',
+    standard: 'Standard deviation of returns. Can be historical (past data) or implied (from options prices).',
+    detailed: 'σ = √[Σ(ri - r̄)² / (n-1)]. Annualize by √252 for daily data. Vol clusters (GARCH effects). Implied vol from Black-Scholes inversion. VIX measures 30-day S&P 500 implied vol.',
+    related: ['Value at Risk', 'Sharpe Ratio', 'Options'],
+  },
+  {
+    term: 'Alpha',
+    category: 'metrics',
+    simple: 'Returns from skill, not just riding the market up.',
+    standard: 'Excess return above what market exposure would explain. True alpha is rare and valuable.',
+    detailed: 'Jensen\'s alpha: α = Rp - [Rf + β(Rm - Rf)]. Residual after accounting for factor exposures. Much "alpha" is actually unrecognized factor exposure. Decays as it gets arbitraged.',
+    related: ['Beta', 'Sharpe Ratio', 'Factor Exposure'],
+  },
+  {
+    term: 'Beta',
+    category: 'metrics',
+    simple: 'How much an investment moves compared to the whole market.',
+    standard: 'Sensitivity to market movements. Beta 1.5 means 50% more volatile than market. Beta 0.5 is half as volatile.',
+    detailed: 'β = Cov(Ri, Rm) / Var(Rm). Systematic risk that cannot be diversified away. Can be negative (gold vs. stocks sometimes). Rolling beta captures time variation.',
+    related: ['Alpha', 'Volatility', 'CAPM'],
+  },
+  {
+    term: 'Drawdown',
+    category: 'metrics',
+    simple: 'How far your investment fell from its peak before recovering.',
+    standard: 'Peak-to-trough decline. Max drawdown is worst historical drop. Critical for survival - 50% loss requires 100% gain to recover.',
+    detailed: 'DD(t) = (Peak(t) - Value(t)) / Peak(t). Max DD = max[DD(t)]. Recovery time also matters. Many strategies fail during drawdowns due to capital calls, redemptions, or psychological capitulation.',
+    related: ['Value at Risk', 'Volatility', 'Risk Management'],
+  },
+  {
+    term: 'Sovereign Spread',
+    category: 'metrics',
+    simple: 'Extra interest a risky country pays to borrow vs. a safe country.',
+    standard: 'Yield premium of government bonds over risk-free benchmarks (usually US Treasuries). Measures perceived country risk.',
+    detailed: 'Spread = Yield(country) - Yield(benchmark). Decomposes into default risk, currency risk, and liquidity premium. CDS spreads provide purer default risk signal. Widening spreads often precede crises.',
+    related: ['Credit Risk', 'Sovereign Default', 'Capital Flight'],
+  },
+  {
+    term: 'Contagion',
+    category: 'intelligence',
+    simple: 'When crisis in one place spreads to others through panic or real connections.',
+    standard: 'Financial crisis transmission across markets/countries. Can be through actual linkages (trade, banking) or pure sentiment.',
+    detailed: 'Contagion vs. interdependence: true contagion shows correlation breakdown (Forbes-Rigobon test). Channels: trade, banking exposure, common creditor, wake-up calls. Correlation spikes mask diversification failure.',
+    related: ['Cascade', 'Correlation', 'Systemic Risk'],
+  },
+  {
+    term: 'Capital Flight',
+    category: 'intelligence',
+    simple: 'When money rapidly leaves a country because investors are scared.',
+    standard: 'Rapid outflow of capital due to crisis or loss of confidence. Often self-reinforcing through currency depreciation.',
+    detailed: 'Measure via BOP financial account, bank deposit changes, or parallel FX premium. Early indicators: wealthy locals moving money abroad, real estate purchases in "safe" countries. Often precedes currency crisis.',
+    related: ['Contagion', 'Currency Crisis', 'Sovereign Spread'],
+  },
+];
+
+// Add quant terms to main glossary
+QUANT_TERMS.forEach(term => GLOSSARY.push(term));
+
 // Category labels
 export const CATEGORY_LABELS: Record<GlossaryTerm['category'], string> = {
   core: 'Core Concepts',
@@ -236,3 +323,18 @@ export const CATEGORY_LABELS: Record<GlossaryTerm['category'], string> = {
   methodology: 'How It Works',
   intelligence: 'Intelligence Terms',
 };
+
+/**
+ * Get tooltip text based on user skill level
+ */
+export function getTooltipForLevel(termName: string, level: 'simple' | 'standard' | 'detailed'): string | undefined {
+  const term = GLOSSARY.find(t => t.term.toLowerCase() === termName.toLowerCase());
+  return term?.[level];
+}
+
+/**
+ * Get a quick one-liner for a term (uses simple level)
+ */
+export function getQuickTip(termName: string): string | undefined {
+  return getTooltipForLevel(termName, 'simple');
+}

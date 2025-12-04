@@ -71,6 +71,8 @@ export default function TrainingDataPage() {
     output: string;
     quality_score: number;
     created_at: string;
+    prompt?: string;
+    completion?: string;
   }>>([]);
 
   // Settings state
@@ -442,7 +444,7 @@ export default function TrainingDataPage() {
                 </button>
               </div>
               <p className="text-slate-500 text-sm mt-3">
-                Your $90 RunPod credits are waiting. Use Alpaca format with Mistral-7B. ~$2-5 per 1000 examples on A100.
+                Your $90 RunPod credits are waiting. Use Alpaca format with phi-2. ~$1-3 per 1000 examples on A100.
               </p>
             </div>
 
@@ -775,8 +777,8 @@ export default function TrainingDataPage() {
                   <div>
                     <p className="text-blue-400 font-medium">Pro Tip: RunPod Training</p>
                     <p className="text-sm text-slate-400 mt-1">
-                      With your $90 RunPod credits, you can fine-tune Mistral-7B on ~18,000-45,000 training examples.
-                      Export in Alpaca format and use axolotl or unsloth for efficient LoRA training.
+                      With your $90 RunPod credits, you can fine-tune phi-2 on ~30,000-90,000 training examples.
+                      Export in Alpaca format and use scripts/train_h200.py for LoRA training.
                     </p>
                   </div>
                 </div>

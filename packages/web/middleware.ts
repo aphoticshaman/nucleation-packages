@@ -69,10 +69,32 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect logged-in users from home to /app
+  // Redirect logged-in users from home to appropriate dashboard
   if (path === '/' && user) {
+    // Get user role to redirect to correct dashboard
+    let role = 'consumer';
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      role = profile?.role || 'consumer';
+    } catch {
+      console.warn('Failed to fetch user profile for home redirect');
+    }
+
     const url = request.nextUrl.clone();
-    url.pathname = '/app';
+    switch (role) {
+      case 'admin':
+        url.pathname = '/admin';
+        break;
+      case 'enterprise':
+        url.pathname = '/dashboard';
+        break;
+      default:
+        url.pathname = '/app';
+    }
     return NextResponse.redirect(url);
   }
 

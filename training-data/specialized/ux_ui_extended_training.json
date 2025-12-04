@@ -1,0 +1,1052 @@
+[
+  {
+    "instruction": "How should intel dashboard hierarchy prioritize critical vs. routine information?",
+    "input": "",
+    "output": "[Dashboard design: composition principles, information hierarchy, responsive adaptation, and user customization patterns.]"
+  },
+  {
+    "instruction": "What grid systems work best for data-dense intelligence dashboards?",
+    "input": "",
+    "output": "[Dashboard design: composition principles, information hierarchy, responsive adaptation, and user customization patterns.]"
+  },
+  {
+    "instruction": "How do you balance information density with cognitive load on dashboards?",
+    "input": "",
+    "output": "[Dashboard design: composition principles, information hierarchy, responsive adaptation, and user customization patterns.]"
+  },
+  {
+    "instruction": "What widget sizing principles work for mixed-priority intel content?",
+    "input": "",
+    "output": "[Dashboard design: composition principles, information hierarchy, responsive adaptation, and user customization patterns.]"
+  },
+  {
+    "instruction": "How should dashboards adapt between overview and detail modes?",
+    "input": "",
+    "output": "[Dashboard design: composition principles, information hierarchy, responsive adaptation, and user customization patterns.]"
+  },
+  {
+    "instruction": "What refresh patterns work for real-time intel dashboards?",
+    "input": "",
+    "output": "[Dashboard design: composition principles, information hierarchy, responsive adaptation, and user customization patterns.]"
+  },
+  {
+    "instruction": "How do you design dashboard states for no-data vs. loading vs. error?",
+    "input": "",
+    "output": "[Dashboard design: composition principles, information hierarchy, responsive adaptation, and user customization patterns.]"
+  },
+  {
+    "instruction": "What card-based layouts work for intel item organization?",
+    "input": "",
+    "output": "[Dashboard design: composition principles, information hierarchy, responsive adaptation, and user customization patterns.]"
+  },
+  {
+    "instruction": "How should KPI tiles be sized and positioned for scanning?",
+    "input": "",
+    "output": "[Dashboard design: composition principles, information hierarchy, responsive adaptation, and user customization patterns.]"
+  },
+  {
+    "instruction": "What sparkline and mini-chart patterns work in dashboard context?",
+    "input": "",
+    "output": "[Dashboard design: composition principles, information hierarchy, responsive adaptation, and user customization patterns.]"
+  },
+  {
+    "instruction": "How do you design dashboard customization without overwhelming users?",
+    "input": "",
+    "output": "[Dashboard design: composition principles, information hierarchy, responsive adaptation, and user customization patterns.]"
+  },
+  {
+    "instruction": "What drag-and-drop patterns work for dashboard personalization?",
+    "input": "",
+    "output": "[Dashboard design: composition principles, information hierarchy, responsive adaptation, and user customization patterns.]"
+  },
+  {
+    "instruction": "How should saved dashboard views be organized and accessed?",
+    "input": "",
+    "output": "[Dashboard design: composition principles, information hierarchy, responsive adaptation, and user customization patterns.]"
+  },
+  {
+    "instruction": "What print and export considerations affect dashboard design?",
+    "input": "",
+    "output": "[Dashboard design: composition principles, information hierarchy, responsive adaptation, and user customization patterns.]"
+  },
+  {
+    "instruction": "How do you design dashboards that work at different viewport sizes?",
+    "input": "",
+    "output": "[Dashboard design: composition principles, information hierarchy, responsive adaptation, and user customization patterns.]"
+  },
+  {
+    "instruction": "How do you prevent alert fatigue in high-volume intel systems?",
+    "input": "",
+    "output": "[Notification design: priority classification, fatigue prevention, escalation patterns, and cross-device synchronization.]"
+  },
+  {
+    "instruction": "What notification priority schemes work for intelligence platforms?",
+    "input": "",
+    "output": "[Notification design: priority classification, fatigue prevention, escalation patterns, and cross-device synchronization.]"
+  },
+  {
+    "instruction": "How should critical vs. informational alerts be visually differentiated?",
+    "input": "",
+    "output": "[Notification design: priority classification, fatigue prevention, escalation patterns, and cross-device synchronization.]"
+  },
+  {
+    "instruction": "What sound design principles apply to intel alert systems?",
+    "input": "",
+    "output": "[Notification design: priority classification, fatigue prevention, escalation patterns, and cross-device synchronization.]"
+  },
+  {
+    "instruction": "How do you design alert aggregation to reduce noise?",
+    "input": "",
+    "output": "[Notification design: priority classification, fatigue prevention, escalation patterns, and cross-device synchronization.]"
+  },
+  {
+    "instruction": "What snooze and mute patterns work for alert management?",
+    "input": "",
+    "output": "[Notification design: priority classification, fatigue prevention, escalation patterns, and cross-device synchronization.]"
+  },
+  {
+    "instruction": "How should alert thresholds be user-configurable?",
+    "input": "",
+    "output": "[Notification design: priority classification, fatigue prevention, escalation patterns, and cross-device synchronization.]"
+  },
+  {
+    "instruction": "What digest modes work for batching non-urgent notifications?",
+    "input": "",
+    "output": "[Notification design: priority classification, fatigue prevention, escalation patterns, and cross-device synchronization.]"
+  },
+  {
+    "instruction": "How do you design escalation for unacknowledged critical alerts?",
+    "input": "",
+    "output": "[Notification design: priority classification, fatigue prevention, escalation patterns, and cross-device synchronization.]"
+  },
+  {
+    "instruction": "What haptic patterns work for mobile intel notifications?",
+    "input": "",
+    "output": "[Notification design: priority classification, fatigue prevention, escalation patterns, and cross-device synchronization.]"
+  },
+  {
+    "instruction": "How should notification history be organized and searchable?",
+    "input": "",
+    "output": "[Notification design: priority classification, fatigue prevention, escalation patterns, and cross-device synchronization.]"
+  },
+  {
+    "instruction": "What quiet hours and focus modes should intel apps support?",
+    "input": "",
+    "output": "[Notification design: priority classification, fatigue prevention, escalation patterns, and cross-device synchronization.]"
+  },
+  {
+    "instruction": "How do you design alerts that interrupt appropriately by context?",
+    "input": "",
+    "output": "[Notification design: priority classification, fatigue prevention, escalation patterns, and cross-device synchronization.]"
+  },
+  {
+    "instruction": "What machine learning can reduce notification noise?",
+    "input": "",
+    "output": "[Notification design: priority classification, fatigue prevention, escalation patterns, and cross-device synchronization.]"
+  },
+  {
+    "instruction": "How should cross-device notification sync work?",
+    "input": "",
+    "output": "[Notification design: priority classification, fatigue prevention, escalation patterns, and cross-device synchronization.]"
+  },
+  {
+    "instruction": "How do you maximize data density without sacrificing readability?",
+    "input": "",
+    "output": "[Information density: typography optimization, progressive disclosure, micro-interactions, and expert vs novice considerations.]"
+  },
+  {
+    "instruction": "What typography choices support dense information display?",
+    "input": "",
+    "output": "[Information density: typography optimization, progressive disclosure, micro-interactions, and expert vs novice considerations.]"
+  },
+  {
+    "instruction": "How do micro-interactions reduce cognitive load in dense UIs?",
+    "input": "",
+    "output": "[Information density: typography optimization, progressive disclosure, micro-interactions, and expert vs novice considerations.]"
+  },
+  {
+    "instruction": "What whitespace principles apply to data-heavy interfaces?",
+    "input": "",
+    "output": "[Information density: typography optimization, progressive disclosure, micro-interactions, and expert vs novice considerations.]"
+  },
+  {
+    "instruction": "How do you design tables that show many columns effectively?",
+    "input": "",
+    "output": "[Information density: typography optimization, progressive disclosure, micro-interactions, and expert vs novice considerations.]"
+  },
+  {
+    "instruction": "What progressive disclosure patterns work for layered detail?",
+    "input": "",
+    "output": "[Information density: typography optimization, progressive disclosure, micro-interactions, and expert vs novice considerations.]"
+  },
+  {
+    "instruction": "How should hover states reveal additional information?",
+    "input": "",
+    "output": "[Information density: typography optimization, progressive disclosure, micro-interactions, and expert vs novice considerations.]"
+  },
+  {
+    "instruction": "What tooltip patterns work for data point explanation?",
+    "input": "",
+    "output": "[Information density: typography optimization, progressive disclosure, micro-interactions, and expert vs novice considerations.]"
+  },
+  {
+    "instruction": "How do you design expandable rows in data tables?",
+    "input": "",
+    "output": "[Information density: typography optimization, progressive disclosure, micro-interactions, and expert vs novice considerations.]"
+  },
+  {
+    "instruction": "What truncation and overflow patterns work for text-heavy content?",
+    "input": "",
+    "output": "[Information density: typography optimization, progressive disclosure, micro-interactions, and expert vs novice considerations.]"
+  },
+  {
+    "instruction": "How should numbers and units be formatted for quick scanning?",
+    "input": "",
+    "output": "[Information density: typography optimization, progressive disclosure, micro-interactions, and expert vs novice considerations.]"
+  },
+  {
+    "instruction": "What abbreviation conventions work for space-constrained UIs?",
+    "input": "",
+    "output": "[Information density: typography optimization, progressive disclosure, micro-interactions, and expert vs novice considerations.]"
+  },
+  {
+    "instruction": "How do you design data labels that don't obscure data?",
+    "input": "",
+    "output": "[Information density: typography optimization, progressive disclosure, micro-interactions, and expert vs novice considerations.]"
+  },
+  {
+    "instruction": "What zoom and pan patterns work for dense visualizations?",
+    "input": "",
+    "output": "[Information density: typography optimization, progressive disclosure, micro-interactions, and expert vs novice considerations.]"
+  },
+  {
+    "instruction": "How do you balance data density between expert and novice users?",
+    "input": "",
+    "output": "[Information density: typography optimization, progressive disclosure, micro-interactions, and expert vs novice considerations.]"
+  },
+  {
+    "instruction": "How should intel dashboards adapt to mobile screen constraints?",
+    "input": "",
+    "output": "[Mobile design: screen adaptation, gesture patterns, offline capability, and platform-specific considerations.]"
+  },
+  {
+    "instruction": "What thumb-zone considerations affect mobile intel UI?",
+    "input": "",
+    "output": "[Mobile design: screen adaptation, gesture patterns, offline capability, and platform-specific considerations.]"
+  },
+  {
+    "instruction": "How do you design one-handed operation for mobile intel apps?",
+    "input": "",
+    "output": "[Mobile design: screen adaptation, gesture patterns, offline capability, and platform-specific considerations.]"
+  },
+  {
+    "instruction": "What swipe gestures work for intel item navigation?",
+    "input": "",
+    "output": "[Mobile design: screen adaptation, gesture patterns, offline capability, and platform-specific considerations.]"
+  },
+  {
+    "instruction": "How should mobile alerts differ from desktop notifications?",
+    "input": "",
+    "output": "[Mobile design: screen adaptation, gesture patterns, offline capability, and platform-specific considerations.]"
+  },
+  {
+    "instruction": "What offline modes should mobile intel apps support?",
+    "input": "",
+    "output": "[Mobile design: screen adaptation, gesture patterns, offline capability, and platform-specific considerations.]"
+  },
+  {
+    "instruction": "How do you design map interactions for mobile intel?",
+    "input": "",
+    "output": "[Mobile design: screen adaptation, gesture patterns, offline capability, and platform-specific considerations.]"
+  },
+  {
+    "instruction": "What pull-to-refresh patterns work for intel feeds?",
+    "input": "",
+    "output": "[Mobile design: screen adaptation, gesture patterns, offline capability, and platform-specific considerations.]"
+  },
+  {
+    "instruction": "How should mobile intel apps handle connectivity changes?",
+    "input": "",
+    "output": "[Mobile design: screen adaptation, gesture patterns, offline capability, and platform-specific considerations.]"
+  },
+  {
+    "instruction": "What bottom sheet patterns work for detail views on mobile?",
+    "input": "",
+    "output": "[Mobile design: screen adaptation, gesture patterns, offline capability, and platform-specific considerations.]"
+  },
+  {
+    "instruction": "How do you design mobile search for intel queries?",
+    "input": "",
+    "output": "[Mobile design: screen adaptation, gesture patterns, offline capability, and platform-specific considerations.]"
+  },
+  {
+    "instruction": "What share sheet integrations benefit intel workflows?",
+    "input": "",
+    "output": "[Mobile design: screen adaptation, gesture patterns, offline capability, and platform-specific considerations.]"
+  },
+  {
+    "instruction": "How should mobile intel apps use device sensors?",
+    "input": "",
+    "output": "[Mobile design: screen adaptation, gesture patterns, offline capability, and platform-specific considerations.]"
+  },
+  {
+    "instruction": "What widget patterns work for iOS and Android home screens?",
+    "input": "",
+    "output": "[Mobile design: screen adaptation, gesture patterns, offline capability, and platform-specific considerations.]"
+  },
+  {
+    "instruction": "How do you design mobile onboarding for complex intel apps?",
+    "input": "",
+    "output": "[Mobile design: screen adaptation, gesture patterns, offline capability, and platform-specific considerations.]"
+  },
+  {
+    "instruction": "How do iOS Human Interface Guidelines apply to intel apps?",
+    "input": "",
+    "output": "[iOS design: HIG compliance, system integration, accessibility, and platform-specific feature utilization.]"
+  },
+  {
+    "instruction": "What SF Symbols work for intel and security iconography?",
+    "input": "",
+    "output": "[iOS design: HIG compliance, system integration, accessibility, and platform-specific feature utilization.]"
+  },
+  {
+    "instruction": "How should iOS intel apps use Dynamic Type for accessibility?",
+    "input": "",
+    "output": "[iOS design: HIG compliance, system integration, accessibility, and platform-specific feature utilization.]"
+  },
+  {
+    "instruction": "What UIKit vs SwiftUI tradeoffs affect intel app development?",
+    "input": "",
+    "output": "[iOS design: HIG compliance, system integration, accessibility, and platform-specific feature utilization.]"
+  },
+  {
+    "instruction": "How should intel apps use iOS Focus modes?",
+    "input": "",
+    "output": "[iOS design: HIG compliance, system integration, accessibility, and platform-specific feature utilization.]"
+  },
+  {
+    "instruction": "What WidgetKit patterns work for intel at-a-glance views?",
+    "input": "",
+    "output": "[iOS design: HIG compliance, system integration, accessibility, and platform-specific feature utilization.]"
+  },
+  {
+    "instruction": "How should intel apps integrate with iOS Shortcuts?",
+    "input": "",
+    "output": "[iOS design: HIG compliance, system integration, accessibility, and platform-specific feature utilization.]"
+  },
+  {
+    "instruction": "What Live Activities patterns work for ongoing intel events?",
+    "input": "",
+    "output": "[iOS design: HIG compliance, system integration, accessibility, and platform-specific feature utilization.]"
+  },
+  {
+    "instruction": "How should intel apps use iOS background refresh?",
+    "input": "",
+    "output": "[iOS design: HIG compliance, system integration, accessibility, and platform-specific feature utilization.]"
+  },
+  {
+    "instruction": "What Handoff patterns work for iOS-Mac intel workflows?",
+    "input": "",
+    "output": "[iOS design: HIG compliance, system integration, accessibility, and platform-specific feature utilization.]"
+  },
+  {
+    "instruction": "How should intel apps handle iPad multitasking and Stage Manager?",
+    "input": "",
+    "output": "[iOS design: HIG compliance, system integration, accessibility, and platform-specific feature utilization.]"
+  },
+  {
+    "instruction": "What iOS accessibility features must intel apps support?",
+    "input": "",
+    "output": "[iOS design: HIG compliance, system integration, accessibility, and platform-specific feature utilization.]"
+  },
+  {
+    "instruction": "How should intel apps use iOS location services appropriately?",
+    "input": "",
+    "output": "[iOS design: HIG compliance, system integration, accessibility, and platform-specific feature utilization.]"
+  },
+  {
+    "instruction": "What iOS notification management features should intel apps support?",
+    "input": "",
+    "output": "[iOS design: HIG compliance, system integration, accessibility, and platform-specific feature utilization.]"
+  },
+  {
+    "instruction": "How should intel apps design for different iPhone screen sizes?",
+    "input": "",
+    "output": "[iOS design: HIG compliance, system integration, accessibility, and platform-specific feature utilization.]"
+  },
+  {
+    "instruction": "How does Material Design 3 apply to intel applications?",
+    "input": "",
+    "output": "[Android design: Material Design compliance, device fragmentation, system integration, and platform-specific patterns.]"
+  },
+  {
+    "instruction": "What Android adaptive icons work for intel app branding?",
+    "input": "",
+    "output": "[Android design: Material Design compliance, device fragmentation, system integration, and platform-specific patterns.]"
+  },
+  {
+    "instruction": "How should Android intel apps handle different screen densities?",
+    "input": "",
+    "output": "[Android design: Material Design compliance, device fragmentation, system integration, and platform-specific patterns.]"
+  },
+  {
+    "instruction": "What Jetpack Compose patterns work for intel interfaces?",
+    "input": "",
+    "output": "[Android design: Material Design compliance, device fragmentation, system integration, and platform-specific patterns.]"
+  },
+  {
+    "instruction": "How should intel apps use Android notification channels?",
+    "input": "",
+    "output": "[Android design: Material Design compliance, device fragmentation, system integration, and platform-specific patterns.]"
+  },
+  {
+    "instruction": "What widget patterns work for Android home screen intel?",
+    "input": "",
+    "output": "[Android design: Material Design compliance, device fragmentation, system integration, and platform-specific patterns.]"
+  },
+  {
+    "instruction": "How should intel apps handle Android background restrictions?",
+    "input": "",
+    "output": "[Android design: Material Design compliance, device fragmentation, system integration, and platform-specific patterns.]"
+  },
+  {
+    "instruction": "What work profile considerations affect enterprise intel apps?",
+    "input": "",
+    "output": "[Android design: Material Design compliance, device fragmentation, system integration, and platform-specific patterns.]"
+  },
+  {
+    "instruction": "How should Android intel apps handle different API levels?",
+    "input": "",
+    "output": "[Android design: Material Design compliance, device fragmentation, system integration, and platform-specific patterns.]"
+  },
+  {
+    "instruction": "What foldable and large screen considerations affect Android intel apps?",
+    "input": "",
+    "output": "[Android design: Material Design compliance, device fragmentation, system integration, and platform-specific patterns.]"
+  },
+  {
+    "instruction": "How should Android intel apps integrate with Google Assistant?",
+    "input": "",
+    "output": "[Android design: Material Design compliance, device fragmentation, system integration, and platform-specific patterns.]"
+  },
+  {
+    "instruction": "What Android accessibility services must intel apps support?",
+    "input": "",
+    "output": "[Android design: Material Design compliance, device fragmentation, system integration, and platform-specific patterns.]"
+  },
+  {
+    "instruction": "How should intel apps use Android location in different modes?",
+    "input": "",
+    "output": "[Android design: Material Design compliance, device fragmentation, system integration, and platform-specific patterns.]"
+  },
+  {
+    "instruction": "What Material You theming works for intel app personalization?",
+    "input": "",
+    "output": "[Android design: Material Design compliance, device fragmentation, system integration, and platform-specific patterns.]"
+  },
+  {
+    "instruction": "How should Android intel apps handle manufacturer UI variations?",
+    "input": "",
+    "output": "[Android design: Material Design compliance, device fragmentation, system integration, and platform-specific patterns.]"
+  },
+  {
+    "instruction": "How should intel interfaces use tablet screen real estate?",
+    "input": "",
+    "output": "[Tablet design: screen utilization, multi-pane layouts, input modalities, and orientation handling.]"
+  },
+  {
+    "instruction": "What multi-column layouts work for tablet intel apps?",
+    "input": "",
+    "output": "[Tablet design: screen utilization, multi-pane layouts, input modalities, and orientation handling.]"
+  },
+  {
+    "instruction": "How should navigation differ between tablet and phone intel apps?",
+    "input": "",
+    "output": "[Tablet design: screen utilization, multi-pane layouts, input modalities, and orientation handling.]"
+  },
+  {
+    "instruction": "What split-view patterns work for master-detail intel display?",
+    "input": "",
+    "output": "[Tablet design: screen utilization, multi-pane layouts, input modalities, and orientation handling.]"
+  },
+  {
+    "instruction": "How should intel apps handle tablet orientation changes?",
+    "input": "",
+    "output": "[Tablet design: screen utilization, multi-pane layouts, input modalities, and orientation handling.]"
+  },
+  {
+    "instruction": "What stylus interactions enhance tablet intel workflows?",
+    "input": "",
+    "output": "[Tablet design: screen utilization, multi-pane layouts, input modalities, and orientation handling.]"
+  },
+  {
+    "instruction": "How should tablet intel apps use floating windows?",
+    "input": "",
+    "output": "[Tablet design: screen utilization, multi-pane layouts, input modalities, and orientation handling.]"
+  },
+  {
+    "instruction": "What keyboard shortcut support should tablet intel apps have?",
+    "input": "",
+    "output": "[Tablet design: screen utilization, multi-pane layouts, input modalities, and orientation handling.]"
+  },
+  {
+    "instruction": "How should tablet intel apps integrate with external displays?",
+    "input": "",
+    "output": "[Tablet design: screen utilization, multi-pane layouts, input modalities, and orientation handling.]"
+  },
+  {
+    "instruction": "What drag-and-drop patterns work for tablet intel apps?",
+    "input": "",
+    "output": "[Tablet design: screen utilization, multi-pane layouts, input modalities, and orientation handling.]"
+  },
+  {
+    "instruction": "How should tablet intel apps handle pointer input?",
+    "input": "",
+    "output": "[Tablet design: screen utilization, multi-pane layouts, input modalities, and orientation handling.]"
+  },
+  {
+    "instruction": "What pop-over patterns work for tablet secondary content?",
+    "input": "",
+    "output": "[Tablet design: screen utilization, multi-pane layouts, input modalities, and orientation handling.]"
+  },
+  {
+    "instruction": "How should tablet intel apps adapt to different aspect ratios?",
+    "input": "",
+    "output": "[Tablet design: screen utilization, multi-pane layouts, input modalities, and orientation handling.]"
+  },
+  {
+    "instruction": "What compact vs. regular size class considerations affect tablets?",
+    "input": "",
+    "output": "[Tablet design: screen utilization, multi-pane layouts, input modalities, and orientation handling.]"
+  },
+  {
+    "instruction": "How should tablet intel apps support picture-in-picture?",
+    "input": "",
+    "output": "[Tablet design: screen utilization, multi-pane layouts, input modalities, and orientation handling.]"
+  },
+  {
+    "instruction": "How do WCAG guidelines apply to mission-critical intel interfaces?",
+    "input": "",
+    "output": "[Accessibility design: WCAG compliance, assistive technology support, cognitive considerations, and stress-condition usability.]"
+  },
+  {
+    "instruction": "What color contrast requirements apply to urgent intel displays?",
+    "input": "",
+    "output": "[Accessibility design: WCAG compliance, assistive technology support, cognitive considerations, and stress-condition usability.]"
+  },
+  {
+    "instruction": "How should screen readers navigate complex intel dashboards?",
+    "input": "",
+    "output": "[Accessibility design: WCAG compliance, assistive technology support, cognitive considerations, and stress-condition usability.]"
+  },
+  {
+    "instruction": "What keyboard navigation patterns work for intel applications?",
+    "input": "",
+    "output": "[Accessibility design: WCAG compliance, assistive technology support, cognitive considerations, and stress-condition usability.]"
+  },
+  {
+    "instruction": "How should intel apps handle color-blind users viewing risk maps?",
+    "input": "",
+    "output": "[Accessibility design: WCAG compliance, assistive technology support, cognitive considerations, and stress-condition usability.]"
+  },
+  {
+    "instruction": "What ARIA labels are needed for dynamic intel content?",
+    "input": "",
+    "output": "[Accessibility design: WCAG compliance, assistive technology support, cognitive considerations, and stress-condition usability.]"
+  },
+  {
+    "instruction": "How should intel apps support reduced motion preferences?",
+    "input": "",
+    "output": "[Accessibility design: WCAG compliance, assistive technology support, cognitive considerations, and stress-condition usability.]"
+  },
+  {
+    "instruction": "What focus management is needed for modal intel workflows?",
+    "input": "",
+    "output": "[Accessibility design: WCAG compliance, assistive technology support, cognitive considerations, and stress-condition usability.]"
+  },
+  {
+    "instruction": "How should intel apps handle users with cognitive disabilities?",
+    "input": "",
+    "output": "[Accessibility design: WCAG compliance, assistive technology support, cognitive considerations, and stress-condition usability.]"
+  },
+  {
+    "instruction": "What text scaling requirements affect intel data display?",
+    "input": "",
+    "output": "[Accessibility design: WCAG compliance, assistive technology support, cognitive considerations, and stress-condition usability.]"
+  },
+  {
+    "instruction": "How should audio and video intel content be captioned?",
+    "input": "",
+    "output": "[Accessibility design: WCAG compliance, assistive technology support, cognitive considerations, and stress-condition usability.]"
+  },
+  {
+    "instruction": "What touch target sizes are needed for stress conditions?",
+    "input": "",
+    "output": "[Accessibility design: WCAG compliance, assistive technology support, cognitive considerations, and stress-condition usability.]"
+  },
+  {
+    "instruction": "How should intel apps support switch control users?",
+    "input": "",
+    "output": "[Accessibility design: WCAG compliance, assistive technology support, cognitive considerations, and stress-condition usability.]"
+  },
+  {
+    "instruction": "What error messaging is needed for accessible intel forms?",
+    "input": "",
+    "output": "[Accessibility design: WCAG compliance, assistive technology support, cognitive considerations, and stress-condition usability.]"
+  },
+  {
+    "instruction": "How should intel apps handle users under time pressure?",
+    "input": "",
+    "output": "[Accessibility design: WCAG compliance, assistive technology support, cognitive considerations, and stress-condition usability.]"
+  },
+  {
+    "instruction": "What color palettes work for risk-level encoding in intel?",
+    "input": "",
+    "output": "[Color design: encoding schemes, accessibility requirements, dark mode adaptation, and cultural considerations.]"
+  },
+  {
+    "instruction": "How do you design color scales for continuous data visualization?",
+    "input": "",
+    "output": "[Color design: encoding schemes, accessibility requirements, dark mode adaptation, and cultural considerations.]"
+  },
+  {
+    "instruction": "What diverging color schemes work for positive/negative values?",
+    "input": "",
+    "output": "[Color design: encoding schemes, accessibility requirements, dark mode adaptation, and cultural considerations.]"
+  },
+  {
+    "instruction": "How should color encode categorical intel data?",
+    "input": "",
+    "output": "[Color design: encoding schemes, accessibility requirements, dark mode adaptation, and cultural considerations.]"
+  },
+  {
+    "instruction": "What color-blind safe palettes work for intel visualization?",
+    "input": "",
+    "output": "[Color design: encoding schemes, accessibility requirements, dark mode adaptation, and cultural considerations.]"
+  },
+  {
+    "instruction": "How do you handle color in dark mode intel interfaces?",
+    "input": "",
+    "output": "[Color design: encoding schemes, accessibility requirements, dark mode adaptation, and cultural considerations.]"
+  },
+  {
+    "instruction": "What sequential color schemes work for magnitude encoding?",
+    "input": "",
+    "output": "[Color design: encoding schemes, accessibility requirements, dark mode adaptation, and cultural considerations.]"
+  },
+  {
+    "instruction": "How should alert colors be chosen for maximum attention?",
+    "input": "",
+    "output": "[Color design: encoding schemes, accessibility requirements, dark mode adaptation, and cultural considerations.]"
+  },
+  {
+    "instruction": "What background colors support prolonged data viewing?",
+    "input": "",
+    "output": "[Color design: encoding schemes, accessibility requirements, dark mode adaptation, and cultural considerations.]"
+  },
+  {
+    "instruction": "How do you use color to create visual hierarchy in dashboards?",
+    "input": "",
+    "output": "[Color design: encoding schemes, accessibility requirements, dark mode adaptation, and cultural considerations.]"
+  },
+  {
+    "instruction": "What color semantics are culturally universal vs. specific?",
+    "input": "",
+    "output": "[Color design: encoding schemes, accessibility requirements, dark mode adaptation, and cultural considerations.]"
+  },
+  {
+    "instruction": "How should brand colors integrate with data visualization?",
+    "input": "",
+    "output": "[Color design: encoding schemes, accessibility requirements, dark mode adaptation, and cultural considerations.]"
+  },
+  {
+    "instruction": "What color opacity patterns work for overlapping data?",
+    "input": "",
+    "output": "[Color design: encoding schemes, accessibility requirements, dark mode adaptation, and cultural considerations.]"
+  },
+  {
+    "instruction": "How do you design color legends that don't obscure data?",
+    "input": "",
+    "output": "[Color design: encoding schemes, accessibility requirements, dark mode adaptation, and cultural considerations.]"
+  },
+  {
+    "instruction": "What color animation patterns draw attention appropriately?",
+    "input": "",
+    "output": "[Color design: encoding schemes, accessibility requirements, dark mode adaptation, and cultural considerations.]"
+  },
+  {
+    "instruction": "What chart types work best for time series intel data?",
+    "input": "",
+    "output": "[Data visualization: chart selection, interaction design, annotation patterns, and user comprehension optimization.]"
+  },
+  {
+    "instruction": "How do you design interactive choropleth maps for risk visualization?",
+    "input": "",
+    "output": "[Data visualization: chart selection, interaction design, annotation patterns, and user comprehension optimization.]"
+  },
+  {
+    "instruction": "What network graph layouts work for entity relationship display?",
+    "input": "",
+    "output": "[Data visualization: chart selection, interaction design, annotation patterns, and user comprehension optimization.]"
+  },
+  {
+    "instruction": "How should treemaps be designed for hierarchical intel data?",
+    "input": "",
+    "output": "[Data visualization: chart selection, interaction design, annotation patterns, and user comprehension optimization.]"
+  },
+  {
+    "instruction": "What scatter plot patterns work for multi-dimensional analysis?",
+    "input": "",
+    "output": "[Data visualization: chart selection, interaction design, annotation patterns, and user comprehension optimization.]"
+  },
+  {
+    "instruction": "How do you design small multiples for comparative intel?",
+    "input": "",
+    "output": "[Data visualization: chart selection, interaction design, annotation patterns, and user comprehension optimization.]"
+  },
+  {
+    "instruction": "What sankey diagrams work for flow and relationship data?",
+    "input": "",
+    "output": "[Data visualization: chart selection, interaction design, annotation patterns, and user comprehension optimization.]"
+  },
+  {
+    "instruction": "How should heatmaps be designed for pattern detection?",
+    "input": "",
+    "output": "[Data visualization: chart selection, interaction design, annotation patterns, and user comprehension optimization.]"
+  },
+  {
+    "instruction": "What bubble charts work for sized categorical comparison?",
+    "input": "",
+    "output": "[Data visualization: chart selection, interaction design, annotation patterns, and user comprehension optimization.]"
+  },
+  {
+    "instruction": "How do you design radar charts for multi-factor assessment?",
+    "input": "",
+    "output": "[Data visualization: chart selection, interaction design, annotation patterns, and user comprehension optimization.]"
+  },
+  {
+    "instruction": "What bullet charts work for goal tracking in intel?",
+    "input": "",
+    "output": "[Data visualization: chart selection, interaction design, annotation patterns, and user comprehension optimization.]"
+  },
+  {
+    "instruction": "How should box plots communicate distribution to non-statisticians?",
+    "input": "",
+    "output": "[Data visualization: chart selection, interaction design, annotation patterns, and user comprehension optimization.]"
+  },
+  {
+    "instruction": "What waterfall charts work for change attribution?",
+    "input": "",
+    "output": "[Data visualization: chart selection, interaction design, annotation patterns, and user comprehension optimization.]"
+  },
+  {
+    "instruction": "How do you design interactive filtering for complex visualizations?",
+    "input": "",
+    "output": "[Data visualization: chart selection, interaction design, annotation patterns, and user comprehension optimization.]"
+  },
+  {
+    "instruction": "What annotation patterns work for chart storytelling?",
+    "input": "",
+    "output": "[Data visualization: chart selection, interaction design, annotation patterns, and user comprehension optimization.]"
+  },
+  {
+    "instruction": "How should Bayesian probability updates be visualized for users?",
+    "input": "",
+    "output": "[Quantitative UI: statistical visualization, uncertainty display, parameter controls, and result interpretation aids.]"
+  },
+  {
+    "instruction": "What UI shows confidence intervals and uncertainty effectively?",
+    "input": "",
+    "output": "[Quantitative UI: statistical visualization, uncertainty display, parameter controls, and result interpretation aids.]"
+  },
+  {
+    "instruction": "How do you design Monte Carlo simulation result displays?",
+    "input": "",
+    "output": "[Quantitative UI: statistical visualization, uncertainty display, parameter controls, and result interpretation aids.]"
+  },
+  {
+    "instruction": "What sliders and inputs work for scenario parameter adjustment?",
+    "input": "",
+    "output": "[Quantitative UI: statistical visualization, uncertainty display, parameter controls, and result interpretation aids.]"
+  },
+  {
+    "instruction": "How should VaR and risk metrics be displayed to non-quants?",
+    "input": "",
+    "output": "[Quantitative UI: statistical visualization, uncertainty display, parameter controls, and result interpretation aids.]"
+  },
+  {
+    "instruction": "What time series forecast UIs show uncertainty bands?",
+    "input": "",
+    "output": "[Quantitative UI: statistical visualization, uncertainty display, parameter controls, and result interpretation aids.]"
+  },
+  {
+    "instruction": "How do you design correlation matrix visualizations?",
+    "input": "",
+    "output": "[Quantitative UI: statistical visualization, uncertainty display, parameter controls, and result interpretation aids.]"
+  },
+  {
+    "instruction": "What regression result displays are interpretable by users?",
+    "input": "",
+    "output": "[Quantitative UI: statistical visualization, uncertainty display, parameter controls, and result interpretation aids.]"
+  },
+  {
+    "instruction": "How should A/B test results be visualized for decision-making?",
+    "input": "",
+    "output": "[Quantitative UI: statistical visualization, uncertainty display, parameter controls, and result interpretation aids.]"
+  },
+  {
+    "instruction": "What sensitivity analysis UIs help users understand drivers?",
+    "input": "",
+    "output": "[Quantitative UI: statistical visualization, uncertainty display, parameter controls, and result interpretation aids.]"
+  },
+  {
+    "instruction": "How do you design distribution visualizations for user understanding?",
+    "input": "",
+    "output": "[Quantitative UI: statistical visualization, uncertainty display, parameter controls, and result interpretation aids.]"
+  },
+  {
+    "instruction": "What threshold adjustment UIs work for signal detection?",
+    "input": "",
+    "output": "[Quantitative UI: statistical visualization, uncertainty display, parameter controls, and result interpretation aids.]"
+  },
+  {
+    "instruction": "How should model performance metrics be displayed?",
+    "input": "",
+    "output": "[Quantitative UI: statistical visualization, uncertainty display, parameter controls, and result interpretation aids.]"
+  },
+  {
+    "instruction": "What backtesting result UIs show strategy performance?",
+    "input": "",
+    "output": "[Quantitative UI: statistical visualization, uncertainty display, parameter controls, and result interpretation aids.]"
+  },
+  {
+    "instruction": "How do you design what-if scenario comparison interfaces?",
+    "input": "",
+    "output": "[Quantitative UI: statistical visualization, uncertainty display, parameter controls, and result interpretation aids.]"
+  },
+  {
+    "instruction": "What date range picker patterns work for temporal intel analysis?",
+    "input": "",
+    "output": "[Control design: filter patterns, selection mechanisms, state management, and advanced query interfaces.]"
+  },
+  {
+    "instruction": "How should multi-select filters be designed for faceted search?",
+    "input": "",
+    "output": "[Control design: filter patterns, selection mechanisms, state management, and advanced query interfaces.]"
+  },
+  {
+    "instruction": "What slider patterns work for continuous threshold adjustment?",
+    "input": "",
+    "output": "[Control design: filter patterns, selection mechanisms, state management, and advanced query interfaces.]"
+  },
+  {
+    "instruction": "How do you design typeahead search for entity lookup?",
+    "input": "",
+    "output": "[Control design: filter patterns, selection mechanisms, state management, and advanced query interfaces.]"
+  },
+  {
+    "instruction": "What toggle patterns work for layer visibility control?",
+    "input": "",
+    "output": "[Control design: filter patterns, selection mechanisms, state management, and advanced query interfaces.]"
+  },
+  {
+    "instruction": "How should dropdown menus handle long option lists?",
+    "input": "",
+    "output": "[Control design: filter patterns, selection mechanisms, state management, and advanced query interfaces.]"
+  },
+  {
+    "instruction": "What pill/chip patterns work for active filter display?",
+    "input": "",
+    "output": "[Control design: filter patterns, selection mechanisms, state management, and advanced query interfaces.]"
+  },
+  {
+    "instruction": "How do you design comparison mode toggles for side-by-side?",
+    "input": "",
+    "output": "[Control design: filter patterns, selection mechanisms, state management, and advanced query interfaces.]"
+  },
+  {
+    "instruction": "What zoom controls work for map and timeline navigation?",
+    "input": "",
+    "output": "[Control design: filter patterns, selection mechanisms, state management, and advanced query interfaces.]"
+  },
+  {
+    "instruction": "How should save and share controls work for analysis states?",
+    "input": "",
+    "output": "[Control design: filter patterns, selection mechanisms, state management, and advanced query interfaces.]"
+  },
+  {
+    "instruction": "What undo/redo patterns work for exploratory analysis?",
+    "input": "",
+    "output": "[Control design: filter patterns, selection mechanisms, state management, and advanced query interfaces.]"
+  },
+  {
+    "instruction": "How do you design export options for different output formats?",
+    "input": "",
+    "output": "[Control design: filter patterns, selection mechanisms, state management, and advanced query interfaces.]"
+  },
+  {
+    "instruction": "What keyboard shortcuts should analysis tools support?",
+    "input": "",
+    "output": "[Control design: filter patterns, selection mechanisms, state management, and advanced query interfaces.]"
+  },
+  {
+    "instruction": "How should analysis history and breadcrumbs work?",
+    "input": "",
+    "output": "[Control design: filter patterns, selection mechanisms, state management, and advanced query interfaces.]"
+  },
+  {
+    "instruction": "What query builder UIs work for advanced filtering?",
+    "input": "",
+    "output": "[Control design: filter patterns, selection mechanisms, state management, and advanced query interfaces.]"
+  },
+  {
+    "instruction": "How should real-time data updates affect UI without jarring?",
+    "input": "",
+    "output": "[Real-time design: update patterns, streaming indicators, scroll management, and connection state handling.]"
+  },
+  {
+    "instruction": "What streaming indicator patterns show live data status?",
+    "input": "",
+    "output": "[Real-time design: update patterns, streaming indicators, scroll management, and connection state handling.]"
+  },
+  {
+    "instruction": "How do you design feeds that update without losing scroll position?",
+    "input": "",
+    "output": "[Real-time design: update patterns, streaming indicators, scroll management, and connection state handling.]"
+  },
+  {
+    "instruction": "What animation patterns indicate new data arrival?",
+    "input": "",
+    "output": "[Real-time design: update patterns, streaming indicators, scroll management, and connection state handling.]"
+  },
+  {
+    "instruction": "How should time-ago stamps update for streaming data?",
+    "input": "",
+    "output": "[Real-time design: update patterns, streaming indicators, scroll management, and connection state handling.]"
+  },
+  {
+    "instruction": "What buffering and catchup patterns work for real-time gaps?",
+    "input": "",
+    "output": "[Real-time design: update patterns, streaming indicators, scroll management, and connection state handling.]"
+  },
+  {
+    "instruction": "How do you design rate limiting indicators for fast streams?",
+    "input": "",
+    "output": "[Real-time design: update patterns, streaming indicators, scroll management, and connection state handling.]"
+  },
+  {
+    "instruction": "What reconnection patterns work for dropped connections?",
+    "input": "",
+    "output": "[Real-time design: update patterns, streaming indicators, scroll management, and connection state handling.]"
+  },
+  {
+    "instruction": "How should users control stream pause and resume?",
+    "input": "",
+    "output": "[Real-time design: update patterns, streaming indicators, scroll management, and connection state handling.]"
+  },
+  {
+    "instruction": "What highlighting patterns show changed values in updates?",
+    "input": "",
+    "output": "[Real-time design: update patterns, streaming indicators, scroll management, and connection state handling.]"
+  },
+  {
+    "instruction": "How do you design real-time charts that scroll or update in place?",
+    "input": "",
+    "output": "[Real-time design: update patterns, streaming indicators, scroll management, and connection state handling.]"
+  },
+  {
+    "instruction": "What audio cues work for background real-time alerts?",
+    "input": "",
+    "output": "[Real-time design: update patterns, streaming indicators, scroll management, and connection state handling.]"
+  },
+  {
+    "instruction": "How should real-time UIs handle high-frequency updates?",
+    "input": "",
+    "output": "[Real-time design: update patterns, streaming indicators, scroll management, and connection state handling.]"
+  },
+  {
+    "instruction": "What batching patterns reduce visual noise in streams?",
+    "input": "",
+    "output": "[Real-time design: update patterns, streaming indicators, scroll management, and connection state handling.]"
+  },
+  {
+    "instruction": "How do you design real-time vs. historical mode switching?",
+    "input": "",
+    "output": "[Real-time design: update patterns, streaming indicators, scroll management, and connection state handling.]"
+  },
+  {
+    "instruction": "How do empty states guide users to their first action?",
+    "input": "",
+    "output": "[Empty state design: user guidance, exploration invitation, progressive revelation, and feature discovery patterns.]"
+  },
+  {
+    "instruction": "What blank map designs invite exploration without overwhelming?",
+    "input": "",
+    "output": "[Empty state design: user guidance, exploration invitation, progressive revelation, and feature discovery patterns.]"
+  },
+  {
+    "instruction": "How should zero-results states guide query refinement?",
+    "input": "",
+    "output": "[Empty state design: user guidance, exploration invitation, progressive revelation, and feature discovery patterns.]"
+  },
+  {
+    "instruction": "What onboarding patterns work for complex intel tools?",
+    "input": "",
+    "output": "[Empty state design: user guidance, exploration invitation, progressive revelation, and feature discovery patterns.]"
+  },
+  {
+    "instruction": "How do you design first-run experiences for intel platforms?",
+    "input": "",
+    "output": "[Empty state design: user guidance, exploration invitation, progressive revelation, and feature discovery patterns.]"
+  },
+  {
+    "instruction": "What placeholder content communicates available functionality?",
+    "input": "",
+    "output": "[Empty state design: user guidance, exploration invitation, progressive revelation, and feature discovery patterns.]"
+  },
+  {
+    "instruction": "How should sample data demonstrate tool capabilities?",
+    "input": "",
+    "output": "[Empty state design: user guidance, exploration invitation, progressive revelation, and feature discovery patterns.]"
+  },
+  {
+    "instruction": "What progressive onboarding reveals features over time?",
+    "input": "",
+    "output": "[Empty state design: user guidance, exploration invitation, progressive revelation, and feature discovery patterns.]"
+  },
+  {
+    "instruction": "How do you design contextual help that appears when needed?",
+    "input": "",
+    "output": "[Empty state design: user guidance, exploration invitation, progressive revelation, and feature discovery patterns.]"
+  },
+  {
+    "instruction": "What walkthrough patterns work for complex workflows?",
+    "input": "",
+    "output": "[Empty state design: user guidance, exploration invitation, progressive revelation, and feature discovery patterns.]"
+  },
+  {
+    "instruction": "How should tips and hints appear without annoying experts?",
+    "input": "",
+    "output": "[Empty state design: user guidance, exploration invitation, progressive revelation, and feature discovery patterns.]"
+  },
+  {
+    "instruction": "What documentation integration works within the UI?",
+    "input": "",
+    "output": "[Empty state design: user guidance, exploration invitation, progressive revelation, and feature discovery patterns.]"
+  },
+  {
+    "instruction": "How do you design feature discovery for power users?",
+    "input": "",
+    "output": "[Empty state design: user guidance, exploration invitation, progressive revelation, and feature discovery patterns.]"
+  },
+  {
+    "instruction": "What empty state actions accelerate user activation?",
+    "input": "",
+    "output": "[Empty state design: user guidance, exploration invitation, progressive revelation, and feature discovery patterns.]"
+  },
+  {
+    "instruction": "How should setup wizards guide initial configuration?",
+    "input": "",
+    "output": "[Empty state design: user guidance, exploration invitation, progressive revelation, and feature discovery patterns.]"
+  }
+]

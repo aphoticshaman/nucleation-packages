@@ -8,6 +8,7 @@ import { BookOpen } from 'lucide-react';
 import type { UserProfile } from '@/lib/auth';
 import ViewAsSwitcher from '@/components/admin/ViewAsSwitcher';
 import Glossary from '@/components/Glossary';
+import ExecBriefButton from '@/components/ExecBriefButton';
 
 interface AdminNavProps {
   user: UserProfile;
@@ -15,11 +16,13 @@ interface AdminNavProps {
 
 const navItems = [
   { href: '/admin', label: 'Overview', icon: '📊' },
+  { href: '/admin/users', label: 'User Management', icon: '👤' },
   { href: '/admin/builder', label: 'Dashboard Builder', icon: '🎨' },
   { href: '/admin/training', label: 'Training Data', icon: '🧠' },
   { href: '/admin/customers', label: 'Customers', icon: '👥' },
   { href: '/admin/billing', label: 'Billing', icon: '💳' },
   { href: '/admin/analytics', label: 'Analytics', icon: '📈' },
+  { href: '/admin/health', label: 'API Health', icon: '🩺' },
   { href: '/admin/pipelines', label: 'Data Pipelines', icon: '🔄' },
   { href: '/admin/models', label: 'ML Models', icon: '🤖' },
   { href: '/admin/compliance', label: 'Compliance', icon: '🛡️' },
@@ -54,6 +57,10 @@ export default function AdminNav({ user }: AdminNavProps) {
             <h1 className="text-lg font-bold text-white">LatticeForge</h1>
             <p className="text-[10px] text-orange-400 uppercase tracking-wider font-medium">Admin Console</p>
           </div>
+        </div>
+        {/* Exec Brief Button */}
+        <div className="mt-4">
+          <ExecBriefButton variant="compact" className="w-full justify-center" />
         </div>
       </div>
 

@@ -11,7 +11,31 @@ export interface Nation {
   transition_risk: number;
   regime: number;
   influence_radius: number;
+  // Extended fields for territorial status
+  sovereignty_status?: 'recognized' | 'disputed' | 'unrecognized' | 'occupied';
+  de_facto_controller?: string;  // ISO code if different from legal sovereign
+  is_contested?: boolean;        // Active conflict
+  government_type?: string;
+  last_transition?: string;      // Date of last government change
 }
+
+// Re-export territorial status types for convenience
+export type {
+  TerritorialStatus,
+  TerritorialClaim,
+  GovernmentStatus,
+  MilitaryAsset,
+  ContestedZone,
+  SovereigntyStatus,
+  ControlStatus,
+  GovernmentType,
+  TransitionType,
+  MilitaryBranch,
+  UnitType,
+  UnitSize,
+  ThreatLevel,
+  ForceDisposition,
+} from '@/lib/territorial-status';
 
 export interface InfluenceEdge {
   id: string;

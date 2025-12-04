@@ -1,15 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
-
-// Service role client
-function getServiceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 interface TrainingExample {
   id: string;
@@ -24,7 +14,7 @@ interface TrainingExample {
 
 // GET: Export training data in various formats for RunPod/fine-tuning
 export async function GET(request: Request) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createClient();
   const { searchParams } = new URL(request.url);
 
   // Check auth - allow admin or cron
@@ -57,7 +47,7 @@ export async function GET(request: Request) {
   const limit = parseInt(searchParams.get('limit') || '10000');
   const includeMetadata = searchParams.get('metadata') === 'true';
 
-  const serviceClient = getServiceClient();
+  const serviceClient = createAdminClient();
 
   // Fetch training examples
   let query = serviceClient
@@ -213,7 +203,7 @@ export async function GET(request: Request) {
 
 // POST: Generate training data summary/stats
 export async function POST(request: Request) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
@@ -230,7 +220,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
   }
 
-  const serviceClient = getServiceClient();
+  const serviceClient = createAdminClient();
 
   // Get comprehensive stats
   const { data: totalCount } = await serviceClient
@@ -240,7 +230,7 @@ export async function POST(request: Request) {
   const { data: domainCounts } = await serviceClient
     .from('training_examples')
     .select('domain')
-    .then(result => {
+    .then((result: { data: { domain: string }[] | null; error: unknown }) => {
       if (!result.data) return { data: [] };
       const counts: Record<string, number> = {};
       result.data.forEach((r: { domain: string }) => {
@@ -283,10 +273,10 @@ export async function POST(request: Request) {
       { format: 'csv', description: 'CSV - for analysis in spreadsheets' },
     ],
     runpodTips: {
-      recommendedModel: 'mistralai/Mistral-7B-Instruct-v0.2',
+      recommendedModel: 'microsoft/phi-2',
       minExamplesRecommended: 1000,
-      estimatedCostPer1000: '$2-5 on RunPod with A100',
-      trainingScript: 'Use axolotl or unsloth for efficient fine-tuning',
+      estimatedCostPer1000: '$1-3 on RunPod with A100',
+      trainingScript: 'Use scripts/train_h200.py for LoRA fine-tuning',
     },
   });
 }
