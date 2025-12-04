@@ -6,7 +6,8 @@ import { createServerClient } from '@supabase/ssr';
 // Sends intelligence packages via email with various format attachments
 
 interface EmailExportRequest {
-  recipientEmail: string;
+  // NOTE: recipientEmail is ignored - packages are ONLY sent to the authenticated user's email
+  // This prevents data exfiltration and ensures users can only export to themselves
   subject?: string;
   includeTextBody: boolean;
   includePdfAttachment: boolean;
@@ -169,14 +170,60 @@ export async function POST(req: Request) {
 
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
+    if (!user || !user.email) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    // SECURITY: Always use the authenticated user's email - no custom recipients allowed
+    const recipientEmail = user.email;
+
+    // Get user tier for rate limiting
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, organizations(plan)')
+      .eq('id', user.id)
+      .single() as { data: { role?: string; organizations?: { plan?: string } | null } | null };
+
+    const userRole = profile?.role || 'consumer';
+    const orgPlan = profile?.organizations?.plan || 'free';
+    const isAdmin = userRole === 'admin';
+
+    // Rate limits per day by tier
+    const RATE_LIMITS: Record<string, number> = {
+      free: 3,
+      starter: 10,
+      pro: 50,
+      enterprise: 500,
+      admin: 9999, // Admins get unlimited
+    };
+
+    const tier = isAdmin ? 'admin' : orgPlan;
+    const dailyLimit = RATE_LIMITS[tier] || RATE_LIMITS.free;
+
+    // Check rate limit - count emails sent today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const { count: todayCount } = await supabase
+      .from('email_export_log')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .gte('created_at', today.toISOString());
+
+    if ((todayCount || 0) >= dailyLimit) {
+      return NextResponse.json({
+        error: 'Daily email limit reached',
+        limit: dailyLimit,
+        tier,
+        message: tier === 'free'
+          ? 'Upgrade to Pro for more email exports per day'
+          : `You've reached your ${dailyLimit} emails/day limit. Resets at midnight.`,
+      }, { status: 429 });
     }
 
     // Parse request
     const body: EmailExportRequest = await req.json();
-    const {
-      recipientEmail,
+    let {
       subject,
       includeTextBody,
       includePdfAttachment,
@@ -186,10 +233,24 @@ export async function POST(req: Request) {
       audience,
     } = body;
 
-    // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(recipientEmail)) {
-      return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
+    // Feature gating for free tier
+    const isFree = tier === 'free';
+    if (isFree) {
+      // Free users: text body only, no attachments, no custom subject
+      includeTextBody = true;
+      includePdfAttachment = false;
+      includeJsonAttachment = false;
+      includeMarkdownAttachment = false;
+      subject = undefined; // Use default subject
+
+      // Limit sections to 3 for free users
+      if (packageContent.sections.length > 3) {
+        packageContent = {
+          ...packageContent,
+          sections: packageContent.sections.slice(0, 3),
+          subtitle: packageContent.subtitle + ' (Free tier: limited to 3 sections)',
+        };
+      }
     }
 
     // Generate content
@@ -280,21 +341,38 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
     }
 
-    // Log the export
-    await supabase.from('user_activity').insert({
-      user_id: user.id,
-      action: 'email_export',
-      details: {
-        recipient: recipientEmail,
-        audience,
-        sections: packageContent.sections.length,
-        attachments: attachments.map(a => a.filename),
-      },
-    });
+    // Log the export for rate limiting
+    try {
+      await supabase.from('email_export_log').insert({
+        user_id: user.id,
+        recipient_email: recipientEmail,
+        package_type: audience,
+        sections_count: packageContent.sections.length,
+      });
+    } catch {
+      // Table might not exist yet - still log to user_activity
+    }
+
+    // Also log to user_activity for audit trail
+    try {
+      await supabase.from('user_activity').insert({
+        user_id: user.id,
+        action: 'email_export',
+        details: {
+          recipient: recipientEmail,
+          audience,
+          sections: packageContent.sections.length,
+          attachments: attachments.map(a => a.filename),
+        },
+      });
+    } catch {
+      // Audit logging is non-critical
+    }
 
     return NextResponse.json({
       success: true,
       message: `Intelligence package sent to ${recipientEmail}`,
+      remaining: dailyLimit - (todayCount || 0) - 1,
     });
 
   } catch (error) {
