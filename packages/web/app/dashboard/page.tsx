@@ -293,7 +293,9 @@ export default function EnterpriseDashboard() {
         fallback={
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
             {[...Array(4)].map((_, i) => (
-              <GlassCard key={i} blur="heavy" className="animate-pulse h-24 md:h-32" />
+              <GlassCard key={i} blur="heavy" className="animate-pulse h-24 md:h-32">
+                <span className="sr-only">Loading...</span>
+              </GlassCard>
             ))}
           </div>
         }
