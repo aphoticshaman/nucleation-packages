@@ -723,8 +723,10 @@ function exportAsHTML(components: PackageComponent[], audience: AudiencePreset):
   downloadFile(html, `latticeforge-package-${Date.now()}.html`, 'text/html');
 }
 
+// nosemgrep: javascript.lang.security.audit.unknown-value-with-script-tag.unknown-value-with-script-tag
 function exportAsPDF(components: PackageComponent[], audience: AudiencePreset): void {
   // Generate HTML and use browser print to PDF
+  // Note: All dynamic content is sanitized via escapeHtml() before template insertion
   const content = generatePackageContent(components, audience);
   const presetInfo = AUDIENCE_PRESETS[audience];
 

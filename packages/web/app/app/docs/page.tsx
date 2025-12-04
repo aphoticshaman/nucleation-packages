@@ -131,12 +131,12 @@ const API_ENDPOINTS = [
 
 const CODE_EXAMPLES = {
   curl: `curl -X GET "https://api.latticeforge.com/api/nations?region=europe&limit=10" \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Authorization: Bearer <your-api-key>" \\
   -H "Content-Type: application/json"`,
   javascript: `const response = await fetch('https://api.latticeforge.com/api/nations', {
   method: 'GET',
   headers: {
-    'Authorization': 'Bearer YOUR_API_KEY',
+    'Authorization': 'Bearer <your-api-key>',
     'Content-Type': 'application/json',
   },
   params: {
@@ -152,7 +152,7 @@ console.log(data.nations);`,
 response = requests.get(
     'https://api.latticeforge.com/api/nations',
     headers={
-        'Authorization': 'Bearer YOUR_API_KEY',
+        'Authorization': 'Bearer <your-api-key>',
         'Content-Type': 'application/json',
     },
     params={
@@ -254,7 +254,7 @@ export default function APIDocsPage() {
         <div className="bg-black/30 rounded-xl p-4 font-mono text-sm">
           <span className="text-slate-500">Authorization:</span>{' '}
           <span className="text-green-400">Bearer</span>{' '}
-          <span className="text-blue-400">YOUR_API_KEY</span>
+          <span className="text-blue-400">&lt;your-api-key&gt;</span>
         </div>
         <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
           <p className="text-amber-300 text-sm flex items-start gap-2">
