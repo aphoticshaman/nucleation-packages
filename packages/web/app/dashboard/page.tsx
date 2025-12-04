@@ -1,7 +1,10 @@
 import { createClient, requireEnterprise } from '@/lib/auth';
 import { Suspense } from 'react';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
+import { TrendingUp, TrendingDown, Key, Link2, Users, FileText, type LucideIcon } from 'lucide-react';
 
-// Stat card - responsive
+// Stat card - responsive with glass design
 function StatCard({
   label,
   value,
@@ -14,28 +17,27 @@ function StatCard({
   trend?: { value: string; up: boolean };
 }) {
   return (
-    <div className="bg-slate-900 rounded-xl p-4 md:p-5 2xl:p-6 border border-slate-800">
-      <p className="text-xs md:text-sm 2xl:text-base text-slate-400">{label}</p>
-      <p className="text-2xl md:text-3xl 2xl:text-4xl font-bold text-white mt-1.5 md:mt-2">
+    <GlassCard blur="heavy" compact>
+      <p className="text-xs md:text-sm text-slate-400">{label}</p>
+      <p className="text-2xl md:text-3xl font-bold text-white mt-1.5">
         {value}
       </p>
-      <div className="flex items-center justify-between mt-1.5 md:mt-2 gap-2">
+      <div className="flex items-center justify-between mt-1.5 gap-2">
         {subtitle && (
-          <p className="text-xs md:text-sm 2xl:text-base text-slate-500 truncate">{subtitle}</p>
+          <p className="text-xs md:text-sm text-slate-500 truncate">{subtitle}</p>
         )}
         {trend && (
-          <p
-            className={`text-xs md:text-sm 2xl:text-base shrink-0 ${trend.up ? 'text-green-400' : 'text-red-400'}`}
-          >
-            {trend.up ? '↑' : '↓'} {trend.value}
+          <p className={`text-xs md:text-sm shrink-0 flex items-center gap-1 ${trend.up ? 'text-green-400' : 'text-red-400'}`}>
+            {trend.up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+            {trend.value}
           </p>
         )}
       </div>
-    </div>
+    </GlassCard>
   );
 }
 
-// Endpoint card for data streams - responsive
+// Endpoint card for data streams - responsive with glass design
 function EndpointCard({
   method,
   endpoint,
@@ -48,26 +50,24 @@ function EndpointCard({
   streaming?: boolean;
 }) {
   const methodColors = {
-    GET: 'bg-green-600',
-    POST: 'bg-blue-600',
-    WS: 'bg-purple-600',
-    SSE: 'bg-orange-600',
+    GET: 'bg-green-500/20 text-green-400 border-green-500/30',
+    POST: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    WS: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    SSE: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
   };
 
   return (
-    <div className="flex flex-col sm:flex-row items-start gap-3 md:gap-4 p-3 md:p-4 bg-slate-800/50 rounded-lg">
-      <span
-        className={`px-2 py-1 rounded text-xs font-mono text-white shrink-0 ${methodColors[method]}`}
-      >
+    <div className="flex flex-col sm:flex-row items-start gap-3 md:gap-4 p-3 md:p-4 bg-black/20 rounded-xl border border-white/[0.04]">
+      <span className={`px-2 py-1 rounded-lg text-xs font-mono border ${methodColors[method]}`}>
         {method}
       </span>
       <div className="flex-1 min-w-0">
-        <code className="text-xs md:text-sm 2xl:text-base text-blue-400 font-mono break-all">
+        <code className="text-xs md:text-sm text-blue-400 font-mono break-all">
           {endpoint}
         </code>
-        <p className="text-xs md:text-sm 2xl:text-base text-slate-400 mt-1">{description}</p>
+        <p className="text-xs md:text-sm text-slate-400 mt-1">{description}</p>
         {streaming && (
-          <span className="inline-flex items-center gap-1 mt-2 text-xs 2xl:text-sm text-emerald-400">
+          <span className="inline-flex items-center gap-1 mt-2 text-xs text-emerald-400">
             <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
             Real-time streaming
           </span>
@@ -77,15 +77,17 @@ function EndpointCard({
   );
 }
 
-// Quick action button - responsive
-function QuickAction({ icon, label, href }: { icon: string; label: string; href: string }) {
+// Quick action button - responsive with glass design
+function QuickAction({ icon: Icon, label, href }: { icon: LucideIcon; label: string; href: string }) {
   return (
     <a
       href={href}
-      className="flex items-center gap-3 p-3 md:p-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-lg transition-colors"
+      className="flex items-center gap-3 p-3 md:p-4 bg-black/20 hover:bg-black/30 border border-white/[0.04] hover:border-white/[0.08] rounded-xl transition-all"
     >
-      <span className="text-xl md:text-2xl">{icon}</span>
-      <span className="text-white text-sm md:text-base 2xl:text-lg">{label}</span>
+      <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+        <Icon className="w-5 h-5 text-blue-400" />
+      </div>
+      <span className="text-white text-sm md:text-base">{label}</span>
     </a>
   );
 }
@@ -123,8 +125,8 @@ async function DashboardContent() {
 
   return (
     <>
-      {/* Stats Grid - responsive grid from 2 cols on mobile to 4 cols on desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 2xl:grid-cols-4 gap-3 md:gap-4 lg:gap-6 2xl:gap-8 mb-6 md:mb-8">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 mb-6 md:mb-8">
         <StatCard
           label="API Calls (24h)"
           value={(recentCalls || 0).toLocaleString()}
@@ -140,19 +142,17 @@ async function DashboardContent() {
         <StatCard label="Avg Response" value="142ms" trend={{ value: '8ms', up: false }} />
       </div>
 
-      {/* Main content grid - stacked on mobile, 2/3 + 1/3 on tablet+, wider on ultrawide */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+      {/* Main content grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
         {/* Data Streams / Endpoints */}
-        <div className="lg:col-span-2 2xl:col-span-3 bg-slate-900 rounded-xl border border-slate-800">
-          <div className="p-4 md:p-6 border-b border-slate-800">
-            <h2 className="text-base md:text-lg 2xl:text-xl font-bold text-white">
-              Data Endpoints
-            </h2>
-            <p className="text-xs md:text-sm 2xl:text-base text-slate-400 mt-0.5">
+        <GlassCard blur="heavy" className="lg:col-span-2">
+          <div className="border-b border-white/[0.06] pb-4 mb-4">
+            <h2 className="text-base md:text-lg font-bold text-white">Data Endpoints</h2>
+            <p className="text-xs md:text-sm text-slate-400 mt-0.5">
               Connect your pipelines to these endpoints
             </p>
           </div>
-          <div className="p-4 md:p-6 space-y-3 md:space-y-4">
+          <div className="space-y-3 md:space-y-4">
             <EndpointCard
               method="GET"
               endpoint="/api/v1/nations"
@@ -181,93 +181,89 @@ async function DashboardContent() {
               description="Export current state as GeoJSON for mapping"
             />
           </div>
-          <div className="p-4 md:p-6 border-t border-slate-800">
-            <a href="/docs/api" className="text-blue-400 hover:text-blue-300 text-sm 2xl:text-base">
+          <div className="pt-4 mt-4 border-t border-white/[0.06]">
+            <a href="/docs/api" className="text-blue-400 hover:text-blue-300 text-sm">
               View full API documentation →
             </a>
           </div>
-        </div>
+        </GlassCard>
 
-        {/* Quick Actions + Executive Reports - single column */}
+        {/* Quick Actions + Executive Reports */}
         <div className="space-y-4 md:space-y-6">
           {/* Quick Actions */}
-          <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 md:p-6">
-            <h2 className="text-base md:text-lg 2xl:text-xl font-bold text-white mb-3 md:mb-4">
+          <GlassCard blur="heavy">
+            <h2 className="text-base md:text-lg font-bold text-white mb-3 md:mb-4">
               Quick Actions
             </h2>
             <div className="space-y-2 md:space-y-3">
-              <QuickAction icon="🔑" label="Generate API Key" href="/dashboard/api-keys" />
-              <QuickAction icon="🔗" label="Configure Webhook" href="/dashboard/webhooks" />
-              <QuickAction icon="👥" label="Invite Team Member" href="/dashboard/team" />
+              <QuickAction icon={Key} label="Generate API Key" href="/dashboard/api-keys" />
+              <QuickAction icon={Link2} label="Configure Webhook" href="/dashboard/webhooks" />
+              <QuickAction icon={Users} label="Invite Team Member" href="/dashboard/team" />
             </div>
-          </div>
+          </GlassCard>
 
           {/* Executive Reports */}
-          <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 md:p-6">
-            <h2 className="text-base md:text-lg 2xl:text-xl font-bold text-white mb-1 md:mb-2">
+          <GlassCard blur="heavy">
+            <h2 className="text-base md:text-lg font-bold text-white mb-1 md:mb-2">
               Executive Reports
             </h2>
-            <p className="text-xs md:text-sm 2xl:text-base text-slate-400 mb-3 md:mb-4">
+            <p className="text-xs md:text-sm text-slate-400 mb-3 md:mb-4">
               Export usage data for leadership
             </p>
             <div className="space-y-2 md:space-y-3">
-              <button className="w-full flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-lg transition-colors">
-                <span className="text-white text-xs md:text-sm 2xl:text-base">
-                  Monthly Usage Report
-                </span>
-                <span className="text-slate-400 text-xs 2xl:text-sm">PDF</span>
-              </button>
-              <button className="w-full flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-lg transition-colors">
-                <span className="text-white text-xs md:text-sm 2xl:text-base">API Performance</span>
-                <span className="text-slate-400 text-xs 2xl:text-sm">CSV</span>
-              </button>
-              <button className="w-full flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-lg transition-colors">
-                <span className="text-white text-xs md:text-sm 2xl:text-base">ROI Analysis</span>
-                <span className="text-slate-400 text-xs 2xl:text-sm">PDF</span>
-              </button>
+              {[
+                { label: 'Monthly Usage Report', format: 'PDF' },
+                { label: 'API Performance', format: 'CSV' },
+                { label: 'ROI Analysis', format: 'PDF' },
+              ].map((report) => (
+                <button
+                  key={report.label}
+                  className="w-full flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-black/20 hover:bg-black/30 border border-white/[0.04] hover:border-white/[0.08] rounded-xl transition-all"
+                >
+                  <span className="text-white text-xs md:text-sm flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-slate-500" />
+                    {report.label}
+                  </span>
+                  <span className="text-slate-500 text-xs">{report.format}</span>
+                </button>
+              ))}
             </div>
-          </div>
+          </GlassCard>
 
           {/* Status */}
-          <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 md:p-6">
+          <GlassCard blur="light">
             <div className="flex items-center gap-3">
-              <span className="w-3 h-3 2xl:w-4 2xl:h-4 bg-green-500 rounded-full shrink-0" />
+              <span className="w-3 h-3 bg-green-500 rounded-full shrink-0 animate-pulse" />
               <div>
-                <p className="text-white text-sm 2xl:text-base">All Systems Operational</p>
-                <p className="text-xs 2xl:text-sm text-slate-500">Last checked: just now</p>
+                <p className="text-white text-sm">All Systems Operational</p>
+                <p className="text-xs text-slate-500">Last checked: just now</p>
               </div>
             </div>
-          </div>
+          </GlassCard>
         </div>
       </div>
 
-      {/* Code Snippet - responsive */}
-      <div className="mt-6 md:mt-8 bg-slate-900 rounded-xl border border-slate-800">
-        <div className="p-4 md:p-6 border-b border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      {/* Code Snippet */}
+      <GlassCard blur="heavy" className="mt-6 md:mt-8">
+        <div className="border-b border-white/[0.06] pb-4 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-base md:text-lg 2xl:text-xl font-bold text-white">Quick Start</h2>
-            <p className="text-xs md:text-sm 2xl:text-base text-slate-400">
+            <h2 className="text-base md:text-lg font-bold text-white">Quick Start</h2>
+            <p className="text-xs md:text-sm text-slate-400">
               Copy this to start streaming data
             </p>
           </div>
           <div className="flex gap-2 shrink-0">
-            <button className="min-h-[44px] px-3 md:px-4 text-xs md:text-sm bg-slate-700 text-white rounded-lg hover:bg-slate-600 active:bg-slate-500">
-              cURL
-            </button>
-            <button className="min-h-[44px] px-3 md:px-4 text-xs md:text-sm bg-slate-800 text-slate-400 rounded-lg hover:bg-slate-700 active:bg-slate-600">
-              Python
-            </button>
-            <button className="min-h-[44px] px-3 md:px-4 text-xs md:text-sm bg-slate-800 text-slate-400 rounded-lg hover:bg-slate-700 active:bg-slate-600">
-              Node.js
-            </button>
+            <GlassButton variant="secondary" size="sm">cURL</GlassButton>
+            <GlassButton variant="ghost" size="sm">Python</GlassButton>
+            <GlassButton variant="ghost" size="sm">Node.js</GlassButton>
           </div>
         </div>
-        <pre className="p-4 md:p-6 text-xs md:text-sm 2xl:text-base text-slate-300 font-mono overflow-x-auto">
+        <pre className="text-xs md:text-sm text-slate-300 font-mono overflow-x-auto p-4 bg-black/30 rounded-xl">
           {`curl -X GET "https://api.latticeforge.io/v1/nations" \\
-  -H "Authorization: Bearer lf_live_xxxxxxxxxxxx" \\
+  -H "Authorization: Bearer <your-api-key>" \\
   -H "Content-Type: application/json"`}
         </pre>
-      </div>
+      </GlassCard>
     </>
   );
 }
@@ -275,21 +271,21 @@ async function DashboardContent() {
 export default function EnterpriseDashboard() {
   return (
     <div>
-      {/* Header - responsive layout */}
+      {/* Header */}
       <div className="mb-6 md:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl 2xl:text-3xl font-bold text-white">Dashboard</h1>
-          <p className="text-slate-400 text-sm md:text-base 2xl:text-lg">
+          <h1 className="text-xl md:text-2xl font-bold text-white">Dashboard</h1>
+          <p className="text-slate-400 text-sm md:text-base">
             Your API usage and data streams
           </p>
         </div>
         <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
-          <button className="flex-1 sm:flex-none px-3 md:px-4 py-2 md:py-2.5 bg-slate-800 text-white rounded-lg hover:bg-slate-700 text-xs md:text-sm 2xl:text-base">
+          <GlassButton variant="secondary" fullWidthMobile>
             View Docs
-          </button>
-          <button className="flex-1 sm:flex-none px-3 md:px-4 py-2 md:py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-xs md:text-sm 2xl:text-base">
+          </GlassButton>
+          <GlassButton variant="primary" glow fullWidthMobile>
             New API Key
-          </button>
+          </GlassButton>
         </div>
       </div>
 
@@ -297,10 +293,9 @@ export default function EnterpriseDashboard() {
         fallback={
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
             {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className="bg-slate-900 rounded-xl p-4 md:p-6 border border-slate-800 animate-pulse h-24 md:h-32"
-              />
+              <GlassCard key={i} blur="heavy" className="animate-pulse h-24 md:h-32">
+                <span className="sr-only">Loading...</span>
+              </GlassCard>
             ))}
           </div>
         }

@@ -52,11 +52,25 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createClient();
 
-  // If this is from onboarding completion, update the profile
+  // If this is from onboarding completion, update the profile metadata
   if (onboardingCompletedAt) {
+    // First get current metadata to preserve other fields
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('metadata')
+      .eq('id', user.id)
+      .single();
+
+    const existingMetadata = (profile?.metadata as Record<string, unknown>) || {};
+
     const { error: profileError } = await supabase
       .from('profiles')
-      .update({ onboarding_completed_at: onboardingCompletedAt })
+      .update({
+        metadata: {
+          ...existingMetadata,
+          onboarding_completed_at: onboardingCompletedAt,
+        },
+      })
       .eq('id', user.id);
 
     if (profileError) {

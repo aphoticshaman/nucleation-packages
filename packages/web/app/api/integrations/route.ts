@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { isSlackConfigured } from '@/lib/integrations/slack';
+import { isDiscordConfigured } from '@/lib/integrations/discord';
+import { isPagerDutyConfigured } from '@/lib/integrations/pagerduty';
+import { isTeamsConfigured } from '@/lib/integrations/teams';
 
 /**
  * GET /api/integrations
@@ -94,22 +97,43 @@ function getAvailableProviders() {
       icon: 'slack',
       configured: isSlackConfigured(),
       comingSoon: false,
+      category: 'messaging',
+    },
+    {
+      id: 'discord',
+      name: 'Discord',
+      description: 'Get alerts in Discord servers via webhooks',
+      icon: 'discord',
+      configured: isDiscordConfigured(),
+      comingSoon: false,
+      category: 'messaging',
     },
     {
       id: 'teams',
       name: 'Microsoft Teams',
       description: 'Get alerts and briefings in Teams channels',
       icon: 'teams',
-      configured: false,
-      comingSoon: true,
+      configured: isTeamsConfigured(),
+      comingSoon: false,
+      category: 'messaging',
+    },
+    {
+      id: 'pagerduty',
+      name: 'PagerDuty',
+      description: 'Trigger incidents for critical alerts',
+      icon: 'pagerduty',
+      configured: isPagerDutyConfigured(),
+      comingSoon: false,
+      category: 'incident',
     },
     {
       id: 'webhook',
       name: 'Custom Webhook',
-      description: 'Send alerts to any HTTP endpoint',
+      description: 'Send alerts to any HTTP endpoint (Zapier, IFTTT, etc.)',
       icon: 'webhook',
-      configured: true, // Webhooks are always "configured"
-      comingSoon: true,
+      configured: true,
+      comingSoon: false,
+      category: 'automation',
     },
     {
       id: 'email',
@@ -117,7 +141,53 @@ function getAvailableProviders() {
       description: 'Daily email summaries of key intelligence',
       icon: 'email',
       configured: true,
+      comingSoon: false,
+      category: 'messaging',
+    },
+    {
+      id: 'opsgenie',
+      name: 'Opsgenie',
+      description: 'Alert routing and on-call management',
+      icon: 'opsgenie',
+      configured: false,
       comingSoon: true,
+      category: 'incident',
+    },
+    {
+      id: 'jira',
+      name: 'Jira',
+      description: 'Create tickets from alerts automatically',
+      icon: 'jira',
+      configured: false,
+      comingSoon: true,
+      category: 'ticketing',
+    },
+    {
+      id: 'servicenow',
+      name: 'ServiceNow',
+      description: 'Enterprise IT service management',
+      icon: 'servicenow',
+      configured: false,
+      comingSoon: true,
+      category: 'ticketing',
+    },
+    {
+      id: 'splunk',
+      name: 'Splunk',
+      description: 'Forward alerts to Splunk for analysis',
+      icon: 'splunk',
+      configured: false,
+      comingSoon: true,
+      category: 'siem',
+    },
+    {
+      id: 'datadog',
+      name: 'Datadog',
+      description: 'Send events to Datadog monitoring',
+      icon: 'datadog',
+      configured: false,
+      comingSoon: true,
+      category: 'monitoring',
     },
   ];
 }

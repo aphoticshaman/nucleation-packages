@@ -72,6 +72,37 @@ export async function createClient() {
   );
 }
 
+// Map organization plan to user tier
+function planToTier(plan: string | null, role: UserRole): UserTier {
+  // Admins always get enterprise tier
+  if (role === 'admin') return 'enterprise_tier';
+
+  switch (plan) {
+    case 'enterprise':
+      return 'enterprise_tier';
+    case 'pro':
+      return 'pro';
+    case 'starter':
+      return 'starter';
+    default:
+      return 'free';
+  }
+}
+
+// Database profile shape (what Supabase actually returns)
+interface DBProfile {
+  id: string;
+  email: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  role: UserRole;
+  organization_id: string | null;
+  is_active: boolean;
+  last_seen_at: string | null;
+  metadata: Record<string, unknown> | null;
+  organizations?: { plan: string } | null;
+}
+
 // Get current user with profile
 // Auto-creates a profile if one doesn't exist (for OAuth users)
 export async function getUser(): Promise<UserProfile | null> {
@@ -89,42 +120,79 @@ export async function getUser(): Promise<UserProfile | null> {
 
   if (!user) return null;
 
-  // Try to get existing profile
+  // Try to get existing profile with organization for plan/tier
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select('*, organizations(plan)')
     .eq('id', user.id)
     .single();
 
-  // If profile exists, return it with correct role/tier from DB
+  // If profile exists, return it with derived tier
   if (profile) {
-    return profile as UserProfile;
+    const dbProfile = profile as DBProfile;
+
+    // Update last_seen_at in background (don't await)
+    supabase
+      .from('profiles')
+      .update({ last_seen_at: new Date().toISOString() })
+      .eq('id', user.id)
+      .then(() => {});
+
+    // Derive tier from org plan or role
+    const tier = planToTier(dbProfile.organizations?.plan || null, dbProfile.role);
+
+    // Check onboarding status from metadata
+    const onboardingCompleted = dbProfile.metadata?.onboarding_completed_at as string | null;
+
+    return {
+      id: dbProfile.id,
+      email: dbProfile.email,
+      full_name: dbProfile.full_name,
+      avatar_url: dbProfile.avatar_url,
+      role: dbProfile.role,
+      tier,
+      organization_id: dbProfile.organization_id,
+      is_active: dbProfile.is_active,
+      last_seen_at: dbProfile.last_seen_at,
+      onboarding_completed_at: onboardingCompleted,
+    };
   }
 
   // If profile doesn't exist (new OAuth user), try to create one
   if (error?.code === 'PGRST116') {
     // PGRST116 = "JSON object requested, multiple (or no) rows returned"
-    const newProfile: Omit<UserProfile, 'last_seen_at' | 'onboarding_completed_at'> & { last_seen_at: string; onboarding_completed_at: null } = {
+    const newProfile = {
       id: user.id,
       email: user.email || '',
       full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
       avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-      role: 'consumer',
-      tier: 'free',
+      role: 'consumer' as UserRole,
       organization_id: null,
       is_active: true,
       last_seen_at: new Date().toISOString(),
-      onboarding_completed_at: null,
+      metadata: {},
     };
 
     const { data: createdProfile, error: insertError } = await supabase
       .from('profiles')
       .insert(newProfile)
-      .select()
+      .select('*, organizations(plan)')
       .single();
 
     if (!insertError && createdProfile) {
-      return createdProfile as UserProfile;
+      const dbProfile = createdProfile as DBProfile;
+      return {
+        id: dbProfile.id,
+        email: dbProfile.email,
+        full_name: dbProfile.full_name,
+        avatar_url: dbProfile.avatar_url,
+        role: dbProfile.role,
+        tier: 'free',
+        organization_id: dbProfile.organization_id,
+        is_active: dbProfile.is_active,
+        last_seen_at: dbProfile.last_seen_at,
+        onboarding_completed_at: null,
+      };
     }
 
     console.error('Failed to create user profile:', insertError);
@@ -135,7 +203,10 @@ export async function getUser(): Promise<UserProfile | null> {
 
   // Only fall back to minimal profile if we truly couldn't get/create one
   // This should be rare - indicates RLS or table issues
-  console.warn('Falling back to minimal profile for user:', user.id);
+  console.error('CRITICAL: Falling back to minimal profile for user:', user.id, user.email);
+  console.error('This usually means RLS is blocking profile access. Check profiles table policies.');
+
+  // Return minimal profile - user will need DB fix for proper role/tier
   return {
     id: user.id,
     email: user.email || '',

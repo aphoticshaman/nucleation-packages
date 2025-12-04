@@ -37,10 +37,30 @@ export default function OnboardingGate({
   // Admins skip onboarding entirely - they have full access and know the platform
   const isAdmin = userRole === 'admin';
 
-  // Trust the database - hasCompletedOnboarding comes from server
-  // Only show wizard if database says not completed AND not admin
-  const [showWizard, setShowWizard] = useState(!hasCompletedOnboarding && !isAdmin);
+  // Check localStorage first to avoid showing wizard after skip/complete
+  const getInitialShowWizard = () => {
+    if (typeof window === 'undefined') return false; // SSR: don't show
+    if (isAdmin) return false; // Admins never see wizard
+    if (hasCompletedOnboarding) return false; // DB says completed
+
+    // Check localStorage for skip or complete
+    const skipped = localStorage.getItem('latticeforge_onboarding_skipped');
+    const completed = localStorage.getItem('latticeforge_onboarding_complete');
+    if (skipped === 'true' || completed === 'true') return false;
+
+    return true;
+  };
+
+  // Start with false on server, hydrate on client
+  const [showWizard, setShowWizard] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Hydrate on mount
+  useEffect(() => {
+    setHydrated(true);
+    setShowWizard(getInitialShowWizard());
+  }, []);
 
   // Convert auth tier to power tier if needed
   const powerTier: UserTier = isAuthTier(userTier) ? authTierToPowerTier(userTier) : userTier;
