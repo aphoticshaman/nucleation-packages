@@ -37,7 +37,8 @@ function LoginForm() {
     // Record sign in with session tracking
     if (data.user) {
       try {
-        await supabase.rpc('record_sign_in', {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.rpc as any)('record_sign_in', {
           p_user_id: data.user.id,
           p_device_info: {
             user_agent: navigator.userAgent,
