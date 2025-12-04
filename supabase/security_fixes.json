@@ -1,0 +1,153 @@
+{
+  "name": "security_fixes_consolidated",
+  "version": "1.0.0",
+  "description": "Consolidated security fixes for RLS and SECURITY DEFINER views",
+  "migration_file": "migrations/20241204000006_security_fixes_consolidated.sql",
+  "changes": {
+    "rls_enabled": [
+      "training_examples",
+      "predictions",
+      "known_cascade_patterns"
+    ],
+    "rls_policies": {
+      "training_examples": [
+        {
+          "name": "training_examples_read_authenticated",
+          "operation": "SELECT",
+          "role": "authenticated",
+          "check": "true"
+        },
+        {
+          "name": "training_examples_insert_service",
+          "operation": "INSERT",
+          "role": "service_role",
+          "check": "true"
+        },
+        {
+          "name": "training_examples_update_service",
+          "operation": "UPDATE",
+          "role": "service_role",
+          "check": "true"
+        },
+        {
+          "name": "training_examples_delete_service",
+          "operation": "DELETE",
+          "role": "service_role",
+          "check": "true"
+        }
+      ],
+      "predictions": [
+        {
+          "name": "predictions_read_authenticated",
+          "operation": "SELECT",
+          "role": "authenticated",
+          "check": "true"
+        },
+        {
+          "name": "predictions_manage_service",
+          "operation": "ALL",
+          "role": "service_role",
+          "check": "true"
+        }
+      ],
+      "known_cascade_patterns": [
+        {
+          "name": "cascade_patterns_read",
+          "operation": "SELECT",
+          "role": "authenticated",
+          "check": "true"
+        },
+        {
+          "name": "cascade_patterns_manage_service",
+          "operation": "ALL",
+          "role": "service_role",
+          "check": "true"
+        }
+      ]
+    },
+    "views_fixed": [
+      {
+        "name": "admin_consumer_overview",
+        "security": "INVOKER",
+        "description": "Consumer user overview for admin dashboard"
+      },
+      {
+        "name": "admin_enterprise_overview",
+        "security": "INVOKER",
+        "description": "Enterprise user overview for admin dashboard"
+      },
+      {
+        "name": "admin_dashboard_stats",
+        "security": "INVOKER",
+        "description": "Aggregate stats for admin dashboard"
+      },
+      {
+        "name": "exportable_training_data",
+        "security": "INVOKER",
+        "description": "Training data filtered for export"
+      },
+      {
+        "name": "nations_at_risk",
+        "security": "INVOKER",
+        "description": "Nations with high transition risk"
+      },
+      {
+        "name": "admin_trial_invites",
+        "security": "INVOKER",
+        "description": "Trial invite management view"
+      },
+      {
+        "name": "training_data_stats",
+        "security": "INVOKER",
+        "description": "Training data statistics by domain"
+      },
+      {
+        "name": "country_risk_score",
+        "security": "INVOKER",
+        "description": "Country risk scoring view"
+      },
+      {
+        "name": "nations_geojson",
+        "security": "INVOKER",
+        "description": "Nations data for GeoJSON rendering"
+      },
+      {
+        "name": "edges_geojson",
+        "security": "INVOKER",
+        "description": "Influence edges for graph rendering"
+      }
+    ],
+    "special_tables": {
+      "spatial_ref_sys": {
+        "action": "RESTRICT",
+        "description": "PostGIS system table - revoke write access, allow SELECT to authenticated"
+      }
+    }
+  },
+  "instructions": {
+    "supabase_dashboard": [
+      "1. Go to SQL Editor in Supabase Dashboard",
+      "2. Copy contents of migrations/20241204000006_security_fixes_consolidated.sql",
+      "3. Run the query",
+      "4. Check Database > Policies to verify RLS policies created",
+      "5. Check Database > Views to verify views recreated with security_invoker = true"
+    ],
+    "supabase_cli": [
+      "1. Run: supabase db push",
+      "2. Or run: supabase migration up",
+      "3. Verify with: supabase db lint"
+    ]
+  },
+  "linter_issues_addressed": [
+    {
+      "code": "rls_disabled_in_public",
+      "severity": "warning",
+      "tables_fixed": ["training_examples", "predictions", "known_cascade_patterns"]
+    },
+    {
+      "code": "security_definer_view",
+      "severity": "warning",
+      "views_fixed": 10
+    }
+  ]
+}
