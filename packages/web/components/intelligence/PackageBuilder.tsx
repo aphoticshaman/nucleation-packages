@@ -294,6 +294,22 @@ const EXPORT_FORMATS: { format: ExportFormat; label: string; icon: React.ReactNo
 
 // === EXPORT UTILITIES ===
 
+/**
+ * Escape HTML to prevent XSS when injecting content into HTML templates.
+ * This is critical for security when generating export documents.
+ */
+function escapeHtml(text: string): string {
+  const htmlEscapes: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#x27;',
+    '/': '&#x2F;',
+  };
+  return text.replace(/[&<>"'/]/g, char => htmlEscapes[char] || char);
+}
+
 function downloadFile(content: string | Blob, filename: string, mimeType: string) {
   const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
@@ -694,8 +710,8 @@ function exportAsHTML(components: PackageComponent[], audience: AudiencePreset):
     </header>
     ${content.sections.map(s => `
     <section>
-      <h2><span>${s.icon}</span> ${s.title} <span class="badge">${s.config.detailLevel || 'standard'}</span></h2>
-      <pre>${s.content}</pre>
+      <h2><span>${escapeHtml(s.icon)}</span> ${escapeHtml(s.title)} <span class="badge">${escapeHtml(s.config.detailLevel || 'standard')}</span></h2>
+      <pre>${escapeHtml(s.content)}</pre>
     </section>`).join('')}
     <footer>
       LatticeForge Intelligence Platform | ${new Date().getFullYear()} | OSINT Only
@@ -756,8 +772,8 @@ function exportAsPDF(components: PackageComponent[], audience: AudiencePreset): 
     </header>
     ${content.sections.map(s => `
     <section>
-      <h2>${s.icon} ${s.title} <span class="badge">${s.config.detailLevel || 'standard'}</span></h2>
-      <pre>${s.content}</pre>
+      <h2>${escapeHtml(s.icon)} ${escapeHtml(s.title)} <span class="badge">${escapeHtml(s.config.detailLevel || 'standard')}</span></h2>
+      <pre>${escapeHtml(s.content)}</pre>
     </section>`).join('')}
     <footer>
       LatticeForge Intelligence Platform | ${new Date().getFullYear()} | OSINT Only - No Classification Authority
@@ -803,8 +819,8 @@ function exportAsDOCX(components: PackageComponent[], audience: AudiencePreset):
     <p class="meta">Generated: ${new Date(content.generatedAt).toLocaleString()} | Classification: OSINT / UNCLASSIFIED</p>
   </div>
   ${content.sections.map(s => `
-  <h2>${s.icon} ${s.title}</h2>
-  <pre>${s.content}</pre>`).join('')}
+  <h2>${escapeHtml(s.icon)} ${escapeHtml(s.title)}</h2>
+  <pre>${escapeHtml(s.content)}</pre>`).join('')}
   <p style="margin-top: 24pt; text-align: center; color: #666; font-size: 9pt;">
     LatticeForge Intelligence Platform | OSINT Only
   </p>
@@ -824,8 +840,8 @@ function exportAsPPTX(components: PackageComponent[], audience: AudiencePreset):
   const slides = content.sections.map((s, i) => `
     <div class="slide">
       <div class="slide-number">${i + 1}</div>
-      <h2>${s.icon} ${s.title}</h2>
-      <pre>${s.content}</pre>
+      <h2>${escapeHtml(s.icon)} ${escapeHtml(s.title)}</h2>
+      <pre>${escapeHtml(s.content)}</pre>
     </div>
   `);
 
