@@ -141,10 +141,10 @@ export default function PricingPage() {
         .from('profiles')
         .select('role, organizations(plan)')
         .eq('id', user.id)
-        .single();
+        .single() as { data: { role?: string; organizations?: { plan?: string } | null } | null };
 
       const role = profile?.role || 'consumer';
-      const orgPlan = (profile?.organizations as { plan?: string } | null)?.plan || 'free';
+      const orgPlan = profile?.organizations?.plan || 'free';
 
       // Blocked roles can't purchase - they already have full access
       const blockedRoles = ['admin', 'enterprise', 'support'];
