@@ -6,6 +6,8 @@ import {
   Archive, RotateCcw, Settings, Activity, Zap, TrendingUp, Filter,
   Trash2, Eye, Clock, BarChart2, Gauge
 } from 'lucide-react';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 
 interface Stats {
   totalExamples: number;
@@ -550,22 +552,25 @@ export default function TrainingDataPage() {
                   Data Integrity & Security
                 </h2>
                 <div className="flex gap-2">
-                  <button
+                  <GlassButton
+                    variant="secondary"
+                    size="sm"
                     onClick={scanAnomalies}
                     disabled={scanning}
-                    className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 disabled:opacity-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    loading={scanning}
                   >
                     <Shield className="w-4 h-4" />
                     {scanning ? 'Scanning...' : 'Scan for Anomalies'}
-                  </button>
+                  </GlassButton>
                   {anomalies.length > 0 && (
-                    <button
+                    <GlassButton
+                      variant="danger"
+                      size="sm"
                       onClick={autoQuarantineAnomalies}
-                      className="flex items-center gap-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                       Quarantine All ({anomalies.length})
-                    </button>
+                    </GlassButton>
                   )}
                 </div>
               </div>
@@ -609,14 +614,16 @@ export default function TrainingDataPage() {
                     Backups are retained for 30 days. Use for rollback if data gets poisoned or corrupted.
                   </p>
                 </div>
-                <button
+                <GlassButton
+                  variant="primary"
                   onClick={createBackup}
                   disabled={backing}
-                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 px-6 py-2 rounded-lg font-medium transition-colors"
+                  loading={backing}
+                  glow
                 >
                   <Archive className="w-4 h-4" />
                   {backing ? 'Creating...' : 'Create Backup Now'}
-                </button>
+                </GlassButton>
               </div>
             </div>
 

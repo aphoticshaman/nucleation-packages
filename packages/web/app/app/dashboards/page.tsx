@@ -27,6 +27,8 @@ import { DASHBOARD_PRESETS, type PresetId } from '@/lib/config/dashboardPresets'
 import { FOCUS_TEMPLATES } from '@/lib/pipeline/DataPipeline';
 import Glossary from '@/components/Glossary';
 import HelpTip from '@/components/HelpTip';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 
 interface UserDashboard {
   id: string;
@@ -163,38 +165,38 @@ export default function DashboardHub() {
 
       {/* Data Health Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl border border-white/[0.06] rounded-xl p-4">
+        <GlassCard blur="heavy" compact>
           <div className="flex items-center gap-3 mb-2">
             <Database className="w-5 h-5 text-cyan-400" />
             <span className="text-sm text-slate-400">Active Sources</span>
           </div>
           <div className="text-2xl font-bold text-white">12</div>
           <div className="text-xs text-green-400 mt-1">All connected</div>
-        </div>
-        <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl border border-white/[0.06] rounded-xl p-4">
+        </GlassCard>
+        <GlassCard blur="heavy" compact>
           <div className="flex items-center gap-3 mb-2">
             <Activity className="w-5 h-5 text-emerald-400" />
             <span className="text-sm text-slate-400">Data Freshness</span>
           </div>
           <div className="text-2xl font-bold text-white">94%</div>
           <div className="text-xs text-slate-500 mt-1">Last 24 hours</div>
-        </div>
-        <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl border border-white/[0.06] rounded-xl p-4">
+        </GlassCard>
+        <GlassCard blur="heavy" compact>
           <div className="flex items-center gap-3 mb-2">
             <RefreshCw className="w-5 h-5 text-amber-400" />
             <span className="text-sm text-slate-400">Last Refresh</span>
           </div>
           <div className="text-2xl font-bold text-white">2m ago</div>
           <div className="text-xs text-slate-500 mt-1">Auto-refresh: ON</div>
-        </div>
-        <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl border border-white/[0.06] rounded-xl p-4">
+        </GlassCard>
+        <GlassCard blur="heavy" compact>
           <div className="flex items-center gap-3 mb-2">
             <LineChart className="w-5 h-5 text-purple-400" />
             <span className="text-sm text-slate-400">Data Points</span>
           </div>
           <div className="text-2xl font-bold text-white">1.2M</div>
           <div className="text-xs text-slate-500 mt-1">This month</div>
-        </div>
+        </GlassCard>
       </div>
 
       {/* Favorite Dashboards */}

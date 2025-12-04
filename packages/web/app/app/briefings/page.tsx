@@ -5,6 +5,8 @@ import { useIntelBriefing, getRiskBadgeStyle } from '@/hooks/useIntelBriefing';
 import { Globe, Shield, TrendingUp, AlertTriangle, RefreshCw, Target, BookOpen } from 'lucide-react';
 import Glossary from '@/components/Glossary';
 import HelpTip from '@/components/HelpTip';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 
 const PRESETS = [
   { id: 'global', name: 'Global Overview', icon: Globe, desc: 'All 195 nations' },
@@ -68,22 +70,22 @@ export default function BriefingsPage() {
 
       {/* Load button or briefing content */}
       {!hasLoaded ? (
-        <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl border border-white/[0.06] p-8 text-center">
+        <GlassCard blur="heavy" className="p-8 text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 flex items-center justify-center">
             <RefreshCw className="w-8 h-8 text-blue-400" />
           </div>
           <p className="text-slate-400 mb-4">Ready to generate briefing for {PRESETS.find(p => p.id === selectedPreset)?.name}</p>
-          <button
+          <GlassButton
+            variant="primary"
+            glow
             onClick={() => void handleLoad()}
-            className="px-6 py-3.5 min-h-[52px] bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl font-medium
-              hover:shadow-[0_0_30px_rgba(59,130,246,0.4)] active:scale-[0.98] transition-all touch-manipulation"
           >
             Generate Intel Briefing
-          </button>
+          </GlassButton>
           <p className="text-xs text-slate-500 mt-3">Cached for 10 minutes • Uses AI analysis</p>
-        </div>
+        </GlassCard>
       ) : loading ? (
-        <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl border border-white/[0.06] p-8">
+        <GlassCard blur="heavy" className="p-8">
           <div className="animate-pulse space-y-4">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="space-y-2">
@@ -92,9 +94,9 @@ export default function BriefingsPage() {
               </div>
             ))}
           </div>
-        </div>
+        </GlassCard>
       ) : (
-        <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl border border-white/[0.06] p-6 space-y-6">
+        <GlassCard blur="heavy" className="p-6 space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
             <div>
@@ -143,7 +145,7 @@ export default function BriefingsPage() {
               <p className="text-sm text-blue-200">{briefings.nsm}</p>
             </div>
           )}
-        </div>
+        </GlassCard>
       )}
 
       {/* Glossary Modal */}

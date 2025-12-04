@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 
 interface HealthCheck {
   name: string;
@@ -32,19 +34,21 @@ function StatusBadge({ status }: { status: HealthCheck['status'] }) {
 
 function HealthCard({ check, onRecheck }: { check: HealthCheck; onRecheck: () => void }) {
   return (
-    <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl p-6 border border-white/[0.06]">
+    <GlassCard blur="heavy">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <StatusBadge status={check.status} />
           <h3 className="text-white font-medium">{check.name}</h3>
         </div>
-        <button
+        <GlassButton
+          variant="secondary"
+          size="sm"
           onClick={onRecheck}
           disabled={check.status === 'checking'}
-          className="px-3 py-1 text-sm bg-slate-700 hover:bg-slate-600 rounded text-white disabled:opacity-50"
+          loading={check.status === 'checking'}
         >
           {check.status === 'checking' ? 'Checking...' : 'Recheck'}
-        </button>
+        </GlassButton>
       </div>
 
       <div className="space-y-2">
@@ -95,7 +99,7 @@ function HealthCard({ check, onRecheck }: { check: HealthCheck; onRecheck: () =>
           </div>
         )}
       </div>
-    </div>
+    </GlassCard>
   );
 }
 
@@ -217,41 +221,38 @@ export default function AdminHealthPage() {
               System {overallStatus.charAt(0).toUpperCase() + overallStatus.slice(1)}
             </span>
           </div>
-          <button
-            onClick={runAllChecks}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white"
-          >
+          <GlassButton variant="primary" onClick={runAllChecks}>
             Refresh All
-          </button>
+          </GlassButton>
         </div>
       </div>
 
       {/* Summary Stats */}
       <div className="grid grid-cols-4 gap-4 mb-8">
-        <div className="bg-[rgba(18,18,26,0.7)] rounded-lg p-4 border border-white/[0.06]">
+        <GlassCard compact>
           <p className="text-2xl font-bold text-green-400">
             {checks.filter((c) => c.status === 'healthy').length}
           </p>
           <p className="text-sm text-slate-400">Healthy</p>
-        </div>
-        <div className="bg-[rgba(18,18,26,0.7)] rounded-lg p-4 border border-white/[0.06]">
+        </GlassCard>
+        <GlassCard compact>
           <p className="text-2xl font-bold text-yellow-400">
             {checks.filter((c) => c.status === 'degraded').length}
           </p>
           <p className="text-sm text-slate-400">Degraded</p>
-        </div>
-        <div className="bg-[rgba(18,18,26,0.7)] rounded-lg p-4 border border-white/[0.06]">
+        </GlassCard>
+        <GlassCard compact>
           <p className="text-2xl font-bold text-red-400">
             {checks.filter((c) => c.status === 'down').length}
           </p>
           <p className="text-sm text-slate-400">Down</p>
-        </div>
-        <div className="bg-[rgba(18,18,26,0.7)] rounded-lg p-4 border border-white/[0.06]">
+        </GlassCard>
+        <GlassCard compact>
           <p className="text-2xl font-bold text-slate-300">
             {Math.round(checks.reduce((sum, c) => sum + (c.latency || 0), 0) / checks.length) || 0}ms
           </p>
           <p className="text-sm text-slate-400">Avg Latency</p>
-        </div>
+        </GlassCard>
       </div>
 
       {/* Health Cards */}
@@ -262,7 +263,7 @@ export default function AdminHealthPage() {
       </div>
 
       {/* Cron Jobs Status */}
-      <div className="mt-8 bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl p-6 border border-white/[0.06]">
+      <GlassCard blur="heavy" className="mt-8">
         <h2 className="text-lg font-bold text-white mb-4">Scheduled Jobs</h2>
         <div className="space-y-3">
           <div className="flex items-center justify-between p-3 bg-black/20 rounded-lg">
@@ -287,7 +288,7 @@ export default function AdminHealthPage() {
             <span className="text-slate-400 text-sm">Every hour</span>
           </div>
         </div>
-      </div>
+      </GlassCard>
     </div>
   );
 }

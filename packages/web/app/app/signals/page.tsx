@@ -5,6 +5,8 @@ import { ALL_FINANCIAL_SOURCES, MARKET_INDICATORS, type FinancialSource } from '
 import { TrendingUp, Fuel, DollarSign, Bitcoin, Building, Globe, Bell, Plus, Settings, BookOpen } from 'lucide-react';
 import Glossary from '@/components/Glossary';
 import HelpTip from '@/components/HelpTip';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 
 const SIGNAL_CATEGORIES = [
   { id: 'equities', name: 'Equities', icon: TrendingUp, desc: 'Stock market indices' },
@@ -77,7 +79,7 @@ export default function SignalsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Data Sources Panel */}
-        <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl border border-white/[0.06] p-4">
+        <GlassCard blur="heavy">
           <h2 className="text-lg font-semibold text-white mb-4">Data Sources</h2>
           <div className="space-y-2">
             {ALL_FINANCIAL_SOURCES.map((api: FinancialSource) => (
@@ -98,23 +100,23 @@ export default function SignalsPage() {
               </button>
             ))}
           </div>
-        </div>
+        </GlassCard>
 
         {/* Main signals view */}
         <div className="lg:col-span-2 space-y-4">
           {/* Quick indicators */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {MARKET_INDICATORS.us_indices.slice(0, 4).map((indicator) => (
-              <div key={indicator.symbol} className="bg-[rgba(18,18,26,0.7)] backdrop-blur-sm rounded-xl border border-white/[0.06] p-4">
+              <GlassCard key={indicator.symbol} blur="light" compact>
                 <p className="text-xs text-slate-400">{indicator.name}</p>
                 <p className="text-xl font-bold text-white mt-1">--</p>
                 <p className="text-xs text-slate-500 mt-1">{indicator.symbol}</p>
-              </div>
+              </GlassCard>
             ))}
           </div>
 
           {/* Signal Feed */}
-          <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl border border-white/[0.06] p-6">
+          <GlassCard blur="heavy">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">Signal Feed</h3>
               <select className="bg-black/30 border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white min-h-[44px]">
@@ -128,16 +130,15 @@ export default function SignalsPage() {
               <div className="text-center">
                 <Settings className="w-10 h-10 text-slate-500 mx-auto mb-3" />
                 <p className="text-slate-400 mb-3">Connect API keys to see live data</p>
-                <button className="px-4 py-2.5 min-h-[44px] bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl text-sm font-medium
-                  hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] active:scale-[0.98] transition-all">
+                <GlassButton variant="primary" glow size="sm">
                   Configure APIs
-                </button>
+                </GlassButton>
               </div>
             </div>
-          </div>
+          </GlassCard>
 
           {/* Alert rules */}
-          <div className="bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-xl border border-white/[0.06] p-4">
+          <GlassCard blur="heavy" compact>
             <div className="flex items-center gap-2 mb-3">
               <Bell className="w-5 h-5 text-amber-400" />
               <h3 className="text-lg font-semibold text-white">Alert Rules</h3>
@@ -162,7 +163,7 @@ export default function SignalsPage() {
                 Add Alert Rule
               </button>
             </div>
-          </div>
+          </GlassCard>
         </div>
       </div>
 

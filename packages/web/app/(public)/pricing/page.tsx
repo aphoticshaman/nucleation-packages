@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import TierBadge, { TierType } from '@/components/TierBadge';
 import { Check, ArrowLeft, Zap, Shield, Globe, Users } from 'lucide-react';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 
 const VISIBLE_PLANS: {
   id: string;
@@ -230,11 +232,14 @@ export default function PricingPage() {
         {/* Plans grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-20">
           {VISIBLE_PLANS.map((plan) => (
-            <div
+            <GlassCard
               key={plan.id}
-              className={`relative bg-[rgba(18,18,26,0.7)] backdrop-blur-xl rounded-2xl border ${
-                plan.popular ? 'border-blue-500/50' : 'border-white/[0.06]'
-              } p-6 flex flex-col transition-all hover:border-white/[0.12] hover:bg-[rgba(18,18,26,0.8)]`}
+              blur="heavy"
+              accent={plan.popular}
+              glow={plan.popular}
+              className={`relative flex flex-col ${
+                plan.popular ? 'border-blue-500/50' : ''
+              }`}
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-xs font-medium rounded-full shadow-lg shadow-blue-500/25">
@@ -264,20 +269,18 @@ export default function PricingPage() {
                 ))}
               </ul>
 
-              <button
+              <GlassButton
+                variant={plan.popular ? 'primary' : plan.id === 'enterprise' ? 'secondary' : 'secondary'}
+                glow={plan.popular}
+                fullWidthMobile
                 onClick={() => void handleSelectPlan(plan)}
                 disabled={loading === plan.id}
-                className={`w-full py-3.5 min-h-[52px] rounded-xl font-medium transition-all touch-manipulation ${
-                  plan.popular
-                    ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:shadow-[0_0_30px_rgba(59,130,246,0.4)] active:scale-[0.98]'
-                    : plan.id === 'enterprise'
-                      ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/30 hover:border-amber-500/50 active:scale-[0.98]'
-                      : 'bg-white/[0.06] text-white border border-white/[0.08] hover:bg-white/[0.1] active:scale-[0.98]'
-                } ${loading === plan.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                loading={loading === plan.id}
+                className={`w-full ${plan.id === 'enterprise' ? 'border-amber-500/30 text-amber-300' : ''}`}
               >
-                {loading === plan.id ? 'Loading...' : plan.cta}
-              </button>
-            </div>
+                {plan.cta}
+              </GlassButton>
+            </GlassCard>
           ))}
         </div>
 
@@ -289,14 +292,11 @@ export default function PricingPage() {
             { icon: Globe, title: '195 Countries', desc: 'Global coverage' },
             { icon: Users, title: 'Team Collaboration', desc: 'Share insights' },
           ].map((item, idx) => (
-            <div
-              key={idx}
-              className="bg-[rgba(18,18,26,0.5)] backdrop-blur-sm rounded-xl border border-white/[0.06] p-4 text-center"
-            >
+            <GlassCard key={idx} blur="light" compact className="text-center">
               <item.icon className="w-8 h-8 text-blue-400 mx-auto mb-3" />
               <h4 className="text-white font-medium text-sm">{item.title}</h4>
               <p className="text-slate-500 text-xs mt-1">{item.desc}</p>
-            </div>
+            </GlassCard>
           ))}
         </div>
 
@@ -308,13 +308,10 @@ export default function PricingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             {FAQ.map((item, idx) => (
-              <div
-                key={idx}
-                className="bg-[rgba(18,18,26,0.5)] backdrop-blur-sm rounded-xl border border-white/[0.06] p-5"
-              >
+              <GlassCard key={idx} blur="light">
                 <h3 className="text-base font-medium text-white mb-2">{item.q}</h3>
                 <p className="text-slate-400 text-sm leading-relaxed">{item.a}</p>
-              </div>
+              </GlassCard>
             ))}
           </div>
         </div>
