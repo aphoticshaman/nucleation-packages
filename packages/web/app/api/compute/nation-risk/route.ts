@@ -204,15 +204,32 @@ export async function GET(req: Request) {
       const eventAdj = currentEventAdjustments[nation.code];
       const eventRiskDelta = eventAdj?.riskDelta || 0;
 
-      // New risk = blend of GDELT (40%), econ (30%), current events (30%)
-      const signalRisk = gdeltRisk * 0.4 + econRisk * 0.3 + eventRiskDelta * 0.3 / 0.2; // Normalize event delta
-      const newTransitionRisk = Math.min(0.98, Math.max(0.02,
-        nation.transition_risk * (1 - blendFactor) + signalRisk * blendFactor + eventRiskDelta
+      // Baseline risk levels (from seed data) - these are the "normal" levels
+      // Event adjustments push ABOVE baseline, not compound forever
+      const BASELINE_RISKS: Record<string, number> = {
+        'USA': 0.18, 'GBR': 0.12, 'DEU': 0.08, 'FRA': 0.15, 'JPN': 0.06,
+        'AUS': 0.07, 'CAN': 0.08, 'CHN': 0.22, 'RUS': 0.35, 'IND': 0.32,
+      };
+      const baselineRisk = BASELINE_RISKS[nation.code] ?? 0.30;
+
+      // New risk = blend of signals with event adjustment as ADDITIVE to baseline
+      // NOT compounding - we calculate from baseline each time
+      const signalRisk = gdeltRisk * 0.5 + econRisk * 0.5; // Signal-based risk 0-1
+
+      // Target risk = baseline + event adjustment + signal deviation
+      // Signals can push +/- 0.15 from baseline, events add their delta
+      const signalDeviation = (signalRisk - 0.5) * 0.3; // -0.15 to +0.15
+      const targetRisk = baselineRisk + eventRiskDelta + signalDeviation;
+
+      // Smooth transition toward target (prevents wild swings)
+      const newTransitionRisk = Math.min(0.95, Math.max(0.02,
+        nation.transition_risk * 0.7 + targetRisk * 0.3
       ));
 
-      // Basin strength inversely related to risk (with lag)
-      const newBasinStrength = Math.min(0.98, Math.max(0.02,
-        nation.basin_strength * (1 - blendFactor * 0.5) + (1 - newTransitionRisk) * blendFactor * 0.5
+      // Basin strength inversely related to risk
+      const targetBasin = Math.max(0.1, 1 - targetRisk - 0.1);
+      const newBasinStrength = Math.min(0.95, Math.max(0.05,
+        nation.basin_strength * 0.7 + targetBasin * 0.3
       ));
 
       // Compute velocity (rate of change in phase space)
