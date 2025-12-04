@@ -8,6 +8,7 @@ interface OnboardingGateProps {
   children: React.ReactNode;
   userId: string;
   userTier: UserTier | AuthTier;
+  userRole?: string;
   hasCompletedOnboarding: boolean;
 }
 
@@ -30,11 +31,15 @@ export default function OnboardingGate({
   children,
   userId,
   userTier,
+  userRole,
   hasCompletedOnboarding,
 }: OnboardingGateProps) {
+  // Admins skip onboarding entirely - they have full access and know the platform
+  const isAdmin = userRole === 'admin';
+
   // Trust the database - hasCompletedOnboarding comes from server
-  // Only show wizard if database says not completed
-  const [showWizard, setShowWizard] = useState(!hasCompletedOnboarding);
+  // Only show wizard if database says not completed AND not admin
+  const [showWizard, setShowWizard] = useState(!hasCompletedOnboarding && !isAdmin);
   const [isCompleting, setIsCompleting] = useState(false);
 
   // Convert auth tier to power tier if needed

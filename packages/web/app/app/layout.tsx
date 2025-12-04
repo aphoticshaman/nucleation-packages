@@ -46,6 +46,7 @@ export default async function ConsumerLayout({ children }: { children: React.Rea
       <OnboardingGate
         userId={user.id}
         userTier={user.tier}
+        userRole={user.role}
         hasCompletedOnboarding={!!user.onboarding_completed_at}
       >
         <ConsumerNav user={user} />
