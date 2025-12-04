@@ -681,7 +681,7 @@ function exportAsHTML(components: PackageComponent[], audience: AudiencePreset):
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${content.title}</title>
+  <title>${escapeHtml(content.title)}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.6; padding: 2rem; }
@@ -700,11 +700,11 @@ function exportAsHTML(components: PackageComponent[], audience: AudiencePreset):
 <body>
   <div class="container">
     <header>
-      <h1>${content.title}</h1>
-      <p class="subtitle">${presetInfo.name}</p>
+      <h1>${escapeHtml(content.title)}</h1>
+      <p class="subtitle">${escapeHtml(presetInfo.name)}</p>
       <div class="meta">
-        <span>Generated: ${new Date(content.generatedAt).toLocaleString()}</span>
-        <span>Sections: ${content.sections.length}</span>
+        <span>Generated: ${escapeHtml(new Date(content.generatedAt).toLocaleString())}</span>
+        <span>Sections: ${String(content.sections.length)}</span>
         <span>Classification: OSINT / UNCLASSIFIED</span>
       </div>
     </header>
@@ -738,7 +738,7 @@ function exportAsPDF(components: PackageComponent[], audience: AudiencePreset): 
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>${content.title}</title>
+  <title>${escapeHtml(content.title)}</title>
   <style>
     @media print {
       @page { margin: 1in; size: letter; }
@@ -763,11 +763,11 @@ function exportAsPDF(components: PackageComponent[], audience: AudiencePreset): 
   <div class="container">
     <div class="classification">UNCLASSIFIED // OSINT</div>
     <header>
-      <h1>${content.title}</h1>
-      <p class="subtitle">${presetInfo.name}</p>
+      <h1>${escapeHtml(content.title)}</h1>
+      <p class="subtitle">${escapeHtml(presetInfo.name)}</p>
       <div class="meta">
-        <span>Generated: ${new Date(content.generatedAt).toLocaleString()}</span>
-        <span>Sections: ${content.sections.length}</span>
+        <span>Generated: ${escapeHtml(new Date(content.generatedAt).toLocaleString())}</span>
+        <span>Sections: ${String(content.sections.length)}</span>
       </div>
     </header>
     ${content.sections.map(s => `
@@ -802,7 +802,7 @@ function exportAsDOCX(components: PackageComponent[], audience: AudiencePreset):
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
 <head>
   <meta charset="UTF-8">
-  <title>${content.title}</title>
+  <title>${escapeHtml(content.title)}</title>
   <style>
     body { font-family: Calibri, sans-serif; font-size: 11pt; }
     h1 { font-size: 18pt; color: #1a1a1a; }
@@ -814,9 +814,9 @@ function exportAsDOCX(components: PackageComponent[], audience: AudiencePreset):
 </head>
 <body>
   <div class="header">
-    <h1>${content.title}</h1>
-    <p><strong>${presetInfo.name}</strong></p>
-    <p class="meta">Generated: ${new Date(content.generatedAt).toLocaleString()} | Classification: OSINT / UNCLASSIFIED</p>
+    <h1>${escapeHtml(content.title)}</h1>
+    <p><strong>${escapeHtml(presetInfo.name)}</strong></p>
+    <p class="meta">Generated: ${escapeHtml(new Date(content.generatedAt).toLocaleString())} | Classification: OSINT / UNCLASSIFIED</p>
   </div>
   ${content.sections.map(s => `
   <h2>${escapeHtml(s.icon)} ${escapeHtml(s.title)}</h2>
@@ -849,7 +849,7 @@ function exportAsPPTX(components: PackageComponent[], audience: AudiencePreset):
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>${content.title} - Presentation</title>
+  <title>${escapeHtml(content.title)} - Presentation</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; }
@@ -868,9 +868,9 @@ function exportAsPPTX(components: PackageComponent[], audience: AudiencePreset):
 </head>
 <body>
   <div class="slide title-slide">
-    <h1>${content.title}</h1>
-    <p class="subtitle">${presetInfo.name}</p>
-    <p class="meta">Generated ${new Date(content.generatedAt).toLocaleDateString()}</p>
+    <h1>${escapeHtml(content.title)}</h1>
+    <p class="subtitle">${escapeHtml(presetInfo.name)}</p>
+    <p class="meta">Generated ${escapeHtml(new Date(content.generatedAt).toLocaleDateString())}</p>
     <div class="slide-number">Title</div>
   </div>
   ${slides.join('')}
