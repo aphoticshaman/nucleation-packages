@@ -15,11 +15,13 @@ interface AdminNavProps {
 
 const navItems = [
   { href: '/admin', label: 'Overview', icon: '📊' },
+  { href: '/admin/users', label: 'User Management', icon: '👤' },
   { href: '/admin/builder', label: 'Dashboard Builder', icon: '🎨' },
   { href: '/admin/training', label: 'Training Data', icon: '🧠' },
   { href: '/admin/customers', label: 'Customers', icon: '👥' },
   { href: '/admin/billing', label: 'Billing', icon: '💳' },
   { href: '/admin/analytics', label: 'Analytics', icon: '📈' },
+  { href: '/admin/health', label: 'API Health', icon: '🩺' },
   { href: '/admin/pipelines', label: 'Data Pipelines', icon: '🔄' },
   { href: '/admin/models', label: 'ML Models', icon: '🤖' },
   { href: '/admin/compliance', label: 'Compliance', icon: '🛡️' },
