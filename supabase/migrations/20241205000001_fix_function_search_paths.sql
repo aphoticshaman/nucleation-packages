@@ -153,10 +153,5 @@ BEGIN
     END LOOP;
 END $$;
 
--- PostGIS system table comment
-DO $$
-BEGIN
-    COMMENT ON TABLE public.spatial_ref_sys IS '@supabase/lint: ignore rls_disabled_in_public - PostGIS system table';
-EXCEPTION WHEN undefined_table THEN
-    RAISE NOTICE 'spatial_ref_sys table not found (skipping)';
-END $$;
+-- Note: spatial_ref_sys is a PostGIS system table owned by postgres.
+-- Cannot add comments to it. The linter warning for this table can be safely ignored.
