@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/auth';
 import { Suspense } from 'react';
+import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
 
 function StatCard({
   label,
@@ -173,9 +173,12 @@ async function DashboardContent() {
               <h2 className="text-lg font-bold text-white">Enterprise Customers</h2>
               <p className="text-sm text-slate-400">API usage and status</p>
             </div>
-            <GlassButton variant="ghost" size="sm" onClick={() => window.location.href = '/admin/customers?type=enterprise'}>
+            <Link
+              href="/admin/customers?type=enterprise"
+              className="px-3 py-1.5 text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] rounded-lg transition-colors"
+            >
               View all
-            </GlassButton>
+            </Link>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -208,9 +211,12 @@ async function DashboardContent() {
               <h2 className="text-lg font-bold text-white">Consumer Users</h2>
               <p className="text-sm text-slate-400">Recent activity</p>
             </div>
-            <GlassButton variant="ghost" size="sm" onClick={() => window.location.href = '/admin/customers?type=consumer'}>
+            <Link
+              href="/admin/customers?type=consumer"
+              className="px-3 py-1.5 text-sm text-slate-300 hover:text-white hover:bg-white/[0.06] rounded-lg transition-colors"
+            >
               View all
-            </GlassButton>
+            </Link>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
