@@ -8,7 +8,9 @@ export const runtime = 'nodejs';
 const COOKIE_DOMAIN = '.latticeforge.ai';
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
+  // Create ONE response object and reuse it for all cookie operations
+  // (Creating new responses on each set() loses previous cookies)
+  const supabaseResponse = NextResponse.next({
     request,
   });
 
@@ -20,32 +22,23 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
+        getAll() {
+          return request.cookies.getAll();
         },
-        set(name: string, value: string, options: Record<string, unknown>) {
-          request.cookies.set(name, value);
-          supabaseResponse = NextResponse.next({
-            request,
+        setAll(cookiesToSet) {
+          // First set on request (for downstream middleware/RSC)
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
           });
-          // Set cookie with cross-subdomain domain in production
-          const cookieOptions = {
-            ...options,
-            ...(isProduction && { domain: COOKIE_DOMAIN }),
-          };
-          supabaseResponse.cookies.set(name, value, cookieOptions);
-        },
-        remove(name: string, options: Record<string, unknown>) {
-          request.cookies.set(name, '');
-          supabaseResponse = NextResponse.next({
-            request,
+
+          // Then set on response (for browser)
+          cookiesToSet.forEach(({ name, value, options }) => {
+            const cookieOptions = {
+              ...options,
+              ...(isProduction && { domain: COOKIE_DOMAIN }),
+            };
+            supabaseResponse.cookies.set(name, value, cookieOptions);
           });
-          // Remove cookie with cross-subdomain domain in production
-          const cookieOptions = {
-            ...options,
-            ...(isProduction && { domain: COOKIE_DOMAIN }),
-          };
-          supabaseResponse.cookies.set(name, '', cookieOptions);
         },
       },
     }

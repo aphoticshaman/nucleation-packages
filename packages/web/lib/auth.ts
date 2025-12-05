@@ -25,44 +25,29 @@ const COOKIE_DOMAIN = '.latticeforge.ai';
 export async function createClient() {
   const cookieStore = await cookies();
 
-  // Check if we're on latticeforge.ai (not localhost) by looking at the Supabase URL
-  // In production, NEXT_PUBLIC_SUPABASE_URL will contain latticeforge
-  const isProduction =
-    process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('latticeforge') ||
-    process.env.VERCEL_ENV === 'production';
+  // Only set cross-subdomain cookie domain on Vercel production
+  // (VERCEL_ENV is 'production' only on latticeforge.ai, not preview deployments)
+  const isProduction = process.env.VERCEL_ENV === 'production';
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
+        getAll() {
+          return cookieStore.getAll();
         },
-        set(name: string, value: string, options: Record<string, unknown>) {
+        setAll(cookiesToSet) {
           try {
-            // Set cookie with cross-subdomain domain only in production
-            const cookieOptions = {
-              name,
-              value,
-              ...options,
-              ...(isProduction && { domain: COOKIE_DOMAIN }),
-            };
-            cookieStore.set(cookieOptions);
-          } catch {
-            // Called from Server Component - can't set cookies
-          }
-        },
-        remove(name: string, options: Record<string, unknown>) {
-          try {
-            // Remove cookie with cross-subdomain domain only in production
-            const cookieOptions = {
-              name,
-              value: '',
-              ...options,
-              ...(isProduction && { domain: COOKIE_DOMAIN }),
-            };
-            cookieStore.set(cookieOptions);
+            cookiesToSet.forEach(({ name, value, options }) => {
+              const cookieOptions = {
+                name,
+                value,
+                ...options,
+                ...(isProduction && { domain: COOKIE_DOMAIN }),
+              };
+              cookieStore.set(cookieOptions);
+            });
           } catch {
             // Called from Server Component - can't set cookies
           }
