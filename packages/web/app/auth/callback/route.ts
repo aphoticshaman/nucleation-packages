@@ -20,6 +20,10 @@ export async function GET(request: NextRequest) {
   if (code) {
     const cookieStore = await cookies();
 
+    // Create response upfront so we can set cookies on it
+    let finalRedirect = redirect;
+    const response = NextResponse.redirect(new URL(finalRedirect, requestUrl.origin));
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -29,14 +33,16 @@ export async function GET(request: NextRequest) {
             return cookieStore.getAll();
           },
           setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => {
+            // Set cookies on BOTH the cookieStore AND the response
+            cookiesToSet.forEach(({ name, value, options }) => {
+              try {
                 cookieStore.set(name, value, options);
-              });
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing sessions.
-            }
+              } catch {
+                // Server Component context - ignore
+              }
+              // Also set on response to ensure they're sent to browser
+              response.cookies.set(name, value, options);
+            });
           },
         },
       }
@@ -104,9 +110,18 @@ export async function GET(request: NextRequest) {
       // Continue anyway - profile will be created by trigger or next request
     }
 
-    // Admin users go to admin panel, others go to app (or their intended redirect)
-    const finalRedirect = userRole === 'admin' ? '/admin' : redirect;
-    return NextResponse.redirect(new URL(finalRedirect, requestUrl.origin));
+    // Update redirect URL based on role (admin goes to admin panel)
+    if (userRole === 'admin') {
+      // Create new response with updated redirect
+      const adminResponse = NextResponse.redirect(new URL('/admin', requestUrl.origin));
+      // Copy cookies from original response
+      response.cookies.getAll().forEach(cookie => {
+        adminResponse.cookies.set(cookie.name, cookie.value);
+      });
+      return adminResponse;
+    }
+
+    return response;
   }
 
   // Redirect to the intended destination

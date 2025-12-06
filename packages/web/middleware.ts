@@ -55,11 +55,21 @@ export async function middleware(request: NextRequest) {
   const protectedPaths = ['/admin', '/dashboard', '/app'];
   const isProtected = protectedPaths.some((p) => path.startsWith(p)) || path === '/';
 
+  // Helper to create redirect with cookies preserved
+  const redirectWithCookies = (url: URL) => {
+    const redirectResponse = NextResponse.redirect(url);
+    // Copy all cookies from supabaseResponse to the redirect
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value);
+    });
+    return redirectResponse;
+  };
+
   if (isProtected && !user) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirect', path === '/' ? '/app' : path);
-    return NextResponse.redirect(url);
+    return redirectWithCookies(url);
   }
 
   // Redirect logged-in users from home to appropriate dashboard
@@ -88,7 +98,7 @@ export async function middleware(request: NextRequest) {
       default:
         url.pathname = '/app';
     }
-    return NextResponse.redirect(url);
+    return redirectWithCookies(url);
   }
 
   // Auth pages - redirect if already logged in
@@ -122,7 +132,7 @@ export async function middleware(request: NextRequest) {
       default:
         url.pathname = '/app';
     }
-    return NextResponse.redirect(url);
+    return redirectWithCookies(url);
   }
 
   return supabaseResponse;
