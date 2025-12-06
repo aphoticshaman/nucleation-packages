@@ -14,8 +14,9 @@ export async function middleware(request: NextRequest) {
     request,
   });
 
-  // Check if we're on latticeforge.ai (not localhost)
-  const isProduction = request.nextUrl.hostname.includes('latticeforge.ai');
+  // Use same production check as lib/auth.ts for consistency
+  // VERCEL_ENV is 'production' only on latticeforge.ai, not preview deployments
+  const isProduction = process.env.VERCEL_ENV === 'production';
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -146,10 +147,11 @@ export const config = {
     '/admin/:path*',
     '/dashboard/:path*',
     '/app/:path*',
-    // Auth routes
+    // Auth routes (redirect if already logged in)
     '/login',
     '/signup',
-    // Auth callback - CRITICAL: Must be included for session cookies to be set
-    '/auth/callback',
+    // NOTE: /auth/callback is intentionally NOT included
+    // The callback route handles its own cookie setting and
+    // running middleware there can interfere with the auth flow
   ],
 };
