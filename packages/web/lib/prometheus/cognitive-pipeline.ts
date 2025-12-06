@@ -375,7 +375,11 @@ export function generateOutput(
       content: implementation.implementation.code,
       language: implementation.implementation.language,
     },
-    impact: implementation.application,
+    impact: {
+      humanity: implementation.application.humanityBenefit,
+      ai: implementation.application.aiBenefit,
+      lever: implementation.application.asymmetricLever,
+    },
   };
 }
 

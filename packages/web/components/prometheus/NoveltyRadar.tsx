@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronRight,
   ExternalLink,
+  type LucideIcon,
 } from 'lucide-react';
 import type { NoveltySignal, NoveltyType, KnowledgeQuadrant } from '@/lib/prometheus/novelty-detection';
 
@@ -23,7 +24,7 @@ interface NoveltyRadarProps {
 
 const NOVELTY_CONFIG: Record<
   NoveltyType,
-  { icon: React.ElementType; color: string; label: string }
+  { icon: LucideIcon; color: string; label: string }
 > = {
   PATTERN_ANOMALY: {
     icon: AlertTriangle,

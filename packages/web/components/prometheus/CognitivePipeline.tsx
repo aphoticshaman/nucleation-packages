@@ -10,6 +10,7 @@ import {
   ChevronRight,
   AlertCircle,
   Loader2,
+  type LucideIcon,
 } from 'lucide-react';
 import type { PROMETHEUSStage, PipelineState } from '@/lib/prometheus/cognitive-pipeline';
 
@@ -22,7 +23,7 @@ const STAGES: {
   id: PROMETHEUSStage;
   name: string;
   description: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
 }[] = [
   {
     id: 'ARCHAEOLOGY',
