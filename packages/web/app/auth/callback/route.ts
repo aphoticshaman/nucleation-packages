@@ -2,6 +2,9 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
+// Use Node.js runtime for consistent cookie handling with middleware
+export const runtime = 'nodejs';
+
 // Cookie domain for cross-subdomain auth - MUST match lib/auth.ts and middleware.ts
 const COOKIE_DOMAIN = '.latticeforge.ai';
 
@@ -31,6 +34,13 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const cookieStore = await cookies();
+
+    // DEBUG: Log what we're working with
+    console.log('[AUTH CALLBACK] Starting code exchange');
+    console.log('[AUTH CALLBACK] Hostname:', requestUrl.hostname);
+    console.log('[AUTH CALLBACK] Origin:', requestUrl.origin);
+    console.log('[AUTH CALLBACK] Redirect target:', redirect);
+    console.log('[AUTH CALLBACK] isProduction:', isProductionEnvironment(requestUrl.hostname));
 
     // Create response upfront so we can set cookies on it
     const response = NextResponse.redirect(new URL(redirect, requestUrl.origin));
@@ -75,12 +85,30 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+    const { data: sessionData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+    console.log('[AUTH CALLBACK] Exchange result - error:', exchangeError?.message || 'none');
+    console.log('[AUTH CALLBACK] Exchange result - session exists:', !!sessionData?.session);
+    console.log('[AUTH CALLBACK] Exchange result - user exists:', !!sessionData?.user);
+    if (sessionData?.user) {
+      console.log('[AUTH CALLBACK] User email:', sessionData.user.email);
+    }
+
+    // Log cookies that will be set
+    const cookieNames = response.cookies.getAll().map(c => c.name);
+    console.log('[AUTH CALLBACK] Cookies being set:', cookieNames);
 
     if (exchangeError) {
-      console.error('Code exchange error:', exchangeError.message);
+      console.error('[AUTH CALLBACK] Code exchange error:', exchangeError.message);
       return NextResponse.redirect(
         new URL(`/login?error=${encodeURIComponent(exchangeError.message)}`, requestUrl.origin)
+      );
+    }
+
+    if (!sessionData?.session) {
+      console.error('[AUTH CALLBACK] No session returned despite no error!');
+      return NextResponse.redirect(
+        new URL('/login?error=Session%20creation%20failed', requestUrl.origin)
       );
     }
 
