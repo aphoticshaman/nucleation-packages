@@ -135,6 +135,7 @@ export default function AdminNav({ user }: AdminNavProps) {
           </div>
           <Link
             href="/api/auth/signout"
+            prefetch={false}
             className="p-2 text-slate-500 hover:text-white hover:bg-white/[0.05] rounded-lg transition-all"
             title="Sign out"
           >
