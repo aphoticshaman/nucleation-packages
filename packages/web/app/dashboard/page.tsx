@@ -2,7 +2,8 @@ import { createClient, requireEnterprise } from '@/lib/auth';
 import { Suspense } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
-import { TrendingUp, TrendingDown, Key, Link2, Users, FileText, type LucideIcon } from 'lucide-react';
+import { TrendingUp, TrendingDown, Key, Link2, Users, FileText, Share2, Activity, Zap, type LucideIcon } from 'lucide-react';
+import Link from 'next/link';
 
 // Stat card - responsive with glass design
 function StatCard({
@@ -240,6 +241,51 @@ async function DashboardContent() {
               </div>
             </div>
           </GlassCard>
+        </div>
+      </div>
+
+      {/* Visualization Tools */}
+      <div className="mt-6 md:mt-8">
+        <h2 className="text-base md:text-lg font-bold text-white mb-4">Visualization Tools</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link
+            href="/dashboard/intelligence"
+            className="group p-4 bg-slate-900/50 hover:bg-slate-800/50 border border-slate-700 hover:border-blue-500/50 rounded-xl transition-all"
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                <Activity className="w-5 h-5 text-blue-400" />
+              </div>
+              <h3 className="text-white font-medium">Intelligence Feed</h3>
+            </div>
+            <p className="text-xs text-slate-400">Real-time streaming signals and alerts with domain filtering</p>
+          </Link>
+
+          <Link
+            href="/dashboard/causal"
+            className="group p-4 bg-slate-900/50 hover:bg-slate-800/50 border border-slate-700 hover:border-cyan-500/50 rounded-xl transition-all"
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
+                <Share2 className="w-5 h-5 text-cyan-400" />
+              </div>
+              <h3 className="text-white font-medium">Causal Graph</h3>
+            </div>
+            <p className="text-xs text-slate-400">Force-directed topology with transfer entropy weighting</p>
+          </Link>
+
+          <Link
+            href="/dashboard/regimes"
+            className="group p-4 bg-slate-900/50 hover:bg-slate-800/50 border border-slate-700 hover:border-amber-500/50 rounded-xl transition-all"
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
+                <Zap className="w-5 h-5 text-amber-400" />
+              </div>
+              <h3 className="text-white font-medium">Regime Detection</h3>
+            </div>
+            <p className="text-xs text-slate-400">Markov-switching regimes with phase transition indicators</p>
+          </Link>
         </div>
       </div>
 
