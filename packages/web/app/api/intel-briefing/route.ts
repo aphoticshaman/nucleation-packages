@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import Anthropic from '@anthropic-ai/sdk';
+import { Redis } from '@upstash/redis';
 import {
   getReasoningOrchestrator,
   getSecurityGuardian,
@@ -13,11 +14,17 @@ import {
 export const runtime = 'edge';
 
 // =============================================================================
-// SERVER-SIDE CACHE - Prevents redundant LLM calls across ALL users
+// REDIS CACHE - Shared across ALL edge instances
 // =============================================================================
 // Cache TTL: 10 minutes. All users hitting the same preset get cached response.
 // Only Enterprise tier gets fresh on-demand analysis.
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const CACHE_TTL_SECONDS = 10 * 60; // 10 minutes
+
+// Initialize Redis client (uses UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN env vars)
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
 interface CachedBriefing {
   data: {
@@ -28,36 +35,34 @@ interface CachedBriefing {
   generatedAt: string;
 }
 
-// In-memory cache - shared across all requests in the same edge instance
-// For production at scale, replace with Vercel KV or Redis
-const briefingCache = new Map<string, CachedBriefing>();
-
 function getCacheKey(preset: string): string {
-  return `briefing:${preset}`;
+  return `intel-briefing:${preset}`;
 }
 
-function getCachedBriefing(preset: string): CachedBriefing | null {
-  const key = getCacheKey(preset);
-  const cached = briefingCache.get(key);
-
-  if (!cached) return null;
-
-  // Check if expired
-  if (Date.now() - cached.timestamp > CACHE_TTL_MS) {
-    briefingCache.delete(key);
+async function getCachedBriefing(preset: string): Promise<CachedBriefing | null> {
+  try {
+    const key = getCacheKey(preset);
+    const cached = await redis.get<CachedBriefing>(key);
+    return cached;
+  } catch (error) {
+    console.error('[CACHE] Redis get error:', error);
     return null;
   }
-
-  return cached;
 }
 
-function setCachedBriefing(preset: string, data: CachedBriefing['data']): void {
-  const key = getCacheKey(preset);
-  briefingCache.set(key, {
-    data,
-    timestamp: Date.now(),
-    generatedAt: new Date().toISOString(),
-  });
+async function setCachedBriefing(preset: string, data: CachedBriefing['data']): Promise<void> {
+  try {
+    const key = getCacheKey(preset);
+    const cacheEntry: CachedBriefing = {
+      data,
+      timestamp: Date.now(),
+      generatedAt: new Date().toISOString(),
+    };
+    // Set with TTL - Redis handles expiration automatically
+    await redis.set(key, cacheEntry, { ex: CACHE_TTL_SECONDS });
+  } catch (error) {
+    console.error('[CACHE] Redis set error:', error);
+  }
 }
 
 // Types for our computed intel
@@ -343,7 +348,17 @@ interface NationData {
 // Build the system prompt - this tells Claude HOW to present intel
 // without revealing our proprietary methods
 function buildSystemPrompt(userTier: string): string {
+  // CRITICAL: Include current date so LLM doesn't generate outdated content
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
   return `You are an intelligence analyst providing concise briefings for decision-makers.
+
+CURRENT DATE: ${currentDate}
 
 Your role is to NARRATE pre-analyzed intelligence data - you receive computed risk metrics and produce natural language summaries. You do not perform the analysis yourself; the metrics you receive are outputs from proprietary analytical systems.
 
@@ -355,6 +370,7 @@ Guidelines:
 - Never speculate about the underlying analytical methods
 - Never make up specific events, dates, or statistics not in the data
 - Frame trends and risks based on the provided metrics
+- CRITICAL: All analysis must reflect current geopolitical reality as of ${currentDate}. Do NOT reference outdated administrations, events, or situations.
 
 Output format: Respond with a JSON object containing briefings for each category.`;
 }
@@ -437,9 +453,9 @@ export async function POST(req: Request) {
     }
 
     // ============================================================
-    // CACHE CHECK - ALWAYS check cache first
+    // CACHE CHECK - ALWAYS check cache first (Redis - shared across all edge instances)
     // ============================================================
-    const cached = getCachedBriefing(preset);
+    const cached = await getCachedBriefing(preset);
     if (cached) {
       console.log(`[CACHE HIT] Serving cached briefing for preset: ${preset}, age: ${Math.round((Date.now() - cached.timestamp) / 1000)}s`);
       return NextResponse.json({
@@ -809,11 +825,11 @@ export async function POST(req: Request) {
     };
 
     // ============================================================
-    // CACHE SET - Store for future requests (non-Enterprise users)
+    // CACHE SET - Store for future requests (Redis - shared across all edge instances)
     // ============================================================
     // Cache the response so next user hitting this preset gets instant response
-    setCachedBriefing(preset, responseData);
-    console.log(`[CACHE SET] Cached fresh briefing for preset: ${preset}`);
+    await setCachedBriefing(preset, responseData);
+    console.log(`[CACHE SET] Cached fresh briefing for preset: ${preset} in Redis`);
 
     return NextResponse.json(responseData);
   } catch (error) {
@@ -907,8 +923,10 @@ function getFallbackBriefings(preset: string): Record<string, string> {
 
   const context = presetContext[preset] || presetContext.global;
 
+  // Note: These are generic baseline assessments shown when live analysis is unavailable
+  // Live briefings refresh every 10 minutes with current intelligence
   return {
-    political: `WHAT: Great power competition continues across multiple theaters. US-China relations frozen at working level after balloon incident aftermath; backchannel diplomacy active but unproductive. Russia-West standoff entrenched with no negotiation pathways visible. WHO: Key actors—Biden admin pursuing "managed competition," Xi consolidating third term priorities, Putin calculating post-Ukraine positioning. WHERE: Friction points concentrated in Taiwan Strait, South China Sea, Eastern Europe, and emerging Africa competition. WHEN: Next 90 days relatively stable pending US election cycle developments. WHY: Structural tensions driven by technological decoupling, ideological divergence, and resource competition. US IMPACT: American businesses face increasing "choose your market" pressure. Expect continued restrictions on tech transfers and outbound investment screening. OUTLOOK: Multipolar fragmentation accelerating—plan for a world of competing blocs, not global integration. Position: Geographic diversification critical. Avoid single-market concentration in either bloc.`,
+    political: `WHAT: Great power competition continues across multiple theaters. US-China relations remain tense with strategic rivalry the dominant framework; selective engagement on narrow issues only. Russia-West standoff entrenched with limited negotiation pathways. WHO: Key actors—Trump administration pursuing assertive bilateral dealmaking and "America First" priorities, Xi entering his third term with economic challenges, Putin managing domestic constraints and international isolation. WHERE: Friction points concentrated in Taiwan Strait, South China Sea, Eastern Europe, and emerging Africa/Middle East competition. WHEN: Next 90 days focused on new administration policy implementation and international response calibration. WHY: Structural tensions driven by technological decoupling, ideological divergence, and resource competition. US IMPACT: American businesses navigating policy shifts on trade, tariffs, and international engagement. Watch for changes in tech transfer restrictions and bilateral deal structures. OUTLOOK: Multipolar fragmentation accelerating—plan for a world of competing blocs, not global integration. Position: Geographic diversification critical. Avoid single-market concentration in either bloc.`,
 
     economic: `WHAT: Global growth at 2.8% but distribution uneven. US economy outperforming at 2.4% while EU stagnates at 0.9% and China struggles to hit 5% target. WHO: Fed maintaining restrictive stance, ECB cautiously pivoting, PBOC deploying targeted stimulus. Major multinationals reporting bifurcated performance by region. WHERE: Growth concentrating in US, India, and select ASEAN markets. Contraction in Germany, UK sluggish, Japan benefiting from yen weakness. WHEN: Q1 2025 inflection point likely as delayed rate cut effects materialize. WHY: Post-pandemic normalization, manufacturing reshoring, and services resilience in developed markets. US IMPACT: American consumers remain engine of global demand. Labor market cooling but not cracking. Corporate margins compressing but revenues holding. For US households—expect grocery inflation to moderate while shelter costs remain elevated through mid-2025. OUTLOOK: Soft landing baseline scenario holds at 60% probability. Position: Overweight US domestic exposure. Selective emerging market entries where demographics and reform momentum align.`,
 
