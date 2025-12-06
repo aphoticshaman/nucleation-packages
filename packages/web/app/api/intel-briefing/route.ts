@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import Anthropic from '@anthropic-ai/sdk';
+import { Redis } from '@upstash/redis';
 import {
   getReasoningOrchestrator,
   getSecurityGuardian,
@@ -13,11 +14,17 @@ import {
 export const runtime = 'edge';
 
 // =============================================================================
-// SERVER-SIDE CACHE - Prevents redundant LLM calls across ALL users
+// REDIS CACHE - Shared across ALL edge instances
 // =============================================================================
 // Cache TTL: 10 minutes. All users hitting the same preset get cached response.
 // Only Enterprise tier gets fresh on-demand analysis.
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const CACHE_TTL_SECONDS = 10 * 60; // 10 minutes
+
+// Initialize Redis client (uses UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN env vars)
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
 interface CachedBriefing {
   data: {
@@ -28,36 +35,34 @@ interface CachedBriefing {
   generatedAt: string;
 }
 
-// In-memory cache - shared across all requests in the same edge instance
-// For production at scale, replace with Vercel KV or Redis
-const briefingCache = new Map<string, CachedBriefing>();
-
 function getCacheKey(preset: string): string {
-  return `briefing:${preset}`;
+  return `intel-briefing:${preset}`;
 }
 
-function getCachedBriefing(preset: string): CachedBriefing | null {
-  const key = getCacheKey(preset);
-  const cached = briefingCache.get(key);
-
-  if (!cached) return null;
-
-  // Check if expired
-  if (Date.now() - cached.timestamp > CACHE_TTL_MS) {
-    briefingCache.delete(key);
+async function getCachedBriefing(preset: string): Promise<CachedBriefing | null> {
+  try {
+    const key = getCacheKey(preset);
+    const cached = await redis.get<CachedBriefing>(key);
+    return cached;
+  } catch (error) {
+    console.error('[CACHE] Redis get error:', error);
     return null;
   }
-
-  return cached;
 }
 
-function setCachedBriefing(preset: string, data: CachedBriefing['data']): void {
-  const key = getCacheKey(preset);
-  briefingCache.set(key, {
-    data,
-    timestamp: Date.now(),
-    generatedAt: new Date().toISOString(),
-  });
+async function setCachedBriefing(preset: string, data: CachedBriefing['data']): Promise<void> {
+  try {
+    const key = getCacheKey(preset);
+    const cacheEntry: CachedBriefing = {
+      data,
+      timestamp: Date.now(),
+      generatedAt: new Date().toISOString(),
+    };
+    // Set with TTL - Redis handles expiration automatically
+    await redis.set(key, cacheEntry, { ex: CACHE_TTL_SECONDS });
+  } catch (error) {
+    console.error('[CACHE] Redis set error:', error);
+  }
 }
 
 // Types for our computed intel
@@ -448,9 +453,9 @@ export async function POST(req: Request) {
     }
 
     // ============================================================
-    // CACHE CHECK - ALWAYS check cache first
+    // CACHE CHECK - ALWAYS check cache first (Redis - shared across all edge instances)
     // ============================================================
-    const cached = getCachedBriefing(preset);
+    const cached = await getCachedBriefing(preset);
     if (cached) {
       console.log(`[CACHE HIT] Serving cached briefing for preset: ${preset}, age: ${Math.round((Date.now() - cached.timestamp) / 1000)}s`);
       return NextResponse.json({
@@ -820,11 +825,11 @@ export async function POST(req: Request) {
     };
 
     // ============================================================
-    // CACHE SET - Store for future requests (non-Enterprise users)
+    // CACHE SET - Store for future requests (Redis - shared across all edge instances)
     // ============================================================
     // Cache the response so next user hitting this preset gets instant response
-    setCachedBriefing(preset, responseData);
-    console.log(`[CACHE SET] Cached fresh briefing for preset: ${preset}`);
+    await setCachedBriefing(preset, responseData);
+    console.log(`[CACHE SET] Cached fresh briefing for preset: ${preset} in Redis`);
 
     return NextResponse.json(responseData);
   } catch (error) {
