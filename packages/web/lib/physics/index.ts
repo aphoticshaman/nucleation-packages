@@ -99,3 +99,57 @@ export {
   type RegimeChangeEvent,
   type RegimeVisualizationData,
 } from './markov-switching';
+
+// Tropical Geometry - Attention mechanisms and expressivity bounds
+export {
+  // Semiring operations
+  tropicalAdd,
+  tropicalMul,
+  tropicalPow,
+  tropicalSum,
+  tropicalProduct,
+  TROPICAL_ZERO,
+  TROPICAL_ONE,
+
+  // Matrix operations
+  tropicalMatMul,
+  tropicalDet2x2,
+  tropicalMatVec,
+
+  // Polynomials
+  evaluateTropicalPolynomial,
+  findTropicalCorners,
+  countLinearRegions,
+
+  // Softmax → Tropical limit
+  logSumExp,
+  temperatureLogSumExp,
+  demonstrateTropicalLimit,
+
+  // Transformer expressivity bounds
+  binomial,
+  newtonPolytopeBound,
+  calculateExpressivityBounds,
+  minLayersForDegree,
+
+  // ARC task complexity
+  estimateARCComplexity,
+  estimateFromOperations,
+  parseARCOperations,
+  ARC_OPERATION_PATTERNS,
+
+  // Proof verification
+  TROPICAL_PROOF_STEPS,
+  verifyTropicalTheorem,
+
+  // Analysis
+  analyzeAttentionTropicality,
+  tropicalGeometry,
+
+  type TropicalNumber,
+  type TropicalMatrix,
+  type TropicalPolynomial,
+  type ExpressivityBound,
+  type ARCComplexity,
+  type ProofStep,
+} from './tropical-geometry';
