@@ -1682,4 +1682,3 @@ Warning:   145:3  warning  Unexpected console statement. Only these console meth
   3 errors and 2 warnings potentially fixable with the `--fix` option.
 
 Error: Process completed with exit code 1.
-0s
