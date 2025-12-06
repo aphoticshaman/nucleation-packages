@@ -7,45 +7,47 @@ export const runtime = 'nodejs';
 // Cookie domain for cross-subdomain auth (auth.latticeforge.ai ↔ latticeforge.ai)
 const COOKIE_DOMAIN = '.latticeforge.ai';
 
+// More robust production detection: check VERCEL_ENV OR hostname
+function isProductionEnvironment(hostname: string): boolean {
+  // VERCEL_ENV is 'production' on production deployments
+  if (process.env.VERCEL_ENV === 'production') return true;
+  // Fallback: check if hostname is on latticeforge.ai
+  if (hostname.endsWith('latticeforge.ai')) return true;
+  return false;
+}
+
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
+  // Create ONE response object and reuse it for all cookie operations
+  // (Creating new responses on each set() loses previous cookies)
+  const supabaseResponse = NextResponse.next({
     request,
   });
 
-  // Check if we're on latticeforge.ai (not localhost)
-  const isProduction = request.nextUrl.hostname.includes('latticeforge.ai');
+  // Use hostname-based production check (more reliable than just VERCEL_ENV)
+  const isProduction = isProductionEnvironment(request.nextUrl.hostname);
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
+        getAll() {
+          return request.cookies.getAll();
         },
-        set(name: string, value: string, options: Record<string, unknown>) {
-          request.cookies.set(name, value);
-          supabaseResponse = NextResponse.next({
-            request,
+        setAll(cookiesToSet) {
+          // First set on request (for downstream middleware/RSC)
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
           });
-          // Set cookie with cross-subdomain domain in production
-          const cookieOptions = {
-            ...options,
-            ...(isProduction && { domain: COOKIE_DOMAIN }),
-          };
-          supabaseResponse.cookies.set(name, value, cookieOptions);
-        },
-        remove(name: string, options: Record<string, unknown>) {
-          request.cookies.set(name, '');
-          supabaseResponse = NextResponse.next({
-            request,
+
+          // Then set on response (for browser)
+          cookiesToSet.forEach(({ name, value, options }) => {
+            const cookieOptions = {
+              ...options,
+              ...(isProduction && { domain: COOKIE_DOMAIN }),
+            };
+            supabaseResponse.cookies.set(name, value, cookieOptions);
           });
-          // Remove cookie with cross-subdomain domain in production
-          const cookieOptions = {
-            ...options,
-            ...(isProduction && { domain: COOKIE_DOMAIN }),
-          };
-          supabaseResponse.cookies.set(name, '', cookieOptions);
         },
       },
     }
@@ -54,19 +56,41 @@ export async function middleware(request: NextRequest) {
   // Refresh session if expired
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
+
+  // DEBUG: Log auth state
+  console.log('[MIDDLEWARE] Path:', path);
+  console.log('[MIDDLEWARE] Hostname:', request.nextUrl.hostname);
+  console.log('[MIDDLEWARE] isProduction:', isProduction);
+  console.log('[MIDDLEWARE] User exists:', !!user);
+  console.log('[MIDDLEWARE] User error:', userError?.message || 'none');
+  if (user) {
+    console.log('[MIDDLEWARE] User email:', user.email);
+  }
+  console.log('[MIDDLEWARE] Cookies received:', request.cookies.getAll().map(c => c.name));
 
   // Protected routes
   const protectedPaths = ['/admin', '/dashboard', '/app'];
   const isProtected = protectedPaths.some((p) => path.startsWith(p)) || path === '/';
 
+  // Helper to create redirect with cookies preserved
+  const redirectWithCookies = (url: URL) => {
+    const redirectResponse = NextResponse.redirect(url);
+    // Copy all cookies from supabaseResponse to the redirect
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value);
+    });
+    return redirectResponse;
+  };
+
   if (isProtected && !user) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirect', path === '/' ? '/app' : path);
-    return NextResponse.redirect(url);
+    return redirectWithCookies(url);
   }
 
   // Redirect logged-in users from home to appropriate dashboard
@@ -95,7 +119,7 @@ export async function middleware(request: NextRequest) {
       default:
         url.pathname = '/app';
     }
-    return NextResponse.redirect(url);
+    return redirectWithCookies(url);
   }
 
   // Auth pages - redirect if already logged in
@@ -129,7 +153,7 @@ export async function middleware(request: NextRequest) {
       default:
         url.pathname = '/app';
     }
-    return NextResponse.redirect(url);
+    return redirectWithCookies(url);
   }
 
   return supabaseResponse;
@@ -143,10 +167,11 @@ export const config = {
     '/admin/:path*',
     '/dashboard/:path*',
     '/app/:path*',
-    // Auth routes
+    // Auth routes (redirect if already logged in)
     '/login',
     '/signup',
-    // Auth callback - CRITICAL: Must be included for session cookies to be set
-    '/auth/callback',
+    // NOTE: /auth/callback is intentionally NOT included
+    // The callback route handles its own cookie setting and
+    // running middleware there can interfere with the auth flow
   ],
 };

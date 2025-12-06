@@ -1,0 +1,1 @@
+export { useIntelStream } from './useIntelStream';

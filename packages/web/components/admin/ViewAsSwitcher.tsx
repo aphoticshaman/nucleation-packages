@@ -1,17 +1,46 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useImpersonation, VIEW_PERSPECTIVES, type ViewPerspective } from '@/contexts/ImpersonationContext';
+
+// Landing page mapping by role/tier
+function getLandingPage(perspective: ViewPerspective): string {
+  // Admin returns to admin dashboard
+  if (perspective.role === 'admin') {
+    return '/admin';
+  }
+
+  // Enterprise admin goes to enterprise dashboard
+  if (perspective.role === 'enterprise') {
+    return '/dashboard';
+  }
+
+  // Support staff goes to admin (with limited view)
+  if (perspective.role === 'support') {
+    return '/admin';
+  }
+
+  // All consumer tiers go to dashboard
+  // The dashboard will show different features based on the tier
+  return '/dashboard';
+}
 
 export default function ViewAsSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
   const { isImpersonating, viewAs, startImpersonation, stopImpersonation } = useImpersonation();
 
   const handleSelect = (perspective: ViewPerspective) => {
     if (perspective.role === 'admin' && perspective.tier === 'enterprise_tier') {
       stopImpersonation();
+      // Navigate back to admin dashboard
+      router.push('/admin');
     } else {
       startImpersonation(perspective);
+      // Navigate to the appropriate landing page for this perspective
+      const landingPage = getLandingPage(perspective);
+      router.push(landingPage);
     }
     setIsOpen(false);
   };

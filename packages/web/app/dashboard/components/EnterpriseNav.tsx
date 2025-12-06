@@ -17,6 +17,11 @@ interface EnterpriseNavProps {
 
 const navItems = [
   { href: '/dashboard', label: 'Overview', icon: '📊' },
+  { href: '/dashboard/intelligence', label: 'Intelligence', icon: '📡' },
+  { href: '/dashboard/causal', label: 'Causal Graph', icon: '🕸️' },
+  { href: '/dashboard/regimes', label: 'Regimes', fullLabel: 'Regime Detection', icon: '⚡' },
+  { href: '/dashboard/phase-dynamics', label: 'Phase', fullLabel: 'Phase Dynamics', icon: '🌊' },
+  { href: '/dashboard/prometheus', label: 'PROMETHEUS', fullLabel: 'Knowledge Extraction', icon: '🔥' },
   { href: '/dashboard/api-keys', label: 'API Keys', icon: '🔑' },
   { href: '/dashboard/usage', label: 'Usage', fullLabel: 'Usage & Analytics', icon: '📈' },
   { href: '/dashboard/webhooks', label: 'Webhooks', icon: '🔗' },

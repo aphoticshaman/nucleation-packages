@@ -2,6 +2,21 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
+// Use Node.js runtime for consistent cookie handling with middleware
+export const runtime = 'nodejs';
+
+// Cookie domain for cross-subdomain auth - MUST match lib/auth.ts and middleware.ts
+const COOKIE_DOMAIN = '.latticeforge.ai';
+
+// More robust production detection: check VERCEL_ENV OR hostname
+function isProductionEnvironment(hostname: string): boolean {
+  // VERCEL_ENV is 'production' on production deployments
+  if (process.env.VERCEL_ENV === 'production') return true;
+  // Fallback: check if hostname is on latticeforge.ai
+  if (hostname.endsWith('latticeforge.ai')) return true;
+  return false;
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
@@ -20,6 +35,16 @@ export async function GET(request: NextRequest) {
   if (code) {
     const cookieStore = await cookies();
 
+    // DEBUG: Log what we're working with
+    console.log('[AUTH CALLBACK] Starting code exchange');
+    console.log('[AUTH CALLBACK] Hostname:', requestUrl.hostname);
+    console.log('[AUTH CALLBACK] Origin:', requestUrl.origin);
+    console.log('[AUTH CALLBACK] Redirect target:', redirect);
+    console.log('[AUTH CALLBACK] isProduction:', isProductionEnvironment(requestUrl.hostname));
+
+    // Create response upfront so we can set cookies on it
+    const response = NextResponse.redirect(new URL(redirect, requestUrl.origin));
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -29,25 +54,61 @@ export async function GET(request: NextRequest) {
             return cookieStore.getAll();
           },
           setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => {
-                cookieStore.set(name, value, options);
-              });
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing sessions.
-            }
+            // Use hostname-based production check (more reliable than just VERCEL_ENV)
+            const isProduction = isProductionEnvironment(requestUrl.hostname);
+
+            // Set cookies on the response with explicit options
+            cookiesToSet.forEach(({ name, value, options }) => {
+              // Ensure proper cookie options for auth cookies
+              // CRITICAL: domain must match lib/auth.ts and middleware.ts
+              const cookieOptions: Parameters<typeof response.cookies.set>[2] = {
+                path: options?.path || '/',
+                sameSite: (options?.sameSite as 'lax' | 'strict' | 'none') || 'lax',
+                secure: isProduction,
+                httpOnly: options?.httpOnly ?? true,
+                maxAge: options?.maxAge,
+                ...(isProduction && { domain: COOKIE_DOMAIN }),
+              };
+
+              // Set on response (this is what gets sent to browser)
+              response.cookies.set(name, value, cookieOptions);
+
+              // Also try to set on cookieStore for downstream RSC
+              try {
+                cookieStore.set(name, value, cookieOptions);
+              } catch {
+                // Server Component context - ignore
+              }
+            });
           },
         },
       }
     );
 
-    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+    const { data: sessionData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+    console.log('[AUTH CALLBACK] Exchange result - error:', exchangeError?.message || 'none');
+    console.log('[AUTH CALLBACK] Exchange result - session exists:', !!sessionData?.session);
+    console.log('[AUTH CALLBACK] Exchange result - user exists:', !!sessionData?.user);
+    if (sessionData?.user) {
+      console.log('[AUTH CALLBACK] User email:', sessionData.user.email);
+    }
+
+    // Log cookies that will be set
+    const cookieNames = response.cookies.getAll().map(c => c.name);
+    console.log('[AUTH CALLBACK] Cookies being set:', cookieNames);
 
     if (exchangeError) {
-      console.error('Code exchange error:', exchangeError.message);
+      console.error('[AUTH CALLBACK] Code exchange error:', exchangeError.message);
       return NextResponse.redirect(
         new URL(`/login?error=${encodeURIComponent(exchangeError.message)}`, requestUrl.origin)
+      );
+    }
+
+    if (!sessionData?.session) {
+      console.error('[AUTH CALLBACK] No session returned despite no error!');
+      return NextResponse.redirect(
+        new URL('/login?error=Session%20creation%20failed', requestUrl.origin)
       );
     }
 
@@ -104,9 +165,26 @@ export async function GET(request: NextRequest) {
       // Continue anyway - profile will be created by trigger or next request
     }
 
-    // Admin users go to admin panel, others go to app (or their intended redirect)
-    const finalRedirect = userRole === 'admin' ? '/admin' : redirect;
-    return NextResponse.redirect(new URL(finalRedirect, requestUrl.origin));
+    // Update redirect URL based on role (admin goes to admin panel)
+    if (userRole === 'admin') {
+      // Use hostname-based production check (more reliable)
+      const isProduction = isProductionEnvironment(requestUrl.hostname);
+
+      // Create new response with updated redirect, copy cookies WITH DOMAIN
+      const adminResponse = NextResponse.redirect(new URL('/admin', requestUrl.origin));
+      response.cookies.getAll().forEach(cookie => {
+        adminResponse.cookies.set(cookie.name, cookie.value, {
+          path: '/',
+          sameSite: 'lax',
+          secure: isProduction,
+          httpOnly: true,
+          ...(isProduction && { domain: COOKIE_DOMAIN }),
+        });
+      });
+      return adminResponse;
+    }
+
+    return response;
   }
 
   // Redirect to the intended destination

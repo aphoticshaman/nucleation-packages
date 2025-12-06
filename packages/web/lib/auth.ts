@@ -1,5 +1,5 @@
 import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 export type UserRole = 'admin' | 'enterprise' | 'consumer' | 'support';
@@ -21,48 +21,49 @@ export interface UserProfile {
 // Cookie domain for cross-subdomain auth (auth.latticeforge.ai ↔ latticeforge.ai)
 const COOKIE_DOMAIN = '.latticeforge.ai';
 
+// Check if we're in production by examining VERCEL_ENV or hostname
+async function isProductionEnvironment(): Promise<boolean> {
+  // VERCEL_ENV check
+  if (process.env.VERCEL_ENV === 'production') return true;
+
+  // Fallback: check hostname from request headers
+  try {
+    const headerStore = await headers();
+    const host = headerStore.get('host') || headerStore.get('x-forwarded-host') || '';
+    if (host.endsWith('latticeforge.ai')) return true;
+  } catch {
+    // Headers not available in this context
+  }
+
+  return false;
+}
+
 // Create Supabase client for server components
 export async function createClient() {
   const cookieStore = await cookies();
 
-  // Check if we're on latticeforge.ai (not localhost) by looking at the Supabase URL
-  // In production, NEXT_PUBLIC_SUPABASE_URL will contain latticeforge
-  const isProduction =
-    process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('latticeforge') ||
-    process.env.VERCEL_ENV === 'production';
+  // Check production with hostname fallback
+  const isProduction = await isProductionEnvironment();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
+        getAll() {
+          return cookieStore.getAll();
         },
-        set(name: string, value: string, options: Record<string, unknown>) {
+        setAll(cookiesToSet) {
           try {
-            // Set cookie with cross-subdomain domain only in production
-            const cookieOptions = {
-              name,
-              value,
-              ...options,
-              ...(isProduction && { domain: COOKIE_DOMAIN }),
-            };
-            cookieStore.set(cookieOptions);
-          } catch {
-            // Called from Server Component - can't set cookies
-          }
-        },
-        remove(name: string, options: Record<string, unknown>) {
-          try {
-            // Remove cookie with cross-subdomain domain only in production
-            const cookieOptions = {
-              name,
-              value: '',
-              ...options,
-              ...(isProduction && { domain: COOKIE_DOMAIN }),
-            };
-            cookieStore.set(cookieOptions);
+            cookiesToSet.forEach(({ name, value, options }) => {
+              const cookieOptions = {
+                name,
+                value,
+                ...options,
+                ...(isProduction && { domain: COOKIE_DOMAIN }),
+              };
+              cookieStore.set(cookieOptions);
+            });
           } catch {
             // Called from Server Component - can't set cookies
           }

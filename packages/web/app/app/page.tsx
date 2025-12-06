@@ -7,6 +7,7 @@ import { useSupabaseNations } from '@/hooks/useSupabaseNations';
 import { useIntelBriefing, getRiskBadgeStyle } from '@/hooks/useIntelBriefing';
 import HelpTip from '@/components/HelpTip';
 import Glossary from '@/components/Glossary';
+import { Map, Share2 } from 'lucide-react';
 
 // Dynamic import for map (client-side only)
 const AttractorMap = dynamic(() => import('@/components/AttractorMap'), {
@@ -17,6 +18,19 @@ const AttractorMap = dynamic(() => import('@/components/AttractorMap'), {
     </div>
   ),
 });
+
+// Dynamic import for causal canvas
+const CausalGraph = dynamic(() => import('@/components/causal/CausalGraph').then(mod => ({ default: mod.CausalGraph })), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full bg-slate-900 rounded-xl flex items-center justify-center">
+      <div className="text-slate-400">Loading causal canvas...</div>
+    </div>
+  ),
+});
+
+// View types
+type ViewMode = 'map' | 'causal';
 
 // Skill levels for progressive disclosure
 type SkillLevel = 'simple' | 'standard' | 'detailed';
@@ -199,6 +213,7 @@ export default function ConsumerDashboard() {
   const [controlsOpen, setControlsOpen] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
   const [showGlossary, setShowGlossary] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('map');
 
   // Filter nations and edges based on selected preset
   const { nations, edges } = useMemo(() => {
@@ -218,6 +233,48 @@ export default function ConsumerDashboard() {
 
     return { nations: filteredNations, edges: filteredEdges };
   }, [allNations, allEdges, selectedPreset]);
+
+  // Causal graph data - higher-order causal chains
+  // These represent direct causality, influence, and correlation relationships
+  const causalNodes = useMemo(() => [
+    // MACRO level - State actors and major events
+    { id: 'us_fed', label: 'US_FED_RES', type: 'ACTOR' as const, level: 'MACRO' as const, beliefMass: 0.95, activity: 0.8 },
+    { id: 'prc', label: 'PRC_PLANNING', type: 'ACTOR' as const, level: 'MACRO' as const, beliefMass: 0.88, activity: 0.9 },
+    { id: 'strait', label: 'STRAIT_BLOCKADE', type: 'EVENT' as const, level: 'MACRO' as const, beliefMass: 0.45, activity: 0.95 },
+    { id: 'ukraine', label: 'UKRAINE_CONFLICT', type: 'EVENT' as const, level: 'MACRO' as const, beliefMass: 0.99, activity: 0.95 },
+    { id: 'nato_exp', label: 'NATO_EXPANSION', type: 'EVENT' as const, level: 'MACRO' as const, beliefMass: 0.85, activity: 0.6 },
+    { id: 'eu_chips', label: 'EU_CHIPS_ACT', type: 'EVENT' as const, level: 'MACRO' as const, beliefMass: 0.75, activity: 0.4 },
+    { id: 'asean', label: 'ASEAN_TRADE', type: 'ACTOR' as const, level: 'MACRO' as const, beliefMass: 0.70, activity: 0.3 },
+    // MESO level - Supply chains and org flows
+    { id: 'tsmc', label: 'TSMC_FAB', type: 'RESOURCE' as const, level: 'MESO' as const, beliefMass: 0.92, activity: 0.6 },
+    { id: 'gpu_supply', label: 'GLOBAL_GPU_SUPPLY', type: 'RESOURCE' as const, level: 'MESO' as const, beliefMass: 0.85, activity: 0.7 },
+    { id: 'energy', label: 'ENERGY_PRICES', type: 'RESOURCE' as const, level: 'MESO' as const, beliefMass: 0.92, activity: 0.8 },
+    { id: 'eur_inf', label: 'EUR_INFLATION', type: 'EVENT' as const, level: 'MESO' as const, beliefMass: 0.88, activity: 0.7 },
+    { id: 'cyber', label: 'CYBER_SCADA', type: 'EVENT' as const, level: 'MESO' as const, beliefMass: 0.30, activity: 0.9 },
+    // MICRO level - Granular actors
+    { id: 'nvda', label: 'NVDA_STOCK', type: 'ACTOR' as const, level: 'MICRO' as const, beliefMass: 0.98, activity: 0.85 },
+    { id: 'lithium', label: 'LITHIUM_SPOT', type: 'RESOURCE' as const, level: 'MICRO' as const, beliefMass: 0.82, activity: 0.5 },
+  ], []);
+
+  const causalEdges = useMemo(() => [
+    // Direct CAUSALITY chains (solid lines, high transfer entropy)
+    { source: 'prc', target: 'strait', transferEntropy: 0.9, lag: 2, type: 'CAUSALITY' as const },
+    { source: 'tsmc', target: 'gpu_supply', transferEntropy: 0.95, lag: 0, type: 'CAUSALITY' as const },
+    { source: 'ukraine', target: 'energy', transferEntropy: 0.88, lag: 0, type: 'CAUSALITY' as const },
+    { source: 'energy', target: 'eur_inf', transferEntropy: 0.82, lag: 1, type: 'CAUSALITY' as const },
+    { source: 'cyber', target: 'tsmc', transferEntropy: 0.7, lag: 0, type: 'CAUSALITY' as const },
+    { source: 'lithium', target: 'gpu_supply', transferEntropy: 0.65, lag: 2, type: 'CAUSALITY' as const },
+    // INFLUENCE chains (indirect, dashed)
+    { source: 'strait', target: 'tsmc', transferEntropy: 0.85, lag: 1, type: 'INFLUENCE' as const },
+    { source: 'us_fed', target: 'nvda', transferEntropy: 0.6, lag: 1, type: 'INFLUENCE' as const },
+    { source: 'eu_chips', target: 'tsmc', transferEntropy: 0.4, lag: 5, type: 'INFLUENCE' as const },
+    { source: 'prc', target: 'asean', transferEntropy: 0.5, lag: 3, type: 'INFLUENCE' as const },
+    { source: 'ukraine', target: 'nato_exp', transferEntropy: 0.75, lag: 1, type: 'INFLUENCE' as const },
+    { source: 'us_fed', target: 'eur_inf', transferEntropy: 0.55, lag: 2, type: 'INFLUENCE' as const },
+    // CORRELATION (non-causal, just correlated)
+    { source: 'gpu_supply', target: 'nvda', transferEntropy: 0.8, lag: 0, type: 'CORRELATION' as const },
+    { source: 'eur_inf', target: 'asean', transferEntropy: 0.45, lag: 3, type: 'CORRELATION' as const },
+  ], []);
 
   const handleSimulate = async () => {
     if (!wasm) return;
@@ -677,44 +734,90 @@ export default function ConsumerDashboard() {
           </div>
         </div>
 
-        {/* Map */}
+        {/* Map / Causal Canvas */}
         <div className="lg:col-span-3 xl:col-span-4 2xl:col-span-5 order-1 lg:order-2">
           <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
-            {/* Map header with current view info */}
+            {/* Header with view toggle */}
             <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="text-xl">{currentPreset.icon}</span>
                 <div>
                   <p className="text-white font-medium text-sm">{currentPreset.fullName}</p>
                   <p className="text-slate-500 text-xs">
-                    Viewing: {currentLayer.name} {currentLayer.icon}
+                    {viewMode === 'map'
+                      ? `Viewing: ${currentLayer.name} ${currentLayer.icon}`
+                      : 'Causal Topology • Transfer Entropy Flows'}
                   </p>
                 </div>
               </div>
-              {/* Legend */}
-              <div className="hidden md:flex items-center gap-2">
-                {currentLayer.legend.map((item, i) => (
-                  <div key={i} className="flex items-center gap-1">
-                    <span className={`w-3 h-3 rounded-full ${item.color}`} />
-                    <span className="text-xs text-slate-400">{item.label}</span>
+
+              {/* View Toggle + Legend */}
+              <div className="flex items-center gap-3">
+                {/* View Mode Toggle */}
+                <div className="flex items-center bg-slate-800 rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode('map')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                      viewMode === 'map'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                    title="Geographic Map View"
+                  >
+                    <Map className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Map</span>
+                  </button>
+                  <button
+                    onClick={() => setViewMode('causal')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                      viewMode === 'causal'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                    title="Causal Canvas - Higher-order causal chains"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Causal</span>
+                  </button>
+                </div>
+
+                {/* Legend - only show for map view */}
+                {viewMode === 'map' && (
+                  <div className="hidden md:flex items-center gap-2">
+                    {currentLayer.legend.map((item, i) => (
+                      <div key={i} className="flex items-center gap-1">
+                        <span className={`w-3 h-3 rounded-full ${item.color}`} />
+                        <span className="text-xs text-slate-400">{item.label}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
             <div className="h-[55vh] md:h-[450px] lg:h-[550px] 2xl:h-[650px]">
-              <AttractorMap nations={nations} edges={edges} layer={selectedLayer} />
+              {viewMode === 'map' ? (
+                <AttractorMap nations={nations} edges={edges} layer={selectedLayer} />
+              ) : (
+                <CausalGraph
+                  nodes={causalNodes}
+                  edges={causalEdges}
+                  onNodeClick={(node) => console.log('Selected:', node.label)}
+                />
+              )}
             </div>
 
-            {/* Mobile legend */}
-            <div className="md:hidden px-4 py-3 border-t border-slate-800 flex flex-wrap gap-3">
-              {currentLayer.legend.map((item, i) => (
-                <div key={i} className="flex items-center gap-1.5">
-                  <span className={`w-2.5 h-2.5 rounded-full ${item.color}`} />
-                  <span className="text-xs text-slate-400">{item.label}</span>
-                </div>
-              ))}
-            </div>
+            {/* Mobile legend - only show for map view */}
+            {viewMode === 'map' && (
+              <div className="md:hidden px-4 py-3 border-t border-slate-800 flex flex-wrap gap-3">
+                {currentLayer.legend.map((item, i) => (
+                  <div key={i} className="flex items-center gap-1.5">
+                    <span className={`w-2.5 h-2.5 rounded-full ${item.color}`} />
+                    <span className="text-xs text-slate-400">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
