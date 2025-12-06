@@ -204,28 +204,37 @@ ALTER TABLE rate_limits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE training_batches ENABLE ROW LEVEL SECURITY;
 
 -- Service role has full access (for edge functions)
+-- Drop first to make migration idempotent
+DROP POLICY IF EXISTS "Service role full access" ON learning_events;
 CREATE POLICY "Service role full access" ON learning_events
     FOR ALL USING (auth.role() = 'service_role');
 
+DROP POLICY IF EXISTS "Service role full access" ON security_logs;
 CREATE POLICY "Service role full access" ON security_logs
     FOR ALL USING (auth.role() = 'service_role');
 
+DROP POLICY IF EXISTS "Service role full access" ON reasoning_traces;
 CREATE POLICY "Service role full access" ON reasoning_traces
     FOR ALL USING (auth.role() = 'service_role');
 
+DROP POLICY IF EXISTS "Service role full access" ON prediction_outcomes;
 CREATE POLICY "Service role full access" ON prediction_outcomes
     FOR ALL USING (auth.role() = 'service_role');
 
+DROP POLICY IF EXISTS "Service role full access" ON historical_cases;
 CREATE POLICY "Service role full access" ON historical_cases
     FOR ALL USING (auth.role() = 'service_role');
 
+DROP POLICY IF EXISTS "Service role full access" ON rate_limits;
 CREATE POLICY "Service role full access" ON rate_limits
     FOR ALL USING (auth.role() = 'service_role');
 
+DROP POLICY IF EXISTS "Service role full access" ON training_batches;
 CREATE POLICY "Service role full access" ON training_batches
     FOR ALL USING (auth.role() = 'service_role');
 
 -- Admins can read security logs
+DROP POLICY IF EXISTS "Admins can read security logs" ON security_logs;
 CREATE POLICY "Admins can read security logs" ON security_logs
     FOR SELECT USING (
         EXISTS (
@@ -236,6 +245,7 @@ CREATE POLICY "Admins can read security logs" ON security_logs
     );
 
 -- Admins can read historical cases
+DROP POLICY IF EXISTS "Admins can manage historical cases" ON historical_cases;
 CREATE POLICY "Admins can manage historical cases" ON historical_cases
     FOR ALL USING (
         EXISTS (
@@ -353,6 +363,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS historical_cases_updated_at ON historical_cases;
 CREATE TRIGGER historical_cases_updated_at
     BEFORE UPDATE ON historical_cases
     FOR EACH ROW
