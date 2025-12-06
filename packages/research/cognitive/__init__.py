@@ -88,6 +88,44 @@ from .nsm import (
     create_nsm_probe,
 )
 
+# NSM Pipeline (2x options + hybrid for each component)
+from .nsm_pipeline import (
+    # Configuration
+    NSMPipelineConfig,
+    NSMPipelineOutput,
+    StateEncoderType,
+    TransitionType,
+    DecoderType,
+    InferenceType,
+    # Main pipeline
+    NSMPipeline,
+    # Encoders: Option A, Option B, Hybrid
+    VariationalStateEncoderNP,
+    ContrastiveStateEncoderNP,
+    DualPathEncoderNP,
+    # Transitions: Option A, Option B, Hybrid
+    GRUTransitionNP,
+    TransformerTransitionNP,
+    AttentiveGRUTransitionNP,
+    # Decoders: Option A, Option B, Hybrid
+    ProbabilisticDecoderNP,
+    FlowDecoderNP,
+    MixtureDecoderNP,
+    # Inference: Option A, Option B, Hybrid
+    FilteringSMCNP,
+    AmortizedVINP,
+    AdaptiveInferenceNP,
+    # Factory functions
+    create_threat_actor_nsm,
+    create_market_regime_nsm,
+    create_escalation_tracker_nsm,
+    create_cognitive_monitor_nsm,
+    # Comparison utilities
+    compare_encoder_options,
+    compare_transition_options,
+    compare_decoder_options,
+)
+
 # Flow state detection
 from .flow import (
     FlowDetector,
@@ -176,6 +214,33 @@ __all__ = [
     "extract_attention_phases",
     "compute_layer_phase_alignment",
     "create_nsm_probe",
+    # NSM Pipeline
+    "NSMPipelineConfig",
+    "NSMPipelineOutput",
+    "StateEncoderType",
+    "TransitionType",
+    "DecoderType",
+    "InferenceType",
+    "NSMPipeline",
+    "VariationalStateEncoderNP",
+    "ContrastiveStateEncoderNP",
+    "DualPathEncoderNP",
+    "GRUTransitionNP",
+    "TransformerTransitionNP",
+    "AttentiveGRUTransitionNP",
+    "ProbabilisticDecoderNP",
+    "FlowDecoderNP",
+    "MixtureDecoderNP",
+    "FilteringSMCNP",
+    "AmortizedVINP",
+    "AdaptiveInferenceNP",
+    "create_threat_actor_nsm",
+    "create_market_regime_nsm",
+    "create_escalation_tracker_nsm",
+    "create_cognitive_monitor_nsm",
+    "compare_encoder_options",
+    "compare_transition_options",
+    "compare_decoder_options",
     # Flow
     "FlowDetector",
     "HopfState",
