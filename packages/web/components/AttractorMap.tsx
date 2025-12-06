@@ -1,9 +1,27 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
 import { Nation, InfluenceEdge, MapLayer, REGIMES } from '@/types';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
+import { Globe, Map as MapIcon, Mountain, Satellite } from 'lucide-react';
+
+// Map type options
+type MapTypeOption = 'hybrid' | 'satellite' | 'roadmap' | 'terrain';
+
+interface MapTypeConfig {
+  id: MapTypeOption;
+  label: string;
+  icon: typeof Satellite;
+  description: string;
+}
+
+const MAP_TYPES: MapTypeConfig[] = [
+  { id: 'hybrid', label: 'Satellite', icon: Satellite, description: 'Satellite imagery with labels' },
+  { id: 'satellite', label: 'Satellite Only', icon: Globe, description: 'Pure satellite imagery' },
+  { id: 'roadmap', label: 'Map', icon: MapIcon, description: 'Standard road map' },
+  { id: 'terrain', label: 'Terrain', icon: Mountain, description: 'Topographic relief map' },
+];
 
 interface AttractorMapProps {
   nations: Nation[];
@@ -82,6 +100,17 @@ export default function AttractorMap({ nations, edges, layer, onNationSelect }: 
   const [markers, setMarkers] = useState<google.maps.marker.AdvancedMarkerElement[]>([]);
   const [polylines, setPolylines] = useState<google.maps.Polyline[]>([]);
   const [infoWindow, setInfoWindow] = useState<google.maps.InfoWindow | null>(null);
+  const [mapType, setMapType] = useState<MapTypeOption>('hybrid'); // Satellite with labels by default
+  const [showMapTypeMenu, setShowMapTypeMenu] = useState(false);
+
+  // Handle map type change
+  const handleMapTypeChange = useCallback((typeId: MapTypeOption) => {
+    if (map) {
+      map.setMapTypeId(typeId);
+      setMapType(typeId);
+      setShowMapTypeMenu(false);
+    }
+  }, [map]);
 
   // Get accessibility settings for colorblind mode
   let accessibilitySettings;
@@ -114,7 +143,10 @@ export default function AttractorMap({ nations, edges, layer, onNationSelect }: 
         zoom: 2,
         minZoom: 2,
         maxZoom: 10,
+        // Default to satellite/hybrid view
+        mapTypeId: 'hybrid',
         // Use cloud-based styling via Map ID (configured in Google Cloud Console)
+        // Note: Map ID styling only applies to roadmap, not satellite
         mapId: process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID,
         restriction: {
           latLngBounds: {
@@ -127,8 +159,12 @@ export default function AttractorMap({ nations, edges, layer, onNationSelect }: 
         },
         disableDefaultUI: true,
         zoomControl: true,
-        mapTypeControl: false,
+        mapTypeControl: false, // We provide our own control
         streetViewControl: false,
+        // Enable tilt for 3D effect on satellite
+        tilt: 0,
+        // Allow rotation
+        rotateControl: true,
       });
 
       setMap(mapInstance);
@@ -355,5 +391,77 @@ export default function AttractorMap({ nations, edges, layer, onNationSelect }: 
     }
   }, [layer]);
 
-  return <div ref={mapRef} className="map-container w-full h-full" />;
+  return (
+    <div className="relative w-full h-full">
+      <div ref={mapRef} className="map-container w-full h-full" />
+
+      {/* Map Type Selector */}
+      <div className="absolute top-4 right-4 z-10">
+        <div className="relative">
+          {/* Toggle Button */}
+          <button
+            onClick={() => setShowMapTypeMenu(!showMapTypeMenu)}
+            className="flex items-center gap-2 px-3 py-2 bg-slate-900/90 hover:bg-slate-800 text-white rounded-lg shadow-lg border border-slate-700 backdrop-blur-sm transition-colors"
+            title="Change map type"
+          >
+            {(() => {
+              const current = MAP_TYPES.find(t => t.id === mapType);
+              const Icon = current?.icon || Satellite;
+              return (
+                <>
+                  <Icon className="w-4 h-4" />
+                  <span className="text-sm font-medium">{current?.label || 'Satellite'}</span>
+                  <svg className={`w-4 h-4 transition-transform ${showMapTypeMenu ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </>
+              );
+            })()}
+          </button>
+
+          {/* Dropdown Menu */}
+          {showMapTypeMenu && (
+            <div className="absolute top-full right-0 mt-2 w-56 bg-slate-900/95 rounded-lg shadow-xl border border-slate-700 backdrop-blur-sm overflow-hidden">
+              {MAP_TYPES.map((type) => {
+                const Icon = type.icon;
+                const isActive = mapType === type.id;
+                return (
+                  <button
+                    key={type.id}
+                    onClick={() => handleMapTypeChange(type.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                      isActive
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-200 hover:bg-slate-800'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    <div>
+                      <div className="text-sm font-medium">{type.label}</div>
+                      <div className={`text-xs ${isActive ? 'text-blue-200' : 'text-slate-400'}`}>
+                        {type.description}
+                      </div>
+                    </div>
+                    {isActive && (
+                      <svg className="w-4 h-4 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Click outside to close menu */}
+      {showMapTypeMenu && (
+        <div
+          className="fixed inset-0 z-0"
+          onClick={() => setShowMapTypeMenu(false)}
+        />
+      )}
+    </div>
+  );
 }
