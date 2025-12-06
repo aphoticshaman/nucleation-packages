@@ -14,8 +14,9 @@ export async function middleware(request: NextRequest) {
     request,
   });
 
-  // Check if we're on latticeforge.ai (not localhost)
-  const isProduction = request.nextUrl.hostname.includes('latticeforge.ai');
+  // Use same production check as lib/auth.ts for consistency
+  // VERCEL_ENV is 'production' only on latticeforge.ai, not preview deployments
+  const isProduction = process.env.VERCEL_ENV === 'production';
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -55,11 +56,21 @@ export async function middleware(request: NextRequest) {
   const protectedPaths = ['/admin', '/dashboard', '/app'];
   const isProtected = protectedPaths.some((p) => path.startsWith(p)) || path === '/';
 
+  // Helper to create redirect with cookies preserved
+  const redirectWithCookies = (url: URL) => {
+    const redirectResponse = NextResponse.redirect(url);
+    // Copy all cookies from supabaseResponse to the redirect
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value);
+    });
+    return redirectResponse;
+  };
+
   if (isProtected && !user) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirect', path === '/' ? '/app' : path);
-    return NextResponse.redirect(url);
+    return redirectWithCookies(url);
   }
 
   // Redirect logged-in users from home to appropriate dashboard
@@ -88,7 +99,7 @@ export async function middleware(request: NextRequest) {
       default:
         url.pathname = '/app';
     }
-    return NextResponse.redirect(url);
+    return redirectWithCookies(url);
   }
 
   // Auth pages - redirect if already logged in
@@ -122,7 +133,7 @@ export async function middleware(request: NextRequest) {
       default:
         url.pathname = '/app';
     }
-    return NextResponse.redirect(url);
+    return redirectWithCookies(url);
   }
 
   return supabaseResponse;
@@ -136,10 +147,11 @@ export const config = {
     '/admin/:path*',
     '/dashboard/:path*',
     '/app/:path*',
-    // Auth routes
+    // Auth routes (redirect if already logged in)
     '/login',
     '/signup',
-    // Auth callback - CRITICAL: Must be included for session cookies to be set
-    '/auth/callback',
+    // NOTE: /auth/callback is intentionally NOT included
+    // The callback route handles its own cookie setting and
+    // running middleware there can interfere with the auth flow
   ],
 };

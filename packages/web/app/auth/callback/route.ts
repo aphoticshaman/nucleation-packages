@@ -2,6 +2,9 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
+// Cookie domain for cross-subdomain auth - MUST match lib/auth.ts and middleware.ts
+const COOKIE_DOMAIN = '.latticeforge.ai';
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
@@ -20,6 +23,9 @@ export async function GET(request: NextRequest) {
   if (code) {
     const cookieStore = await cookies();
 
+    // Create response upfront so we can set cookies on it
+    const response = NextResponse.redirect(new URL(redirect, requestUrl.origin));
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -29,14 +35,32 @@ export async function GET(request: NextRequest) {
             return cookieStore.getAll();
           },
           setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => {
-                cookieStore.set(name, value, options);
-              });
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing sessions.
-            }
+            // Use same production check as lib/auth.ts for consistency
+            const isProduction = process.env.VERCEL_ENV === 'production';
+
+            // Set cookies on the response with explicit options
+            cookiesToSet.forEach(({ name, value, options }) => {
+              // Ensure proper cookie options for auth cookies
+              // CRITICAL: domain must match lib/auth.ts and middleware.ts
+              const cookieOptions: Parameters<typeof response.cookies.set>[2] = {
+                path: options?.path || '/',
+                sameSite: (options?.sameSite as 'lax' | 'strict' | 'none') || 'lax',
+                secure: isProduction,
+                httpOnly: options?.httpOnly ?? true,
+                maxAge: options?.maxAge,
+                ...(isProduction && { domain: COOKIE_DOMAIN }),
+              };
+
+              // Set on response (this is what gets sent to browser)
+              response.cookies.set(name, value, cookieOptions);
+
+              // Also try to set on cookieStore for downstream RSC
+              try {
+                cookieStore.set(name, value, cookieOptions);
+              } catch {
+                // Server Component context - ignore
+              }
+            });
           },
         },
       }
@@ -104,9 +128,22 @@ export async function GET(request: NextRequest) {
       // Continue anyway - profile will be created by trigger or next request
     }
 
-    // Admin users go to admin panel, others go to app (or their intended redirect)
-    const finalRedirect = userRole === 'admin' ? '/admin' : redirect;
-    return NextResponse.redirect(new URL(finalRedirect, requestUrl.origin));
+    // Update redirect URL based on role (admin goes to admin panel)
+    if (userRole === 'admin') {
+      // Create new response with updated redirect, copy cookies
+      const adminResponse = NextResponse.redirect(new URL('/admin', requestUrl.origin));
+      response.cookies.getAll().forEach(cookie => {
+        adminResponse.cookies.set(cookie.name, cookie.value, {
+          path: '/',
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+          httpOnly: true,
+        });
+      });
+      return adminResponse;
+    }
+
+    return response;
   }
 
   // Redirect to the intended destination
