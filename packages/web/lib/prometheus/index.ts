@@ -35,3 +35,10 @@ export {
   type KnowledgeQuadrant,
   type NoveltyConfig,
 } from './novelty-detection';
+
+export {
+  PrometheusEngine,
+  prometheusEngine,
+  type InferenceResult,
+  type BasinCluster,
+} from './prometheus-engine';
