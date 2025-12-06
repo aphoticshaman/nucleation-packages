@@ -496,6 +496,7 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
 
           <Link
             href="/api/auth/signout"
+            prefetch={false}
             onClick={() => setMobileMenuOpen(false)}
             className="flex items-center justify-center gap-2 w-full py-3 rounded-xl
               text-slate-500 text-sm active:text-slate-300 active:bg-white/[0.03]
