@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Activity, GitBranch, Zap, Layers, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Activity, GitBranch, Zap, Layers, TrendingUp, TrendingDown, Minus, type LucideIcon } from 'lucide-react';
 import type { CICMetrics } from '@/lib/types/causal';
 
 interface CICMetricsPanelProps {
@@ -12,7 +12,7 @@ interface CICMetricsPanelProps {
 interface MetricCardProps {
   label: string;
   value: string | number;
-  icon: React.ElementType;
+  icon: LucideIcon;
   trend?: 'up' | 'down' | 'stable';
   color: string;
   description: string;
