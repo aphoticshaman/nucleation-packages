@@ -204,17 +204,29 @@ END $$;
 -- Set empty search_path for security
 -- =============================================
 
--- Fix cleanup_old_learning_events
-ALTER FUNCTION IF EXISTS public.cleanup_old_learning_events()
-  SET search_path = '';
+DO $$
+BEGIN
+  -- Fix cleanup_old_learning_events
+  ALTER FUNCTION public.cleanup_old_learning_events() SET search_path = '';
+EXCEPTION WHEN undefined_function THEN
+  RAISE NOTICE 'Function cleanup_old_learning_events does not exist, skipping';
+END $$;
 
--- Fix update_updated_at
-ALTER FUNCTION IF EXISTS public.update_updated_at()
-  SET search_path = '';
+DO $$
+BEGIN
+  -- Fix update_updated_at
+  ALTER FUNCTION public.update_updated_at() SET search_path = '';
+EXCEPTION WHEN undefined_function THEN
+  RAISE NOTICE 'Function update_updated_at does not exist, skipping';
+END $$;
 
--- Fix compute_training_metrics
-ALTER FUNCTION IF EXISTS public.compute_training_metrics()
-  SET search_path = '';
+DO $$
+BEGIN
+  -- Fix compute_training_metrics
+  ALTER FUNCTION public.compute_training_metrics() SET search_path = '';
+EXCEPTION WHEN undefined_function THEN
+  RAISE NOTICE 'Function compute_training_metrics does not exist, skipping';
+END $$;
 
 -- Fix export_training_batch (with signature)
 DO $$
