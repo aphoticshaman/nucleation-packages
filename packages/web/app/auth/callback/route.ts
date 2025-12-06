@@ -5,6 +5,15 @@ import { NextRequest, NextResponse } from 'next/server';
 // Cookie domain for cross-subdomain auth - MUST match lib/auth.ts and middleware.ts
 const COOKIE_DOMAIN = '.latticeforge.ai';
 
+// More robust production detection: check VERCEL_ENV OR hostname
+function isProductionEnvironment(hostname: string): boolean {
+  // VERCEL_ENV is 'production' on production deployments
+  if (process.env.VERCEL_ENV === 'production') return true;
+  // Fallback: check if hostname is on latticeforge.ai
+  if (hostname.endsWith('latticeforge.ai')) return true;
+  return false;
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
@@ -35,8 +44,8 @@ export async function GET(request: NextRequest) {
             return cookieStore.getAll();
           },
           setAll(cookiesToSet) {
-            // Use same production check as lib/auth.ts for consistency
-            const isProduction = process.env.VERCEL_ENV === 'production';
+            // Use hostname-based production check (more reliable than just VERCEL_ENV)
+            const isProduction = isProductionEnvironment(requestUrl.hostname);
 
             // Set cookies on the response with explicit options
             cookiesToSet.forEach(({ name, value, options }) => {
@@ -130,14 +139,18 @@ export async function GET(request: NextRequest) {
 
     // Update redirect URL based on role (admin goes to admin panel)
     if (userRole === 'admin') {
-      // Create new response with updated redirect, copy cookies
+      // Use hostname-based production check (more reliable)
+      const isProduction = isProductionEnvironment(requestUrl.hostname);
+
+      // Create new response with updated redirect, copy cookies WITH DOMAIN
       const adminResponse = NextResponse.redirect(new URL('/admin', requestUrl.origin));
       response.cookies.getAll().forEach(cookie => {
         adminResponse.cookies.set(cookie.name, cookie.value, {
           path: '/',
           sameSite: 'lax',
-          secure: process.env.NODE_ENV === 'production',
+          secure: isProduction,
           httpOnly: true,
+          ...(isProduction && { domain: COOKIE_DOMAIN }),
         });
       });
       return adminResponse;

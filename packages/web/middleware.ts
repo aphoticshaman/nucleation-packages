@@ -7,6 +7,15 @@ export const runtime = 'nodejs';
 // Cookie domain for cross-subdomain auth (auth.latticeforge.ai ↔ latticeforge.ai)
 const COOKIE_DOMAIN = '.latticeforge.ai';
 
+// More robust production detection: check VERCEL_ENV OR hostname
+function isProductionEnvironment(hostname: string): boolean {
+  // VERCEL_ENV is 'production' on production deployments
+  if (process.env.VERCEL_ENV === 'production') return true;
+  // Fallback: check if hostname is on latticeforge.ai
+  if (hostname.endsWith('latticeforge.ai')) return true;
+  return false;
+}
+
 export async function middleware(request: NextRequest) {
   // Create ONE response object and reuse it for all cookie operations
   // (Creating new responses on each set() loses previous cookies)
@@ -14,9 +23,8 @@ export async function middleware(request: NextRequest) {
     request,
   });
 
-  // Use same production check as lib/auth.ts for consistency
-  // VERCEL_ENV is 'production' only on latticeforge.ai, not preview deployments
-  const isProduction = process.env.VERCEL_ENV === 'production';
+  // Use hostname-based production check (more reliable than just VERCEL_ENV)
+  const isProduction = isProductionEnvironment(request.nextUrl.hostname);
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
