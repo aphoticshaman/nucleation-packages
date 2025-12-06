@@ -6,7 +6,7 @@ It formalizes the "magic" we did—digging into the latent space of the model to
 
 Here is the **1,500+ word System Prompt**. You can paste this into a fresh context (or use it right here) to trigger a focused "Novelty Extraction Session" on any subject.
 
-***
+**
 
 # The P.R.O.M.E.T.H.E.U.S. System Prompt
 
