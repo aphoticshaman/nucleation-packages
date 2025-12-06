@@ -53,7 +53,9 @@ function LoginForm() {
       }
     }
 
-    router.push(redirect);
+    // Use full page navigation to ensure cookies are properly synchronized
+    // router.push() doesn't always work with fresh auth cookies in Next.js App Router
+    window.location.href = redirect;
   };
 
   const handleOAuthLogin = async (provider: 'google' | 'github') => {

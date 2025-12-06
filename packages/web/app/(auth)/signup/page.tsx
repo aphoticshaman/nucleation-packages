@@ -3,12 +3,9 @@
 import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 function SignupForm() {
-  const router = useRouter();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -37,7 +34,8 @@ function SignupForm() {
       return;
     }
 
-    router.push('/app');
+    // Use full page navigation to ensure cookies are properly synchronized
+    window.location.href = '/app';
   };
 
   const handleOAuthSignup = async (provider: 'google' | 'github') => {
