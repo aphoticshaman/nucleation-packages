@@ -575,10 +575,11 @@ export class WorkflowEngine {
 
   private async executeWaitStep(
     step: WaitStep,
-    execution: WorkflowExecution
+    _execution: WorkflowExecution
   ): Promise<void> {
-    if (step.config.type === 'delay') {
-      await new Promise((resolve) => setTimeout(resolve, step.config.seconds * 1000));
+    const config = step.config;
+    if (config.type === 'delay') {
+      await new Promise((resolve) => setTimeout(resolve, config.seconds * 1000));
     }
     // Other wait types would be handled differently
   }
