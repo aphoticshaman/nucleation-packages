@@ -238,7 +238,7 @@ export default function PROMETHEUSPage() {
                 Epistemic Quadrants
               </h3>
               <div className="space-y-4">
-                {Object.entries(quadrant).map(([key, items]) => {
+                {(Object.entries(quadrant) as [string, string[]][]).map(([key, items]) => {
                   const labels: Record<string, { title: string; color: string }> = {
                     knownKnowns: { title: 'Known Knowns', color: 'text-green-400' },
                     knownUnknowns: { title: 'Known Unknowns', color: 'text-blue-400' },
