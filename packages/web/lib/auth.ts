@@ -1,5 +1,5 @@
 import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 export type UserRole = 'admin' | 'enterprise' | 'consumer' | 'support';
@@ -21,13 +21,29 @@ export interface UserProfile {
 // Cookie domain for cross-subdomain auth (auth.latticeforge.ai ↔ latticeforge.ai)
 const COOKIE_DOMAIN = '.latticeforge.ai';
 
+// Check if we're in production by examining VERCEL_ENV or hostname
+async function isProductionEnvironment(): Promise<boolean> {
+  // VERCEL_ENV check
+  if (process.env.VERCEL_ENV === 'production') return true;
+
+  // Fallback: check hostname from request headers
+  try {
+    const headerStore = await headers();
+    const host = headerStore.get('host') || headerStore.get('x-forwarded-host') || '';
+    if (host.endsWith('latticeforge.ai')) return true;
+  } catch {
+    // Headers not available in this context
+  }
+
+  return false;
+}
+
 // Create Supabase client for server components
 export async function createClient() {
   const cookieStore = await cookies();
 
-  // Only set cross-subdomain cookie domain on Vercel production
-  // (VERCEL_ENV is 'production' only on latticeforge.ai, not preview deployments)
-  const isProduction = process.env.VERCEL_ENV === 'production';
+  // Check production with hostname fallback
+  const isProduction = await isProductionEnvironment();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
