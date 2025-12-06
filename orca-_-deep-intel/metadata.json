@@ -1,0 +1,7 @@
+{
+  "name": "ORCA | Deep Intel",
+  "description": "Next-gen Intelligence Platform. Advanced visual synthesis and contextual analysis.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
