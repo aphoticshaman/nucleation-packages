@@ -400,4 +400,4 @@ BEGIN
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
-RAISE NOTICE 'Security linter fix migration complete';
+DO $$ BEGIN RAISE NOTICE 'Security linter fix migration complete'; END $$;
