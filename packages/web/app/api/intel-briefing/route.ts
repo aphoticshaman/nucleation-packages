@@ -20,11 +20,9 @@ export const runtime = 'edge';
 // Only Enterprise tier gets fresh on-demand analysis.
 const CACHE_TTL_SECONDS = 10 * 60; // 10 minutes
 
-// Initialize Redis client (uses UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN env vars)
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+// Initialize Redis client - uses Redis.fromEnv() to auto-detect env var names
+// Works with both UPSTASH_REDIS_REST_* and KV_REST_API_* naming conventions
+const redis = Redis.fromEnv();
 
 interface CachedBriefing {
   data: {
