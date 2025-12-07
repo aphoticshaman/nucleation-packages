@@ -4,7 +4,7 @@ import { Key, Plus, Copy, Trash2 } from 'lucide-react';
 import { GlassButton } from '@/components/ui/GlassButton';
 
 export default async function ApiKeysPage() {
-  const user = await requireEnterprise();
+  await requireEnterprise();
 
   return (
     <div>

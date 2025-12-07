@@ -152,7 +152,7 @@ export async function GET(req: Request) {
 
       // Blend signals with current values (momentum/smoothing)
       // 30% new signals, 70% existing (prevents wild swings)
-      const blendFactor = 0.3;
+      const _blendFactor = 0.3; // Future: use for momentum smoothing
 
       // Hard-coded adjustments for current events (December 2024)
       // These should eventually come from real-time signals

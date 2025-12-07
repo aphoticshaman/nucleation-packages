@@ -6,7 +6,7 @@ export const runtime = 'edge';
 
 // GDELT API endpoints
 const GDELT_DOC_API = 'https://api.gdeltproject.org/api/v2/doc/doc';
-const GDELT_GEO_API = 'https://api.gdeltproject.org/api/v2/geo/geo';
+const _GDELT_GEO_API = 'https://api.gdeltproject.org/api/v2/geo/geo'; // Reserved for geo queries
 
 interface GDELTArticle {
   url: string;

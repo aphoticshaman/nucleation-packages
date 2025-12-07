@@ -2,13 +2,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { CausalNode, CausalEdge } from '../types';
 import { MOCK_NODES, MOCK_EDGES } from '../constants';
-import { Layers, ZoomIn, ZoomOut, Maximize, Activity } from 'lucide-react';
+import { Layers, Maximize, Activity } from 'lucide-react';
 
 export const CausalCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [nodes, setNodes] = useState<CausalNode[]>([]);
-  const [edges, setEdges] = useState<CausalEdge[]>(MOCK_EDGES);
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [edges, _setEdges] = useState<CausalEdge[]>(MOCK_EDGES);
+  const [selectedNode, _setSelectedNode] = useState<string | null>(null);
   const [activeLevel, setActiveLevel] = useState<'ALL' | 'MACRO' | 'MESO' | 'MICRO'>('ALL');
 
   // Initialize Simulation

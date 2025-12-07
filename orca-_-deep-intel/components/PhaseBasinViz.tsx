@@ -38,7 +38,7 @@ export const PhaseBasinViz: React.FC<PhaseBasinVizProps> = ({ stability, isCriti
       for (let x = 0; x <= width; x += 2) {
         const nx = (x / width - 0.5) * 4;
         const effectiveStability = stability * 4;
-        let y = Math.pow(nx, 4) - effectiveStability * Math.pow(nx, 2);
+        const y = Math.pow(nx, 4) - effectiveStability * Math.pow(nx, 2);
         const plotY = height / 2 + (y * 20) + 10; 
         points.push({x, y: plotY});
       }
@@ -71,7 +71,7 @@ export const PhaseBasinViz: React.FC<PhaseBasinVizProps> = ({ stability, isCriti
       
       const nx = (ballX / width - 0.5) * 4;
       const effectiveStability = stability * 4;
-      let curveY = Math.pow(nx, 4) - effectiveStability * Math.pow(nx, 2);
+      const curveY = Math.pow(nx, 4) - effectiveStability * Math.pow(nx, 2);
       const ballY = height / 2 + (curveY * 20) + 10;
 
       // Trail Logic

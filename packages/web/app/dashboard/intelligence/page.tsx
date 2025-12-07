@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   NeuralTicker,
   mockTickerItems,
@@ -14,16 +13,14 @@ import {
   CommandPalette,
   useCommandPalette,
 } from '@/components/intelligence';
-import { GlassCard } from '@/components/ui/GlassCard';
 
 export default function IntelligenceDashboard() {
-  const router = useRouter();
   const { isOpen, open, close } = useCommandPalette();
 
   // Simulated real-time data
   const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
-  const [tickerItems, setTickerItems] = useState(mockTickerItems);
-  const [signals, setSignals] = useState(mockSignals);
+  const [tickerItems, _setTickerItems] = useState(mockTickerItems);
+  const [signals, _setSignals] = useState(mockSignals);
   const [selectedView, setSelectedView] = useState<'feed' | 'logic' | 'map'>('feed');
 
   // Simulate real-time updates

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Layers, ZoomIn, ZoomOut, Maximize2, RotateCcw } from 'lucide-react';
-import type { CausalNode, CausalEdge, NodeLevel } from '@/lib/types/causal';
+import { Layers, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import type { CausalNode, CausalEdge } from '@/lib/types/causal';
 
 interface CausalGraphProps {
   nodes: CausalNode[];

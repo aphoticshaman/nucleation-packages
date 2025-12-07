@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { useIntelBriefing, getRiskBadgeStyle } from '@/hooks/useIntelBriefing';
 import {
   Globe, Shield, TrendingUp, AlertTriangle, RefreshCw, Target, BookOpen,
-  Landmark, DollarSign, Lock, Factory, Cpu, Zap, Clock, ChevronRight,
-  FileText, Users, Building2, Plane, Radio, Rocket
+  Landmark, DollarSign, Factory, Cpu, Clock, ChevronRight,
+  FileText, Users, Radio, Zap, X
 } from 'lucide-react';
 import Glossary from '@/components/Glossary';
 import HelpTip from '@/components/HelpTip';
@@ -130,9 +130,47 @@ export default function BriefingsPage() {
   const [showGlossary, setShowGlossary] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>('Political & Security');
 
+  // Emergency refresh state
+  const [showEmergencyModal, setShowEmergencyModal] = useState(false);
+  const [emergencyLoading, setEmergencyLoading] = useState(false);
+  const [emergencyResult, setEmergencyResult] = useState<{ success: boolean; message: string } | null>(null);
+
   const handleLoad = async () => {
     setHasLoaded(true);
     await refetch();
+  };
+
+  // Emergency refresh handler - costs $1-3 per call
+  const handleEmergencyRefresh = async () => {
+    setEmergencyLoading(true);
+    setEmergencyResult(null);
+    try {
+      const response = await fetch('/api/intel-briefing/emergency-refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setEmergencyResult({ success: true, message: 'Data refreshed successfully! Reloading...' });
+        // Reload the page after a short delay to show success
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } else {
+        setEmergencyResult({ success: false, message: data.error || 'Failed to refresh data' });
+      }
+    } catch (error) {
+      setEmergencyResult({
+        success: false,
+        message: error instanceof Error ? error.message : 'Network error'
+      });
+    } finally {
+      setEmergencyLoading(false);
+    }
   };
 
   const formatTimestamp = (ts: string) => {
@@ -166,6 +204,15 @@ export default function BriefingsPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {/* Emergency Refresh Button - Big Red Button */}
+          <button
+            onClick={() => setShowEmergencyModal(true)}
+            className="flex items-center gap-2 px-4 py-2 min-h-[44px] bg-red-600 hover:bg-red-500 rounded-xl border border-red-400/50 text-white font-bold shadow-lg shadow-red-500/30 hover:shadow-red-500/50 transition-all animate-pulse hover:animate-none"
+            title="Force refresh all data from Claude API ($1-3)"
+          >
+            <Zap className="w-5 h-5" />
+            <span className="text-sm uppercase tracking-wide">Emergency Refresh</span>
+          </button>
           <button
             onClick={() => setShowGlossary(true)}
             className="flex items-center gap-2 px-3 py-2 min-h-[44px] bg-[rgba(18,18,26,0.7)] backdrop-blur-sm rounded-xl border border-white/[0.06] text-slate-400 hover:text-white hover:border-white/[0.12] transition-all"
@@ -456,6 +503,87 @@ export default function BriefingsPage() {
         onClose={() => setShowGlossary(false)}
         skillLevel="standard"
       />
+
+      {/* Emergency Refresh Confirmation Modal */}
+      {showEmergencyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-slate-900 border-2 border-red-500/50 rounded-2xl p-6 max-w-md mx-4 shadow-2xl shadow-red-500/20">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-500/20 rounded-lg">
+                  <Zap className="w-6 h-6 text-red-400" />
+                </div>
+                <h2 className="text-xl font-bold text-white">Emergency Refresh</h2>
+              </div>
+              <button
+                onClick={() => {
+                  setShowEmergencyModal(false);
+                  setEmergencyResult(null);
+                }}
+                className="text-slate-500 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                <p className="text-red-200 text-sm font-medium mb-2">⚠️ This will:</p>
+                <ul className="text-sm text-slate-300 space-y-1 ml-4 list-disc">
+                  <li>Force a full data refresh from Claude API</li>
+                  <li>Repopulate last 72 hours of major events</li>
+                  <li>Cost approximately <span className="font-bold text-red-300">$1-3</span> per call</li>
+                  <li>Replace all cached briefing data</li>
+                </ul>
+              </div>
+
+              <p className="text-slate-400 text-sm">
+                Use this only when the database is empty, fallback data is showing, or you need urgent fresh intel.
+              </p>
+
+              {emergencyResult && (
+                <div className={`p-3 rounded-lg ${
+                  emergencyResult.success
+                    ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-300'
+                    : 'bg-red-500/20 border border-red-500/30 text-red-300'
+                }`}>
+                  {emergencyResult.message}
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowEmergencyModal(false);
+                    setEmergencyResult(null);
+                  }}
+                  className="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
+                  disabled={emergencyLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => void handleEmergencyRefresh()}
+                  disabled={emergencyLoading}
+                  className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-500 text-white rounded-lg font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {emergencyLoading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Refreshing...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-4 h-4" />
+                      Confirm Refresh
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

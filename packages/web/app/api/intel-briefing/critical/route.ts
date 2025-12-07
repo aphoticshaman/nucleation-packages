@@ -32,7 +32,7 @@ const NEWS_SOURCES = {
 
 async function fetchBreakingNews(): Promise<NewsArticle[]> {
   const articles: NewsArticle[] = [];
-  const today = new Date().toISOString().split('T')[0];
+  const _today = new Date().toISOString().split('T')[0]; // Available for date filtering
 
   // Try GNews (if API key available)
   if (process.env.GNEWS_API_KEY) {

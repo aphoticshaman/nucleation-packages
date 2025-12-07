@@ -3,7 +3,7 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { Users, Building2, TrendingUp, DollarSign } from 'lucide-react';
 
 export default async function CustomersPage() {
-  const user = await requireAdmin();
+  await requireAdmin();
   const supabase = await createClient();
 
   // Get all organizations (customers)

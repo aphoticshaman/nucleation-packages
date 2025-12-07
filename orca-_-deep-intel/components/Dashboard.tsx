@@ -62,8 +62,8 @@ export const Dashboard: React.FC<{ context: ContextLayer }> = ({ context }) => {
       const data = await fetchEntropy();
       setEntropySources(data);
     };
-    loadEntropy();
-    const interval = setInterval(loadEntropy, 60000);
+    void loadEntropy();
+    const interval = setInterval(() => void loadEntropy(), 60000);
     return () => clearInterval(interval);
   }, []);
 

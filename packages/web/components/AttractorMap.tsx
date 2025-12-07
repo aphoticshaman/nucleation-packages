@@ -115,7 +115,7 @@ export default function AttractorMap({ nations, edges, layer, onNationSelect }: 
   // Get accessibility settings for colorblind mode
   let accessibilitySettings;
   try {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     accessibilitySettings = useAccessibility();
   } catch {
     // Context not available (e.g., in dashboard outside consumer app)

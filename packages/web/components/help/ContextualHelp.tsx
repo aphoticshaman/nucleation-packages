@@ -13,7 +13,7 @@
  */
 
 import { useState, useRef, useEffect, createContext, useContext, ReactNode } from 'react';
-import { HelpCircle, X, ExternalLink, ChevronRight } from 'lucide-react';
+import { HelpCircle, ExternalLink, ChevronRight } from 'lucide-react';
 import { getLexiconEntry, getArticle, LexiconEntry, KnowledgeArticle } from '@/lib/knowledge/KnowledgeBase';
 
 // ============================================
@@ -242,10 +242,10 @@ interface HelpPopupProps {
 const HelpPopup = ({
   content,
   position,
-  onClose,
+  onClose: _onClose,
   ref,
 }: HelpPopupProps & { ref: React.RefObject<HTMLDivElement | null> }) => {
-  const { level } = useExpertise();
+  const { level: _level } = useExpertise();
   const [showFull, setShowFull] = useState(false);
   const [lexiconEntry, setLexiconEntry] = useState<LexiconEntry | undefined>();
   const [article, setArticle] = useState<KnowledgeArticle | undefined>();

@@ -7,7 +7,6 @@ import {
   Copy,
   Check,
   ChevronRight,
-  Terminal,
   Globe,
   Key,
   Webhook,
@@ -16,7 +15,6 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
 
 const API_ENDPOINTS = [
   {
@@ -179,7 +177,7 @@ export default function APIDocsPage() {
   const [copiedEndpoint, setCopiedEndpoint] = useState<string | null>(null);
 
   const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
+    void navigator.clipboard.writeText(text);
     setCopiedEndpoint(id);
     setTimeout(() => setCopiedEndpoint(null), 2000);
   };

@@ -4,14 +4,12 @@ import {
   executePipeline,
   performArchaeology,
   type ConceptPrimitive,
-  type PipelineState,
 } from '@/lib/prometheus/cognitive-pipeline';
 import {
   detectPatternAnomaly,
   detectTemporalBreak,
   buildKnowledgeQuadrant,
   prioritizeNovelties,
-  type NoveltySignal,
 } from '@/lib/prometheus/novelty-detection';
 
 interface PROMETHEUSRequest {

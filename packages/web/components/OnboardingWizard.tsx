@@ -6,7 +6,6 @@ import {
   ChevronLeft,
   X,
   Globe,
-  Bell,
   Zap,
   Shield,
   Users,

@@ -157,7 +157,7 @@ export const Visuals: React.FC = () => {
             />
             <button
               disabled={loading || !prompt}
-              onClick={() => handleGenerate()}
+              onClick={() => void handleGenerate()}
               className="w-full mt-3 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/50 py-2 rounded font-mono text-sm font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (

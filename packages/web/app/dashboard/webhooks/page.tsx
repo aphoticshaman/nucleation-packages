@@ -4,7 +4,7 @@ import { GlassButton } from '@/components/ui/GlassButton';
 import { Link2, Plus, CheckCircle, XCircle } from 'lucide-react';
 
 export default async function WebhooksPage() {
-  const user = await requireEnterprise();
+  await requireEnterprise();
 
   return (
     <div>

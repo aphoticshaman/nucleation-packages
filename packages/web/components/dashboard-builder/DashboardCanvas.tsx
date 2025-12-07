@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, type DragEvent } from 'react';
-import type { Widget, WidgetPosition, WidgetCatalogItem } from '@/lib/dashboard/types';
+import type { Widget, WidgetCatalogItem } from '@/lib/dashboard/types';
 import WidgetRenderer from './WidgetRenderer';
 
 interface DashboardCanvasProps {
@@ -20,7 +20,7 @@ interface DashboardCanvasProps {
 export default function DashboardCanvas({
   widgets,
   onWidgetAdd,
-  onWidgetUpdate,
+  onWidgetUpdate: _onWidgetUpdate,
   onWidgetDelete,
   onWidgetSelect,
   selectedWidgetId,

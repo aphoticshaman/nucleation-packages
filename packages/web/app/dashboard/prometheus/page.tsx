@@ -107,7 +107,7 @@ export default function PROMETHEUSPage() {
             Scan Novelty
           </button>
           <button
-            onClick={runPipeline}
+            onClick={() => void runPipeline()}
             disabled={isRunning}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-sm font-mono text-white transition-all disabled:opacity-50"
           >

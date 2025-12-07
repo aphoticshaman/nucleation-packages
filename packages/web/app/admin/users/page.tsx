@@ -148,7 +148,7 @@ function UserRow({
             <GlassButton
               variant="primary"
               size="sm"
-              onClick={handleSave}
+              onClick={() => void handleSave()}
               disabled={saving}
               loading={saving}
             >
@@ -188,7 +188,7 @@ export default function AdminUsersPage() {
   );
 
   useEffect(() => {
-    loadUsers();
+    void loadUsers();
   }, []);
 
   const loadUsers = async () => {
@@ -287,7 +287,7 @@ export default function AdminUsersPage() {
           <option value="enterprise">Enterprise</option>
           <option value="consumer">Consumers</option>
         </select>
-        <GlassButton variant="primary" onClick={loadUsers}>
+        <GlassButton variant="primary" onClick={() => void loadUsers()}>
           Refresh
         </GlassButton>
       </div>

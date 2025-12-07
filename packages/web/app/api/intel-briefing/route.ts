@@ -514,7 +514,7 @@ export async function POST(req: Request) {
     // ============================================================
     // SECURITY LAYER - Rate limits (skip for cron/internal)
     // ============================================================
-    const security = getSecurityGuardian();
+    const _security = getSecurityGuardian(); // Used for authenticated rate limiting
 
     // Cron/internal bypasses rate limits
     const rateLimit = { allowed: true, remaining: 999, resetAt: new Date() };
@@ -899,7 +899,7 @@ function computeOverallRisk(nations: NationData[]): ComputedMetrics['overallRisk
 }
 
 // Create anonymized hash for learning data collection
-async function hashForLearning(userId: string): Promise<string> {
+async function _hashForLearning(userId: string): Promise<string> {
   const encoder = new TextEncoder();
   const salt = process.env.ANONYMIZATION_SALT || 'lattice-default-salt';
   const data = encoder.encode(userId + salt);
