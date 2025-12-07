@@ -37,10 +37,9 @@ SELECT
   o.id,
   o.name,
   o.slug,
-  COALESCE(o.subscription_plan, 'free') as plan,
-  COALESCE(o.subscription_status, 'inactive') as status,
   (SELECT COUNT(*) FROM profiles WHERE organization_id = o.id) as team_size,
-  o.updated_at as last_activity
+  o.created_at,
+  o.updated_at
 FROM organizations o;
 
 -- admin_dashboard_stats
@@ -51,7 +50,6 @@ AS
 SELECT
   (SELECT COUNT(*) FROM profiles WHERE role = 'consumer') as total_consumers,
   (SELECT COUNT(*) FROM organizations) as total_enterprise,
-  (SELECT COUNT(*) FROM organizations WHERE subscription_status = 'active') as active_orgs,
   (SELECT COUNT(*) FROM profiles WHERE last_seen_at > NOW() - INTERVAL '24 hours') as active_24h,
   (SELECT COUNT(*) FROM profiles WHERE last_seen_at > NOW() - INTERVAL '7 days') as active_7d;
 
