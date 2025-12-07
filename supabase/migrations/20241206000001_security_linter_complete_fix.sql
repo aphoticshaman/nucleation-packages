@@ -26,7 +26,7 @@ SELECT
   COALESCE((SELECT COUNT(*) FROM user_activity WHERE user_id = p.id), 0) as simulation_count,
   COALESCE((SELECT COUNT(*) FROM user_activity WHERE user_id = p.id AND created_at > NOW() - INTERVAL '7 days'), 0) as actions_7d
 FROM profiles p
-WHERE p.role = 'consumer' OR p.role = 'user';
+WHERE p.role = 'consumer';
 
 -- admin_enterprise_overview
 DROP VIEW IF EXISTS admin_enterprise_overview CASCADE;
@@ -50,7 +50,7 @@ CREATE VIEW admin_dashboard_stats
 WITH (security_invoker = true)
 AS
 SELECT
-  (SELECT COUNT(*) FROM profiles WHERE role = 'consumer' OR role = 'user') as total_consumers,
+  (SELECT COUNT(*) FROM profiles WHERE role = 'consumer') as total_consumers,
   (SELECT COUNT(*) FROM organizations) as total_enterprise,
   (SELECT COUNT(*) FROM organizations WHERE is_active = true) as active_orgs,
   (SELECT COUNT(*) FROM profiles WHERE last_seen_at > NOW() - INTERVAL '24 hours') as active_24h,
