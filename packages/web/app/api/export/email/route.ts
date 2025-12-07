@@ -223,13 +223,14 @@ export async function POST(req: Request) {
 
     // Parse request
     const body: EmailExportRequest = await req.json();
-    const { packageContent, audience } = body;
+    const { audience } = body;
     let {
       subject,
       includeTextBody,
       includePdfAttachment,
       includeJsonAttachment,
       includeMarkdownAttachment,
+      packageContent,
     } = body;
 
     // Feature gating for free tier
