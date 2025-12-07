@@ -771,21 +771,19 @@ Warning:   117:15  warning  Forbidden non-null assertion                        
 Warning:   171:7   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
 
 /home/runner/work/nucleation-packages/nucleation-packages/packages/web/app/api/intel-briefing/route.ts
-Warning:    25:8   warning  Forbidden non-null assertion                                                         @typescript-eslint/no-non-null-assertion
-Warning:    26:10  warning  Forbidden non-null assertion                                                         @typescript-eslint/no-non-null-assertion
-Warning:   335:19  warning  Generic Object Injection Sink                                                        security/detect-object-injection
-Warning:   337:10  warning  Generic Object Injection Sink                                                        security/detect-object-injection
-Warning:   460:7   warning  Unexpected console statement. Only these console methods are allowed: warn, error    no-console
-Warning:   478:7   warning  Unexpected console statement. Only these console methods are allowed: warn, error    no-console
-Warning:   493:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error    no-console
-Warning:   498:7   warning  Forbidden non-null assertion                                                         @typescript-eslint/no-non-null-assertion
-Warning:   499:7   warning  Forbidden non-null assertion                                                         @typescript-eslint/no-non-null-assertion
-Error:   518:11  error    'security' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
-Warning:   597:20  warning  Variable Assigned to Object Injection Sink                                           security/detect-object-injection
-Warning:   716:15  warning  Forbidden non-null assertion                                                         @typescript-eslint/no-non-null-assertion
-Warning:   832:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error    no-console
-Error:   903:16  error    'hashForLearning' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
-Warning:   924:19  warning  Generic Object Injection Sink                                                        security/detect-object-injection
+Warning:   333:19  warning  Generic Object Injection Sink                                                        security/detect-object-injection
+Warning:   335:10  warning  Generic Object Injection Sink                                                        security/detect-object-injection
+Warning:   458:7   warning  Unexpected console statement. Only these console methods are allowed: warn, error    no-console
+Warning:   476:7   warning  Unexpected console statement. Only these console methods are allowed: warn, error    no-console
+Warning:   491:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error    no-console
+Warning:   496:7   warning  Forbidden non-null assertion                                                         @typescript-eslint/no-non-null-assertion
+Warning:   497:7   warning  Forbidden non-null assertion                                                         @typescript-eslint/no-non-null-assertion
+Error:   516:11  error    'security' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+Warning:   595:20  warning  Variable Assigned to Object Injection Sink                                           security/detect-object-injection
+Warning:   714:15  warning  Forbidden non-null assertion                                                         @typescript-eslint/no-non-null-assertion
+Warning:   830:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error    no-console
+Error:   901:16  error    'hashForLearning' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+Warning:   922:19  warning  Generic Object Injection Sink                                                        security/detect-object-injection
 
 /home/runner/work/nucleation-packages/nucleation-packages/packages/web/app/api/invite/[token]/route.ts
 Warning:   14:7  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
@@ -1678,7 +1676,7 @@ Warning:   143:3  warning  Unexpected console statement. Only these console meth
 Warning:   144:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
 Warning:   145:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
 
-✖ 1234 problems (210 errors, 1024 warnings)
+✖ 1232 problems (210 errors, 1022 warnings)
   3 errors and 2 warnings potentially fixable with the `--fix` option.
 
 Error: Process completed with exit code 1.
