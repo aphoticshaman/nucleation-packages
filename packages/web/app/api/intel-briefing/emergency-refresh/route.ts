@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
 
 export const runtime = 'edge';
 export const maxDuration = 60;
@@ -44,46 +46,38 @@ export async function POST(request: Request) {
       }, { status: 500 });
     }
 
+    // Use service role client for database operations
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // STRICT ADMIN AUTH: Validate user session and check admin role
-    // Extract access token from cookie or Authorization header
-    const authHeader = request.headers.get('Authorization');
-    const cookieHeader = request.headers.get('cookie');
+    // STRICT ADMIN AUTH: Use @supabase/ssr for proper cookie-based auth
+    const cookieStore = await cookies();
+    const authClient = createServerClient(
+      supabaseUrl,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll() {
+            // Read-only for this check
+          },
+        },
+      }
+    );
 
-    let accessToken: string | null = null;
+    // Get user from session cookies (handles chunked auth tokens automatically)
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
 
-    // Try Authorization header first (Bearer token)
-    if (authHeader?.startsWith('Bearer ')) {
-      accessToken = authHeader.substring(7);
-    }
-
-    // Try cookie if no header
-    if (!accessToken && cookieHeader) {
-      const cookies = Object.fromEntries(
-        cookieHeader.split('; ').map(c => c.split('=').map(decodeURIComponent))
-      );
-      accessToken = cookies['sb-access-token'] || cookies['supabase-auth-token'];
-    }
-
-    if (!accessToken) {
+    if (authError || !user) {
+      console.log('[EMERGENCY REFRESH] Auth failed:', authError?.message || 'No user');
       return NextResponse.json({
         success: false,
         error: 'Authentication required - please log in'
       }, { status: 401 });
     }
 
-    // Verify the token and get user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-
-    if (authError || !user) {
-      return NextResponse.json({
-        success: false,
-        error: 'Invalid or expired session - please log in again'
-      }, { status: 401 });
-    }
-
-    // Check if user is admin
+    // Check if user is admin using service role client (bypasses RLS)
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
@@ -91,12 +85,14 @@ export async function POST(request: Request) {
       .single();
 
     if (profileError || !profile || profile.role !== 'admin') {
-      console.warn(`Non-admin user ${user.id} attempted emergency refresh`);
+      console.warn(`[EMERGENCY REFRESH] Non-admin user ${user.id} (${user.email}) attempted access`);
       return NextResponse.json({
         success: false,
         error: 'Admin access required'
       }, { status: 403 });
     }
+
+    console.log(`[EMERGENCY REFRESH] Admin ${user.email} authorized`);
 
     console.log(`Admin ${user.id} initiated emergency refresh`);
 
