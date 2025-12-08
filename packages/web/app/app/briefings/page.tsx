@@ -152,21 +152,34 @@ export default function BriefingsPage() {
         },
       });
 
-      const data = await response.json();
+      // Handle non-JSON responses gracefully
+      const contentType = response.headers.get('content-type');
+      let data;
 
-      if (response.ok) {
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        // API returned non-JSON (likely an error)
+        const text = await response.text();
+        console.error('Emergency refresh returned non-JSON:', text);
+        data = { error: `API Error: ${text.substring(0, 200)}...` };
+      }
+
+      if (response.ok && data.success) {
         setEmergencyResult({ success: true, message: 'Data refreshed successfully! Reloading...' });
         // Reload the page after a short delay to show success
         setTimeout(() => {
           window.location.reload();
         }, 1500);
       } else {
-        setEmergencyResult({ success: false, message: data.error || 'Failed to refresh data' });
+        const errorMsg = data.error || data.details || 'Failed to refresh data';
+        setEmergencyResult({ success: false, message: errorMsg });
       }
     } catch (error) {
+      console.error('Emergency refresh error:', error);
       setEmergencyResult({
         success: false,
-        message: error instanceof Error ? error.message : 'Network error'
+        message: error instanceof Error ? error.message : 'Network error - check console'
       });
     } finally {
       setEmergencyLoading(false);
