@@ -530,9 +530,10 @@ export async function POST(req: Request) {
     // Only cron jobs and internal services can generate fresh data.
     // User requests ALWAYS get cached data - this prevents abuse,
     // exploits, and uncontrolled API costs.
-    const isCronWarm = req.headers.get('x-cron-warm') === '1';
+    const isVercelCron = req.headers.get('x-vercel-cron') === '1'; // Set by Vercel, not spoofable
     const isInternalService = req.headers.get('x-internal-service') === process.env.INTERNAL_SERVICE_SECRET;
-    const canGenerateFresh = isCronWarm || isInternalService;
+    const hasCronWarmWithSecret = req.headers.get('x-cron-warm') === '1' && isInternalService;
+    const canGenerateFresh = isVercelCron || isInternalService || hasCronWarmWithSecret;
 
     // Parse request body first (needed for preset)
     const { preset = 'global', region } = await req.json();

@@ -47,16 +47,16 @@ export async function POST(req: Request) {
   // Warm each preset in parallel
   const warmPromises = PRESETS.map(async (preset) => {
     try {
-      // SECURITY: Use CRON_SECRET for internal service-to-service calls
-      // Never use unauthenticated headers that can be spoofed
+      // SECURITY: Use INTERNAL_SERVICE_SECRET for internal service-to-service calls
       const internalHeaders: Record<string, string> = {
         'Content-Type': 'application/json',
-        'X-Internal-Service': '1', // Mark as internal service call
+        'x-cron-warm': '1', // Mark as cron warming call
       };
 
-      // Pass cron secret for proper authentication
-      if (cronSecret) {
-        internalHeaders['Authorization'] = `Bearer ${cronSecret}`;
+      // Pass internal service secret for proper authentication
+      const internalSecret = process.env.INTERNAL_SERVICE_SECRET;
+      if (internalSecret) {
+        internalHeaders['x-internal-service'] = internalSecret;
       }
 
       const response = await fetch(`${baseUrl}/api/intel-briefing`, {
