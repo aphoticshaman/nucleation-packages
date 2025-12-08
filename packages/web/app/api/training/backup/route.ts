@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
 
 // Service role client
 function getServiceClient() {
@@ -7,6 +9,59 @@ function getServiceClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+}
+
+// Verify cron secret for scheduled jobs
+function verifyCronAuth(request: Request): boolean {
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+  const isVercelCron = request.headers.get('x-vercel-cron') === '1';
+
+  if (isVercelCron) return true;
+  if (cronSecret && authHeader === `Bearer ${cronSecret}`) return true;
+  return false;
+}
+
+// Server-side auth verification - requires admin role
+async function verifyAdminAuth(): Promise<{ isAdmin: boolean; userId?: string; error?: string }> {
+  try {
+    const cookieStore = await cookies();
+    const authClient = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll() {
+            // Read-only
+          },
+        },
+      }
+    );
+
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    if (authError || !user) {
+      return { isAdmin: false, error: 'Authentication required' };
+    }
+
+    // Check admin role using service client (bypasses RLS)
+    const db = getServiceClient();
+    const { data: profile, error: profileError } = await db
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return { isAdmin: false, userId: user.id, error: 'Profile not found' };
+    }
+
+    return { isAdmin: profile.role === 'admin', userId: user.id };
+  } catch {
+    return { isAdmin: false, error: 'Auth check failed' };
+  }
 }
 
 interface TrainingExample {
@@ -43,15 +98,17 @@ function simpleChecksum(data: string): string {
 }
 
 // POST: Create a backup of training data
+// SECURITY: Requires admin role or cron secret
 export async function POST(request: Request) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  // Allow cron or check admin via service role
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    const isVercelCron = request.headers.get('x-vercel-cron') === '1';
-    if (!isVercelCron) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Verify authorization - cron jobs or admin users only
+  const isCron = verifyCronAuth(request);
+  if (!isCron) {
+    const auth = await verifyAdminAuth();
+    if (!auth.isAdmin) {
+      return NextResponse.json(
+        { error: auth.error || 'Admin access required' },
+        { status: 403 }
+      );
     }
   }
 
@@ -203,12 +260,18 @@ export async function POST(request: Request) {
 }
 
 // GET: List available backups
+// SECURITY: Requires admin role or cron secret
 export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Verify authorization - cron jobs or admin users only
+  const isCron = verifyCronAuth(request);
+  if (!isCron) {
+    const auth = await verifyAdminAuth();
+    if (!auth.isAdmin) {
+      return NextResponse.json(
+        { error: auth.error || 'Admin access required' },
+        { status: 403 }
+      );
+    }
   }
 
   const serviceClient = getServiceClient();

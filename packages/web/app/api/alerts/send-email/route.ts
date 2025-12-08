@@ -104,9 +104,21 @@ export async function POST(req: NextRequest) {
     // Parse request
     const body: EmailRequest = await req.json();
 
-    // Validate
-    if (!body.to || !body.subject || !body.title) {
+    // Validate required fields
+    if (!body.subject || !body.title) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // SECURITY: Force email to be sent to authenticated user only
+    // This prevents email spoofing where users could send alerts to arbitrary addresses
+    const recipientEmail = user.email;
+    if (!recipientEmail) {
+      return NextResponse.json({ error: 'User email not available' }, { status: 400 });
+    }
+
+    // Warn if body.to was provided but doesn't match (log for audit)
+    if (body.to && body.to !== recipientEmail) {
+      console.warn(`[SECURITY] User ${user.id} attempted to send alert to ${body.to} - forcing to ${recipientEmail}`);
     }
 
     // Send via Resend
@@ -124,7 +136,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         from: 'LatticeForge Alerts <alerts@latticeforge.ai>',
-        to: [body.to],
+        to: [recipientEmail], // SECURITY: Always use authenticated user's email
         subject: `[${body.priority.toUpperCase()}] ${body.subject}`,
         html: generateEmailHtml(body),
         text: generateEmailText(body),

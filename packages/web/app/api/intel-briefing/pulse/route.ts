@@ -222,7 +222,32 @@ Be conservative - false positives waste resources.`,
 }
 
 // Get recent alerts (for the main briefing to check)
-export async function POST() {
+// POST: Get recent alerts for frontend polling
+// SECURITY NOTE: This endpoint returns non-sensitive alert status.
+// Rate limited by edge function's inherent request limits.
+// For production, consider adding user auth if alert details become sensitive.
+export async function POST(request: Request) {
+  // Basic rate limiting via referrer check - prevent external abuse
+  const origin = request.headers.get('origin') || '';
+  const referer = request.headers.get('referer') || '';
+
+  // Allow same-origin requests and Vercel preview deployments
+  const allowedPatterns = [
+    'latticeforge.ai',
+    'localhost',
+    'vercel.app',
+  ];
+
+  const isAllowed = allowedPatterns.some(pattern =>
+    origin.includes(pattern) || referer.includes(pattern)
+  );
+
+  if (!isAllowed && origin && referer) {
+    // Log potential abuse attempt
+    console.warn(`[PULSE] Blocked external request from origin: ${origin}`);
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   // Return any alerts from the last 10 minutes
   const tenMinutesAgo = Date.now() - (10 * 60 * 1000);
   const recentAlerts = pulseAlerts.filter(
