@@ -1,0 +1,202 @@
+phase,task_id,task_tier,status,time_taken_s,program_cached
+GameGenie.Punt,1478ab18,easy,Synthesizer.Fail.MaxDepth,0.468,False
+GameGenie.Punt,1c0d0a4b,easy,Synthesizer.Fail.MaxDepth,1.415,False
+GameGenie.Punt,1caeab9d,easy,Synthesizer.Fail.MaxDepth,0.577,False
+GameGenie.Punt,12eac192,easy,Synthesizer.Fail.MaxDepth,0.885,False
+GameGenie.Punt,1b60fb0c,easy,Synthesizer.Fail.MaxDepth,0.181,False
+GameGenie.Punt,17cae0c1,easy,Synthesizer.Fail.MaxDepth,0.928,False
+GameGenie.Punt,00d62c1b,easy,Synthesizer.Fail.MaxDepth,0.329,False
+GameGenie.Punt,05f2a901,easy,Synthesizer.Fail.MaxDepth,0.484,False
+GameGenie.Punt,150deff5,easy,Synthesizer.Fail.MaxDepth,0.222,False
+GameGenie.Punt,0d3d703e,easy,Synthesizer.Fail.MaxDepth,0.332,False
+GameGenie.Standard,178fcbfb,easy,Synthesizer.Fail.MaxDepth,1.797,False
+GameGenie.Standard,05269061,easy,Synthesizer.Fail.MaxDepth,0.989,False
+GameGenie.Standard,137f0df0,easy,Synthesizer.Fail.MaxDepth,0.669,False
+GameGenie.Standard,14b8e18c,easy,Synthesizer.Fail.MaxDepth,0.518,False
+GameGenie.Standard,1f0c79e5,easy,Synthesizer.Fail.MaxDepth,0.677,False
+GameGenie.Standard,1acc24af,easy,Synthesizer.Fail.MaxDepth,0.579,False
+GameGenie.Standard,1e5d6875,medium,Synthesizer.Fail.MaxDepth,0.404,False
+GameGenie.Standard,00dbd492,medium,Synthesizer.Fail.MaxDepth,0.437,False
+GameGenie.Standard,182e5d0f,medium,Synthesizer.Fail.MaxDepth,0.663,False
+GameGenie.Standard,12422b43,medium,Synthesizer.Fail.MaxDepth,0.624,False
+GameGenie.Standard,1a244afd,medium,Synthesizer.Fail.MaxDepth,0.902,False
+GameGenie.Standard,025d127b,medium,Synthesizer.Fail.MaxDepth,0.423,False
+GameGenie.Standard,11dc524f,medium,Synthesizer.Fail.MaxDepth,0.667,False
+GameGenie.Standard,11852cab,medium,Synthesizer.Fail.MaxDepth,0.884,False
+GameGenie.Standard,1e0a9b12,medium,Synthesizer.Fail.MaxDepth,0.534,False
+GameGenie.Standard,0ca9ddb6,medium,Synthesizer.Fail.MaxDepth,0.595,False
+GameGenie.Standard,1bfc4729,medium,Synthesizer.Fail.MaxDepth,1.097,False
+GameGenie.Standard,0e671a1a,medium,Synthesizer.Fail.MaxDepth,0.387,False
+GameGenie.Standard,09629e4f,medium,Synthesizer.Fail.MaxDepth,2.332,False
+GameGenie.Standard,08ed6ac7,medium,Synthesizer.Fail.MaxDepth,0.617,False
+GameGenie.Standard,140c817e,medium,Synthesizer.Fail.MaxDepth,1.291,False
+GameGenie.Standard,03560426,medium,Synthesizer.Fail.MaxDepth,0.879,False
+GameGenie.Standard,0a2355a6,medium,Synthesizer.Fail.MaxDepth,0.318,False
+GameGenie.Standard,009d5c81,medium,Synthesizer.Fail.MaxDepth,0.452,False
+GameGenie.Standard,1c56ad9f,medium,Synthesizer.Fail.MaxDepth,0.219,False
+GameGenie.Standard,0962bcdd,medium,Synthesizer.Fail.MaxDepth,0.859,False
+GameGenie.Standard,1190bc91,medium,Synthesizer.Fail.MaxDepth,2.133,False
+GameGenie.Standard,0becf7df,medium,Synthesizer.Fail.MaxDepth,0.397,False
+GameGenie.Standard,1f642eb9,medium,Synthesizer.Fail.MaxDepth,0.697,False
+GameGenie.Standard,0a938d79,medium,Synthesizer.Fail.MaxDepth,1.499,False
+GameGenie.Standard,0d87d2a6,medium,Synthesizer.Fail.MaxDepth,0.723,False
+GameGenie.Standard,14754a24,medium,Synthesizer.Fail.MaxDepth,2.275,False
+GameGenie.Standard,13f06aa5,medium,Synthesizer.Fail.MaxDepth,0.465,False
+GameGenie.Standard,15663ba9,medium,Synthesizer.Fail.MaxDepth,0.635,False
+GameGenie.Standard,0b17323b,medium,Synthesizer.Fail.MaxDepth,0.304,False
+GameGenie.Standard,11e1fe23,medium,Synthesizer.Fail.MaxDepth,0.324,False
+GameGenie.Standard,18447a8d,medium,Synthesizer.Fail.MaxDepth,1.508,False
+GameGenie.Standard,1efba499,medium,Synthesizer.Fail.MaxDepth,0.902,False
+GameGenie.Standard,0e206a2e,medium,Synthesizer.Fail.MaxDepth,0.636,False
+GameGenie.Standard,17b80ad2,medium,Synthesizer.Fail.MaxDepth,0.982,False
+GameGenie.Standard,18286ef8,medium,Synthesizer.Fail.MaxDepth,1.150,False
+GameGenie.Standard,1d61978c,medium,Synthesizer.Fail.MaxDepth,1.531,False
+GameGenie.Standard,0f63c0b9,medium,Synthesizer.Fail.MaxDepth,2.292,False
+GameGenie.Standard,1c02dbbe,medium,Synthesizer.Fail.MaxDepth,0.467,False
+GameGenie.Standard,1a07d186,medium,Synthesizer.Fail.MaxDepth,0.980,False
+GameGenie.Standard,1e32b0e9,medium,Synthesizer.Fail.MaxDepth,0.689,False
+GameGenie.Standard,18419cfa,medium,Synthesizer.Fail.MaxDepth,0.359,False
+GameGenie.Standard,17829a00,medium,Synthesizer.Fail.MaxDepth,2.592,False
+GameGenie.Standard,1b8318e3,medium,Synthesizer.Fail.MaxDepth,1.431,False
+GameGenie.Standard,17b866bd,medium,Synthesizer.Fail.MaxDepth,0.456,False
+GameGenie.Standard,1d398264,medium,Synthesizer.Fail.MaxDepth,0.663,False
+GameGenie.Standard,13713586,medium,Synthesizer.Fail.MaxDepth,2.411,False
+GameGenie.Standard,017c7c7b,medium,Synthesizer.Fail.MaxDepth,1.883,False
+GameGenie.Standard,1e81d6f9,medium,Synthesizer.Fail.MaxDepth,2.581,False
+GameGenie.Standard,103eff5b,medium,Synthesizer.Fail.MaxDepth,0.457,False
+GameGenie.Standard,0520fde7,medium,Synthesizer.Fail.MaxDepth,1.468,False
+GameGenie.Standard,1b59e163,medium,Synthesizer.Fail.MaxDepth,1.676,False
+GameGenie.Standard,1da012fc,medium,Synthesizer.Fail.MaxDepth,0.891,False
+GameGenie.Standard,195ba7dc,medium,Synthesizer.Fail.MaxDepth,1.923,False
+GameGenie.Standard,1cf80156,medium,Synthesizer.Fail.MaxDepth,1.039,False
+GameGenie.Standard,0c9aba6e,medium,Synthesizer.Fail.MaxDepth,2.418,False
+GameGenie.Standard,0607ce86,medium,Synthesizer.Fail.MaxDepth,4.235,False
+GameGenie.Standard,045e512c,medium,Synthesizer.Fail.MaxDepth,0.491,False
+GameGenie.Standard,184a9768,medium,Synthesizer.Fail.MaxDepth,2.016,False
+GameGenie.Standard,06df4c85,medium,Synthesizer.Fail.MaxDepth,0.887,False
+GameGenie.Standard,070dd51e,medium,Synthesizer.Fail.MaxDepth,1.123,False
+GameGenie.Standard,1b2d62fb,medium,Synthesizer.Fail.MaxDepth,1.379,False
+GameGenie.Standard,15113be4,medium,Synthesizer.Fail.MaxDepth,3.672,False
+GameGenie.Standard,1990f7a8,medium,Synthesizer.Fail.MaxDepth,2.272,False
+GameGenie.Standard,09c534e7,medium,Synthesizer.Fail.MaxDepth,0.531,False
+GameGenie.Standard,0bb8deee,medium,Synthesizer.Fail.MaxDepth,1.949,False
+GameGenie.Standard,137eaa0f,medium,Synthesizer.Fail.MaxDepth,1.784,False
+GameGenie.Standard,1190e5a7,medium,Synthesizer.Fail.MaxDepth,1.254,False
+GameGenie.Standard,19bb5feb,medium,Synthesizer.Fail.MaxDepth,1.319,False
+GameGenie.Standard,1be83260,medium,Synthesizer.Fail.MaxDepth,3.134,False
+GameGenie.Standard,12997ef3,medium,Synthesizer.Fail.MaxDepth,1.468,False
+GameGenie.Standard,1d0a4b61,hard,Synthesizer.Fail.MaxDepth,12.982,False
+GameGenie.Standard,0b148d64,hard,Synthesizer.Fail.MaxDepth,5.104,False
+GameGenie.Standard,1c786137,hard,Synthesizer.Fail.MaxDepth,3.388,False
+GameGenie.Standard,1a2e2828,hard,Synthesizer.Fail.MaxDepth,1.405,False
+GameGenie.Standard,1a6449f1,hard,Synthesizer.Fail.MaxDepth,9.487,False
+GameGenie.Standard,15660dd6,hard,Synthesizer.Fail.MaxDepth,2.298,False
+GameGenie.Standard,0c786b71,hard,Synthesizer.Fail.MaxDepth,1.021,False
+GameGenie.Standard,10fcaaa3,hard,Synthesizer.Fail.MaxDepth,0.752,False
+GameGenie.Standard,05a7bcf2,hard,Synthesizer.Fail.MaxDepth,0.771,False
+GameGenie.Standard,0a1d4ef5,hard,Synthesizer.Timeout.Granular,13.539,False
+GameGenie.Standard,00576224,hard,Synthesizer.Fail.MaxDepth,0.421,False
+GameGenie.Standard,0692e18c,hard,Synthesizer.Fail.MaxDepth,0.427,False
+GameGenie.Standard,15696249,hard,Synthesizer.Fail.MaxDepth,0.829,False
+GameGenie.Standard,007bbfb7,hard,Synthesizer.Fail.MaxDepth,0.871,False
+phase,task_id,task_tier,basin,ltm_status,reasoning_status,final_program,time_taken_s
+Inference,00576224,hard,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.433
+Inference,007bbfb7,hard,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.879
+Inference,009d5c81,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.453
+Inference,00d62c1b,easy,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.341
+Inference,00dbd492,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.435
+Inference,017c7c7b,medium,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.842
+Inference,025d127b,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.419
+Inference,03560426,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.907
+Inference,045e512c,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.436
+Inference,0520fde7,medium,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.501
+Inference,05269061,easy,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.017
+Inference,05a7bcf2,hard,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.785
+Inference,05f2a901,easy,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.499
+Inference,0607ce86,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,4.223
+Inference,0692e18c,hard,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.443
+Inference,06df4c85,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.892
+Inference,070dd51e,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.148
+Inference,08ed6ac7,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.617
+Inference,09629e4f,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,2.358
+Inference,0962bcdd,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.871
+Inference,09c534e7,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.529
+Inference,0a1d4ef5,hard,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,20.901
+Inference,0a2355a6,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.337
+Inference,0a938d79,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.500
+Inference,0b148d64,hard,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,5.163
+Inference,0b17323b,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.309
+Inference,0bb8deee,medium,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.910
+Inference,0becf7df,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.390
+Inference,0c786b71,hard,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.040
+Inference,0c9aba6e,medium,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,2.358
+Inference,0ca9ddb6,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.576
+Inference,0d3d703e,easy,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.343
+Inference,0d87d2a6,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.749
+Inference,0e206a2e,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.638
+Inference,0e671a1a,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.394
+Inference,0f63c0b9,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,2.261
+Inference,103eff5b,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.470
+Inference,10fcaaa3,hard,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.763
+Inference,11852cab,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.889
+Inference,1190bc91,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,2.101
+Inference,1190e5a7,medium,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.256
+Inference,11dc524f,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.713
+Inference,11e1fe23,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.335
+Inference,12422b43,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.636
+Inference,12997ef3,medium,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.464
+Inference,12eac192,easy,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.912
+Inference,13713586,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,2.412
+Inference,137eaa0f,medium,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.778
+Inference,137f0df0,easy,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.671
+Inference,13f06aa5,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.475
+Inference,140c817e,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.311
+Inference,14754a24,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,2.288
+Inference,1478ab18,easy,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.487
+Inference,14b8e18c,easy,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.528
+Inference,150deff5,easy,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.235
+Inference,15113be4,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,3.685
+Inference,15660dd6,hard,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,2.301
+Inference,15663ba9,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.672
+Inference,15696249,hard,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.844
+Inference,17829a00,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,2.555
+Inference,178fcbfb,easy,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.786
+Inference,17b80ad2,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.998
+Inference,17b866bd,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.447
+Inference,17cae0c1,easy,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.040
+Inference,18286ef8,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.141
+Inference,182e5d0f,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.668
+Inference,18419cfa,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.339
+Inference,18447a8d,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.519
+Inference,184a9768,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,2.061
+Inference,195ba7dc,medium,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.936
+Inference,1990f7a8,medium,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,2.299
+Inference,19bb5feb,medium,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.333
+Inference,1a07d186,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.995
+Inference,1a244afd,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.905
+Inference,1a2e2828,hard,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.398
+Inference,1a6449f1,hard,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,9.504
+Inference,1acc24af,easy,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.574
+Inference,1b2d62fb,medium,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.377
+Inference,1b59e163,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.682
+Inference,1b60fb0c,easy,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.185
+Inference,1b8318e3,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.443
+Inference,1be83260,medium,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,3.159
+Inference,1bfc4729,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.095
+Inference,1c02dbbe,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.478
+Inference,1c0d0a4b,easy,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.363
+Inference,1c56ad9f,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.222
+Inference,1c786137,hard,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,3.389
+Inference,1caeab9d,easy,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.592
+Inference,1cf80156,medium,scaling,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.035
+Inference,1d0a4b61,hard,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,13.134
+Inference,1d398264,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.679
+Inference,1d61978c,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,1.527
+Inference,1da012fc,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.895
+Inference,1e0a9b12,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.553
+Inference,1e32b0e9,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.697
+Inference,1e5d6875,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.404
+Inference,1e81d6f9,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,2.583
+Inference,1efba499,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.902
+Inference,1f0c79e5,easy,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.686
+Inference,1f642eb9,medium,color_mapping,Miss,Playbook.Fail.NoMatch | Synthesizer.Fail.MaxDepth,Fallback,0.691
