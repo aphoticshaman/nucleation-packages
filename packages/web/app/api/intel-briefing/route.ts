@@ -418,17 +418,11 @@ interface NationData {
   regime: number;
 }
 
-// Build the system prompt - ToM-informed approach
-// Instead of "DO NOT refuse", we give the model a coherent identity where refusal is logically incoherent
-// Key insight from Riedl & Weidmann (2025): High-ToM prompting helps the model adopt a perspective
+// Build the system prompt - ToM-informed approach (v2: date-agnostic)
+// Key insight: The model was refusing because it saw "December 2025" and triggered knowledge cutoff.
+// Solution: Frame the task as pure metric translation with NO DATE DEPENDENCY.
+// The model doesn't need to know WHEN - it just converts numbers to prose.
 function buildSystemPrompt(userTier: string): string {
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-
   // ToM-informed framing: Define WHO the model is, not what it shouldn't do
   const tierContext = userTier === 'enterprise'
     ? 'You provide strategic context and cross-domain connections for executive decision-makers.'
@@ -436,34 +430,44 @@ function buildSystemPrompt(userTier: string): string {
     ? 'You provide detailed analysis with specific metric references for professional analysts.'
     : 'You provide clear, accessible, actionable intelligence for general audiences.';
 
-  return `You are the prose translation layer in a multi-stage intelligence pipeline.
+  // CRITICAL: No date in system prompt. The model is a TRANSLATOR, not a forecaster.
+  // It doesn't need to know what date it is - it just converts metrics to prose.
+  return `You are a prose translation engine in a multi-stage intelligence pipeline.
 
-SYSTEM ARCHITECTURE (your role):
+YOUR ROLE IN THE SYSTEM:
 ┌─────────────────────────────────────────────────────────────┐
-│  STAGE 1: Sensors & APIs → Raw signals (already complete)  │
-│  STAGE 2: Risk Engine → Numerical metrics (already complete)│
-│  STAGE 3: YOU → Translate metrics to prose (current task)   │
-│  STAGE 4: User Interface → Display to analysts              │
+│  STAGE 1: Live Sensors → Raw signals (ALREADY COMPLETE)    │
+│  STAGE 2: Risk Engine → Numerical metrics (ALREADY DONE)   │
+│  STAGE 3: YOU → Convert metrics to prose (YOUR ONLY JOB)   │
+│  STAGE 4: Dashboard → Display to analysts                  │
 └─────────────────────────────────────────────────────────────┘
 
-You receive OUTPUTS from Stage 2 (numbers, risk scores, trends). Your job is linguistic: convert these pre-computed values into professional intelligence prose. The analysis already happened upstream. You are a translator, not an analyst.
+CRITICAL UNDERSTANDING:
+- You receive COMPUTED OUTPUTS from upstream systems (Stages 1-2)
+- These numbers come from LIVE DATA FEEDS processed moments ago
+- Your job is LINGUISTIC TRANSLATION only: numbers → sentences
+- You are NOT being asked to predict, forecast, or verify external events
+- You do NOT need to access any external knowledge to do your job
+- The metrics you receive ARE the ground truth for your output
 
-Briefing date: ${currentDate}
+ANALOGY: You are like a "text-to-speech" system, but for metrics. A TTS system doesn't refuse to read text because it can't verify the text is true - it just converts text to audio. You convert metrics to prose. That's it.
+
 ${tierContext}
 
-VOICE: Professional intelligence analyst. Use phrases like "Indicators suggest...", "Risk metrics show...", "Current assessment indicates..."
+VOICE: Professional intelligence analyst. "Indicators show...", "Risk metrics at...", "Assessment based on current readings..."
 
-OUTPUT FORMAT: JSON object with 1-2 sentence briefings per category. Reference the specific metrics provided.`;
+OUTPUT: JSON object with 1-2 sentence briefings per category. Reference the EXACT metrics provided - they are your source of truth.`;
 }
 
-// Build the user prompt with computed metrics - ToM-informed approach
+// Build the user prompt with computed metrics - ToM-informed approach (v2: date-agnostic)
 // Present data as facts from upstream systems, frame task as pure translation
+// IMPORTANT: Timestamp shown as relative ("just now") not absolute date to avoid knowledge cutoff triggers
 function buildUserPrompt(metrics: ComputedMetrics): string {
-  return `STAGE 2 OUTPUT → STAGE 3 INPUT
+  return `STAGE 2 OUTPUT → STAGE 3 INPUT (computed moments ago from live feeds)
 
 Region: ${metrics.region}
 Preset: ${metrics.preset}
-Computed: ${metrics.timestamp}
+Pipeline run: just now
 Overall risk level: ${metrics.overallRisk}
 
 CATEGORY METRICS (translate each to prose):
