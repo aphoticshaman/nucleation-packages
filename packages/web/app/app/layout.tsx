@@ -3,6 +3,7 @@ import ConsumerNav from './components/ConsumerNav';
 import OnboardingGate from '@/components/setup/OnboardingGate';
 import { IntelDisclaimer } from '@/components/IntelDisclaimer';
 import { ClientProviders } from './components/ClientProviders';
+import FeedbackButton from '@/components/FeedbackButton';
 import '@/styles/dark-glass.css';
 
 export default async function ConsumerLayout({ children }: { children: React.ReactNode }) {
@@ -60,6 +61,9 @@ export default async function ConsumerLayout({ children }: { children: React.Rea
             </div>
           </main>
         </OnboardingGate>
+
+        {/* Floating Feedback Button - always available */}
+        <FeedbackButton />
       </div>
     </ClientProviders>
   );
