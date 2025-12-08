@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { Shield, Zap, Brain, Target, Globe, TrendingUp } from 'lucide-react';
 
 function LoginForm() {
-  const router = useRouter();
+  const _router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/app';
 

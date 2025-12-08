@@ -152,7 +152,7 @@ export default function SavedSimulationsPage() {
                       variant="ghost"
                       size="sm"
                       loading={deleting === sim.id}
-                      onClick={() => handleDelete(sim.id)}
+                      onClick={() => void handleDelete(sim.id)}
                     >
                       Delete
                     </GlassButton>

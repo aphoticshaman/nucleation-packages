@@ -9,7 +9,7 @@ import {
   createPhaseState,
   type LandauGinzburgConfig,
 } from '@/lib/physics/landau-ginzburg';
-import { analyzeRegimes, type MarkovSwitchingConfig } from '@/lib/physics/markov-switching';
+import { analyzeRegimes } from '@/lib/physics/markov-switching';
 
 interface PhaseTransitionRequest {
   mode: 'analyze' | 'simulate' | 'forecast';

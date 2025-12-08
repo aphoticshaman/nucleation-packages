@@ -202,7 +202,7 @@ export async function GET(request: Request) {
 }
 
 // POST: Generate training data summary/stats
-export async function POST(request: Request) {
+export async function POST(_request: Request) {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();

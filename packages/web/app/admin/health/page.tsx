@@ -190,8 +190,8 @@ export default function AdminHealthPage() {
   };
 
   useEffect(() => {
-    runAllChecks();
-    const interval = setInterval(runAllChecks, 60000); // Refresh every minute
+    void runAllChecks();
+    const interval = setInterval(() => void runAllChecks(), 60000); // Refresh every minute
     return () => clearInterval(interval);
   }, []);
 
@@ -221,7 +221,7 @@ export default function AdminHealthPage() {
               System {overallStatus.charAt(0).toUpperCase() + overallStatus.slice(1)}
             </span>
           </div>
-          <GlassButton variant="primary" onClick={runAllChecks}>
+          <GlassButton variant="primary" onClick={() => void runAllChecks()}>
             Refresh All
           </GlassButton>
         </div>
@@ -258,7 +258,7 @@ export default function AdminHealthPage() {
       {/* Health Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {checks.map((check, index) => (
-          <HealthCard key={check.name} check={check} onRecheck={() => runHealthCheck(index)} />
+          <HealthCard key={check.name} check={check} onRecheck={() => void runHealthCheck(index)} />
         ))}
       </div>
 

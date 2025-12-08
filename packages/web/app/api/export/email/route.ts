@@ -33,7 +33,7 @@ function generatePlainText(content: EmailExportRequest['packageContent'], audien
   const divider = '═'.repeat(60);
   const subDivider = '─'.repeat(40);
 
-  let text = `
+  const text = `
 ${divider}
 ${content.title.toUpperCase()}
 ${content.subtitle}
@@ -223,6 +223,7 @@ export async function POST(req: Request) {
 
     // Parse request
     const body: EmailExportRequest = await req.json();
+    const { audience } = body;
     let {
       subject,
       includeTextBody,
@@ -230,7 +231,6 @@ export async function POST(req: Request) {
       includeJsonAttachment,
       includeMarkdownAttachment,
       packageContent,
-      audience,
     } = body;
 
     // Feature gating for free tier

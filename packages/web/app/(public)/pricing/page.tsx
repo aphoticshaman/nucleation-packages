@@ -158,7 +158,7 @@ export default function PricingPage() {
       });
     }
 
-    checkUserStatus();
+    void checkUserStatus();
   }, []);
 
   const handleSelectPlan = async (plan: (typeof VISIBLE_PLANS)[0]) => {

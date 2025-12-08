@@ -32,7 +32,7 @@ const NEWS_SOURCES = {
 
 async function fetchBreakingNews(): Promise<NewsArticle[]> {
   const articles: NewsArticle[] = [];
-  const today = new Date().toISOString().split('T')[0];
+  const _today = new Date().toISOString().split('T')[0]; // Available for date filtering
 
   // Try GNews (if API key available)
   if (process.env.GNEWS_API_KEY) {
@@ -137,7 +137,7 @@ export async function POST(req: Request) {
     });
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 4096,
       system: `You are an intelligence analyst providing EMERGENCY briefings during breaking events.
 

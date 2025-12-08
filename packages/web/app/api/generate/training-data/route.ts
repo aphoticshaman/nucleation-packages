@@ -155,6 +155,29 @@ const RSS_SOURCES: Record<string, { url: string; domain: string }[]> = {
     { url: 'https://cointelegraph.com/rss', domain: 'crypto' },
     { url: 'https://www.coindesk.com/arc/outboundfeeds/rss/', domain: 'crypto' },
   ],
+  // OSINT & Intelligence
+  osint: [
+    { url: 'https://www.bellingcat.com/feed/', domain: 'osint' },
+    { url: 'https://www.rferl.org/api/z-pqpiev-qpp', domain: 'osint' },
+    { url: 'https://www.voanews.com/api/ziqpovqqvq', domain: 'osint' },
+    { url: 'https://warontherocks.com/feed/', domain: 'osint' },
+    { url: 'https://foreignpolicy.com/feed/', domain: 'osint' },
+    { url: 'https://www.lawfaremedia.org/rss.xml', domain: 'osint' },
+  ],
+  // Think Tanks & Policy
+  policy: [
+    { url: 'https://www.brookings.edu/feed/', domain: 'policy' },
+    { url: 'https://carnegieendowment.org/rss/solr/?fa=rss', domain: 'policy' },
+    { url: 'https://www.csis.org/rss.xml', domain: 'policy' },
+    { url: 'https://www.rand.org/rss.xml', domain: 'policy' },
+    { url: 'https://www.cfr.org/rss.xml', domain: 'policy' },
+  ],
+  // Military & Defense Intel
+  defense_intel: [
+    { url: 'https://www.understandingwar.org/feed', domain: 'defense_intel' },
+    { url: 'https://www.iiss.org/en/rss', domain: 'defense_intel' },
+    { url: 'https://rusi.org/rss.xml', domain: 'defense_intel' },
+  ],
 };
 
 interface NewsItem {
@@ -1040,7 +1063,7 @@ Only output the JSON.`;
 
   try {
     const response = await getAnthropic().messages.create({
-      model: 'claude-3-haiku-20240307',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 1200,
       messages: [{ role: 'user', content: prompt }],
     });
@@ -1211,7 +1234,7 @@ Only output the JSON, nothing else.`;
 
   try {
     const response = await getAnthropic().messages.create({
-      model: 'claude-3-haiku-20240307',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 1024,
       messages: [{ role: 'user', content: prompt }],
     });

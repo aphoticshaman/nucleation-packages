@@ -6,7 +6,7 @@ import {
   Archive, RotateCcw, Settings, Activity, Zap, TrendingUp, Filter,
   Trash2, Eye, Clock, BarChart2, Gauge
 } from 'lucide-react';
-import { GlassCard } from '@/components/ui/GlassCard';
+// GlassCard not used directly in this file
 import { GlassButton } from '@/components/ui/GlassButton';
 
 interface Stats {
@@ -140,7 +140,7 @@ export default function TrainingDataPage() {
   }, []);
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, [loadData]);
 
   async function exportData() {
@@ -162,7 +162,7 @@ export default function TrainingDataPage() {
       const data = await res.json();
       if (res.ok) {
         setMessage({ type: 'success', text: `Backup created: ${data.backup?.exampleCount} examples` });
-        loadData();
+        void loadData();
       } else {
         setMessage({ type: 'error', text: data.error });
       }
@@ -206,7 +206,7 @@ export default function TrainingDataPage() {
       if (res.ok) {
         setMessage({ type: 'success', text: data.message });
         setAnomalies([]);
-        loadData();
+        void loadData();
       } else {
         setMessage({ type: 'error', text: data.error });
       }
@@ -229,7 +229,7 @@ export default function TrainingDataPage() {
       const data = await res.json();
       if (res.ok) {
         setMessage({ type: 'success', text: data.message });
-        loadData();
+        void loadData();
       } else {
         setMessage({ type: 'error', text: data.error });
       }
@@ -289,7 +289,7 @@ export default function TrainingDataPage() {
               <span className="text-sm font-medium">{health.message}</span>
             </div>
             <button
-              onClick={loadData}
+              onClick={() => void loadData()}
               className="p-2 hover:bg-white/10 rounded-lg transition-colors"
               title="Refresh"
             >
@@ -437,7 +437,7 @@ export default function TrainingDataPage() {
                   />
                 </div>
                 <button
-                  onClick={exportData}
+                  onClick={() => void exportData()}
                   disabled={exporting}
                   className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-6 py-2 rounded-lg font-medium transition-colors"
                 >
@@ -555,7 +555,7 @@ export default function TrainingDataPage() {
                   <GlassButton
                     variant="secondary"
                     size="sm"
-                    onClick={scanAnomalies}
+                    onClick={() => void scanAnomalies()}
                     disabled={scanning}
                     loading={scanning}
                   >
@@ -566,7 +566,7 @@ export default function TrainingDataPage() {
                     <GlassButton
                       variant="danger"
                       size="sm"
-                      onClick={autoQuarantineAnomalies}
+                      onClick={() => void autoQuarantineAnomalies()}
                     >
                       <Trash2 className="w-4 h-4" />
                       Quarantine All ({anomalies.length})
@@ -616,7 +616,7 @@ export default function TrainingDataPage() {
                 </div>
                 <GlassButton
                   variant="primary"
-                  onClick={createBackup}
+                  onClick={() => void createBackup()}
                   disabled={backing}
                   loading={backing}
                   glow
@@ -654,7 +654,7 @@ export default function TrainingDataPage() {
                         </div>
                       </div>
                       <button
-                        onClick={() => rollbackTo(backup.id)}
+                        onClick={() => void rollbackTo(backup.id)}
                         className="text-sm px-4 py-2 bg-purple-600/30 hover:bg-purple-600 rounded-lg transition-colors flex items-center gap-2"
                       >
                         <RotateCcw className="w-4 h-4" />

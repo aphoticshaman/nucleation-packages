@@ -20,7 +20,7 @@ export const fetchEntropy = async (): Promise<EntropySource[]> => {
         delta: cryptoData.bitcoin.usd_24h_change
       });
     }
-  } catch (e) {
+  } catch {
     console.warn("Crypto Entropy Offline, simulating...");
     sources.push({ id: 'BTC_SIM', source: 'System', value: Math.random(), label: 'Sim Flux', delta: (Math.random() - 0.5) * 5 });
   }
@@ -40,7 +40,7 @@ export const fetchEntropy = async (): Promise<EntropySource[]> => {
         delta: weatherData.current.wind_speed_10m
       });
     }
-  } catch (e) {
+  } catch {
     console.warn("Weather Entropy Offline, simulating...");
     sources.push({ id: 'ATM_SIM', source: 'System', value: Math.random(), label: 'Sim Atm', delta: (Math.random() - 0.5) * 2 });
   }

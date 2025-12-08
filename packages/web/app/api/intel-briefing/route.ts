@@ -514,7 +514,7 @@ export async function POST(req: Request) {
     // ============================================================
     // SECURITY LAYER - Rate limits (skip for cron/internal)
     // ============================================================
-    const security = getSecurityGuardian();
+    const _security = getSecurityGuardian(); // Used for authenticated rate limiting
 
     // Cron/internal bypasses rate limits
     const rateLimit = { allowed: true, remaining: 999, resetAt: new Date() };
@@ -727,7 +727,7 @@ export async function POST(req: Request) {
 
     const llmStartTime = Date.now();
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 2048,
       system: buildSystemPrompt(userTier),
       messages: [
@@ -764,7 +764,7 @@ export async function POST(req: Request) {
       inputTokens: message.usage?.input_tokens || 0,
       outputTokens: message.usage?.output_tokens || 0,
       latencyMs: llmLatency,
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-haiku-4-5-20251001',
       success: true,
     });
 
@@ -842,7 +842,7 @@ export async function POST(req: Request) {
         inputTokens: 0,
         outputTokens: 0,
         latencyMs: Date.now() - startTime,
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-haiku-4-5-20251001',
         success: false,
       });
     } catch {
@@ -899,7 +899,7 @@ function computeOverallRisk(nations: NationData[]): ComputedMetrics['overallRisk
 }
 
 // Create anonymized hash for learning data collection
-async function hashForLearning(userId: string): Promise<string> {
+async function _hashForLearning(userId: string): Promise<string> {
   const encoder = new TextEncoder();
   const salt = process.env.ANONYMIZATION_SALT || 'lattice-default-salt';
   const data = encoder.encode(userId + salt);

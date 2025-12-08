@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { CausalGraph } from '@/components/causal/CausalGraph';
 import type { CausalNode, CausalEdge } from '@/lib/types/causal';
-import { Share2, Info, X } from 'lucide-react';
+import { Share2, X } from 'lucide-react';
 import Link from 'next/link';
 
 // Demo data - realistic geopolitical causal graph

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { ALL_FINANCIAL_SOURCES, MARKET_INDICATORS, type FinancialSource } from '@/lib/signals/financialSources';
 import { TrendingUp, Fuel, DollarSign, Bitcoin, Building, Globe, Bell, Plus, Settings, BookOpen } from 'lucide-react';
 import Glossary from '@/components/Glossary';
-import HelpTip from '@/components/HelpTip';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
 

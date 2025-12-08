@@ -4,7 +4,6 @@ import { useState } from 'react';
 import {
   Plus,
   LayoutDashboard,
-  Trash2,
   Star,
   StarOff,
   ChevronRight,
@@ -26,9 +25,7 @@ import {
 import { DASHBOARD_PRESETS, type PresetId } from '@/lib/config/dashboardPresets';
 import { FOCUS_TEMPLATES } from '@/lib/pipeline/DataPipeline';
 import Glossary from '@/components/Glossary';
-import HelpTip from '@/components/HelpTip';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
 
 interface UserDashboard {
   id: string;

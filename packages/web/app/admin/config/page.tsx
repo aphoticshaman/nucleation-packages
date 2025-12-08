@@ -1,7 +1,7 @@
 import { requireAdmin } from '@/lib/auth';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
-import { Settings, Server, Database, Globe, Shield, Bell, Save } from 'lucide-react';
+import { Settings, Server, Database, Shield, Bell, Save } from 'lucide-react';
 
 export default async function ConfigPage() {
   await requireAdmin();

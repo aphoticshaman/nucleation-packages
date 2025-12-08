@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ContextLayer } from '../types';
-import { Layers, Activity, Lock, Globe, Share2, LayoutDashboard, TrendingUp } from 'lucide-react';
+import { Activity, Lock, Globe, Share2, LayoutDashboard, TrendingUp } from 'lucide-react';
 
 interface NavigationProps {
   context: ContextLayer;

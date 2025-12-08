@@ -13,8 +13,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useIntelStream } from '@/lib/hooks/useIntelStream';
-import { ContextLayer, ContextLayerColors, ContextLayerLabels } from '@/lib/types/causal';
-import type { IntelPacket } from '@/lib/types/causal';
+import { ContextLayer, ContextLayerColors } from '@/lib/types/causal';
 
 const CATEGORIES = [
   'DEFENSE',

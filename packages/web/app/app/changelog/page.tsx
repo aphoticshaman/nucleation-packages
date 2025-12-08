@@ -7,7 +7,6 @@ import {
   Wrench,
   Shield,
   Zap,
-  Globe,
   Bell,
   ChevronDown,
   ExternalLink,
