@@ -32,8 +32,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
 
         <AdminNav user={user} />
-        <main className="pl-72 relative z-10">
-          <div className="p-6 lg:p-8">{children}</div>
+        {/* Mobile: no left padding (sidebar is overlay), Desktop: pl-72 for fixed sidebar */}
+        <main className="lg:pl-72 relative z-10">
+          {/* Mobile: add top padding for fixed header, more padding on desktop */}
+          <div className="pt-16 lg:pt-0 p-4 sm:p-6 lg:p-8">{children}</div>
         </main>
       </div>
     </AdminProviders>

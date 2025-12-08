@@ -3,9 +3,14 @@ import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
+import { Redis } from '@upstash/redis';
 
 export const runtime = 'edge';
 export const maxDuration = 60;
+
+// Initialize Redis client for cache (same as intel-briefing route)
+const redis = Redis.fromEnv();
+const REDIS_CACHE_TTL_SECONDS = 6 * 60 * 60; // 6 hours for emergency refresh
 
 // PRODUCTION-ONLY: Block Anthropic API calls in non-production unless explicitly enabled
 function isAnthropicAllowed(): { allowed: boolean; reason?: string } {
@@ -204,22 +209,41 @@ Respond ONLY with valid JSON.`
       }, { status: 500 });
     }
 
-    // Cache the results in Supabase
-    const cacheKey = `emergency_briefing_global_${currentDate}`;
+    // Prepare cache data
     const cacheData = {
-      preset: 'global',
       briefings,
       metadata: {
+        region: 'Global',
+        preset: 'global',
         timestamp: new Date().toISOString(),
-        overallRisk: 'elevated', // Default to elevated for emergency refresh
+        overallRisk: 'elevated' as const, // Default to elevated for emergency refresh
         source: 'emergency_refresh',
         model: 'claude-haiku-4-5-20251001',
         estimatedCost: '$0.25-0.75',
+        cached: false,
       },
-      generated_at: new Date().toISOString(),
     };
 
-    // PURGE old cache before storing new data
+    // ============================================================
+    // CRITICAL: Write to REDIS cache (used by main intel-briefing API)
+    // ============================================================
+    // The main /api/intel-briefing endpoint reads from Redis with key 'intel-briefing:global'
+    // We MUST write to Redis for the briefings page to pick up our fresh data!
+    try {
+      const redisCacheKey = 'intel-briefing:global'; // Same format as intel-briefing route
+      await redis.set(redisCacheKey, {
+        data: cacheData,
+        timestamp: Date.now(),
+        generatedAt: new Date().toISOString(),
+      }, { ex: REDIS_CACHE_TTL_SECONDS });
+      console.log('[EMERGENCY REFRESH] ✅ Written to Redis cache: intel-briefing:global');
+    } catch (redisError) {
+      console.error('[EMERGENCY REFRESH] Redis cache write failed:', redisError);
+      // Continue anyway - we'll also write to Supabase as backup
+    }
+
+    // Also cache in Supabase as backup
+    const supabaseCacheKey = `emergency_briefing_global_${currentDate}`;
     try {
       // Delete ALL expired cache entries
       await supabase
@@ -233,18 +257,18 @@ Respond ONLY with valid JSON.`
         .delete()
         .like('cache_key', 'emergency_briefing_%');
 
-      // Store fresh data
+      // Store fresh data in Supabase
       await supabase
         .from('briefing_cache')
         .upsert({
-          cache_key: cacheKey,
+          cache_key: supabaseCacheKey,
           data: cacheData,
           expires_at: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(), // 6 hour expiry
         }, { onConflict: 'cache_key' });
 
-      console.log('Cache purged and refreshed successfully');
+      console.log('[EMERGENCY REFRESH] ✅ Supabase cache updated');
     } catch (cacheError) {
-      console.warn('Cache storage failed, continuing without cache:', cacheError);
+      console.warn('[EMERGENCY REFRESH] Supabase cache storage failed:', cacheError);
     }
 
     return NextResponse.json({
