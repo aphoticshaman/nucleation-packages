@@ -142,23 +142,51 @@ export default function BriefingsPage() {
     async function checkAdmin() {
       try {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
-        console.log('[BRIEFINGS] Auth check:', { userId: user?.id, authError });
-        if (!user) return;
+        console.log('[BRIEFINGS] Auth check:', {
+          userId: user?.id,
+          email: user?.email,
+          authError: authError?.message || null
+        });
+
+        if (authError) {
+          console.error('[BRIEFINGS] Auth error:', authError);
+          return;
+        }
+
+        if (!user) {
+          console.log('[BRIEFINGS] No user session found');
+          return;
+        }
 
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, email')
           .eq('id', user.id)
           .single();
 
-        console.log('[BRIEFINGS] Profile check:', { profile, profileError });
+        console.log('[BRIEFINGS] Profile check:', {
+          profile,
+          profileError: profileError?.message || null,
+          profileCode: profileError?.code || null
+        });
 
-        if (profile && (profile as { role?: string }).role === 'admin') {
-          console.log('[BRIEFINGS] User is admin, showing button');
+        if (profileError) {
+          console.error('[BRIEFINGS] Profile query failed:', profileError);
+          // RLS might be blocking - user can still use the app
+          return;
+        }
+
+        const userRole = (profile as { role?: string })?.role;
+        console.log('[BRIEFINGS] User role:', userRole);
+
+        if (userRole === 'admin') {
+          console.log('[BRIEFINGS] ✓ User is admin, showing Emergency Refresh button');
           setIsAdmin(true);
+        } else {
+          console.log('[BRIEFINGS] User role is not admin:', userRole);
         }
       } catch (err) {
-        console.error('Failed to check admin status:', err);
+        console.error('[BRIEFINGS] Exception in checkAdmin:', err);
       }
     }
     void checkAdmin();
