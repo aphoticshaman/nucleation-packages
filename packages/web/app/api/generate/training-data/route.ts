@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
 import Anthropic from '@anthropic-ai/sdk';
 
 // PRODUCTION-ONLY: Block Anthropic API calls in non-production unless explicitly enabled
@@ -7,6 +9,17 @@ function isAnthropicAllowed(): boolean {
   const env = process.env.VERCEL_ENV || process.env.NODE_ENV;
   if (env === 'production') return true;
   if (process.env.ALLOW_ANTHROPIC_IN_DEV === 'true') return true;
+  return false;
+}
+
+// Verify cron secret for scheduled jobs
+function verifyCronAuth(request: Request): boolean {
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+  const isVercelCron = request.headers.get('x-vercel-cron') === '1';
+
+  if (isVercelCron) return true;
+  if (cronSecret && authHeader === `Bearer ${cronSecret}`) return true;
   return false;
 }
 
@@ -31,6 +44,48 @@ function getAnthropic() {
     });
   }
   return anthropic;
+}
+
+// Server-side auth verification - requires admin role
+async function verifyAdminAuth(): Promise<{ isAdmin: boolean; userId?: string; error?: string }> {
+  try {
+    const cookieStore = await cookies();
+    const authClient = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll() {
+            // Read-only
+          },
+        },
+      }
+    );
+
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    if (authError || !user) {
+      return { isAdmin: false, error: 'Authentication required' };
+    }
+
+    // Check admin role using service client (bypasses RLS)
+    const db = getSupabase();
+    const { data: profile, error: profileError } = await db
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return { isAdmin: false, userId: user.id, error: 'Profile not found' };
+    }
+
+    return { isAdmin: profile.role === 'admin', userId: user.id };
+  } catch {
+    return { isAdmin: false, error: 'Auth check failed' };
+  }
 }
 
 // RSS feeds by domain - comprehensive multi-sector coverage
@@ -1263,15 +1318,15 @@ Only output the JSON, nothing else.`;
 }
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  // Allow cron or authenticated requests
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    // Check if it's a Vercel cron request
-    const isVercelCron = request.headers.get('x-vercel-cron') === '1';
-    if (!isVercelCron) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // SECURITY: Verify authorization - cron jobs or admin users only
+  const isCron = verifyCronAuth(request);
+  if (!isCron) {
+    const auth = await verifyAdminAuth();
+    if (!auth.isAdmin) {
+      return NextResponse.json(
+        { error: auth.error || 'Admin access required' },
+        { status: 403 }
+      );
     }
   }
 
@@ -1547,6 +1602,15 @@ export async function GET(request: Request) {
 
 // Export endpoint to download training data
 export async function POST(request: Request) {
+  // SECURITY: Verify authorization - admin users only (no cron for POST)
+  const auth = await verifyAdminAuth();
+  if (!auth.isAdmin) {
+    return NextResponse.json(
+      { error: auth.error || 'Admin access required' },
+      { status: 403 }
+    );
+  }
+
   const { format = 'alpaca', mark_exported = false } = await request.json();
 
   const { data, error } = await getSupabase()
