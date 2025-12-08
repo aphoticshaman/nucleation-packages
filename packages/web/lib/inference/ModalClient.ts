@@ -16,6 +16,14 @@
 // Modal endpoint URL - set in Vercel env vars
 const MODAL_ENDPOINT = process.env.MODAL_INFERENCE_URL;
 
+// PRODUCTION-ONLY: Block Anthropic API calls in non-production unless explicitly enabled
+function isAnthropicAllowed(): boolean {
+  const env = process.env.VERCEL_ENV || process.env.NODE_ENV;
+  if (env === 'production') return true;
+  if (process.env.ALLOW_ANTHROPIC_IN_DEV === 'true') return true;
+  return false;
+}
+
 interface ModalGenerateRequest {
   action: 'generate';
   prompt: string;
@@ -246,7 +254,11 @@ export async function infer(
     }
   }
 
-  // Fallback to Anthropic
+  // Fallback to Anthropic - BLOCKED in non-production
+  if (!isAnthropicAllowed()) {
+    throw new Error(`Anthropic API blocked in non-production (${process.env.VERCEL_ENV || process.env.NODE_ENV}). Set ALLOW_ANTHROPIC_IN_DEV=true to enable.`);
+  }
+
   const Anthropic = (await import('@anthropic-ai/sdk')).default;
   const anthropic = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY!,

@@ -2,6 +2,14 @@ import { NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 
+// PRODUCTION-ONLY: Block Anthropic API calls in non-production unless explicitly enabled
+function isAnthropicAllowed(): boolean {
+  const env = process.env.VERCEL_ENV || process.env.NODE_ENV;
+  if (env === 'production') return true;
+  if (process.env.ALLOW_ANTHROPIC_IN_DEV === 'true') return true;
+  return false;
+}
+
 // Lazy initialization to avoid build-time errors
 let supabase: SupabaseClient | null = null;
 let anthropic: Anthropic | null = null;
@@ -1265,6 +1273,15 @@ export async function GET(request: Request) {
     if (!isVercelCron) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+  }
+
+  // BLOCK non-production Anthropic API calls
+  if (!isAnthropicAllowed()) {
+    return NextResponse.json({
+      success: false,
+      error: 'Anthropic API blocked in non-production environment',
+      environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
+    }, { status: 403 });
   }
 
   const results = {

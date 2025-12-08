@@ -4,6 +4,14 @@ import Anthropic from '@anthropic-ai/sdk';
 // Vercel Edge Runtime for low latency
 export const runtime = 'edge';
 
+// PRODUCTION-ONLY: Block Anthropic API calls in non-production unless explicitly enabled
+function isAnthropicAllowed(): boolean {
+  const env = process.env.VERCEL_ENV || process.env.NODE_ENV;
+  if (env === 'production') return true;
+  if (process.env.ALLOW_ANTHROPIC_IN_DEV === 'true') return true;
+  return false;
+}
+
 // =============================================================================
 // PULSE CHECK - Ultra-cheap breaking news detector
 // =============================================================================
@@ -110,6 +118,18 @@ export async function GET(req: Request) {
       cached: false,
       message: 'Pulse check not yet available',
     }, { status: 503 });
+  }
+
+  // BLOCK non-production Anthropic API calls
+  if (!isAnthropicAllowed()) {
+    return NextResponse.json({
+      breaking: false,
+      severity: 'none',
+      timestamp: new Date().toISOString(),
+      cached: false,
+      message: 'Anthropic API blocked in non-production',
+      environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
+    }, { status: 403 });
   }
 
   try {

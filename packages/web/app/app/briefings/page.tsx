@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useIntelBriefing, getRiskBadgeStyle } from '@/hooks/useIntelBriefing';
 import {
   Globe, Shield, TrendingUp, AlertTriangle, RefreshCw, Target, BookOpen,
@@ -11,6 +11,7 @@ import Glossary from '@/components/Glossary';
 import HelpTip from '@/components/HelpTip';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
+import { supabase } from '@/lib/supabase';
 
 const PRESETS = [
   { id: 'global', name: 'Global Overview', icon: Globe, desc: 'All 195 nations' },
@@ -130,10 +131,34 @@ export default function BriefingsPage() {
   const [showGlossary, setShowGlossary] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>('Political & Security');
 
-  // Emergency refresh state
+  // Admin-only emergency refresh state
+  const [isAdmin, setIsAdmin] = useState(false);
   const [showEmergencyModal, setShowEmergencyModal] = useState(false);
   const [emergencyLoading, setEmergencyLoading] = useState(false);
   const [emergencyResult, setEmergencyResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  // Check if user is admin on mount
+  useEffect(() => {
+    async function checkAdmin() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        if (profile && (profile as { role?: string }).role === 'admin') {
+          setIsAdmin(true);
+        }
+      } catch (err) {
+        console.error('Failed to check admin status:', err);
+      }
+    }
+    void checkAdmin();
+  }, []);
 
   const handleLoad = async () => {
     setHasLoaded(true);
@@ -150,6 +175,7 @@ export default function BriefingsPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Send auth cookies for server-side admin validation
       });
 
       // Handle non-JSON responses gracefully
@@ -217,15 +243,17 @@ export default function BriefingsPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {/* Emergency Refresh Button - Big Red Button */}
-          <button
-            onClick={() => setShowEmergencyModal(true)}
-            className="flex items-center gap-2 px-4 py-2 min-h-[44px] bg-red-600 hover:bg-red-500 rounded-xl border border-red-400/50 text-white font-bold shadow-lg shadow-red-500/30 hover:shadow-red-500/50 transition-all animate-pulse hover:animate-none"
-            title="Force refresh all data from Claude API ($1-3)"
-          >
-            <Zap className="w-5 h-5" />
-            <span className="text-sm uppercase tracking-wide">Emergency Refresh</span>
-          </button>
+          {/* Emergency Refresh Button - ADMIN ONLY */}
+          {isAdmin && (
+            <button
+              onClick={() => setShowEmergencyModal(true)}
+              className="flex items-center gap-2 px-4 py-2 min-h-[44px] bg-red-600 hover:bg-red-500 rounded-xl border border-red-400/50 text-white font-bold shadow-lg shadow-red-500/30 hover:shadow-red-500/50 transition-all animate-pulse hover:animate-none"
+              title="Force refresh all data from Claude API ($0.25-0.75) - ADMIN ONLY"
+            >
+              <Zap className="w-5 h-5" />
+              <span className="text-sm uppercase tracking-wide">Emergency Refresh</span>
+            </button>
+          )}
           <button
             onClick={() => setShowGlossary(true)}
             className="flex items-center gap-2 px-3 py-2 min-h-[44px] bg-[rgba(18,18,26,0.7)] backdrop-blur-sm rounded-xl border border-white/[0.06] text-slate-400 hover:text-white hover:border-white/[0.12] transition-all"

@@ -13,6 +13,17 @@ import {
 // Vercel Edge Runtime for low latency
 export const runtime = 'edge';
 
+// PRODUCTION-ONLY: Block Anthropic API calls in non-production unless explicitly enabled
+function isAnthropicAllowed(): boolean {
+  const env = process.env.VERCEL_ENV || process.env.NODE_ENV;
+  if (env === 'production') return true;
+  if (process.env.ALLOW_ANTHROPIC_IN_DEV === 'true') {
+    console.warn('ANTHROPIC API ENABLED IN NON-PRODUCTION');
+    return true;
+  }
+  return false;
+}
+
 // =============================================================================
 // REDIS CACHE - Shared across ALL edge instances
 // =============================================================================
@@ -723,6 +734,21 @@ export async function POST(req: Request) {
 - Historical parallels: ${reasoningResult.analogies.map((a) => a.description).join('; ') || 'None identified'}
 - Key causal factors: ${reasoningResult.causal_factors.map((f) => `${f.factor} (${f.contribution > 0 ? '+' : ''}${(f.contribution * 100).toFixed(0)}%)`).join(', ')}
 - Uncertainty range: ${(reasoningResult.uncertainty.lower * 100).toFixed(0)}%-${(reasoningResult.uncertainty.upper * 100).toFixed(0)}%`;
+    }
+
+    // BLOCK non-production Anthropic API calls - use fallback instead
+    if (!isAnthropicAllowed()) {
+      console.log('[INTEL] Anthropic blocked in non-production, returning fallback data');
+      const fallback = await generateFallbackBriefing(supabase, preset);
+      return NextResponse.json({
+        briefings: fallback,
+        metadata: {
+          timestamp: new Date().toISOString(),
+          overallRisk: 'elevated',
+          source: 'fallback_non_production',
+          environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
+        },
+      });
     }
 
     const llmStartTime = Date.now();
