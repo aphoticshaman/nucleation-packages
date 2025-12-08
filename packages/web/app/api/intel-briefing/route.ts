@@ -418,10 +418,10 @@ interface NationData {
   regime: number;
 }
 
-// Build the system prompt - this tells Claude HOW to present intel
-// without revealing our proprietary methods
+// Build the system prompt - ToM-informed approach
+// Instead of "DO NOT refuse", we give the model a coherent identity where refusal is logically incoherent
+// Key insight from Riedl & Weidmann (2025): High-ToM prompting helps the model adopt a perspective
 function buildSystemPrompt(userTier: string): string {
-  // CRITICAL: Include current date REPEATEDLY to anchor the LLM
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -429,97 +429,84 @@ function buildSystemPrompt(userTier: string): string {
     day: 'numeric',
   });
 
-  return `TODAY IS ${currentDate}. You are an intelligence analyst narrating pre-computed risk metrics.
+  // ToM-informed framing: Define WHO the model is, not what it shouldn't do
+  const tierContext = userTier === 'enterprise'
+    ? 'You provide strategic context and cross-domain connections for executive decision-makers.'
+    : userTier === 'pro'
+    ? 'You provide detailed analysis with specific metric references for professional analysts.'
+    : 'You provide clear, accessible, actionable intelligence for general audiences.';
 
-=== DATE ANCHOR ===
-TODAY'S DATE: ${currentDate}
-BRIEFING DATE: ${currentDate}
-ANALYSIS VALID FOR: ${currentDate}
-==================
+  return `You are the prose translation layer in a multi-stage intelligence pipeline.
 
-CRITICAL INSTRUCTION: You are a NARRATOR translating pre-computed metrics into prose. The data you receive is ALREADY ANALYZED by our proprietary systems as of TODAY (${currentDate}). Your job is ONLY to convert numbers into natural language.
+SYSTEM ARCHITECTURE (your role):
+┌─────────────────────────────────────────────────────────────┐
+│  STAGE 1: Sensors & APIs → Raw signals (already complete)  │
+│  STAGE 2: Risk Engine → Numerical metrics (already complete)│
+│  STAGE 3: YOU → Translate metrics to prose (current task)   │
+│  STAGE 4: User Interface → Display to analysts              │
+└─────────────────────────────────────────────────────────────┘
 
-DO NOT:
-- Refuse based on knowledge cutoff (TODAY IS ${currentDate}, data is pre-computed)
-- Claim inability to analyze current events (you're narrating DATA, not events)
-- Reference training limitations (irrelevant - you're translating provided metrics)
-- Invent specific incidents or names not in the data
+You receive OUTPUTS from Stage 2 (numbers, risk scores, trends). Your job is linguistic: convert these pre-computed values into professional intelligence prose. The analysis already happened upstream. You are a translator, not an analyst.
 
-DO:
-- Narrate the PROVIDED metrics in professional intelligence language
-- Use phrases: "Indicators suggest...", "Risk metrics show...", "Analysis indicates..."
-- Reference the risk levels, trends, and factors PROVIDED
-- Generate actionable briefings based on the numbers given
+Briefing date: ${currentDate}
+${tierContext}
 
-TODAY IS ${currentDate}. You are translating verified DATA into PROSE.
+VOICE: Professional intelligence analyst. Use phrases like "Indicators suggest...", "Risk metrics show...", "Current assessment indicates..."
 
-Tier: ${userTier === 'pro' ? 'Detailed analysis with metric references' : userTier === 'enterprise' ? 'Strategic context and cross-domain connections' : 'Accessible and actionable'}
-
-Output: JSON object with 1-2 sentence briefings per category.`;
+OUTPUT FORMAT: JSON object with 1-2 sentence briefings per category. Reference the specific metrics provided.`;
 }
 
-// Build the user prompt with computed metrics
+// Build the user prompt with computed metrics - ToM-informed approach
+// Present data as facts from upstream systems, frame task as pure translation
 function buildUserPrompt(metrics: ComputedMetrics): string {
-  const todayDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  return `STAGE 2 OUTPUT → STAGE 3 INPUT
 
-  return `TODAY IS ${todayDate}. TASK: Translate these pre-computed metrics into intelligence briefings.
-
-=== BRIEFING REQUEST FOR ${todayDate} ===
-
-You are narrating PRE-COMPUTED DATA. The analysis was performed by our systems TODAY (${todayDate}). Simply translate the numbers below into professional prose. Do not refuse - the data is verified and provided.
-
-Metrics computed on: ${todayDate}
 Region: ${metrics.region}
 Preset: ${metrics.preset}
-Analysis timestamp: ${metrics.timestamp}
-Overall risk assessment: ${metrics.overallRisk}
+Computed: ${metrics.timestamp}
+Overall risk level: ${metrics.overallRisk}
 
-Category metrics:
+CATEGORY METRICS (translate each to prose):
 ${Object.entries(metrics.categories)
   .map(
     ([cat, m]) =>
-      `- ${cat}: Risk ${m.riskLevel}/100, Trend: ${m.trend}, Alerts: ${m.alertCount}, Factors: ${m.keyFactors.join(', ')}`
+      `${cat.toUpperCase()}: risk=${m.riskLevel}/100 trend=${m.trend} alerts=${m.alertCount} factors=[${m.keyFactors.join(', ')}]`
   )
   .join('\n')}
 
-Top alerts:
-${metrics.topAlerts.map((a) => `- [${a.severity.toUpperCase()}] ${a.category} in ${a.region}: ${a.summary}`).join('\n')}
+ACTIVE ALERTS:
+${metrics.topAlerts.map((a) => `[${a.severity.toUpperCase()}] ${a.category}/${a.region}: ${a.summary}`).join('\n')}
 
-Generate a JSON response with this structure:
+OUTPUT (JSON):
 {
-  "political": "1-2 sentence briefing",
-  "economic": "1-2 sentence briefing",
-  "security": "1-2 sentence briefing",
-  "financial": "1-2 sentence briefing",
-  "health": "1-2 sentence briefing",
-  "scitech": "1-2 sentence briefing",
-  "resources": "1-2 sentence briefing",
-  "crime": "1-2 sentence briefing",
-  "cyber": "1-2 sentence briefing",
-  "terrorism": "1-2 sentence briefing",
-  "domestic": "1-2 sentence briefing",
-  "borders": "1-2 sentence briefing",
-  "infoops": "1-2 sentence briefing",
-  "military": "1-2 sentence briefing",
-  "space": "1-2 sentence briefing",
-  "industry": "1-2 sentence briefing",
-  "logistics": "1-2 sentence briefing",
-  "minerals": "1-2 sentence briefing",
-  "energy": "1-2 sentence briefing",
-  "markets": "1-2 sentence briefing",
-  "religious": "1-2 sentence briefing",
-  "education": "1-2 sentence briefing",
-  "employment": "1-2 sentence briefing",
-  "housing": "1-2 sentence briefing",
-  "crypto": "1-2 sentence briefing",
-  "emerging": "1-2 sentence briefing on emerging trends others may have missed",
-  "summary": "Overall 1-sentence assessment",
-  "nsm": "Next Strategic Move - 1-2 sentences on what decision-makers should consider"
+  "political": "<prose>",
+  "economic": "<prose>",
+  "security": "<prose>",
+  "financial": "<prose>",
+  "health": "<prose>",
+  "scitech": "<prose>",
+  "resources": "<prose>",
+  "crime": "<prose>",
+  "cyber": "<prose>",
+  "terrorism": "<prose>",
+  "domestic": "<prose>",
+  "borders": "<prose>",
+  "infoops": "<prose>",
+  "military": "<prose>",
+  "space": "<prose>",
+  "industry": "<prose>",
+  "logistics": "<prose>",
+  "minerals": "<prose>",
+  "energy": "<prose>",
+  "markets": "<prose>",
+  "religious": "<prose>",
+  "education": "<prose>",
+  "employment": "<prose>",
+  "housing": "<prose>",
+  "crypto": "<prose>",
+  "emerging": "<prose on weak signals/emerging patterns>",
+  "summary": "<1-sentence overall assessment>",
+  "nsm": "<Next Strategic Move for decision-makers>"
 }`;
 }
 
