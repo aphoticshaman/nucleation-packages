@@ -25,16 +25,8 @@ function isAnthropicAllowed(): boolean {
 }
 
 // =============================================================================
-// REDIS CACHE - Shared across ALL edge instances
+// CACHE TYPES
 // =============================================================================
-// Cache TTL: 10 minutes. All users hitting the same preset get cached response.
-// Only Enterprise tier gets fresh on-demand analysis.
-const CACHE_TTL_SECONDS = 10 * 60; // 10 minutes
-
-// Initialize Redis client - uses Redis.fromEnv() to auto-detect env var names
-// Works with both UPSTASH_REDIS_REST_* and KV_REST_API_* naming conventions
-const redis = Redis.fromEnv();
-
 interface CachedBriefing {
   data: {
     briefings: Record<string, string>;
@@ -44,33 +36,105 @@ interface CachedBriefing {
   generatedAt: string;
 }
 
+interface HotCacheEntry {
+  data: CachedBriefing;
+  expiry: number;
+}
+
+// =============================================================================
+// L1: HOT CACHE - In-memory, same edge instance (<1ms latency)
+// =============================================================================
+// This is process-local - not shared across edge instances, but INSTANT.
+// Falls back to Redis (warm) if miss. Acts as Upstash failover too.
+const HOT_CACHE_TTL_MS = 60 * 1000; // 60 seconds - short because not shared
+
+const hotCache = new Map<string, HotCacheEntry>();
+
+function getHotCache(key: string): CachedBriefing | null {
+  const entry = hotCache.get(key);
+  if (entry && Date.now() < entry.expiry) {
+    console.log(`[L1 HOT] Cache hit for ${key}`);
+    return entry.data;
+  }
+  if (entry) {
+    hotCache.delete(key); // Expired, clean up
+  }
+  return null;
+}
+
+function setHotCache(key: string, data: CachedBriefing): void {
+  hotCache.set(key, {
+    data,
+    expiry: Date.now() + HOT_CACHE_TTL_MS,
+  });
+  console.log(`[L1 HOT] Cached ${key} (expires in ${HOT_CACHE_TTL_MS / 1000}s)`);
+
+  // Prevent memory bloat - keep max 20 entries
+  if (hotCache.size > 20) {
+    const oldestKey = hotCache.keys().next().value;
+    if (oldestKey) hotCache.delete(oldestKey);
+  }
+}
+
+// =============================================================================
+// L2: WARM CACHE - Redis (Upstash), shared across ALL edge instances (5-50ms)
+// =============================================================================
+// Cache TTL: 10 minutes. All users hitting the same preset get cached response.
+// Only Enterprise tier gets fresh on-demand analysis.
+const CACHE_TTL_SECONDS = 10 * 60; // 10 minutes
+
+// Initialize Redis client - uses Redis.fromEnv() to auto-detect env var names
+// Works with both UPSTASH_REDIS_REST_* and KV_REST_API_* naming conventions
+const redis = Redis.fromEnv();
+
 function getCacheKey(preset: string): string {
   return `intel-briefing:${preset}`;
 }
 
+// Multi-tier cache read: L1 (hot) → L2 (warm/Redis)
 async function getCachedBriefing(preset: string): Promise<CachedBriefing | null> {
+  const key = getCacheKey(preset);
+
+  // L1: Check hot cache first (instant)
+  const hot = getHotCache(key);
+  if (hot) return hot;
+
+  // L2: Check Redis (warm)
   try {
-    const key = getCacheKey(preset);
     const cached = await redis.get<CachedBriefing>(key);
-    return cached;
+    if (cached) {
+      console.log(`[L2 WARM] Redis hit for ${key}`);
+      // Promote to L1 hot cache
+      setHotCache(key, cached);
+      return cached;
+    }
   } catch (error) {
-    console.error('[CACHE] Redis get error:', error);
-    return null;
+    console.error('[L2 WARM] Redis get error (falling through):', error);
+    // Redis is down - continue to cold path
   }
+
+  return null;
 }
 
+// Multi-tier cache write: Write to BOTH L1 and L2
 async function setCachedBriefing(preset: string, data: CachedBriefing['data']): Promise<void> {
+  const key = getCacheKey(preset);
+  const cacheEntry: CachedBriefing = {
+    data,
+    timestamp: Date.now(),
+    generatedAt: new Date().toISOString(),
+  };
+
+  // L1: Set hot cache (instant)
+  setHotCache(key, cacheEntry);
+
+  // L2: Set Redis cache (warm)
   try {
-    const key = getCacheKey(preset);
-    const cacheEntry: CachedBriefing = {
-      data,
-      timestamp: Date.now(),
-      generatedAt: new Date().toISOString(),
-    };
-    // Set with TTL - Redis handles expiration automatically
     await redis.set(key, cacheEntry, { ex: CACHE_TTL_SECONDS });
+    console.log(`[L2 WARM] Cached ${key} in Redis (TTL: ${CACHE_TTL_SECONDS}s)`);
   } catch (error) {
-    console.error('[CACHE] Redis set error:', error);
+    console.error('[L2 WARM] Redis set error:', error);
+    // L1 still works even if Redis fails
   }
 }
 
