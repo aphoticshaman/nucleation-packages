@@ -4,6 +4,14 @@ import Anthropic from '@anthropic-ai/sdk';
 // Vercel Edge Runtime for low latency
 export const runtime = 'edge';
 
+// PRODUCTION-ONLY: Block Anthropic API calls in non-production unless explicitly enabled
+function isAnthropicAllowed(): boolean {
+  const env = process.env.VERCEL_ENV || process.env.NODE_ENV;
+  if (env === 'production') return true;
+  if (process.env.ALLOW_ANTHROPIC_IN_DEV === 'true') return true;
+  return false;
+}
+
 // =============================================================================
 // CRITICAL EVENT HANDLER - Full analysis triggered by pulse detecting major event
 // =============================================================================
@@ -102,6 +110,15 @@ export async function POST(req: Request) {
     if (!isCronWarm && !isInternalService && !isVercelCron) {
       console.log('[CRITICAL] Unauthorized request blocked');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // BLOCK non-production Anthropic API calls
+    if (!isAnthropicAllowed()) {
+      return NextResponse.json({
+        success: false,
+        error: 'Anthropic API blocked in non-production environment',
+        environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
+      }, { status: 403 });
     }
 
     const { severity, headline, preset = 'global' } = await req.json();

@@ -4,6 +4,14 @@ import Anthropic from '@anthropic-ai/sdk';
 
 export const runtime = 'edge';
 
+// PRODUCTION-ONLY: Block Anthropic API calls in non-production unless explicitly enabled
+function isAnthropicAllowed(): boolean {
+  const env = process.env.VERCEL_ENV || process.env.NODE_ENV;
+  if (env === 'production') return true;
+  if (process.env.ALLOW_ANTHROPIC_IN_DEV === 'true') return true;
+  return false;
+}
+
 /**
  * CRON: Rolling Country Update System
  *
@@ -66,6 +74,15 @@ export async function GET(req: Request) {
 
   if (!isVercelCron && cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // BLOCK non-production Anthropic API calls
+  if (!isAnthropicAllowed()) {
+    return NextResponse.json({
+      success: false,
+      error: 'Anthropic API blocked in non-production environment',
+      environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
+    }, { status: 403 });
   }
 
   const supabase = createClient(

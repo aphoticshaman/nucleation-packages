@@ -5,8 +5,28 @@ import { createClient } from '@supabase/supabase-js';
 export const runtime = 'edge';
 export const maxDuration = 60;
 
+// PRODUCTION-ONLY: Block Anthropic API calls in non-production unless explicitly enabled
+function isAnthropicAllowed(): { allowed: boolean; reason?: string } {
+  const env = process.env.VERCEL_ENV || process.env.NODE_ENV;
+  const allowInDev = process.env.ALLOW_ANTHROPIC_IN_DEV === 'true';
+
+  if (env === 'production') {
+    return { allowed: true };
+  }
+
+  if (allowInDev) {
+    console.warn('ANTHROPIC API ENABLED IN NON-PRODUCTION - ALLOW_ANTHROPIC_IN_DEV=true');
+    return { allowed: true };
+  }
+
+  return {
+    allowed: false,
+    reason: `Anthropic API blocked in ${env} environment. Set ALLOW_ANTHROPIC_IN_DEV=true to enable.`
+  };
+}
+
 // Emergency endpoint to force-refresh intel data from Claude API
-// Estimated cost: $1-3 per call
+// Estimated cost: $0.25-0.75 per call
 export async function POST(request: Request) {
   const startTime = Date.now();
   const debugInfo: Record<string, unknown> = {};
@@ -80,11 +100,22 @@ export async function POST(request: Request) {
 
     console.log(`Admin ${user.id} initiated emergency refresh`);
 
+    // BLOCK non-production Anthropic API calls
+    const apiCheck = isAnthropicAllowed();
+    if (!apiCheck.allowed) {
+      return NextResponse.json({
+        success: false,
+        error: apiCheck.reason,
+        environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
+      }, { status: 403 });
+    }
+
     debugInfo.hasSupabaseUrl = !!supabaseUrl;
     debugInfo.hasSupabaseKey = !!supabaseKey;
     debugInfo.hasAnthropicKey = !!anthropicKey;
     debugInfo.anthropicKeyPrefix = anthropicKey ? anthropicKey.substring(0, 10) + '...' : 'MISSING';
     debugInfo.adminId = user.id;
+    debugInfo.environment = process.env.VERCEL_ENV || process.env.NODE_ENV;
 
     if (!anthropicKey) {
       return NextResponse.json({
