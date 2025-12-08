@@ -9,6 +9,11 @@ import {
   getLearningCollector,
   type ReasoningResult,
 } from '@/lib/reasoning';
+import {
+  generateBriefingFromMetrics,
+  shouldUseClaude,
+  type ComputedMetrics as TemplateMetrics,
+} from '@/lib/briefing/template-engine';
 
 // Vercel Edge Runtime for low latency
 export const runtime = 'edge';
@@ -572,23 +577,79 @@ export async function POST(req: Request) {
     );
 
     // ============================================================
-    // CACHE MISS - Return fallback data for users, only cron generates fresh
+    // CACHE MISS - Use template engine for fast, zero-cost response
     // ============================================================
-    // SECURITY: Users NEVER trigger external API calls. Period.
-    // Return REAL data from database as fallback until cron warms the cache.
+    // SECURITY: Users NEVER trigger external LLM API calls.
+    // The template engine generates structured briefings from metrics WITHOUT calling Claude.
+    // Cost: $0 | Latency: <10ms | Quality: Consistent, structured
     if (!canGenerateFresh) {
-      console.log(`[CACHE MISS] No cached briefing for preset: ${preset}, fetching real data for fallback`);
-      const fallbackBriefings = await getFallbackBriefings(preset, supabase);
+      console.log(`[CACHE MISS] No cached briefing for preset: ${preset}, using template engine`);
+
+      // Fetch nation data for template engine
+      const presetFiltersForTemplate: Record<string, string[] | null> = {
+        global: null,
+        nato: ['USA', 'CAN', 'GBR', 'FRA', 'DEU', 'ITA', 'ESP', 'POL', 'NLD', 'TUR'],
+        brics: ['BRA', 'RUS', 'IND', 'CHN', 'ZAF', 'IRN', 'EGY', 'ETH', 'SAU', 'ARE'],
+        conflict: ['UKR', 'RUS', 'ISR', 'PSE', 'LBN', 'SYR', 'YEM', 'TWN', 'CHN', 'PRK'],
+      };
+
+      const templateFilter = presetFiltersForTemplate[preset];
+      let templateQuery = supabase
+        .from('nations')
+        .select('code, name, basin_strength, transition_risk, regime');
+      if (templateFilter) {
+        templateQuery = templateQuery.in('code', templateFilter);
+      }
+
+      const { data: templateNations } = await templateQuery;
+      const templateNationData = (templateNations || []) as NationData[];
+
+      // Compute metrics for template engine
+      const templateMetrics: TemplateMetrics = {
+        region: req.headers.get('x-vercel-ip-country') || 'Global',
+        preset: preset as 'global' | 'nato' | 'brics' | 'conflict',
+        categories: {
+          political: computeCategoryRisk(templateNationData, 'political'),
+          economic: computeCategoryRisk(templateNationData, 'economic'),
+          security: computeCategoryRisk(templateNationData, 'security'),
+          financial: computeCategoryRisk(templateNationData, 'financial'),
+          cyber: computeCategoryRisk(templateNationData, 'cyber'),
+          energy: computeCategoryRisk(templateNationData, 'energy'),
+          trade: computeCategoryRisk(templateNationData, 'industry'),
+          diplomatic: computeCategoryRisk(templateNationData, 'borders'),
+          humanitarian: computeCategoryRisk(templateNationData, 'health'),
+          social: computeCategoryRisk(templateNationData, 'domestic'),
+        },
+        topAlerts: generateTopAlerts(templateNationData, preset).map(a => ({
+          category: a.category,
+          severity: a.severity as 'low' | 'moderate' | 'elevated' | 'high' | 'critical',
+          headline: a.summary,
+        })),
+        overallRisk: computeOverallRisk(templateNationData),
+      };
+
+      // Generate briefing using template engine (no LLM, instant)
+      const templateBriefing = generateBriefingFromMetrics(templateMetrics);
+
+      // Convert to expected response format
+      const briefingsMap: Record<string, string> = {};
+      for (const b of templateBriefing.briefings) {
+        briefingsMap[b.category] = `${b.summary} Risk: ${b.riskLevel}. Trend: ${b.trend}. ${b.keyPoints.map(p => '• ' + p).join(' ')}`;
+      }
+      briefingsMap['nsm'] = templateBriefing.nsm;
+      briefingsMap['summary'] = `${preset.toUpperCase()} preset analysis indicates ${templateMetrics.overallRisk} overall risk environment.`;
+
       return NextResponse.json({
-        briefings: fallbackBriefings,
+        briefings: briefingsMap,
         metadata: {
-          region: 'Global',
+          region: templateMetrics.region,
           preset,
           timestamp: new Date().toISOString(),
-          overallRisk: 'moderate' as const,
+          overallRisk: templateMetrics.overallRisk,
           cached: false,
-          fallback: true,
-          message: 'Showing real-time data from stored signals. Full LLM-enhanced briefings available when cache is warm.',
+          generatedBy: 'template-engine',
+          llmCost: 0,
+          latencyMs: Date.now() - startTime,
         },
       });
     }
