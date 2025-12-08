@@ -255,7 +255,7 @@ export async function infer(
   const startTime = Date.now();
 
   const message = await anthropic.messages.create({
-    model: 'claude-3-haiku-20240307', // Use Haiku for cost (not Sonnet)
+    model: 'claude-3-5-haiku-20241022', // Use Haiku 3.5 for cost efficiency
     max_tokens: context.maxTokens || 512,
     system: context.systemPrompt || 'You are a helpful assistant.',
     messages: [{ role: 'user', content: prompt }],
