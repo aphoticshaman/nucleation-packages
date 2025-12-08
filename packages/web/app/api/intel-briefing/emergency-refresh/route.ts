@@ -82,7 +82,7 @@ Be specific. Name names. Cite dates. Focus on actionable intelligence.
 CRITICAL: Use current information as of ${currentDate}. Reference current administration and ongoing events.`;
 
     const briefingResponse = await anthropic.messages.create({
-      model: 'claude-3-5-haiku-20241022',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 8000,
       system: systemPrompt,
       messages: [{
@@ -141,7 +141,7 @@ Respond ONLY with valid JSON.`
         timestamp: new Date().toISOString(),
         overallRisk: 'elevated', // Default to elevated for emergency refresh
         source: 'emergency_refresh',
-        model: 'claude-3-5-haiku-20241022',
+        model: 'claude-haiku-4-5-20251001',
         estimatedCost: '$0.25-0.75',
       },
       generated_at: new Date().toISOString(),

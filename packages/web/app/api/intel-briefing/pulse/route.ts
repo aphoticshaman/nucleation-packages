@@ -120,7 +120,7 @@ export async function GET(req: Request) {
     // Ultra-minimal prompt - just checking for breaking news
     // Uses Haiku for speed and cost (fraction of a cent)
     const message = await anthropic.messages.create({
-      model: 'claude-3-5-haiku-20241022',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 100,
       system: `You check for breaking world events. Respond ONLY with JSON:
 {"breaking":true/false,"severity":"none|significant|major|critical","headline":"brief if breaking"}

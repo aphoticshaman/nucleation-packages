@@ -727,7 +727,7 @@ export async function POST(req: Request) {
 
     const llmStartTime = Date.now();
     const message = await anthropic.messages.create({
-      model: 'claude-3-5-haiku-20241022',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 2048,
       system: buildSystemPrompt(userTier),
       messages: [
@@ -764,7 +764,7 @@ export async function POST(req: Request) {
       inputTokens: message.usage?.input_tokens || 0,
       outputTokens: message.usage?.output_tokens || 0,
       latencyMs: llmLatency,
-      model: 'claude-3-5-haiku-20241022',
+      model: 'claude-haiku-4-5-20251001',
       success: true,
     });
 
@@ -842,7 +842,7 @@ export async function POST(req: Request) {
         inputTokens: 0,
         outputTokens: 0,
         latencyMs: Date.now() - startTime,
-        model: 'claude-3-5-haiku-20241022',
+        model: 'claude-haiku-4-5-20251001',
         success: false,
       });
     } catch {

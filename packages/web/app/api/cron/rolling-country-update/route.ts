@@ -127,7 +127,7 @@ Provide your assessment as JSON.`;
 
         // Call Claude for country-specific intel
         const message = await anthropic.messages.create({
-          model: 'claude-3-5-haiku-20241022',
+          model: 'claude-haiku-4-5-20251001',
           max_tokens: 256,
           system: COUNTRY_INTEL_SYSTEM_PROMPT,
           messages: [{ role: 'user', content: userPrompt }],
