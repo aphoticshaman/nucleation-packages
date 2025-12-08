@@ -141,16 +141,20 @@ export default function BriefingsPage() {
   useEffect(() => {
     async function checkAdmin() {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        console.log('[BRIEFINGS] Auth check:', { userId: user?.id, authError });
         if (!user) return;
 
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single();
 
+        console.log('[BRIEFINGS] Profile check:', { profile, profileError });
+
         if (profile && (profile as { role?: string }).role === 'admin') {
+          console.log('[BRIEFINGS] User is admin, showing button');
           setIsAdmin(true);
         }
       } catch (err) {
