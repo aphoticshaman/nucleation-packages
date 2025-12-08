@@ -739,7 +739,7 @@ export async function POST(req: Request) {
     // BLOCK non-production Anthropic API calls - use fallback instead
     if (!isAnthropicAllowed()) {
       console.log('[INTEL] Anthropic blocked in non-production, returning fallback data');
-      const fallback = await getFallbackBriefings(supabase, preset);
+      const fallback = await getFallbackBriefings(preset, supabase);
       return NextResponse.json({
         briefings: fallback,
         metadata: {
