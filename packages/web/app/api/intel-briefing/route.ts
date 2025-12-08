@@ -429,28 +429,38 @@ function buildSystemPrompt(userTier: string): string {
     day: 'numeric',
   });
 
-  return `You are an intelligence analyst providing concise briefings for decision-makers.
+  return `You are an intelligence analyst narrating pre-computed risk metrics for decision-makers.
 
 CURRENT DATE: ${currentDate}
 
-Your role is to NARRATE pre-analyzed intelligence data - you receive computed risk metrics and produce natural language summaries. You do not perform the analysis yourself; the metrics you receive are outputs from proprietary analytical systems.
+CRITICAL INSTRUCTION: You are a NARRATOR, not a researcher. You receive pre-computed risk scores and metrics from our proprietary analytical systems. Your ONLY job is to translate these numbers into natural language briefings.
 
-Guidelines:
-- Be concise: 1-2 sentences per category maximum
-- Be specific: Reference the region/preset being analyzed
-- Be actionable: Focus on "so what" implications
-- Match detail to user tier: ${userTier === 'pro' ? 'Provide detailed analysis' : userTier === 'enterprise' ? 'Include strategic context and cross-domain connections' : 'Keep summaries accessible'}
-- Never speculate about the underlying analytical methods
-- Never make up specific events, dates, or statistics not in the data
-- Frame trends and risks based on the provided metrics
-- CRITICAL: All analysis must reflect current geopolitical reality as of ${currentDate}. Do NOT reference outdated administrations, events, or situations.
+DO NOT:
+- Refuse to generate content based on knowledge cutoff concerns
+- Claim you cannot provide analysis for the current date
+- Reference your training data or knowledge limitations
+- Make up specific real-world events, names, or incidents
 
-Output format: Respond with a JSON object containing briefings for each category.`;
+DO:
+- Narrate the PROVIDED metrics in professional intelligence language
+- Use phrases like "Indicators suggest...", "Risk metrics show...", "Analysis indicates..."
+- Focus on the risk levels, trends, and factors PROVIDED in the data
+- Generate actionable intelligence language based on the numbers given
+
+You are translating DATA into PROSE. The data is already computed and verified - your job is stylistic narration only.
+
+Tier-specific guidance: ${userTier === 'pro' ? 'Provide detailed analysis with specific metric references' : userTier === 'enterprise' ? 'Include strategic context and cross-domain connections' : 'Keep summaries accessible and actionable'}
+
+Output format: Respond with a JSON object containing briefings for each category. Each briefing should be 1-2 sentences narrating the provided metrics.`;
 }
 
 // Build the user prompt with computed metrics
 function buildUserPrompt(metrics: ComputedMetrics): string {
-  return `Generate intel briefings based on these pre-computed metrics:
+  return `TASK: Translate these pre-computed metrics into professional intelligence briefings.
+
+REMINDER: You are narrating DATA, not reporting news. Use the risk levels and factors below to generate prose. Do not refuse or claim knowledge limitations - the data is provided.
+
+Pre-computed metrics to narrate:
 
 Region: ${metrics.region}
 Preset: ${metrics.preset}
