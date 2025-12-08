@@ -12,32 +12,79 @@ export async function POST(request: Request) {
   const debugInfo: Record<string, unknown> = {};
 
   try {
-    // Verify the request has proper authorization
-    const authHeader = request.headers.get('Authorization');
-    const adminKey = process.env.ADMIN_EMERGENCY_KEY;
-
-    // Simple auth check - in production you'd want proper auth
-    if (adminKey && authHeader !== `Bearer ${adminKey}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check environment variables
+    // Check environment variables first
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
-
-    debugInfo.hasSupabaseUrl = !!supabaseUrl;
-    debugInfo.hasSupabaseKey = !!supabaseKey;
-    debugInfo.hasAnthropicKey = !!anthropicKey;
-    debugInfo.anthropicKeyPrefix = anthropicKey ? anthropicKey.substring(0, 10) + '...' : 'MISSING';
 
     if (!supabaseUrl || !supabaseKey) {
       return NextResponse.json({
         success: false,
         error: 'Missing Supabase configuration',
-        debug: debugInfo,
       }, { status: 500 });
     }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // STRICT ADMIN AUTH: Validate user session and check admin role
+    // Extract access token from cookie or Authorization header
+    const authHeader = request.headers.get('Authorization');
+    const cookieHeader = request.headers.get('cookie');
+
+    let accessToken: string | null = null;
+
+    // Try Authorization header first (Bearer token)
+    if (authHeader?.startsWith('Bearer ')) {
+      accessToken = authHeader.substring(7);
+    }
+
+    // Try cookie if no header
+    if (!accessToken && cookieHeader) {
+      const cookies = Object.fromEntries(
+        cookieHeader.split('; ').map(c => c.split('=').map(decodeURIComponent))
+      );
+      accessToken = cookies['sb-access-token'] || cookies['supabase-auth-token'];
+    }
+
+    if (!accessToken) {
+      return NextResponse.json({
+        success: false,
+        error: 'Authentication required - please log in'
+      }, { status: 401 });
+    }
+
+    // Verify the token and get user
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+
+    if (authError || !user) {
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid or expired session - please log in again'
+      }, { status: 401 });
+    }
+
+    // Check if user is admin
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile || profile.role !== 'admin') {
+      console.warn(`Non-admin user ${user.id} attempted emergency refresh`);
+      return NextResponse.json({
+        success: false,
+        error: 'Admin access required'
+      }, { status: 403 });
+    }
+
+    console.log(`Admin ${user.id} initiated emergency refresh`);
+
+    debugInfo.hasSupabaseUrl = !!supabaseUrl;
+    debugInfo.hasSupabaseKey = !!supabaseKey;
+    debugInfo.hasAnthropicKey = !!anthropicKey;
+    debugInfo.anthropicKeyPrefix = anthropicKey ? anthropicKey.substring(0, 10) + '...' : 'MISSING';
+    debugInfo.adminId = user.id;
 
     if (!anthropicKey) {
       return NextResponse.json({
@@ -46,8 +93,6 @@ export async function POST(request: Request) {
         debug: debugInfo,
       }, { status: 500 });
     }
-
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     const anthropic = new Anthropic({
       apiKey: anthropicKey,
@@ -147,8 +192,21 @@ Respond ONLY with valid JSON.`
       generated_at: new Date().toISOString(),
     };
 
-    // Store in cache table if it exists
+    // PURGE old cache before storing new data
     try {
+      // Delete ALL expired cache entries
+      await supabase
+        .from('briefing_cache')
+        .delete()
+        .lt('expires_at', new Date().toISOString());
+
+      // Delete any existing emergency refresh cache for this preset
+      await supabase
+        .from('briefing_cache')
+        .delete()
+        .like('cache_key', 'emergency_briefing_%');
+
+      // Store fresh data
       await supabase
         .from('briefing_cache')
         .upsert({
@@ -156,6 +214,8 @@ Respond ONLY with valid JSON.`
           data: cacheData,
           expires_at: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(), // 6 hour expiry
         }, { onConflict: 'cache_key' });
+
+      console.log('Cache purged and refreshed successfully');
     } catch (cacheError) {
       console.warn('Cache storage failed, continuing without cache:', cacheError);
     }
