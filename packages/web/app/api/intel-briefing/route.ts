@@ -727,7 +727,7 @@ export async function POST(req: Request) {
 
     const llmStartTime = Date.now();
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5-20250929',
       max_tokens: 2048,
       system: buildSystemPrompt(userTier),
       messages: [
@@ -764,7 +764,7 @@ export async function POST(req: Request) {
       inputTokens: message.usage?.input_tokens || 0,
       outputTokens: message.usage?.output_tokens || 0,
       latencyMs: llmLatency,
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5-20250929',
       success: true,
     });
 
@@ -842,7 +842,7 @@ export async function POST(req: Request) {
         inputTokens: 0,
         outputTokens: 0,
         latencyMs: Date.now() - startTime,
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5-20250929',
         success: false,
       });
     } catch {

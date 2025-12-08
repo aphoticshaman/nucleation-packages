@@ -82,7 +82,7 @@ Be specific. Name names. Cite dates. Focus on actionable intelligence.
 CRITICAL: Use information from December 2024. Reference Trump transition if relevant.`;
 
     const briefingResponse = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5-20250929',
       max_tokens: 8000,
       system: systemPrompt,
       messages: [{
@@ -141,7 +141,7 @@ Respond ONLY with valid JSON.`
         timestamp: new Date().toISOString(),
         overallRisk: 'elevated', // Default to elevated for emergency refresh
         source: 'emergency_refresh',
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5-20250929',
         estimatedCost: '$1-3',
       },
       generated_at: new Date().toISOString(),
