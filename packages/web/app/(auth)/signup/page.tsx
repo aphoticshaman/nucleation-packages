@@ -11,13 +11,14 @@ function SignupForm() {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmationSent, setConfirmationSent] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -34,8 +35,17 @@ function SignupForm() {
       return;
     }
 
-    // Use full page navigation to ensure cookies are properly synchronized
-    window.location.href = '/app';
+    // Check if email confirmation is required
+    // If user.identities is empty, it means email confirmation is pending
+    // If session exists, user is auto-confirmed (e.g., OAuth or email confirmation disabled)
+    if (data.session) {
+      // User is auto-confirmed, redirect to app
+      window.location.href = '/app';
+    } else {
+      // Email confirmation required - show the confirmation message
+      setConfirmationSent(true);
+      setLoading(false);
+    }
   };
 
   const handleOAuthSignup = async (provider: 'google' | 'github') => {
@@ -50,6 +60,73 @@ function SignupForm() {
       setError(error.message);
     }
   };
+
+  // Show confirmation sent screen
+  if (confirmationSent) {
+    return (
+      <div className="w-full max-w-md relative z-10 px-4 sm:px-0">
+        {/* Logo */}
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/images/brand/monogram.png"
+              alt="LatticeForge"
+              width={48}
+              height={48}
+              className="w-12 h-12"
+            />
+          </div>
+        </div>
+
+        {/* Glass confirmation card */}
+        <div className="bg-[rgba(18,18,26,0.8)] backdrop-blur-xl rounded-2xl border border-white/[0.08] p-6 sm:p-8 shadow-2xl text-center">
+          {/* Email icon */}
+          <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 flex items-center justify-center mb-6">
+            <svg className="w-8 h-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+          </div>
+
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">
+            Check your inbox
+          </h2>
+          <p className="text-slate-400 mb-2">
+            We&apos;ve sent a confirmation email to:
+          </p>
+          <p className="text-blue-400 font-medium mb-6 break-all">
+            {email}
+          </p>
+
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-6">
+            <p className="text-slate-300 text-sm">
+              Click the link in your email to activate your account.
+              <span className="text-slate-500 block mt-2">
+                Be sure to check your spam folder, just in case!
+              </span>
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <button
+              onClick={() => setConfirmationSent(false)}
+              className="w-full py-3 text-slate-400 hover:text-white text-sm transition-colors"
+            >
+              Use a different email
+            </button>
+            <Link
+              href="/login"
+              className="block w-full py-3.5 min-h-[52px] rounded-xl font-medium
+                bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white
+                hover:shadow-[0_0_30px_rgba(59,130,246,0.4)] active:scale-[0.98]
+                transition-all text-center"
+            >
+              Go to Sign In
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md relative z-10 px-4 sm:px-0">
