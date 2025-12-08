@@ -79,7 +79,7 @@ For EACH domain provide:
 - OUTLOOK: 24-72 hour projection
 
 Be specific. Name names. Cite dates. Focus on actionable intelligence.
-CRITICAL: Use information from December 2024. Reference Trump transition if relevant.`;
+CRITICAL: Use current information as of ${currentDate}. Reference current administration and ongoing events.`;
 
     const briefingResponse = await anthropic.messages.create({
       model: 'claude-sonnet-4-5-20250929',
