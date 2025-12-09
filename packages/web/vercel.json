@@ -16,7 +16,7 @@
     },
     {
       "path": "/api/ingest/gdelt",
-      "schedule": "0 */3 * * *"
+      "schedule": "*/20 * * * *"
     },
     {
       "path": "/api/ingest/worldbank",
