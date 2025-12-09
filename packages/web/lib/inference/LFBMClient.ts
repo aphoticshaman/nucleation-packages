@@ -158,11 +158,18 @@ Generate JSON briefings for each category.`;
       const data = await response.json();
       const latencyMs = Date.now() - startTime;
 
-      // RunPod wraps output in { output: { ... } } or { output: "..." }
+      // RunPod response formats vary by worker type:
+      // - vLLM: { output: [{ choices: [{ tokens: [...] }] }] }
+      // - OpenAI compat: { output: { choices: [{ message: { content } }] } }
+      // - Raw text: { output: "string" }
       let content: string;
       if (typeof data.output === 'string') {
         content = data.output;
+      } else if (Array.isArray(data.output) && data.output[0]?.choices?.[0]?.tokens) {
+        // vLLM format: output is array, tokens is array of strings
+        content = data.output[0].choices[0].tokens.join('');
       } else if (data.output?.choices?.[0]?.message?.content) {
+        // OpenAI compat format
         content = data.output.choices[0].message.content;
       } else if (data.output?.text) {
         content = data.output.text;
