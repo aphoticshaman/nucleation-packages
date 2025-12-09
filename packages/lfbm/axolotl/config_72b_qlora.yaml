@@ -1,0 +1,78 @@
+# =============================================================================
+# Axolotl QLoRA Config for Qwen2.5-72B-Instruct
+# =============================================================================
+# Target: 2x H200 (~160GB VRAM) - MOST BUDGET EFFICIENT
+# Budget: $50 = ~6.5 hours at $7.50/hr
+# Method: 4-bit QLoRA (LoRA rank 128 for maximum quality)
+# =============================================================================
+
+base_model: Qwen/Qwen2.5-72B-Instruct
+model_type: AutoModelForCausalLM
+tokenizer_type: AutoTokenizer
+trust_remote_code: true
+
+# QLoRA config (4-bit quantization) - fits in ~40GB per GPU
+load_in_4bit: true
+adapter: qlora
+lora_r: 128        # Higher rank for 72B = more expressive
+lora_alpha: 256    # 2x rank
+lora_dropout: 0.05
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+# Dataset
+datasets:
+  - path: aphoticshaman/latticeforge-briefing-data
+    type: sharegpt
+    conversation: chatml
+
+# Output
+output_dir: /workspace/output/latticeforge-briefing-72b-lora
+hub_model_id: aphoticshaman/latticeforge-briefing-72b-lora
+push_to_hub: true
+
+# Training hyperparameters
+sequence_len: 2048
+sample_packing: true
+pad_to_sequence_len: true
+
+# Can afford larger batches with QLoRA
+gradient_accumulation_steps: 8
+micro_batch_size: 2
+num_epochs: 3       # More epochs with QLoRA savings
+
+learning_rate: 1e-4  # Higher LR for LoRA
+lr_scheduler: cosine
+warmup_ratio: 0.05
+
+optimizer: adamw_bnb_8bit
+weight_decay: 0.01
+max_grad_norm: 1.0
+
+# Precision
+bf16: auto
+tf32: true
+
+# DeepSpeed ZeRO-2 for QLoRA (lighter weight)
+deepspeed: deepspeed_configs/zero2.json
+
+# Logging
+logging_steps: 10
+eval_steps: 100
+save_steps: 300
+save_total_limit: 2
+
+# Eval
+val_set_size: 0.05
+eval_sample_packing: false
+
+# Performance
+seed: 42
+gradient_checkpointing: true
+flash_attention: true
