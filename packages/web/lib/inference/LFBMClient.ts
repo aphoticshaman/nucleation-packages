@@ -170,7 +170,7 @@ Generate JSON briefings for each category.`;
         body: JSON.stringify({
           input: {
             messages: [
-              { role: 'system', content: SYSTEM_PROMPT },
+              { role: 'system', content: REALTIME_PROMPT },
               { role: 'user', content: userMessage },
             ],
             max_tokens: request.max_tokens || 1024,
