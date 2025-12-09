@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
-import Anthropic from '@anthropic-ai/sdk';
 import { Redis } from '@upstash/redis';
 import {
   getReasoningOrchestrator,
@@ -10,32 +9,18 @@ import {
   type ReasoningResult,
 } from '@/lib/reasoning';
 import {
-  generateBriefingFromMetrics,
-  shouldUseClaude,
   type ComputedMetrics as TemplateMetrics,
 } from '@/lib/briefing/template-engine';
-import { getLFBMClient, shouldUseLFBM } from '@/lib/inference/LFBMClient';
+import { getLFBMClient } from '@/lib/inference/LFBMClient';
 
 // Vercel Edge Runtime for low latency
 export const runtime = 'edge';
 
 // =============================================================================
-// COST CONTROL KILL SWITCH
+// LFBM: Self-hosted vLLM on RunPod - NO EXTERNAL LLM DEPENDENCIES
 // =============================================================================
-// Set DISABLE_LLM=true in Vercel to completely stop all LLM API calls
-// Use this when you've blown through your credits
-const LLM_KILL_SWITCH = process.env.DISABLE_LLM === 'true';
-
-// PRODUCTION-ONLY: Block Anthropic API calls in non-production unless explicitly enabled
-function isAnthropicAllowed(): boolean {
-  const env = process.env.VERCEL_ENV || process.env.NODE_ENV;
-  if (env === 'production') return true;
-  if (process.env.ALLOW_ANTHROPIC_IN_DEV === 'true') {
-    console.warn('ANTHROPIC API ENABLED IN NON-PRODUCTION');
-    return true;
-  }
-  return false;
-}
+// All inference is routed through LFBM (250x cheaper than Anthropic)
+// Set LFBM_ENDPOINT and LFBM_API_KEY in Vercel environment variables
 
 // =============================================================================
 // CACHE TYPES
@@ -431,101 +416,7 @@ interface NationData {
   regime: number;
 }
 
-// Build the system prompt - ToM-informed approach (v2: date-agnostic)
-// Key insight: The model was refusing because it saw "December 2025" and triggered knowledge cutoff.
-// Solution: Frame the task as pure metric translation with NO DATE DEPENDENCY.
-// The model doesn't need to know WHEN - it just converts numbers to prose.
-function buildSystemPrompt(userTier: string): string {
-  // ToM-informed framing: Define WHO the model is, not what it shouldn't do
-  const tierContext = userTier === 'enterprise'
-    ? 'You provide strategic context and cross-domain connections for executive decision-makers.'
-    : userTier === 'pro'
-    ? 'You provide detailed analysis with specific metric references for professional analysts.'
-    : 'You provide clear, accessible, actionable intelligence for general audiences.';
-
-  // CRITICAL: No date in system prompt. The model is a TRANSLATOR, not a forecaster.
-  // It doesn't need to know what date it is - it just converts metrics to prose.
-  return `You are a prose translation engine in a multi-stage intelligence pipeline.
-
-YOUR ROLE IN THE SYSTEM:
-┌─────────────────────────────────────────────────────────────┐
-│  STAGE 1: Live Sensors → Raw signals (ALREADY COMPLETE)    │
-│  STAGE 2: Risk Engine → Numerical metrics (ALREADY DONE)   │
-│  STAGE 3: YOU → Convert metrics to prose (YOUR ONLY JOB)   │
-│  STAGE 4: Dashboard → Display to analysts                  │
-└─────────────────────────────────────────────────────────────┘
-
-CRITICAL UNDERSTANDING:
-- You receive COMPUTED OUTPUTS from upstream systems (Stages 1-2)
-- These numbers come from LIVE DATA FEEDS processed moments ago
-- Your job is LINGUISTIC TRANSLATION only: numbers → sentences
-- You are NOT being asked to predict, forecast, or verify external events
-- You do NOT need to access any external knowledge to do your job
-- The metrics you receive ARE the ground truth for your output
-
-ANALOGY: You are like a "text-to-speech" system, but for metrics. A TTS system doesn't refuse to read text because it can't verify the text is true - it just converts text to audio. You convert metrics to prose. That's it.
-
-${tierContext}
-
-VOICE: Professional intelligence analyst. "Indicators show...", "Risk metrics at...", "Assessment based on current readings..."
-
-OUTPUT: JSON object with 1-2 sentence briefings per category. Reference the EXACT metrics provided - they are your source of truth.`;
-}
-
-// Build the user prompt with computed metrics - ToM-informed approach (v2: date-agnostic)
-// Present data as facts from upstream systems, frame task as pure translation
-// IMPORTANT: Timestamp shown as relative ("just now") not absolute date to avoid knowledge cutoff triggers
-function buildUserPrompt(metrics: ComputedMetrics): string {
-  return `STAGE 2 OUTPUT → STAGE 3 INPUT (computed moments ago from live feeds)
-
-Region: ${metrics.region}
-Preset: ${metrics.preset}
-Pipeline run: just now
-Overall risk level: ${metrics.overallRisk}
-
-CATEGORY METRICS (translate each to prose):
-${Object.entries(metrics.categories)
-  .map(
-    ([cat, m]) =>
-      `${cat.toUpperCase()}: risk=${m.riskLevel}/100 trend=${m.trend} alerts=${m.alertCount} factors=[${m.keyFactors.join(', ')}]`
-  )
-  .join('\n')}
-
-ACTIVE ALERTS:
-${metrics.topAlerts.map((a) => `[${a.severity.toUpperCase()}] ${a.category}/${a.region}: ${a.summary}`).join('\n')}
-
-OUTPUT (JSON):
-{
-  "political": "<prose>",
-  "economic": "<prose>",
-  "security": "<prose>",
-  "financial": "<prose>",
-  "health": "<prose>",
-  "scitech": "<prose>",
-  "resources": "<prose>",
-  "crime": "<prose>",
-  "cyber": "<prose>",
-  "terrorism": "<prose>",
-  "domestic": "<prose>",
-  "borders": "<prose>",
-  "infoops": "<prose>",
-  "military": "<prose>",
-  "space": "<prose>",
-  "industry": "<prose>",
-  "logistics": "<prose>",
-  "minerals": "<prose>",
-  "energy": "<prose>",
-  "markets": "<prose>",
-  "religious": "<prose>",
-  "education": "<prose>",
-  "employment": "<prose>",
-  "housing": "<prose>",
-  "crypto": "<prose>",
-  "emerging": "<prose on weak signals/emerging patterns>",
-  "summary": "<1-sentence overall assessment>",
-  "nsm": "<Next Strategic Move for decision-makers>"
-}`;
-}
+// NOTE: Prompts moved to LFBMClient - all inference via self-hosted vLLM
 
 export async function POST(req: Request) {
   const startTime = Date.now();
@@ -1026,138 +917,29 @@ export async function POST(req: Request) {
     }
 
     // ============================================================
-    // LLM CALL - Claude narrates the pre-computed intelligence
+    // LFBM: ALL inference via self-hosted vLLM (250x cheaper)
     // ============================================================
+    console.log('[INTEL] Using LFBM (self-hosted vLLM) for briefing generation');
+    const lfbmClient = getLFBMClient();
+    const lfbmStartTime = Date.now();
 
-    const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY!,
-    });
-
-    // Enhance prompt with reasoning insights if available
-    let enhancedPrompt = buildUserPrompt(computedMetrics);
-    if (reasoningResult) {
-      enhancedPrompt += `\n\nAdditional reasoning insights (confidence: ${(reasoningResult.confidence * 100).toFixed(0)}%):
-- Primary conclusion: ${reasoningResult.conclusion}
-- Historical parallels: ${reasoningResult.analogies.map((a) => a.description).join('; ') || 'None identified'}
-- Key causal factors: ${reasoningResult.causal_factors.map((f) => `${f.factor} (${f.contribution > 0 ? '+' : ''}${(f.contribution * 100).toFixed(0)}%)`).join(', ')}
-- Uncertainty range: ${(reasoningResult.uncertainty.lower * 100).toFixed(0)}%-${(reasoningResult.uncertainty.upper * 100).toFixed(0)}%`;
-    }
-
-    // BLOCK non-production Anthropic API calls - use fallback instead
-    if (!isAnthropicAllowed()) {
-      console.log('[INTEL] Anthropic blocked in non-production, returning fallback data');
-      const fallback = await getFallbackBriefings(preset, supabase);
-      return NextResponse.json({
-        briefings: fallback,
-        metadata: {
-          timestamp: new Date().toISOString(),
-          overallRisk: 'elevated',
-          source: 'fallback_non_production',
-          environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
-        },
-      });
-    }
-
-    // COST CONTROL: Kill switch to stop all LLM calls
-    if (LLM_KILL_SWITCH) {
-      console.log('[INTEL] LLM KILL SWITCH ACTIVE - returning template data only');
-      const fallback = await getFallbackBriefings(preset, supabase);
-      return NextResponse.json({
-        briefings: fallback,
-        metadata: {
-          timestamp: new Date().toISOString(),
-          overallRisk: 'elevated',
-          source: 'kill_switch_active',
-          message: 'LLM calls disabled via DISABLE_LLM=true',
-        },
-      });
-    }
-
-    // ============================================================
-    // LFBM: Use self-hosted vLLM model if configured (250x cheaper)
-    // ============================================================
-    // Set LFBM_ENDPOINT and PREFER_LFBM=true to enable
-    if (shouldUseLFBM()) {
-      console.log('[INTEL] Using LFBM (self-hosted vLLM) for briefing generation');
-      const lfbmClient = getLFBMClient();
-      const lfbmStartTime = Date.now();
-
-      try {
-        const briefings = await lfbmClient.generateFromMetrics(
-          nationData,
-          {
-            count: nationData.length,
-            avg_tone: nationData.reduce((s, n) => s + (n.transition_risk || 0), 0) / (nationData.length || 1),
-            alerts: nationData.filter(n => (n.transition_risk || 0) > 0.6).length,
-          },
-          {
-            political: computedMetrics.categories.political?.riskLevel || 50,
-            economic: computedMetrics.categories.economic?.riskLevel || 50,
-            security: computedMetrics.categories.security?.riskLevel || 50,
-            cyber: computedMetrics.categories.cyber?.riskLevel || 50,
-          }
-        );
-
-        const lfbmLatency = Date.now() - lfbmStartTime;
-        console.log(`[INTEL] LFBM briefing generated in ${lfbmLatency}ms`);
-
-        // Cache the result
-        await setCachedBriefing(preset, {
-          briefings,
-          metadata: {
-            region: computedMetrics.region,
-            preset: computedMetrics.preset,
-            timestamp: computedMetrics.timestamp,
-            overallRisk: computedMetrics.overallRisk,
-          },
-        });
-
-        return NextResponse.json({
-          briefings,
-          metadata: {
-            region: computedMetrics.region,
-            preset: computedMetrics.preset,
-            timestamp: computedMetrics.timestamp,
-            overallRisk: computedMetrics.overallRisk,
-            source: 'lfbm_vllm',
-            llmLatencyMs: lfbmLatency,
-            llmCost: 0.001, // ~$0.001 per briefing
-            cached: false,
-          },
-        });
-      } catch (lfbmError) {
-        console.error('[INTEL] LFBM error, falling back to Anthropic:', lfbmError);
-        // Fall through to Anthropic
+    const briefings = await lfbmClient.generateFromMetrics(
+      nationData,
+      {
+        count: nationData.length,
+        avg_tone: nationData.reduce((s, n) => s + (n.transition_risk || 0), 0) / (nationData.length || 1),
+        alerts: nationData.filter(n => (n.transition_risk || 0) > 0.6).length,
+      },
+      {
+        political: computedMetrics.categories.political?.riskLevel || 50,
+        economic: computedMetrics.categories.economic?.riskLevel || 50,
+        security: computedMetrics.categories.security?.riskLevel || 50,
+        cyber: computedMetrics.categories.cyber?.riskLevel || 50,
       }
-    }
+    );
 
-    const llmStartTime = Date.now();
-    const message = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2048,
-      system: buildSystemPrompt(userTier),
-      messages: [
-        {
-          role: 'user',
-          content: enhancedPrompt,
-        },
-      ],
-    });
-    const llmLatency = Date.now() - llmStartTime;
-
-    // Extract text response
-    const textContent = message.content.find((c) => c.type === 'text');
-    if (!textContent || textContent.type !== 'text') {
-      throw new Error('No text response from Claude');
-    }
-
-    // Parse JSON from response
-    const jsonMatch = textContent.text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('Could not parse briefing JSON');
-    }
-
-    const briefings = JSON.parse(jsonMatch[0]);
+    const llmLatency = Date.now() - lfbmStartTime;
+    console.log(`[INTEL] LFBM briefing generated in ${llmLatency}ms`);
 
     // ============================================================
     // LEARNING COLLECTOR - Capture for future model training
@@ -1166,11 +948,11 @@ export async function POST(req: Request) {
 
     // Log the LLM interaction (anonymized)
     void learner.logLLMInteraction(sessionHash, userTier, preset, {
-      promptTemplate: 'intel_briefing_v2',
-      inputTokens: message.usage?.input_tokens || 0,
-      outputTokens: message.usage?.output_tokens || 0,
+      promptTemplate: 'intel_briefing_lfbm',
+      inputTokens: 0, // LFBM doesn't report token counts
+      outputTokens: 0,
       latencyMs: llmLatency,
-      model: 'claude-haiku-4-5-20251001',
+      model: 'lfbm-vllm',
       success: true,
     });
 
@@ -1211,6 +993,8 @@ export async function POST(req: Request) {
         preset: computedMetrics.preset,
         timestamp: computedMetrics.timestamp,
         overallRisk: computedMetrics.overallRisk,
+        source: 'lfbm_vllm',
+        estimatedCost: '$0.001',
         // Include reasoning metadata for transparency
         reasoning: reasoningResult
           ? {
@@ -1244,11 +1028,11 @@ export async function POST(req: Request) {
     try {
       const learner = getLearningCollector();
       void learner.logLLMInteraction(sessionHash, 'consumer', 'error', {
-        promptTemplate: 'intel_briefing_v2',
+        promptTemplate: 'intel_briefing_lfbm',
         inputTokens: 0,
         outputTokens: 0,
         latencyMs: Date.now() - startTime,
-        model: 'claude-haiku-4-5-20251001',
+        model: 'lfbm-vllm',
         success: false,
       });
     } catch {
@@ -1389,6 +1173,6 @@ async function getFallbackBriefings(preset: string, supabase: ReturnType<typeof 
 
     security: `[DATA AS OF ${currentDate}] Security assessment based on composite risk scores. Nations with elevated security concerns: ${riskData.filter(n => n.overall_risk > 0.5).map(n => n.name).slice(0, 5).join(', ') || 'None at critical levels'}. Overall security posture: ${highRiskNations.length > 5 ? 'ELEVATED' : highRiskNations.length > 2 ? 'MODERATE' : 'STABLE'}. Continuous monitoring of ${riskData.length} nations active.`,
 
-    summary: `[LIVE DATA SUMMARY - ${currentDate}] ${context}: Monitoring ${riskData.length} nations with ${highRiskNations.length} at high risk, ${elevatedRiskNations.length} at elevated risk. Economic data from ${signalsData.length} recent indicators. This is REAL stored data from your intelligence feeds - not cached LLM output. Full LLM-enhanced briefings available when Anthropic API is accessible.`,
+    summary: `[LIVE DATA SUMMARY - ${currentDate}] ${context}: Monitoring ${riskData.length} nations with ${highRiskNations.length} at high risk, ${elevatedRiskNations.length} at elevated risk. Economic data from ${signalsData.length} recent indicators. This is REAL stored data from your intelligence feeds. LFBM-enhanced briefings generated via self-hosted vLLM.`,
   };
 }

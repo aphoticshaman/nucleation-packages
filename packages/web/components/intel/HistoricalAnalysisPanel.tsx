@@ -5,14 +5,16 @@ import { useState } from 'react';
 /**
  * Historical Analysis Panel
  *
- * Granular controls for meta-analysis using Claude's verified historical knowledge.
+ * Granular controls for meta-analysis using LFBM (self-hosted vLLM).
  * Three modes:
- * - Realtime: Pure metric translation (default, cheap)
- * - Historical: Meta-analysis of historical patterns (leverages Claude's training data)
- * - Hybrid: Current metrics + historical context overlay
+ * - Realtime: Pure metric translation (~$0.001)
+ * - Historical: Meta-analysis of historical patterns (~$0.002)
+ * - Hybrid: Current metrics + historical context overlay (~$0.003)
+ *
+ * ALL inference via self-hosted vLLM - no external LLM dependencies
  */
 
-// Historical eras Claude can confidently analyze
+// Historical eras for analysis (from model training data)
 const HISTORICAL_ERAS = {
   ancient: { label: 'Ancient (3000 BCE - 500 CE)', description: 'Egypt, Rome, Greece, Persia' },
   medieval: { label: 'Medieval (500 - 1500)', description: 'Byzantine, Mongol Empire, Crusades' },
@@ -95,15 +97,15 @@ export function HistoricalAnalysisPanel({ onAnalyze, isLoading, disabled }: Hist
     onAnalyze(config);
   };
 
-  // Cost estimates
+  // Cost estimates - LFBM is 250x cheaper than external LLMs
   const costEstimate = {
-    realtime: '$0.25-0.50',
-    'historical-quick': '$0.25-0.50',
-    'historical-standard': '$0.40-0.75',
-    'historical-deep': '$1.00-2.00',
-    'hybrid-quick': '$0.30-0.60',
-    'hybrid-standard': '$0.50-1.00',
-    'hybrid-deep': '$1.50-2.50',
+    realtime: '$0.001',
+    'historical-quick': '$0.001',
+    'historical-standard': '$0.002',
+    'historical-deep': '$0.003',
+    'hybrid-quick': '$0.001',
+    'hybrid-standard': '$0.002',
+    'hybrid-deep': '$0.003',
   };
   const costKey = mode === 'realtime' ? 'realtime' : `${mode}-${depth}`;
 
@@ -278,19 +280,19 @@ export function HistoricalAnalysisPanel({ onAnalyze, isLoading, disabled }: Hist
         {mode === 'realtime' && (
           <>
             <strong className="text-blue-400">Realtime Mode:</strong> Translates current pipeline metrics into prose.
-            Fast and cost-effective. No historical analysis.
+            Fast (~$0.001). Self-hosted inference via LFBM.
           </>
         )}
         {mode === 'historical' && (
           <>
-            <strong className="text-purple-400">Historical Mode:</strong> Meta-analysis using Claude&apos;s verified historical
-            knowledge (3000 BCE → Jan 2025). Identifies patterns, precedents, and cycles. Zero hallucination risk on historical events.
+            <strong className="text-purple-400">Historical Mode:</strong> Meta-analysis using model training knowledge.
+            Identifies patterns, precedents, and cycles. Self-hosted via LFBM (~$0.002).
           </>
         )}
         {mode === 'hybrid' && (
           <>
             <strong className="text-cyan-400">Hybrid Mode:</strong> Combines current metrics with historical context.
-            Shows what numbers mean NOW and what similar patterns meant HISTORICALLY.
+            What numbers mean NOW + what similar patterns meant HISTORICALLY. Self-hosted (~$0.003).
           </>
         )}
       </div>

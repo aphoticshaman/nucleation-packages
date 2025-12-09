@@ -1,23 +1,22 @@
 import { NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
+import { getLFBMClient } from '@/lib/inference/LFBMClient';
 
 export const runtime = 'edge';
 export const maxDuration = 120; // Allow longer for deep analysis
 
 /**
- * Historical Meta-Analysis API
+ * Historical Meta-Analysis API - POWERED BY LFBM (self-hosted vLLM)
  *
- * Leverages Claude's verified historical knowledge (ancient → training cutoff)
+ * Leverages Qwen's training knowledge for historical pattern analysis
  * combined with GDELT data (2015-present) for pattern synthesis.
  *
- * Key design: NO hallucination risk because we only ask Claude about
- * historical events within its training data, not current events.
+ * NO EXTERNAL LLM DEPENDENCIES - 250x cheaper than Anthropic
  */
 
-// Historical eras Claude can confidently analyze
+// Historical eras the model can analyze (from training data)
 export const HISTORICAL_ERAS = {
   ancient: { label: 'Ancient Civilizations', range: '3000 BCE - 500 CE', topics: ['Egypt', 'Rome', 'Greece', 'Persia', 'China', 'India'] },
   medieval: { label: 'Medieval Period', range: '500 - 1500 CE', topics: ['Byzantine', 'Islamic Golden Age', 'Mongol Empire', 'Crusades', 'Black Death'] },
@@ -69,10 +68,14 @@ export async function POST(request: Request) {
     // Check environment
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    const lfbmEndpoint = process.env.LFBM_ENDPOINT;
 
-    if (!supabaseUrl || !supabaseKey || !anthropicKey) {
-      return NextResponse.json({ error: 'Missing configuration' }, { status: 500 });
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json({ error: 'Missing Supabase configuration' }, { status: 500 });
+    }
+
+    if (!lfbmEndpoint) {
+      return NextResponse.json({ error: 'Missing LFBM_ENDPOINT - configure self-hosted vLLM' }, { status: 500 });
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -110,7 +113,7 @@ export async function POST(request: Request) {
     }
 
     // Fetch GDELT data if period specified
-    let gdeltContext = '';
+    let gdeltSummary: Record<string, number> = {};
     if (gdeltPeriod) {
       const { data: gdeltSignals } = await supabase
         .from('learning_events')
@@ -121,16 +124,10 @@ export async function POST(request: Request) {
         .limit(100);
 
       if (gdeltSignals?.length) {
-        const signalSummary = gdeltSignals.reduce((acc, s) => {
+        gdeltSummary = gdeltSignals.reduce((acc, s) => {
           acc[s.domain] = (acc[s.domain] || 0) + 1;
           return acc;
         }, {} as Record<string, number>);
-
-        gdeltContext = `\n\nGDELT SIGNALS (${gdeltPeriod.start} to ${gdeltPeriod.end}):\n${
-          Object.entries(signalSummary)
-            .map(([domain, count]) => `- ${domain}: ${count} events`)
-            .join('\n')
-        }`;
       }
     }
 
@@ -141,154 +138,29 @@ export async function POST(request: Request) {
       .order('transition_risk', { ascending: false })
       .limit(15);
 
-    const nationContext = nations?.length
-      ? `\n\nCURRENT NATION RISK DATA:\n${nations.map(n =>
-          `- ${n.name} (${n.code}): ${((n.transition_risk || 0) * 100).toFixed(0)}% transition risk`
-        ).join('\n')}`
-      : '';
+    // Build focus description from eras and domains
+    const eraLabels = eras.map(era => HISTORICAL_ERAS[era].label).join(', ');
+    const domainLabels = domains.map(d => d).join(', ');
+    const focusDescription = focus || `${eraLabels} - ${domainLabels}`;
 
-    // Build era context
-    const eraContext = eras.map(era => {
-      const e = HISTORICAL_ERAS[era];
-      return `${e.label} (${e.range}): ${e.topics.join(', ')}`;
-    }).join('\n');
+    // Use LFBM for historical analysis
+    const lfbmClient = getLFBMClient();
+    const lfbmStartTime = Date.now();
 
-    // Build domain context
-    const domainContext = domains.map(d =>
-      `${d.toUpperCase()}: ${ANALYSIS_DOMAINS[d]}`
-    ).join('\n');
-
-    // Token limits by depth
-    const tokenLimits = {
-      quick: 2000,
-      standard: 4000,
-      deep: 8000,
-    };
-
-    // Build the meta-analysis prompt
-    const systemPrompt = `You are a senior intelligence analyst specializing in historical pattern analysis.
-
-YOUR UNIQUE ADVANTAGE:
-You have comprehensive knowledge of human history from ancient civilizations through your training cutoff.
-This allows you to identify patterns, parallels, and precedents that inform current analysis.
-
-ANALYSIS METHODOLOGY:
-1. PATTERN IDENTIFICATION: Find recurring patterns across historical eras
-2. PRECEDENT ANALYSIS: Identify historical analogues to current situations
-3. CAUSAL CHAINS: Trace how historical decisions led to outcomes
-4. CYCLE DETECTION: Identify geopolitical, economic, and social cycles
-5. LESSONS EXTRACTION: Distill actionable insights from historical examples
-
-CRITICAL RULES:
-- Ground ALL claims in verifiable historical events
-- Cite specific examples with dates when possible
-- Distinguish between established facts and analytical interpretation
-- Acknowledge uncertainty when extrapolating patterns
-- NO speculation about events after your training cutoff
-- Connect historical patterns to the data provided about current nations
-
-OUTPUT VOICE: Academic intelligence analysis - precise, sourced, actionable.`;
-
-    const userPrompt = `HISTORICAL META-ANALYSIS REQUEST
-
-ERAS TO ANALYZE:
-${eraContext}
-
-DOMAINS OF FOCUS:
-${domainContext}
-
-${focus ? `SPECIFIC FOCUS: ${focus}` : ''}
-${nationContext}
-${gdeltContext}
-
-ANALYSIS DEPTH: ${depth.toUpperCase()}
-
-REQUESTED OUTPUT:
-Generate a comprehensive meta-analysis covering:
-
-1. **HISTORICAL PATTERNS**: Recurring patterns across the specified eras relevant to the domains
-   - Include specific examples with dates
-   - Identify cycle lengths where applicable
-
-2. **PRECEDENT ANALYSIS**: Historical analogues to current situations
-   - Map historical events to current nation risk profiles
-   - Identify which precedents suggest escalation vs. de-escalation
-
-3. **CAUSAL MECHANISMS**: How similar situations have historically resolved
-   - Economic pressures → political outcomes
-   - Military buildups → conflict/deterrence patterns
-   - Alliance shifts → power transitions
-
-4. **LESSONS FOR ANALYSTS**: Actionable insights from historical analysis
-   - Early warning indicators based on historical precedent
-   - Common failure modes in similar situations
-   - Successful intervention patterns
-
-5. **CONFIDENCE ASSESSMENT**: Your confidence level in each pattern identified
-   - HIGH: Well-documented with multiple examples
-   - MEDIUM: Supported but limited sample size
-   - LOW: Speculative pattern requiring more evidence
-
-Format as structured JSON:
-{
-  "executive_summary": "<2-3 sentence overview>",
-  "patterns": [
-    {
-      "name": "<pattern name>",
-      "description": "<description>",
-      "historical_examples": ["<example1>", "<example2>"],
-      "current_relevance": "<how it applies now>",
-      "confidence": "HIGH|MEDIUM|LOW"
-    }
-  ],
-  "precedents": [
-    {
-      "historical_event": "<event>",
-      "date_range": "<dates>",
-      "modern_parallel": "<current situation>",
-      "outcome_then": "<what happened>",
-      "implications_now": "<what it suggests>"
-    }
-  ],
-  "lessons": [
-    {
-      "insight": "<actionable insight>",
-      "basis": "<historical basis>",
-      "application": "<how to apply>"
-    }
-  ],
-  "warnings": ["<early warning indicators based on historical patterns>"],
-  "confidence_note": "<overall confidence assessment>"
-}`;
-
-    const anthropic = new Anthropic({ apiKey: anthropicKey });
-
-    const response = await anthropic.messages.create({
-      model: depth === 'deep' ? 'claude-sonnet-4-20250514' : 'claude-haiku-4-5-20251001',
-      max_tokens: tokenLimits[depth],
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }],
+    const response = await lfbmClient.generateHistoricalAnalysis({
+      nations: (nations || []).map(n => ({
+        code: n.code,
+        name: n.name,
+        risk: n.transition_risk || 0,
+        trend: 0,
+      })),
+      gdeltSummary,
+      focus: focusDescription,
+      selectedEras: eras,
+      depth,
     });
 
-    // Extract response
-    const textBlock = response.content.find(b => b.type === 'text');
-    if (!textBlock || textBlock.type !== 'text') {
-      throw new Error('No text response from Claude');
-    }
-
-    // Parse JSON response
-    let analysis;
-    try {
-      const jsonMatch = textBlock.text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        analysis = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('No JSON found');
-      }
-    } catch {
-      // Return raw text if JSON parsing fails
-      analysis = { raw: textBlock.text };
-    }
+    const lfbmLatency = Date.now() - lfbmStartTime;
 
     // Log usage for billing
     const { data: existingUsage } = await supabase
@@ -303,7 +175,7 @@ Format as structured JSON:
         .from('api_usage')
         .update({
           request_count: existingUsage.request_count + 1,
-          total_tokens: existingUsage.total_tokens + response.usage.input_tokens + response.usage.output_tokens,
+          total_tokens: existingUsage.total_tokens + response.tokens_generated,
         })
         .eq('user_id', user.id)
         .eq('month', new Date().toISOString().slice(0, 7));
@@ -311,19 +183,20 @@ Format as structured JSON:
 
     return NextResponse.json({
       success: true,
-      analysis,
+      analysis: response.briefings,
       metadata: {
         eras,
         domains,
         focus,
         depth,
-        model: depth === 'deep' ? 'claude-sonnet-4-20250514' : 'claude-haiku-4-5-20251001',
+        model: 'lfbm-vllm',
         tokens: {
-          input: response.usage.input_tokens,
-          output: response.usage.output_tokens,
+          output: response.tokens_generated,
         },
         latency_ms: Date.now() - startTime,
-        gdelt_signals: gdeltContext ? 'included' : 'none',
+        lfbm_latency_ms: lfbmLatency,
+        gdelt_signals: Object.keys(gdeltSummary).length > 0 ? 'included' : 'none',
+        estimatedCost: depth === 'deep' ? '$0.003' : '$0.002',
       },
     });
 
@@ -348,9 +221,10 @@ export async function GET() {
       description: value,
     })),
     depth_options: [
-      { id: 'quick', label: 'Quick Analysis', tokens: 2000, model: 'claude-haiku-4-5-20251001', tier: 'free' },
-      { id: 'standard', label: 'Standard Analysis', tokens: 4000, model: 'claude-haiku-4-5-20251001', tier: 'pro' },
-      { id: 'deep', label: 'Deep Analysis', tokens: 8000, model: 'claude-sonnet-4-20250514', tier: 'enterprise' },
+      { id: 'quick', label: 'Quick Analysis', tokens: 1024, model: 'lfbm-vllm', tier: 'free', cost: '$0.001' },
+      { id: 'standard', label: 'Standard Analysis', tokens: 1536, model: 'lfbm-vllm', tier: 'pro', cost: '$0.002' },
+      { id: 'deep', label: 'Deep Analysis', tokens: 2048, model: 'lfbm-vllm', tier: 'enterprise', cost: '$0.003' },
     ],
+    inference_engine: 'LFBM (self-hosted vLLM on RunPod)',
   });
 }

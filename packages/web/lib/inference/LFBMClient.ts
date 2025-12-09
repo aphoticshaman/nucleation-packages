@@ -1,8 +1,13 @@
 /**
- * LFBM Client - Drop-in replacement for Anthropic calls
+ * LFBM Client - Self-hosted LLM inference for LatticeForge
  *
- * Routes briefing generation to your self-hosted vLLM endpoint
- * running a fine-tuned Qwen2.5-3B-Instruct model.
+ * Routes ALL briefing generation to your self-hosted vLLM endpoint
+ * running Qwen2.5-3B-Instruct. No external LLM dependencies.
+ *
+ * Modes:
+ * - realtime: Pure metric translation (~$0.001)
+ * - historical: Pattern analysis using model's training knowledge (~$0.002)
+ * - hybrid: Current metrics + historical context (~$0.003)
  *
  * Setup:
  * 1. Fine-tune model on RunPod Axolotl (see packages/lfbm/axolotl/)
@@ -13,10 +18,6 @@
  * RunPod Endpoints (LatticeForge):
  * - Axolotl Training: https://api.runpod.ai/v2/w5w7c0mseycf23/run
  * - vLLM Inference:   https://api.runpod.ai/v2/p2rvk115ebb42j/run
- *
- * Cost comparison:
- * - Anthropic Haiku: ~$0.25-0.75 per briefing
- * - LFBM on RunPod vLLM: ~$0.001 per briefing
  */
 
 export interface LFBMNationInput {
@@ -41,8 +42,8 @@ export interface LFBMResponse {
   model: string;
 }
 
-// System prompt - MUST output raw JSON, no markdown
-const SYSTEM_PROMPT = `You are a metrics-to-prose translator. Convert numbers into intelligence briefings.
+// System prompts for different analysis modes - MUST output raw JSON
+const REALTIME_PROMPT = `You are a metrics-to-prose translator. Convert numbers into intelligence briefings.
 
 CRITICAL: Output RAW JSON only. No markdown, no code blocks, no \`\`\`json.
 
@@ -53,6 +54,40 @@ Rules:
 2. Professional intelligence analyst voice
 3. RAW JSON ONLY - no markdown formatting
 4. Describe what the NUMBERS indicate`;
+
+const HISTORICAL_PROMPT = `You are a senior intelligence historian. Analyze historical patterns and precedents.
+
+CRITICAL: Output RAW JSON only. No markdown, no code blocks.
+
+Output format: {"summary":"...","precedents":[{"event":"...","date":"...","parallel":"..."}],"patterns":[{"name":"...","examples":["..."],"current_phase":"..."}],"lessons":["..."],"warnings":["..."],"political":"...","economic":"...","security":"...","military":"...","nsm":"..."}
+
+Rules:
+1. Ground claims in verifiable historical events with dates
+2. Connect patterns to provided nation data
+3. Professional academic intelligence voice
+4. RAW JSON ONLY`;
+
+const HYBRID_PROMPT = `You are a dual-mode analyst combining realtime metrics with historical context.
+
+CRITICAL: Output RAW JSON only. No markdown, no code blocks.
+
+Output format: {"summary":"...","current_assessment":{"political":"...","economic":"...","security":"..."},"historical_context":{"precedent":"...","pattern":"...","outcome":"..."},"synthesis":{"political":"...","economic":"...","security":"...","military":"...","cyber":"..."},"risk_assessment":"...","nsm":"..."}
+
+Rules:
+1. Translate current metrics to prose (Layer 1)
+2. Overlay historical context with dates (Layer 2)
+3. Synthesize both for assessment (Layer 3)
+4. RAW JSON ONLY`;
+
+export type AnalysisMode = 'realtime' | 'historical' | 'hybrid';
+
+export interface HistoricalRequest {
+  nations: LFBMNationInput[];
+  gdeltSummary: Record<string, number>;
+  focus?: string;
+  selectedEras?: string[];
+  depth?: 'quick' | 'standard' | 'deep';
+}
 
 export class LFBMClient {
   private endpoint: string;
@@ -265,6 +300,191 @@ Generate JSON briefings for each category.`;
 
     const response = await this.generateBriefing(request);
     return response.briefings;
+  }
+
+  /**
+   * Generate historical pattern analysis
+   */
+  async generateHistoricalAnalysis(request: HistoricalRequest): Promise<LFBMResponse> {
+    if (!this.endpoint) {
+      throw new Error('LFBM_ENDPOINT not configured');
+    }
+
+    const nationLines = request.nations.slice(0, 10).map((n) => {
+      const riskPct = Math.round(n.risk * 100);
+      return `  ${n.name || n.code}: ${riskPct}% transition risk`;
+    });
+
+    const gdeltLines = Object.entries(request.gdeltSummary).map(
+      ([domain, count]) => `  ${domain}: ${count} signals`
+    );
+
+    const userMessage = `HISTORICAL META-ANALYSIS REQUEST
+
+FOCUS AREA: ${request.focus || 'geopolitical transitions and power shifts'}
+
+CURRENT NATION RISK DATA:
+${nationLines.length > 0 ? nationLines.join('\n') : '  No nations above threshold'}
+
+GDELT SIGNAL CONTEXT:
+${gdeltLines.length > 0 ? gdeltLines.join('\n') : '  No GDELT data'}
+
+${request.selectedEras?.length ? `ERAS TO ANALYZE: ${request.selectedEras.join(', ')}` : ''}
+
+Generate historical pattern analysis connecting precedents to current data.`;
+
+    return this.callEndpoint(HISTORICAL_PROMPT, userMessage, request.depth === 'deep' ? 2048 : 1024);
+  }
+
+  /**
+   * Generate hybrid analysis (current + historical)
+   */
+  async generateHybridAnalysis(
+    nationData: Array<{ code: string; name: string; transition_risk?: number }>,
+    gdeltSignals: Record<string, number>,
+    categoryRisks: Record<string, number>,
+    focus?: string
+  ): Promise<LFBMResponse> {
+    if (!this.endpoint) {
+      throw new Error('LFBM_ENDPOINT not configured');
+    }
+
+    const nationLines = nationData.slice(0, 10).map((n) => {
+      const risk = ((n.transition_risk || 0) * 100).toFixed(0);
+      return `  ${n.name}: ${risk}% risk`;
+    });
+
+    const catLines = Object.entries(categoryRisks).map(
+      ([k, v]) => `  ${k}: ${v}/100`
+    );
+
+    const userMessage = `HYBRID ANALYSIS REQUEST
+
+CURRENT METRICS (from live pipeline):
+Nations at elevated risk:
+${nationLines.length > 0 ? nationLines.join('\n') : '  None above threshold'}
+
+Category risks:
+${catLines.join('\n')}
+
+GDELT signals: ${gdeltSignals.count || 0} in analysis window
+Avg tone: ${gdeltSignals.avg_tone?.toFixed(2) || 'N/A'}
+
+HISTORICAL FOCUS: ${focus || 'General geopolitical patterns'}
+
+Generate hybrid briefing combining current metrics with historical context.`;
+
+    return this.callEndpoint(HYBRID_PROMPT, userMessage, 1536);
+  }
+
+  /**
+   * Internal method to call the endpoint with any prompt
+   */
+  private async callEndpoint(systemPrompt: string, userMessage: string, maxTokens: number): Promise<LFBMResponse> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (this.apiKey) {
+      headers['Authorization'] = `Bearer ${this.apiKey}`;
+    }
+
+    const startTime = Date.now();
+    const isRunPod = this.endpoint.includes('api.runpod.ai');
+
+    if (isRunPod) {
+      const syncEndpoint = this.endpoint.replace(/\/run$/, '/runsync');
+
+      const response = await fetch(syncEndpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          input: {
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userMessage },
+            ],
+            max_tokens: maxTokens,
+            temperature: 0.7,
+            model: this.model,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`LFBM RunPod error: ${response.status} ${error}`);
+      }
+
+      const data = await response.json();
+      const latencyMs = Date.now() - startTime;
+
+      let content: string;
+      if (typeof data.output === 'string') {
+        content = data.output;
+      } else if (Array.isArray(data.output) && data.output[0]?.choices?.[0]?.tokens) {
+        content = data.output[0].choices[0].tokens.join('');
+      } else if (data.output?.choices?.[0]?.message?.content) {
+        content = data.output.choices[0].message.content;
+      } else if (data.output?.text) {
+        content = data.output.text;
+      } else {
+        content = JSON.stringify(data.output || {});
+      }
+
+      let briefings: Record<string, string>;
+      try {
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        briefings = jsonMatch ? JSON.parse(jsonMatch[0]) : { raw: content };
+      } catch {
+        briefings = { raw: content };
+      }
+
+      return {
+        briefings,
+        latency_ms: latencyMs,
+        tokens_generated: data.output?.usage?.completion_tokens || 0,
+        model: this.model,
+      };
+    }
+
+    // Direct vLLM server
+    const response = await fetch(`${this.endpoint}/openai/v1/chat/completions`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model: this.model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userMessage },
+        ],
+        max_tokens: maxTokens,
+        temperature: 0.7,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`LFBM error: ${response.status} ${error}`);
+    }
+
+    const data = await response.json();
+    const latencyMs = Date.now() - startTime;
+    const content = data.choices?.[0]?.message?.content || '{}';
+
+    let briefings: Record<string, string>;
+    try {
+      briefings = JSON.parse(content);
+    } catch {
+      briefings = { raw: content };
+    }
+
+    return {
+      briefings,
+      latency_ms: latencyMs,
+      tokens_generated: data.usage?.completion_tokens || 0,
+      model: data.model || this.model,
+    };
   }
 
   /**

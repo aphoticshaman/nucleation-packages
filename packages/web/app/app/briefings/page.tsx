@@ -281,7 +281,7 @@ export default function BriefingsPage() {
             <button
               onClick={() => setShowEmergencyModal(true)}
               className="flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] bg-red-600 hover:bg-red-500 rounded-xl border border-red-400/50 text-white font-bold shadow-lg shadow-red-500/30 hover:shadow-red-500/50 transition-all animate-pulse hover:animate-none"
-              title="Force refresh all data from Claude API ($0.25-0.75) - ADMIN ONLY"
+              title="Force refresh all data via LFBM (~$0.001) - ADMIN ONLY"
             >
               <Zap className="w-5 h-5" />
               <span className="text-xs sm:text-sm uppercase tracking-wide">Refresh</span>
@@ -602,11 +602,11 @@ export default function BriefingsPage() {
 
             <div className="space-y-4">
               <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-                <p className="text-red-200 text-sm font-medium mb-2">⚠️ This will:</p>
+                <p className="text-emerald-200 text-sm font-medium mb-2">This will:</p>
                 <ul className="text-sm text-slate-300 space-y-1 ml-4 list-disc">
-                  <li>Force a full data refresh from Claude API</li>
-                  <li>Repopulate last 72 hours of major events</li>
-                  <li>Cost approximately <span className="font-bold text-red-300">$1-3</span> per call</li>
+                  <li>Force a full data refresh via LFBM (self-hosted)</li>
+                  <li>Regenerate all intelligence briefings</li>
+                  <li>Cost approximately <span className="font-bold text-emerald-300">$0.001</span> per call</li>
                   <li>Replace all cached briefing data</li>
                 </ul>
               </div>
