@@ -123,6 +123,18 @@ async function createTicketFromChat(
       IDEA: 'idea',
       SUPPORT: 'question',
       QUESTION: 'question',
+      SECURITY: 'bug', // Security issues go as bugs with critical priority
+      QUOTA: 'other',  // Quota violations
+    };
+
+    // Priority mapping
+    const priorityMap: Record<string, string> = {
+      SECURITY: 'critical',
+      QUOTA: 'high',
+      BUG: 'normal',
+      IDEA: 'low',
+      SUPPORT: 'normal',
+      QUESTION: 'low',
     };
 
     const { data, error } = await supabase
@@ -137,9 +149,11 @@ async function createTicketFromChat(
           source: 'elle_chat',
           classification,
           created_by: 'elle',
+          is_security_incident: classification === 'SECURITY',
+          is_quota_violation: classification === 'QUOTA',
         },
         status: 'unread',
-        priority: classification === 'BUG' ? 'normal' : 'low',
+        priority: priorityMap[classification] || 'low',
       })
       .select('id')
       .single();
@@ -149,13 +163,13 @@ async function createTicketFromChat(
       return null;
     }
 
-    // Send notification
+    // Send notification (urgent for security/quota issues)
     void notifyNewTicket({
       id: data.id,
       type: typeMap[classification] || 'other',
       title: summary.slice(0, 200),
       description: conversationContext,
-      priority: classification === 'BUG' ? 'normal' : 'low',
+      priority: priorityMap[classification] || 'low',
       status: 'unread',
       pageUrl,
       userEmail,
@@ -174,15 +188,28 @@ export async function POST(request: Request) {
     const user = await getAuthUser();
     const userId = user?.id || 'anonymous';
 
-    // Rate limiting
+    const body = await request.json();
+
+    // Rate limiting with quota violation tracking
     if (!checkRateLimit(userId)) {
+      // Log quota violation and create ticket
+      console.warn(`[ELLE/QUOTA] Rate limit exceeded for ${userId}`);
+
+      await createTicketFromChat(
+        user?.id || null,
+        user?.email,
+        'QUOTA',
+        `Quota exceeded: ${user?.email || userId}`,
+        `User hit rate limit (30 messages/hour)\nUser: ${user?.email || userId}\nTime: ${new Date().toISOString()}`,
+        body?.pageUrl
+      );
+
       return NextResponse.json(
-        { error: 'Too many messages. Please wait a moment.' },
+        { error: 'Too many messages. Please wait a moment.', quotaExceeded: true },
         { status: 429 }
       );
     }
 
-    const body = await request.json();
     const { message, history, pageUrl } = body;
 
     if (!message || typeof message !== 'string') {
@@ -199,14 +226,28 @@ export async function POST(request: Request) {
       );
     }
 
-    // Guardian: Validate input
+    // Guardian: Validate input and detect security issues
     const guardian = getSecurityGuardian();
     const validation = guardian.validateInput(message, userId, 'consumer');
 
     if (!validation.allowed) {
+      // Log security incident and create ticket if suspicious
+      console.warn(`[ELLE/GUARDIAN] Blocked input from ${userId}: ${validation.reason}`);
+
+      // Auto-create security ticket for suspicious activity
+      await createTicketFromChat(
+        user?.id || null,
+        user?.email,
+        'SECURITY',
+        `Guardian blocked: ${validation.reason}`,
+        `User attempted: "${message.slice(0, 500)}"\nReason: ${validation.reason}\nUser: ${user?.email || userId}`,
+        pageUrl
+      );
+
       return NextResponse.json({
         response: "I'm sorry, but I can't process that message. Could you rephrase your question?",
-        ticketCreated: false,
+        ticketCreated: true, // Security ticket created
+        securityFlag: true,
       });
     }
 
