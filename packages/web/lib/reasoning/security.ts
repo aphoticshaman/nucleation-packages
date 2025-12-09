@@ -381,3 +381,293 @@ export function getSecurityGuardian(): SecurityGuardian {
   }
   return guardianInstance;
 }
+
+// =============================================================================
+// OUTPUT GUARDIAN - Validates Elle's (LFBM) output before caching
+// =============================================================================
+// The stock Qwen model sometimes returns malformed JSON. Guardian validates
+// and attempts to fix common issues before the data gets cached.
+
+/**
+ * Required keys for a valid briefing response
+ */
+const REQUIRED_BRIEFING_KEYS = ['political', 'economic', 'security', 'summary'];
+const OPTIONAL_BRIEFING_KEYS = [
+  'military', 'cyber', 'financial', 'nsm', 'health', 'scitech', 'resources',
+  'crime', 'terrorism', 'domestic', 'borders', 'infoops', 'space', 'industry',
+  'logistics', 'minerals', 'energy', 'markets', 'religious', 'education',
+  'employment', 'housing', 'crypto', 'emerging'
+];
+
+export interface BriefingValidationResult {
+  valid: boolean;
+  briefings: Record<string, string> | null;
+  errors: string[];
+  warnings: string[];
+  fixed: boolean; // True if we had to fix/repair the JSON
+}
+
+/**
+ * Output Guardian - validates and repairs Elle's JSON output
+ */
+export class OutputGuardian {
+  /**
+   * Validate briefing output from Elle (LFBM)
+   * Returns validated briefings or null if unfixable
+   */
+  validateBriefings(raw: unknown): BriefingValidationResult {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    let fixed = false;
+
+    // Handle null/undefined
+    if (raw === null || raw === undefined) {
+      return {
+        valid: false,
+        briefings: null,
+        errors: ['Output is null or undefined'],
+        warnings: [],
+        fixed: false,
+      };
+    }
+
+    // If it's a string, try to parse as JSON
+    let parsed: unknown = raw;
+    if (typeof raw === 'string') {
+      const extracted = this.extractJSON(raw);
+      if (extracted) {
+        parsed = extracted;
+        fixed = true;
+      } else {
+        return {
+          valid: false,
+          briefings: null,
+          errors: ['Could not extract valid JSON from string output'],
+          warnings: [],
+          fixed: false,
+        };
+      }
+    }
+
+    // Must be an object at this point
+    if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {
+        valid: false,
+        briefings: null,
+        errors: ['Output is not an object'],
+        warnings: [],
+        fixed: false,
+      };
+    }
+
+    const obj = parsed as Record<string, unknown>;
+
+    // Check for the {raw: ...} fallback pattern - this means parsing already failed
+    if ('raw' in obj && Object.keys(obj).length === 1) {
+      // Try to extract from the raw content
+      const rawContent = obj.raw;
+      if (typeof rawContent === 'string') {
+        const extracted = this.extractJSON(rawContent);
+        if (extracted) {
+          // Recursively validate the extracted JSON
+          return this.validateBriefings(extracted);
+        }
+      }
+      return {
+        valid: false,
+        briefings: null,
+        errors: ['Output contains only raw content that could not be parsed'],
+        warnings: [],
+        fixed: false,
+      };
+    }
+
+    // Check for required keys
+    const missingRequired: string[] = [];
+    for (const key of REQUIRED_BRIEFING_KEYS) {
+      if (!(key in obj)) {
+        missingRequired.push(key);
+      }
+    }
+
+    if (missingRequired.length > 0) {
+      errors.push(`Missing required keys: ${missingRequired.join(', ')}`);
+    }
+
+    // Validate each value is a string (or can be converted to one)
+    const briefings: Record<string, string> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (typeof value === 'string') {
+        // Check for nested JSON in string values (common Qwen bug)
+        if (value.startsWith('{') || value.startsWith('[')) {
+          try {
+            const nested = JSON.parse(value);
+            // If it parsed, it's nested JSON - flatten it
+            briefings[key] = this.flattenNestedJSON(nested);
+            warnings.push(`Key '${key}' contained nested JSON - flattened`);
+            fixed = true;
+          } catch {
+            // Not valid JSON, use as-is
+            briefings[key] = value;
+          }
+        } else {
+          briefings[key] = value;
+        }
+      } else if (typeof value === 'object' && value !== null) {
+        // Object value - try to stringify meaningfully
+        briefings[key] = this.flattenNestedJSON(value);
+        warnings.push(`Key '${key}' was an object - converted to string`);
+        fixed = true;
+      } else if (value !== null && value !== undefined) {
+        briefings[key] = String(value);
+        warnings.push(`Key '${key}' was not a string - converted`);
+        fixed = true;
+      }
+    }
+
+    // If we have at least some required keys, consider it partially valid
+    const hasEnoughKeys = REQUIRED_BRIEFING_KEYS.filter(k => k in briefings).length >= 2;
+
+    return {
+      valid: missingRequired.length === 0 || hasEnoughKeys,
+      briefings: Object.keys(briefings).length > 0 ? briefings : null,
+      errors,
+      warnings,
+      fixed,
+    };
+  }
+
+  /**
+   * Extract JSON from a string that may contain markdown code blocks or extra text
+   */
+  private extractJSON(content: string): Record<string, unknown> | null {
+    // Try direct parse first
+    try {
+      return JSON.parse(content);
+    } catch {
+      // Continue with extraction attempts
+    }
+
+    // Remove markdown code blocks
+    let cleaned = content
+      .replace(/```json\s*/gi, '')
+      .replace(/```\s*/g, '')
+      .trim();
+
+    // Try parsing cleaned content
+    try {
+      return JSON.parse(cleaned);
+    } catch {
+      // Continue with regex extraction
+    }
+
+    // Try to find JSON object with regex (greedy match)
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch[0]);
+      } catch {
+        // JSON is malformed
+      }
+    }
+
+    // Try to find the outermost balanced braces
+    const balanced = this.extractBalancedBraces(cleaned);
+    if (balanced) {
+      try {
+        return JSON.parse(balanced);
+      } catch {
+        // Still malformed
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Extract balanced braces from a string
+   */
+  private extractBalancedBraces(content: string): string | null {
+    const start = content.indexOf('{');
+    if (start === -1) return null;
+
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+
+    for (let i = start; i < content.length; i++) {
+      const char = content[i];
+
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+
+      if (char === '\\') {
+        escaped = true;
+        continue;
+      }
+
+      if (char === '"') {
+        inString = !inString;
+        continue;
+      }
+
+      if (inString) continue;
+
+      if (char === '{') depth++;
+      if (char === '}') {
+        depth--;
+        if (depth === 0) {
+          return content.slice(start, i + 1);
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Flatten nested JSON into a readable string
+   */
+  private flattenNestedJSON(obj: unknown): string {
+    if (typeof obj === 'string') return obj;
+    if (typeof obj !== 'object' || obj === null) return String(obj);
+
+    // For arrays, join with newlines
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.flattenNestedJSON(item)).join('\n');
+    }
+
+    // For objects, extract meaningful content
+    const record = obj as Record<string, unknown>;
+
+    // Common patterns in briefings
+    if ('text' in record) return this.flattenNestedJSON(record.text);
+    if ('content' in record) return this.flattenNestedJSON(record.content);
+    if ('value' in record) return this.flattenNestedJSON(record.value);
+    if ('description' in record) return this.flattenNestedJSON(record.description);
+
+    // Fallback: join all string values
+    const parts: string[] = [];
+    for (const [key, value] of Object.entries(record)) {
+      if (typeof value === 'string') {
+        parts.push(value);
+      } else if (typeof value === 'object') {
+        parts.push(this.flattenNestedJSON(value));
+      }
+    }
+
+    return parts.join(' ').trim() || JSON.stringify(obj);
+  }
+}
+
+// Singleton
+let outputGuardianInstance: OutputGuardian | null = null;
+
+export function getOutputGuardian(): OutputGuardian {
+  if (!outputGuardianInstance) {
+    outputGuardianInstance = new OutputGuardian();
+  }
+  return outputGuardianInstance;
+}

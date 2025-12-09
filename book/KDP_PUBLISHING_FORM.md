@@ -25,6 +25,9 @@ Ready-to-use content for Amazon Kindle Direct Publishing submission.
 - **First name:** `Ryan J.`
 - **Last name:** `Cardwell`
 
+### Contributors (Optional)
+*Skip or add collaborators as desired*
+
 ---
 
 ## Description (Copy-Paste Ready)
@@ -91,6 +94,11 @@ Select: **No**
 2. **Computers & Technology > Artificial Intelligence > Machine Learning**
 3. **Science & Math > Mathematics > Applied**
 
+*Alternative options if primary not available:*
+- Computers & Technology > Computer Science
+- Science & Math > Mathematics > Probability & Statistics
+- Computers & Technology > Programming > Algorithms
+
 ---
 
 ## Keywords (7 Maximum, 50 chars each)
@@ -149,6 +157,70 @@ SIZE:      Under 50MB
 
 ---
 
+## Kindle Create Software Guide
+
+### What Is Kindle Create?
+Amazon's FREE book formatting software that converts your manuscript into a professional eBook or print book.
+
+**Download:** [Kindle Create](https://www.amazon.com/Kindle-Create/b?ie=UTF8&node=18292298011)
+
+### Supported Input Formats
+- **DOCX** (recommended) - Microsoft Word
+- **HTML** - Web format
+- **RTF** - Rich Text Format
+- **TXT** - Plain text
+- **PDF** - For fixed layout only
+
+### Output Formats
+- **KPF** - Kindle Package Format (recommended for KDP)
+- **EPUB** - Standard eBook format
+
+### Project Types
+
+| Type | Best For |
+|------|----------|
+| **Reflowable** | Novels, nonfiction, technical books |
+| **Comics** | Graphic novels, sequential art |
+| **Kids** | Children's picture books |
+| **Print Replica** | Textbooks, PDFs with exact layout |
+
+**For "Mathematics of Intelligence":** Use **Reflowable** - best for technical content with text-heavy chapters.
+
+### Key Features
+- **Auto Table of Contents** - Generated from chapter headings
+- **Theme Presets** - Professional formatting templates
+- **Multi-Device Preview** - See how it looks on Kindle, tablet, phone
+- **Print + eBook** - One file for both formats
+
+### Limitations to Know
+- KPF only works on Amazon/KDP (not other stores)
+- Print books: can't customize margins/fonts (auto-calculated)
+- Tables, footnotes, endnotes not supported for print
+- No bleed images for paperback
+
+### Workflow
+
+```
+1. Prepare DOCX with proper Heading styles
+   └── Heading 1 = Chapter titles
+   └── Heading 2 = Subheadings
+   └── Normal = Body text
+
+2. Import into Kindle Create
+   └── Select "Reflowable" project type
+   └── Choose theme
+
+3. Auto-detect chapters from Heading 1
+
+4. Preview on different devices
+
+5. Export as KPF
+
+6. Upload KPF to KDP
+```
+
+---
+
 ## Top Cover Candidates (From Your Art Assets)
 
 | Asset | Why It Works |
@@ -163,14 +235,12 @@ SIZE:      Under 50MB
 - `art_assets/aphoticshaman_Abstract_visualization_of_interconnected_nodes__dcc2e015-*`
 - `art_assets/aphoticshaman_Mercury_droplet_shaped_like_earth_hovering_refl_48219cf9-*`
 
-See `book/COVER_ART_GUIDE.md` for Midjourney prompts and typography overlay plan.
-
 ---
 
 ## Next Steps After eBook Details
 
 ### Kindle eBook Content Tab
-1. Upload manuscript (EPUB, MOBI, or DOCX)
+1. Upload manuscript (DOCX → Kindle Create → KPF)
 2. Upload cover image (use specs above)
 3. Preview in Kindle Previewer
 4. Verify formatting on different device types
@@ -184,17 +254,38 @@ See `book/COVER_ART_GUIDE.md` for Midjourney prompts and typography overlay plan
 
 ## Validation Checklist
 
+### eBook Details
 - [ ] Title matches cover exactly
 - [ ] Description under 4,000 characters ✓ (~1,650)
 - [ ] 7 keywords, each under 50 characters ✓
 - [ ] 3 categories selected ✓
 - [ ] Publishing rights confirmed
 - [ ] Age rating set (18+)
-- [ ] Cover dimensions: 2,560 × 1,600 (or 1.6:1 ratio)
-- [ ] Cover format: JPEG or TIFF
-- [ ] Cover color: RGB (no CMYK/separation)
-- [ ] Cover size: Under 50MB
-- [ ] Gray border added if light background
+
+### Cover Image
+- [ ] Dimensions: 2,560 × 1,600 (or 1.6:1 ratio)
+- [ ] Format: JPEG or TIFF
+- [ ] Color: RGB (no CMYK/separation)
+- [ ] Size: Under 50MB
+- [ ] Gray border if light background
+
+### Manuscript
+- [ ] All chapters included
+- [ ] Heading styles applied (H1 for chapters)
+- [ ] Imported into Kindle Create
+- [ ] TOC auto-generated
+- [ ] Previewed on multiple devices
+- [ ] Exported as KPF
+
+---
+
+## Sources
+
+- [Kindle Create Download](https://www.amazon.com/Kindle-Create/b?ie=UTF8&node=18292298011)
+- [KDP Help: Prepare with Kindle Create](https://kdp.amazon.com/en_US/help/topic/G93BCLJGZFGK39BT)
+- [Getting Started with Kindle Create](https://kdp.amazon.com/en_US/help/topic/GUGQ4WDZ92F733GC)
+- [eBook Manuscript Formatting Guide](https://kdp.amazon.com/help?topicId=G200645680)
+- [Kindlepreneur Kindle Create Tutorial](https://kindlepreneur.com/kindle-create-tutorial/)
 
 ---
 

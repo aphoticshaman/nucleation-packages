@@ -1,18 +1,18 @@
 {
   "input": {
     "user_id": "latticeforge",
-    "model_id": "latticeforge-briefing-3b",
-    "run_id": "briefing-v1",
+    "model_id": "latticeforge-briefing-7b",
+    "run_id": "briefing-v2-h200",
     "credentials": {
       "wandb_api_key": "",
       "hf_token": "${HF_TOKEN}"
     },
     "args": {
-      "base_model": "Qwen/Qwen2.5-3B-Instruct",
+      "base_model": "Qwen/Qwen2.5-7B-Instruct",
       "model_type": "AutoModelForCausalLM",
       "tokenizer_type": "AutoTokenizer",
       "load_in_8bit": false,
-      "load_in_4bit": true,
+      "load_in_4bit": false,
       "strict": false,
       "trust_remote_code": true,
 
@@ -26,40 +26,26 @@
 
       "dataset_prepared_path": "last_run_prepared",
       "val_set_size": 0.05,
-      "output_dir": "./outputs/latticeforge-briefing-3b",
-
-      "adapter": "qlora",
-      "lora_r": 32,
-      "lora_alpha": 64,
-      "lora_dropout": 0.05,
-      "lora_target_modules": [
-        "q_proj",
-        "k_proj",
-        "v_proj",
-        "o_proj",
-        "gate_proj",
-        "up_proj",
-        "down_proj"
-      ],
+      "output_dir": "./outputs/latticeforge-briefing-7b",
 
       "sequence_len": 2048,
       "sample_packing": true,
       "eval_sample_packing": false,
       "pad_to_sequence_len": true,
 
-      "gradient_accumulation_steps": 4,
-      "micro_batch_size": 2,
-      "num_epochs": 3,
-      "optimizer": "adamw_bnb_8bit",
+      "gradient_accumulation_steps": 2,
+      "micro_batch_size": 8,
+      "num_epochs": 5,
+      "optimizer": "adamw_torch",
       "lr_scheduler": "cosine",
-      "learning_rate": 0.0002,
+      "learning_rate": 0.00001,
       "warmup_ratio": 0.1,
       "weight_decay": 0.01,
       "max_grad_norm": 1.0,
 
       "train_on_inputs": false,
       "group_by_length": false,
-      "bf16": "auto",
+      "bf16": true,
       "tf32": true,
       "gradient_checkpointing": true,
       "flash_attention": true,
