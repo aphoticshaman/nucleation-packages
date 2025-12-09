@@ -39,7 +39,7 @@ FROM public.training_examples;
 -- ============================================================================
 
 -- Fix record_nation_snapshot
-DROP FUNCTION IF EXISTS public.record_nation_snapshot();
+DROP FUNCTION IF EXISTS public.record_nation_snapshot() CASCADE;
 CREATE FUNCTION public.record_nation_snapshot()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -69,7 +69,7 @@ END;
 $$;
 
 -- Fix sync_profile_to_client (we just created this)
-DROP FUNCTION IF EXISTS public.sync_profile_to_client();
+DROP FUNCTION IF EXISTS public.sync_profile_to_client() CASCADE;
 CREATE FUNCTION public.sync_profile_to_client()
 RETURNS TRIGGER
 LANGUAGE plpgsql
