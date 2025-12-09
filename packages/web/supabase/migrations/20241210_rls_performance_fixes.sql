@@ -28,15 +28,15 @@ CREATE POLICY "Users can update own profile" ON public.profiles
 CREATE POLICY "Users can insert own profile" ON public.profiles
     FOR INSERT WITH CHECK ((select auth.uid()) = id);
 
--- clients table (uses `user_id` column to reference auth.users)
+-- clients table (uses `uuid` column to reference auth.users)
 DROP POLICY IF EXISTS "Users can view own client" ON public.clients;
 DROP POLICY IF EXISTS "Users can update own client" ON public.clients;
 
 CREATE POLICY "Users can view own client" ON public.clients
-    FOR SELECT USING ((select auth.uid()) = user_id);
+    FOR SELECT USING ((select auth.uid()) = uuid);
 
 CREATE POLICY "Users can update own client" ON public.clients
-    FOR UPDATE USING ((select auth.uid()) = user_id);
+    FOR UPDATE USING ((select auth.uid()) = uuid);
 
 -- feedback table (consolidate admin + user policies)
 DROP POLICY IF EXISTS "Users can submit feedback" ON public.feedback;
