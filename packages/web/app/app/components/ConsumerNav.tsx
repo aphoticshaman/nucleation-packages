@@ -317,9 +317,9 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
               </Link>
             )}
 
-            {/* User avatar - touchable on mobile */}
+            {/* User avatar - touchable on mobile (44px min touch target) */}
             <button
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800
+              className="w-11 h-11 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800
                 flex items-center justify-center text-white text-sm font-medium
                 border border-white/10 shadow-inner
                 active:scale-95 transition-transform"

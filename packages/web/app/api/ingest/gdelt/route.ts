@@ -75,10 +75,11 @@ export async function GET(req: Request) {
     for (const theme of RISK_THEMES) {
       try {
         // GDELT Doc API query - last 24 hours, sorted by tone
+        // Increased from 50 to 100 for better signal coverage
         const params = new URLSearchParams({
           query: `theme:${theme}`,
           mode: 'artlist',
-          maxrecords: '50',
+          maxrecords: '100',
           format: 'json',
           timespan: '24h',
           sort: 'toneasc', // Most negative first (risk signals)

@@ -34,7 +34,20 @@ function isAnthropicAllowed(): boolean {
  */
 
 const BATCH_SIZE = 5; // Countries to update per run
-const MIN_UPDATE_INTERVAL_HOURS = 12; // Don't update same country within 12 hours
+
+// Priority-based update intervals (hours) - high-risk countries get more frequent updates
+const RISK_UPDATE_INTERVALS = {
+  high: 2,     // High risk (>70%) - update every 2 hours
+  medium: 6,   // Medium risk (40-70%) - update every 6 hours
+  low: 12,     // Low risk (<40%) - update every 12 hours
+};
+
+// Helper to get update interval based on risk level
+function getUpdateIntervalHours(transitionRisk: number): number {
+  if (transitionRisk > 0.7) return RISK_UPDATE_INTERVALS.high;
+  if (transitionRisk > 0.4) return RISK_UPDATE_INTERVALS.medium;
+  return RISK_UPDATE_INTERVALS.low;
+}
 
 // System prompt for country-specific intel analysis
 const COUNTRY_INTEL_SYSTEM_PROMPT = `You are an intelligence analyst providing brief country assessments.
@@ -99,20 +112,43 @@ export async function GET(req: Request) {
   };
 
   try {
-    // Calculate cutoff time - don't update countries updated within MIN_UPDATE_INTERVAL_HOURS
-    const cutoffTime = new Date(Date.now() - MIN_UPDATE_INTERVAL_HOURS * 60 * 60 * 1000).toISOString();
-
-    // Get countries needing update (oldest first)
-    const { data: staleCountries, error: fetchError } = await supabase
+    // Priority-based update: fetch all countries and filter by risk-appropriate intervals
+    // High-risk countries get updated more frequently than low-risk
+    const { data: allCountries, error: fetchError } = await supabase
       .from('nations')
       .select('code, name, basin_strength, transition_risk, regime, updated_at')
-      .or(`updated_at.is.null,updated_at.lt.${cutoffTime}`)
-      .order('updated_at', { ascending: true, nullsFirst: true })
-      .limit(BATCH_SIZE);
+      .order('transition_risk', { ascending: false }); // High risk first
 
     if (fetchError) {
       throw new Error(`Failed to fetch countries: ${fetchError.message}`);
     }
+
+    // Filter countries based on their risk-appropriate update intervals
+    const now = Date.now();
+    const staleCountries = (allCountries || [])
+      .filter((country) => {
+        if (!country.updated_at) return true; // Never updated
+
+        const intervalHours = getUpdateIntervalHours(country.transition_risk || 0);
+        const cutoffTime = now - (intervalHours * 60 * 60 * 1000);
+        const lastUpdate = new Date(country.updated_at).getTime();
+
+        return lastUpdate < cutoffTime;
+      })
+      // Sort by: high-risk AND most overdue first
+      .sort((a, b) => {
+        // Priority score = risk level * hours overdue
+        const aInterval = getUpdateIntervalHours(a.transition_risk || 0);
+        const bInterval = getUpdateIntervalHours(b.transition_risk || 0);
+        const aOverdue = a.updated_at ? (now - new Date(a.updated_at).getTime()) / (aInterval * 60 * 60 * 1000) : 999;
+        const bOverdue = b.updated_at ? (now - new Date(b.updated_at).getTime()) / (bInterval * 60 * 60 * 1000) : 999;
+
+        // Higher risk + more overdue = higher priority
+        const aPriority = (a.transition_risk || 0) * aOverdue;
+        const bPriority = (b.transition_risk || 0) * bOverdue;
+        return bPriority - aPriority;
+      })
+      .slice(0, BATCH_SIZE);
 
     if (!staleCountries || staleCountries.length === 0) {
       return NextResponse.json({

@@ -6,14 +6,14 @@ export default async function BillingPage() {
   await requireAdmin();
 
   return (
-    <div className="pl-72 p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Billing</h1>
-        <p className="text-slate-400">Revenue metrics and subscription management</p>
+    <div className="p-4 lg:pl-72 lg:p-8">
+      <div className="mb-6 lg:mb-8">
+        <h1 className="text-xl lg:text-2xl font-bold text-white">Billing</h1>
+        <p className="text-slate-400 text-sm lg:text-base">Revenue metrics and subscription management</p>
       </div>
 
       {/* Revenue Stats */}
-      <div className="grid grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
         <GlassCard blur="heavy" compact>
           <div className="flex items-center gap-3 mb-2">
             <DollarSign className="w-5 h-5 text-green-400" />

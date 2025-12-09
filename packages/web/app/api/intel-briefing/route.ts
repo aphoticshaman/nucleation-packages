@@ -14,6 +14,7 @@ import {
   shouldUseClaude,
   type ComputedMetrics as TemplateMetrics,
 } from '@/lib/briefing/template-engine';
+import { getLFBMClient, shouldUseLFBM } from '@/lib/inference/LFBMClient';
 
 // Vercel Edge Runtime for low latency
 export const runtime = 'edge';
@@ -1070,6 +1071,64 @@ export async function POST(req: Request) {
           message: 'LLM calls disabled via DISABLE_LLM=true',
         },
       });
+    }
+
+    // ============================================================
+    // LFBM: Use self-hosted vLLM model if configured (250x cheaper)
+    // ============================================================
+    // Set LFBM_ENDPOINT and PREFER_LFBM=true to enable
+    if (shouldUseLFBM()) {
+      console.log('[INTEL] Using LFBM (self-hosted vLLM) for briefing generation');
+      const lfbmClient = getLFBMClient();
+      const lfbmStartTime = Date.now();
+
+      try {
+        const briefings = await lfbmClient.generateFromMetrics(
+          nationData,
+          {
+            count: nationData.length,
+            avg_tone: nationData.reduce((s, n) => s + (n.transition_risk || 0), 0) / (nationData.length || 1),
+            alerts: nationData.filter(n => (n.transition_risk || 0) > 0.6).length,
+          },
+          {
+            political: computedMetrics.categories.political?.riskLevel || 50,
+            economic: computedMetrics.categories.economic?.riskLevel || 50,
+            security: computedMetrics.categories.security?.riskLevel || 50,
+            cyber: computedMetrics.categories.cyber?.riskLevel || 50,
+          }
+        );
+
+        const lfbmLatency = Date.now() - lfbmStartTime;
+        console.log(`[INTEL] LFBM briefing generated in ${lfbmLatency}ms`);
+
+        // Cache the result
+        await setCachedBriefing(preset, {
+          briefings,
+          metadata: {
+            region: computedMetrics.region,
+            preset: computedMetrics.preset,
+            timestamp: computedMetrics.timestamp,
+            overallRisk: computedMetrics.overallRisk,
+          },
+        });
+
+        return NextResponse.json({
+          briefings,
+          metadata: {
+            region: computedMetrics.region,
+            preset: computedMetrics.preset,
+            timestamp: computedMetrics.timestamp,
+            overallRisk: computedMetrics.overallRisk,
+            source: 'lfbm_vllm',
+            llmLatencyMs: lfbmLatency,
+            llmCost: 0.001, // ~$0.001 per briefing
+            cached: false,
+          },
+        });
+      } catch (lfbmError) {
+        console.error('[INTEL] LFBM error, falling back to Anthropic:', lfbmError);
+        // Fall through to Anthropic
+      }
     }
 
     const llmStartTime = Date.now();
