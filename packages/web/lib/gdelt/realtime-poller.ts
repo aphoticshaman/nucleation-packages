@@ -187,7 +187,8 @@ export async function storeSignals(
   // Insert in batches of 100
   for (let i = 0; i < events.length; i += 100) {
     const batch = events.slice(i, i + 100);
-    const { error } = await supabase.from('learning_events').insert(batch);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await supabase.from('learning_events').insert(batch as any);
 
     if (error) {
       console.error('Batch insert error:', error);
@@ -217,7 +218,7 @@ export async function getAggregatedSignals(
     .from('learning_events')
     .select('domain, data')
     .eq('session_hash', 'gdelt_realtime')
-    .gte('timestamp', cutoff);
+    .gte('timestamp', cutoff) as { data: Array<{ domain: string; data: unknown }> | null };
 
   const byCountry: Record<string, { risk: number; articleCount: number; themes: string[] }> = {};
   const byTheme: Record<string, { risk: number; articleCount: number; countries: string[] }> = {};
@@ -231,7 +232,7 @@ export async function getAggregatedSignals(
     const data = signal.data as {
       numeric_features?: { gdelt_tone_risk?: number };
       categorical_features?: { theme?: string };
-    };
+    } | null;
 
     const risk = data?.numeric_features?.gdelt_tone_risk || 0;
     const theme = data?.categorical_features?.theme || 'unknown';

@@ -79,7 +79,6 @@ export function HistoricalAnalysisPanel({ onAnalyze, isLoading, disabled }: Hist
 
   const handleAnalyze = () => {
     const preset = GDELT_PRESETS.find(p => p.id === gdeltPreset);
-    const today = new Date().toISOString().split('T')[0];
 
     const config: AnalysisConfig = {
       mode,
