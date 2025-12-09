@@ -61,7 +61,9 @@ interface UseIntelBriefingResult {
   loading: boolean;
   error: Error | null;
   /** Call this to explicitly fetch/refresh the briefing */
-  refetch: () => Promise<void>;
+  refetch: (options?: { force?: boolean }) => Promise<void>;
+  /** Clear the local cache for this preset */
+  clearCache: () => void;
   pulse: PulseResult | null;
   pulseLoading: boolean;
   /** Call this to start pulse polling (if not auto-enabled) */
@@ -108,16 +110,28 @@ export function useIntelBriefing(
   const pulseIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const hasFetchedRef = useRef(false); // Track if we've ever fetched
 
-  const fetchBriefing = useCallback(async () => {
+  // Clear the local cache for this preset
+  const clearCache = useCallback(() => {
+    cache.delete(preset);
+    console.log(`[INTEL HOOK] Cache cleared for preset: ${preset}`);
+  }, [preset]);
+
+  const fetchBriefing = useCallback(async (options?: { force?: boolean }) => {
     const cacheKey = preset;
     const cached = cache.get(cacheKey);
 
-    // Return cached data if still valid
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    // Return cached data if still valid (unless force=true)
+    if (!options?.force && cached && Date.now() - cached.timestamp < CACHE_TTL) {
       setBriefings(cached.data.briefings);
       setMetadata(cached.data.metadata);
       setLoading(false);
       return;
+    }
+
+    // Force refresh - clear cache first
+    if (options?.force) {
+      cache.delete(cacheKey);
+      console.log(`[INTEL HOOK] Force refresh - cache cleared for ${preset}`);
     }
 
     try {
@@ -128,8 +142,10 @@ export function useIntelBriefing(
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // Tell server to skip its cache too
+          ...(options?.force ? { 'Cache-Control': 'no-cache' } : {}),
         },
-        body: JSON.stringify({ preset }),
+        body: JSON.stringify({ preset, forceRefresh: options?.force }),
       });
 
       if (!response.ok) {
@@ -232,6 +248,7 @@ export function useIntelBriefing(
     loading,
     error,
     refetch: fetchBriefing,
+    clearCache,
     pulse,
     pulseLoading,
     startPulse,
