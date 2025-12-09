@@ -18,6 +18,13 @@ import {
 // Vercel Edge Runtime for low latency
 export const runtime = 'edge';
 
+// =============================================================================
+// COST CONTROL KILL SWITCH
+// =============================================================================
+// Set DISABLE_LLM=true in Vercel to completely stop all LLM API calls
+// Use this when you've blown through your credits
+const LLM_KILL_SWITCH = process.env.DISABLE_LLM === 'true';
+
 // PRODUCTION-ONLY: Block Anthropic API calls in non-production unless explicitly enabled
 function isAnthropicAllowed(): boolean {
   const env = process.env.VERCEL_ENV || process.env.NODE_ENV;
@@ -578,13 +585,13 @@ export async function POST(req: Request) {
     );
 
     // ============================================================
-    // CACHE MISS - Use template engine for fast, zero-cost response
+    // CACHE MISS - Use enhanced template engine with REAL DATA
     // ============================================================
-    // SECURITY: Users NEVER trigger external LLM API calls.
-    // The template engine generates structured briefings from metrics WITHOUT calling Claude.
-    // Cost: $0 | Latency: <10ms | Quality: Consistent, structured
+    // Pulls actual GDELT tones, country signals, and nation state vectors
+    // to generate data-driven briefings WITHOUT calling Claude.
+    // Cost: $0 | Latency: <50ms | Quality: Dynamic, data-backed
     if (!canGenerateFresh) {
-      console.log(`[CACHE MISS] No cached briefing for preset: ${preset}, using template engine`);
+      console.log(`[CACHE MISS] No cached briefing for preset: ${preset}, using enhanced template engine with real data`);
 
       // Fetch nation data for template engine
       const presetFiltersForTemplate: Record<string, string[] | null> = {
@@ -595,31 +602,109 @@ export async function POST(req: Request) {
       };
 
       const templateFilter = presetFiltersForTemplate[preset];
-      let templateQuery = supabase
-        .from('nations')
-        .select('code, name, basin_strength, transition_risk, regime');
-      if (templateFilter) {
-        templateQuery = templateQuery.in('code', templateFilter);
+
+      // Parallel fetch: nations, GDELT signals, country indicators
+      const [nationsResult, gdeltResult, signalsResult] = await Promise.all([
+        // Nations with state vectors
+        (async () => {
+          let q = supabase.from('nations').select('code, name, basin_strength, transition_risk, regime');
+          if (templateFilter) q = q.in('code', templateFilter);
+          return q;
+        })(),
+        // Recent GDELT tone data (last 48 hours)
+        supabase
+          .from('learning_events')
+          .select('domain, data')
+          .eq('session_hash', 'gdelt_ingest')
+          .gte('timestamp', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString())
+          .limit(100),
+        // Country economic signals
+        supabase
+          .from('country_signals')
+          .select('country_code, country_name, indicator, value')
+          .order('updated_at', { ascending: false })
+          .limit(200),
+      ]);
+
+      const templateNationData = (nationsResult.data || []) as NationData[];
+
+      // Process GDELT data into country risk scores
+      const gdeltRiskByCountry: Record<string, number> = {};
+      const gdeltData = gdeltResult.data || [];
+      for (const event of gdeltData) {
+        const country = event.domain;
+        const risk = (event.data as { numeric_features?: { gdelt_tone_risk?: number } })?.numeric_features?.gdelt_tone_risk;
+        if (country && risk !== undefined) {
+          gdeltRiskByCountry[country] = risk;
+        }
       }
 
-      const { data: templateNations } = await templateQuery;
-      const templateNationData = (templateNations || []) as NationData[];
+      // Process country signals into indicators
+      const signalsByCountry: Record<string, Record<string, number>> = {};
+      const signalsData = signalsResult.data || [];
+      for (const sig of signalsData) {
+        if (!signalsByCountry[sig.country_code]) {
+          signalsByCountry[sig.country_code] = {};
+        }
+        signalsByCountry[sig.country_code][sig.indicator] = sig.value;
+      }
 
-      // Compute metrics for template engine
+      // Find highest-risk nations for dynamic content
+      const highRiskNations = templateNationData
+        .filter(n => (n.transition_risk || 0) > 0.5 || (gdeltRiskByCountry[n.code] || 0) > 0.6)
+        .sort((a, b) => (b.transition_risk || 0) - (a.transition_risk || 0))
+        .slice(0, 5);
+
+      // Build dynamic key factors from real data
+      const dynamicFactors: string[] = [];
+      if (highRiskNations.length > 0) {
+        dynamicFactors.push(`Elevated risk indicators in ${highRiskNations.map(n => n.name).join(', ')}`);
+      }
+
+      // Check for economic stress signals
+      const highInflation = Object.entries(signalsByCountry)
+        .filter(([_, sigs]) => (sigs['inflation'] || 0) > 8)
+        .map(([code]) => code);
+      if (highInflation.length > 0) {
+        dynamicFactors.push(`Inflationary pressure detected in ${highInflation.length} economies`);
+      }
+
+      // Check for negative GDELT sentiment
+      const negativeGdelt = Object.entries(gdeltRiskByCountry)
+        .filter(([_, risk]) => risk > 0.7)
+        .map(([country]) => country);
+      if (negativeGdelt.length > 0) {
+        dynamicFactors.push(`Negative media sentiment trending in ${negativeGdelt.length} regions`);
+      }
+
+      // Compute metrics with GDELT-enhanced risk
+      const computeEnhancedRisk = (nations: NationData[], category: string) => {
+        const baseRisk = computeCategoryRisk(nations, category);
+        // Boost risk if GDELT shows negative sentiment
+        const gdeltBoost = Object.values(gdeltRiskByCountry).length > 0
+          ? Object.values(gdeltRiskByCountry).reduce((a, b) => a + b, 0) / Object.values(gdeltRiskByCountry).length * 10
+          : 0;
+        return {
+          ...baseRisk,
+          riskLevel: Math.min(100, baseRisk.riskLevel + Math.round(gdeltBoost)),
+          keyFactors: dynamicFactors.length > 0 ? dynamicFactors.slice(0, 3) : baseRisk.keyFactors,
+        };
+      };
+
       const templateMetrics: TemplateMetrics = {
         region: req.headers.get('x-vercel-ip-country') || 'Global',
         preset: preset as 'global' | 'nato' | 'brics' | 'conflict',
         categories: {
-          political: computeCategoryRisk(templateNationData, 'political'),
-          economic: computeCategoryRisk(templateNationData, 'economic'),
-          security: computeCategoryRisk(templateNationData, 'security'),
-          financial: computeCategoryRisk(templateNationData, 'financial'),
-          cyber: computeCategoryRisk(templateNationData, 'cyber'),
-          energy: computeCategoryRisk(templateNationData, 'energy'),
-          trade: computeCategoryRisk(templateNationData, 'industry'),
-          diplomatic: computeCategoryRisk(templateNationData, 'borders'),
-          humanitarian: computeCategoryRisk(templateNationData, 'health'),
-          social: computeCategoryRisk(templateNationData, 'domestic'),
+          political: computeEnhancedRisk(templateNationData, 'political'),
+          economic: computeEnhancedRisk(templateNationData, 'economic'),
+          security: computeEnhancedRisk(templateNationData, 'security'),
+          financial: computeEnhancedRisk(templateNationData, 'financial'),
+          cyber: computeEnhancedRisk(templateNationData, 'cyber'),
+          energy: computeEnhancedRisk(templateNationData, 'energy'),
+          trade: computeEnhancedRisk(templateNationData, 'industry'),
+          diplomatic: computeEnhancedRisk(templateNationData, 'borders'),
+          humanitarian: computeEnhancedRisk(templateNationData, 'health'),
+          social: computeEnhancedRisk(templateNationData, 'domestic'),
         },
         topAlerts: generateTopAlerts(templateNationData, preset).map(a => ({
           category: a.category,
@@ -632,13 +717,17 @@ export async function POST(req: Request) {
       // Generate briefing using template engine (no LLM, instant)
       const templateBriefing = generateBriefingFromMetrics(templateMetrics);
 
-      // Convert to expected response format
+      // Build richer summary with actual data
+      const dataPointCount = gdeltData.length + signalsData.length + templateNationData.length;
+      const topRiskNation = highRiskNations[0]?.name || 'multiple regions';
+
+      // Convert to expected response format with enhanced prose
       const briefingsMap: Record<string, string> = {};
       for (const b of templateBriefing.briefings) {
         briefingsMap[b.category] = `${b.summary} Risk: ${b.riskLevel}. Trend: ${b.trend}. ${b.keyPoints.map(p => '• ' + p).join(' ')}`;
       }
       briefingsMap['nsm'] = templateBriefing.nsm;
-      briefingsMap['summary'] = `${preset.toUpperCase()} preset analysis indicates ${templateMetrics.overallRisk} overall risk environment.`;
+      briefingsMap['summary'] = `Analysis of ${dataPointCount} data points indicates ${templateMetrics.overallRisk} overall risk. Primary concern: ${topRiskNation}. ${highInflation.length > 0 ? `Economic stress in ${highInflation.length} markets. ` : ''}${negativeGdelt.length > 0 ? `Media sentiment deteriorating in ${negativeGdelt.length} regions.` : ''}`;
 
       return NextResponse.json({
         briefings: briefingsMap,
@@ -648,7 +737,9 @@ export async function POST(req: Request) {
           timestamp: new Date().toISOString(),
           overallRisk: templateMetrics.overallRisk,
           cached: false,
-          generatedBy: 'template-engine',
+          generatedBy: 'template-engine-enhanced',
+          dataPoints: dataPointCount,
+          gdeltSignals: gdeltData.length,
           llmCost: 0,
           latencyMs: Date.now() - startTime,
         },
@@ -886,6 +977,21 @@ export async function POST(req: Request) {
           overallRisk: 'elevated',
           source: 'fallback_non_production',
           environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
+        },
+      });
+    }
+
+    // COST CONTROL: Kill switch to stop all LLM calls
+    if (LLM_KILL_SWITCH) {
+      console.log('[INTEL] LLM KILL SWITCH ACTIVE - returning template data only');
+      const fallback = await getFallbackBriefings(preset, supabase);
+      return NextResponse.json({
+        briefings: fallback,
+        metadata: {
+          timestamp: new Date().toISOString(),
+          overallRisk: 'elevated',
+          source: 'kill_switch_active',
+          message: 'LLM calls disabled via DISABLE_LLM=true',
         },
       });
     }
