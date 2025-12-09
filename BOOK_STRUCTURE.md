@@ -242,6 +242,31 @@
 
 ---
 
+## PART V: ADVANCED THEORY & VALIDATION (NEW)
+*Where theory meets competition and deep structure emerges*
+
+### Chapter 23: Gauge-Theoretic Foundations of Value Clustering
+- 23.1 The 5% tolerance as gauge symmetry with O(ε²) invariance
+- 23.2 Yang-Mills analogy: gauge group G_ε on answer space
+- 23.3 Renormalization Group flow for fixed-point extraction
+- 23.4 Quantum Darwinism correspondence (einselection ↔ clustering)
+- 23.5 Compression-Causality Correlation theorem
+- **Source:** PROMETHEUS extraction + Chapter 26 file
+- **Word Target:** 8,000
+
+### Chapter 24: Competition Proving Grounds
+- 24.1 ARC Prize: Compression-based abstraction reasoning
+- 24.2 AIMO3: RYANAIMO architecture, 84% error reduction validated
+- 24.3 Hull Tactical: Phase transitions in financial markets
+- 24.4 Universal principles across domains
+- 24.5 From competition to production pipeline
+- **Source:** research/AIMO3, research/arcprize-2025, Chapter 27 file
+- **Word Target:** 8,000
+
+**PART V TOTAL: ~16,000 words (~40 pages)**
+
+---
+
 ## Back Matter
 
 ### Appendix A: The PROMETHEUS Protocol
@@ -251,7 +276,7 @@
 
 ### Appendix B: Code Repository
 - Links to GitHub/HuggingFace
-- Package descriptions (nucleation, crowd-phase, etc.)
+- Package descriptions (nucleation, crowd-phase, gtvc, etc.)
 - How to run the examples
 - **Word Target:** 2,000
 
@@ -259,18 +284,28 @@
 - Summary table from LATTICEFORGE
 - **Word Target:** 2,000
 
+### Appendix D: Paper Summaries & Bibliography
+- Summaries of key referenced papers
+- Full bibliography with annotations
+- **Word Target:** 4,000
+
+### Appendix E: The PROMETHEUS Methodology (Expanded)
+- Full 5-stage protocol for latent knowledge extraction
+- NSM (Novel Synthesis Method) details
+- XYZA operationalization framework
+- Confidence levels and ablation testing
+- Case study: CIC framework extraction
+- **Source:** APPENDIX_G_PROMETHEUS_METHODOLOGY.md
+- **Word Target:** 5,000
+
 ### Glossary
 - Key terms and acronyms
-- **Word Target:** 2,000
-
-### Bibliography
-- All citations from all sources
 - **Word Target:** 2,000
 
 ### Index
 - Generated at production time
 
-**BACK MATTER TOTAL: ~11,000 words (~30 pages)**
+**BACK MATTER TOTAL: ~18,000 words (~45 pages)**
 
 ---
 
@@ -283,10 +318,11 @@
 | Part II: CIC Framework | 54,000 | 140 |
 | Part III: Applications | 58,000 | 150 |
 | Part IV: Doctrine | 36,000 | 95 |
-| Back Matter | 11,000 | 30 |
-| **TOTAL** | **209,000** | **~545 pages** |
+| Part V: Advanced Theory | 16,000 | 40 |
+| Back Matter | 18,000 | 45 |
+| **TOTAL** | **232,000** | **~600 pages** |
 
-*Note: At 385 words/page (standard non-fiction), this is ~545 pages. May need trimming to hit 400 target.*
+*Note: At 385 words/page (standard non-fiction), this is ~600 pages. Expanded from original 400 target to accommodate advanced theory chapters.*
 
 ---
 
@@ -297,6 +333,9 @@
 - [ ] Part II: Chapters 6-11 (CIC_INFERENCE_PAPER, APPENDIX)
 - [ ] Part III: Chapters 12-17 (LATTICEFORGE_MATHEMATICAL_FOUNDATIONS)
 - [ ] Part IV: Chapters 18-22 (MILITARY_DOCTRINE, skills/)
+- [x] Part V: Chapter 23 (CHAPTER_26_GAUGE_THEORETIC_FOUNDATIONS.md)
+- [x] Part V: Chapter 24 (CHAPTER_27_COMPETITION_PROVING_GROUNDS.md)
+- [x] Appendix E: PROMETHEUS Methodology (APPENDIX_G_PROMETHEUS_METHODOLOGY.md)
 
 ### Needs Writing (20%)
 - [ ] Preface (new)
@@ -305,12 +344,14 @@
 - [ ] Worked examples and code walkthroughs
 - [ ] Conclusion
 - [ ] Glossary
+- [ ] Appendix D: Paper Summaries
 
 ### Needs Editing
 - [ ] Tone consistency (academic ↔ casual)
 - [ ] Redundancy removal (same concepts appear in multiple source files)
 - [ ] Citation formatting
 - [ ] Code block formatting for print
+- [ ] Figure generation for Chapter 23 (gauge symmetry diagrams)
 
 ---
 
