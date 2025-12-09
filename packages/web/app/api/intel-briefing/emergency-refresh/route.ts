@@ -379,23 +379,40 @@ GLOBAL RISK CONTEXT:
 
 YOUR TASK: Translate these metrics into executive briefing prose for each domain.
 
-Format your response as JSON:
+Format your response as JSON with ALL 26 domains:
 {
-  "summary": "<1-2 sentence executive summary based on metrics above>",
-  "political": "<prose translating political risk metrics>",
-  "economic": "<prose on economic indicators>",
-  "security": "<prose on security posture from metrics>",
-  "scitech": "<prose on technology/science sector>",
-  "cyber": "<prose on cyber threat indicators>",
-  "energy": "<prose on energy security metrics>",
-  "military": "<prose on military situation indicators>",
-  "financial": "<prose on financial stability metrics>",
-  "domestic": "<prose on domestic stability indicators>",
-  "nsm": "<Next Strategic Move recommendation based on data>"
+  "political": "<1-2 sentences on political risk metrics>",
+  "economic": "<1-2 sentences on economic indicators>",
+  "security": "<1-2 sentences on security posture>",
+  "financial": "<1-2 sentences on financial stability>",
+  "health": "<1-2 sentences on health sector>",
+  "scitech": "<1-2 sentences on science/tech>",
+  "resources": "<1-2 sentences on resource security>",
+  "crime": "<1-2 sentences on crime metrics>",
+  "cyber": "<1-2 sentences on cyber threats>",
+  "terrorism": "<1-2 sentences on terrorism indicators>",
+  "domestic": "<1-2 sentences on domestic stability>",
+  "borders": "<1-2 sentences on border/migration>",
+  "infoops": "<1-2 sentences on information ops>",
+  "military": "<1-2 sentences on military posture>",
+  "space": "<1-2 sentences on space sector>",
+  "industry": "<1-2 sentences on industrial output>",
+  "logistics": "<1-2 sentences on logistics/supply>",
+  "minerals": "<1-2 sentences on critical minerals>",
+  "energy": "<1-2 sentences on energy security>",
+  "markets": "<1-2 sentences on market conditions>",
+  "religious": "<1-2 sentences on religious affairs>",
+  "education": "<1-2 sentences on education sector>",
+  "employment": "<1-2 sentences on labor markets>",
+  "housing": "<1-2 sentences on housing metrics>",
+  "crypto": "<1-2 sentences on digital assets>",
+  "emerging": "<1-2 sentences on emerging trends>",
+  "summary": "<2-3 sentence executive summary>",
+  "nsm": "<Next Strategic Move recommendation>"
 }
 
-Reference the SPECIFIC metrics provided. Do not fabricate events - describe what the NUMBERS indicate.
-Respond ONLY with valid JSON.`;
+IMPORTANT: You are translating NUMBERS to SENTENCES. The metrics are your source of truth.
+Reference the SPECIFIC metrics provided. Output ONLY valid JSON.`;
     }
 
     debugInfo.mode = mode;
@@ -474,6 +491,12 @@ Respond ONLY with valid JSON.`;
     // We MUST write to Redis for the briefings page to pick up our fresh data!
     try {
       const redisCacheKey = 'intel-briefing:global'; // Same format as intel-briefing route
+
+      // FIRST: Delete the old cache to ensure fresh data is used
+      await redis.del(redisCacheKey);
+      console.log('[EMERGENCY REFRESH] Deleted old cache key:', redisCacheKey);
+
+      // THEN: Write the new data
       await redis.set(redisCacheKey, {
         data: cacheData,
         timestamp: Date.now(),
