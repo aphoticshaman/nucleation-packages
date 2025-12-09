@@ -160,7 +160,7 @@ Current metrics:
 Provide your assessment as JSON.`;
 
         // Call LFBM for country-specific intel
-        const lfbmResponse = await lfbm.generateBriefing({
+        const lfbmResponse = await lfbm.generateRaw({
           systemPrompt: COUNTRY_INTEL_SYSTEM_PROMPT,
           userMessage: userPrompt,
           max_tokens: 256,

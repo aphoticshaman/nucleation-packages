@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { CookieConsent } from '@/components/CookieConsent';
+import { NonProdApiToggle } from '@/components/admin/NonProdApiToggle';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://latticeforge.io'),
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-slate-950 text-white antialiased">
         {children}
         <CookieConsent />
+        <NonProdApiToggle />
       </body>
     </html>
   );

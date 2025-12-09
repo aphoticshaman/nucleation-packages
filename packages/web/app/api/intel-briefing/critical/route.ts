@@ -166,7 +166,7 @@ Provide emergency intelligence briefing in JSON format. Focus on:
 3. What decision-makers should do RIGHT NOW
 4. What to monitor in the next 1-6 hours`;
 
-    const lfbmResponse = await lfbm.generateBriefing({
+    const lfbmResponse = await lfbm.generateRaw({
       systemPrompt,
       userMessage,
       max_tokens: 4096,

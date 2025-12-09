@@ -123,7 +123,7 @@ Be conservative - false positives waste resources.`;
 
     const userMessage = `Current time: ${new Date().toISOString()}. Any earth-shattering global events in the last hour that would affect geopolitical intelligence analysis?`;
 
-    const lfbmResponse = await lfbm.generateBriefing({
+    const lfbmResponse = await lfbm.generateRaw({
       systemPrompt,
       userMessage,
       max_tokens: 100,

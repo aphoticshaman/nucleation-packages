@@ -98,7 +98,7 @@ Score how accurate the prediction was from 0.0 to 1.0:
 Respond with ONLY a JSON object:
 {"accuracy": 0.X, "reasoning": "brief explanation"}`;
 
-        const lfbmResponse = await lfbm.generateBriefing({
+        const lfbmResponse = await lfbm.generateRaw({
           userMessage: prompt,
           max_tokens: 256,
         });

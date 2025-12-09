@@ -18,7 +18,130 @@
  * RunPod Endpoints (LatticeForge):
  * - Axolotl Training: https://api.runpod.ai/v2/w5w7c0mseycf23/run
  * - vLLM Inference:   https://api.runpod.ai/v2/p2rvk115ebb42j/run
+ *
+ * Non-Production Control:
+ * - Set ENABLE_LFBM_IN_PREVIEW=true to enable in preview/dev
+ * - Without this, LFBM calls return fallback responses in non-prod
  */
+
+// =============================================================================
+// NON-PRODUCTION API BLOCKING
+// =============================================================================
+// Uses LF_PROD_ENABLE environment variable for master control:
+// - 'true' in production → APIs enabled
+// - 'false' in preview/dev → APIs BLOCKED by default
+//
+// Admin can temporarily enable via timed override (ARM + FIRE mechanism):
+// 1. Set LF_ADMIN_OVERRIDE_UNTIL in localStorage (timestamp)
+// 2. Override expires after the timeout (default 30 minutes)
+// This prevents dozens of preview deployments from racking up RunPod costs.
+
+// Fallback responses for when LFBM is disabled in non-prod
+const FALLBACK_BRIEFING: Record<string, string> = {
+  political: '[LFBM DISABLED] LF_PROD_ENABLE=false - Enable via admin override',
+  economic: '[LFBM DISABLED] No RunPod calls in preview/dev by default',
+  security: '[LFBM DISABLED] This is a fallback response',
+  summary: 'LFBM API calls are disabled. LF_PROD_ENABLE must be true or admin must override.',
+  nsm: 'N/A - Non-production environment',
+};
+
+const FALLBACK_RESPONSE: LFBMResponse = {
+  briefings: FALLBACK_BRIEFING,
+  latency_ms: 0,
+  tokens_generated: 0,
+  model: 'fallback-nonprod',
+};
+
+// In-memory admin override state (for serverless functions)
+// Each function instance has its own state - this is a per-request cache
+let adminOverrideExpiry: number | null = null;
+
+/**
+ * Set a timed admin override to temporarily enable APIs
+ * @param minutes - How long the override should last (default 30 minutes)
+ */
+export function setAdminOverride(minutes: number = 30): { expiresAt: string; durationMinutes: number } {
+  const expiryTime = Date.now() + (minutes * 60 * 1000);
+  adminOverrideExpiry = expiryTime;
+
+  return {
+    expiresAt: new Date(expiryTime).toISOString(),
+    durationMinutes: minutes,
+  };
+}
+
+/**
+ * Clear any active admin override
+ */
+export function clearAdminOverride(): void {
+  adminOverrideExpiry = null;
+}
+
+/**
+ * Check if admin override is active
+ */
+export function isAdminOverrideActive(): boolean {
+  if (!adminOverrideExpiry) return false;
+
+  // Check if override has expired
+  if (Date.now() > adminOverrideExpiry) {
+    adminOverrideExpiry = null;
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Get remaining time on admin override
+ */
+export function getAdminOverrideRemaining(): { active: boolean; remainingMinutes: number } {
+  if (!adminOverrideExpiry) {
+    return { active: false, remainingMinutes: 0 };
+  }
+
+  const remaining = adminOverrideExpiry - Date.now();
+  if (remaining <= 0) {
+    adminOverrideExpiry = null;
+    return { active: false, remainingMinutes: 0 };
+  }
+
+  return {
+    active: true,
+    remainingMinutes: Math.ceil(remaining / (60 * 1000)),
+  };
+}
+
+/**
+ * Master check: Is LFBM enabled in current environment?
+ *
+ * Priority order:
+ * 1. LF_PROD_ENABLE='true' → Enabled (production)
+ * 2. Admin timed override active → Enabled (temporary)
+ * 3. ENABLE_APIS_IN_PREVIEW='true' → Enabled (legacy env var)
+ * 4. Default → BLOCKED
+ */
+export function isLFBMEnabled(): boolean {
+  // Primary control: LF_PROD_ENABLE environment variable
+  // This is set to 'true' in production and 'false' in preview/dev
+  if (process.env.LF_PROD_ENABLE === 'true') {
+    return true;
+  }
+
+  // Admin timed override (ARM + FIRE mechanism)
+  if (isAdminOverrideActive()) {
+    console.log('[LFBM] Admin override active - APIs temporarily enabled');
+    return true;
+  }
+
+  // Legacy fallback: explicit enable in preview/dev
+  if (process.env.ENABLE_LFBM_IN_PREVIEW === 'true') return true;
+  if (process.env.ENABLE_APIS_IN_PREVIEW === 'true') return true;
+
+  // BLOCKED by default when LF_PROD_ENABLE is not 'true'
+  console.log('[LFBM] BLOCKED - LF_PROD_ENABLE is not true and no admin override');
+  return false;
+}
 
 export interface LFBMNationInput {
   code: string;
@@ -139,8 +262,17 @@ Generate JSON briefings for each category.`;
   /**
    * Call RunPod serverless vLLM endpoint
    * RunPod uses /runsync for synchronous calls with { input: { ... } } wrapper
+   *
+   * IMPORTANT: Blocked in non-production by default to prevent preview deployments
+   * from making RunPod calls. Enable via ENABLE_APIS_IN_PREVIEW=true.
    */
   async generateBriefing(request: LFBMRequest): Promise<LFBMResponse> {
+    // BLOCK in non-production unless explicitly enabled
+    if (!isLFBMEnabled()) {
+      console.log('[LFBM] BLOCKED - Non-production environment, returning fallback');
+      return FALLBACK_RESPONSE;
+    }
+
     if (!this.endpoint) {
       throw new Error('LFBM_ENDPOINT not configured');
     }
@@ -270,6 +402,36 @@ Generate JSON briefings for each category.`;
   }
 
   /**
+   * Generate with raw prompts - for routes that need custom system/user messages
+   * BLOCKED in non-production by default
+   */
+  async generateRaw(params: {
+    systemPrompt?: string;
+    userMessage: string;
+    max_tokens?: number;
+    temperature?: number;
+  }): Promise<string> {
+    // BLOCK in non-production unless explicitly enabled
+    if (!isLFBMEnabled()) {
+      console.log('[LFBM] BLOCKED raw generation - Non-production environment');
+      return JSON.stringify({ blocked: true, reason: 'LFBM disabled in non-production', fallback: true });
+    }
+
+    if (!this.endpoint) {
+      throw new Error('LFBM_ENDPOINT not configured');
+    }
+
+    const response = await this.callEndpoint(
+      params.systemPrompt || 'You are a helpful assistant. Respond with JSON only.',
+      params.userMessage,
+      params.max_tokens || 256
+    );
+
+    // Return raw content string for routes to parse
+    return JSON.stringify(response.briefings);
+  }
+
+  /**
    * Convert from the format used in intel-briefing route
    */
   async generateFromMetrics(
@@ -304,8 +466,15 @@ Generate JSON briefings for each category.`;
 
   /**
    * Generate historical pattern analysis
+   * BLOCKED in non-production by default
    */
   async generateHistoricalAnalysis(request: HistoricalRequest): Promise<LFBMResponse> {
+    // BLOCK in non-production unless explicitly enabled
+    if (!isLFBMEnabled()) {
+      console.log('[LFBM] BLOCKED historical analysis - Non-production environment');
+      return FALLBACK_RESPONSE;
+    }
+
     if (!this.endpoint) {
       throw new Error('LFBM_ENDPOINT not configured');
     }
@@ -338,6 +507,7 @@ Generate historical pattern analysis connecting precedents to current data.`;
 
   /**
    * Generate hybrid analysis (current + historical)
+   * BLOCKED in non-production by default
    */
   async generateHybridAnalysis(
     nationData: Array<{ code: string; name: string; transition_risk?: number }>,
@@ -345,6 +515,12 @@ Generate historical pattern analysis connecting precedents to current data.`;
     categoryRisks: Record<string, number>,
     focus?: string
   ): Promise<LFBMResponse> {
+    // BLOCK in non-production unless explicitly enabled
+    if (!isLFBMEnabled()) {
+      console.log('[LFBM] BLOCKED hybrid analysis - Non-production environment');
+      return FALLBACK_RESPONSE;
+    }
+
     if (!this.endpoint) {
       throw new Error('LFBM_ENDPOINT not configured');
     }

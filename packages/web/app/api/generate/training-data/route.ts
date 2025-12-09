@@ -1115,7 +1115,7 @@ Respond in this exact JSON format:
 Only output the JSON.`;
 
   try {
-    const lfbmResponse = await getLFBM().generateBriefing({
+    const lfbmResponse = await getLFBM().generateRaw({
       userMessage: prompt,
       max_tokens: 1200,
     });
@@ -1285,7 +1285,7 @@ Respond in this exact JSON format:
 Only output the JSON, nothing else.`;
 
   try {
-    const lfbmResponse = await getLFBM().generateBriefing({
+    const lfbmResponse = await getLFBM().generateRaw({
       userMessage: prompt,
       max_tokens: 1024,
     });
