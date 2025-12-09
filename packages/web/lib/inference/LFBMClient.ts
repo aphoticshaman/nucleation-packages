@@ -10,6 +10,10 @@
  * 3. Set LFBM_ENDPOINT in Vercel env vars
  * 4. Set LFBM_API_KEY to your RunPod API key
  *
+ * RunPod Endpoints (LatticeForge):
+ * - Axolotl Training: https://api.runpod.ai/v2/w5w7c0mseycf23/run
+ * - vLLM Inference:   https://api.runpod.ai/v2/p2rvk115ebb42j/run
+ *
  * Cost comparison:
  * - Anthropic Haiku: ~$0.25-0.75 per briefing
  * - LFBM on RunPod vLLM: ~$0.001 per briefing

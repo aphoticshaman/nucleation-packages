@@ -6,7 +6,26 @@ import { createServerClient } from '@supabase/ssr';
 import { Redis } from '@upstash/redis';
 
 export const runtime = 'edge';
-export const maxDuration = 60;
+export const maxDuration = 120; // Extended for meta-analysis
+
+/**
+ * Emergency Refresh Modes:
+ * - realtime: Current metric translation (default)
+ * - historical: Meta-analysis using Claude's verified historical knowledge
+ * - hybrid: Combine current metrics with historical pattern analysis
+ */
+type RefreshMode = 'realtime' | 'historical' | 'hybrid';
+
+interface RefreshRequest {
+  mode?: RefreshMode;
+  // For historical/hybrid modes
+  gdeltPeriod?: {
+    start: string; // ISO date, GDELT goes back to 2015
+    end: string;
+  };
+  historicalFocus?: string; // e.g., "Arab Spring parallels", "Cold War patterns"
+  depth?: 'quick' | 'standard' | 'deep';
+}
 
 // Initialize Redis client for cache (same as intel-briefing route)
 const redis = Redis.fromEnv();
@@ -33,10 +52,20 @@ function isAnthropicAllowed(): { allowed: boolean; reason?: string } {
 }
 
 // Emergency endpoint to force-refresh intel data from Claude API
-// Estimated cost: $0.25-0.75 per call
+// Estimated cost: $0.25-0.75 per call (realtime), $0.50-2.00 (historical/hybrid)
 export async function POST(request: Request) {
   const startTime = Date.now();
   const debugInfo: Record<string, unknown> = {};
+
+  // Parse request body for mode and options
+  let body: RefreshRequest = {};
+  try {
+    body = await request.json();
+  } catch {
+    // Default to realtime mode if no body
+  }
+  const mode: RefreshMode = body.mode || 'realtime';
+  const depth = body.depth || 'standard';
 
   try {
     // Check environment variables first
@@ -130,36 +159,191 @@ export async function POST(request: Request) {
       apiKey: anthropicKey,
     });
 
-    // ============================================================
-    // DATE-AGNOSTIC PROMPT (v2) - Matches main intel-briefing route
-    // ============================================================
-    // Key insight: Don't ask Claude for current events it can't know about.
-    // Instead, frame it as translating METRICS from upstream systems.
-    // This avoids knowledge cutoff triggers while still producing useful output.
-
-    // Fetch actual metrics from database to give Claude real data to work with
+    // Fetch nation data (used in all modes)
     const { data: nationRisks } = await supabase
       .from('nations')
       .select('code, name, basin_strength, transition_risk, regime')
       .order('transition_risk', { ascending: false })
       .limit(20);
 
-    const { data: recentSignals } = await supabase
-      .from('learning_events')
-      .select('domain, data')
-      .eq('session_hash', 'gdelt_ingest')
-      .gte('timestamp', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString())
-      .limit(50);
-
-    // Build metrics context from real data
     const highRiskNations = (nationRisks || [])
       .filter((n: { transition_risk?: number }) => (n.transition_risk || 0) > 0.5)
-      .map((n: { name: string; transition_risk?: number }) => `${n.name}: ${((n.transition_risk || 0) * 100).toFixed(0)}% transition risk`)
+      .map((n: { code: string; name: string; transition_risk?: number }) =>
+        `${n.name} (${n.code}): ${((n.transition_risk || 0) * 100).toFixed(0)}% transition risk`)
       .slice(0, 5);
 
+    // Fetch GDELT signals based on mode
+    let gdeltQuery = supabase
+      .from('learning_events')
+      .select('domain, data, timestamp')
+      .eq('session_hash', 'gdelt_ingest');
+
+    // For historical/hybrid mode, use specified period; else last 48h
+    if (body.gdeltPeriod && (mode === 'historical' || mode === 'hybrid')) {
+      gdeltQuery = gdeltQuery
+        .gte('timestamp', body.gdeltPeriod.start)
+        .lte('timestamp', body.gdeltPeriod.end);
+    } else {
+      gdeltQuery = gdeltQuery
+        .gte('timestamp', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString());
+    }
+
+    const { data: recentSignals } = await gdeltQuery.limit(100);
     const gdeltSignalCount = recentSignals?.length || 0;
 
-    const systemPrompt = `You are a prose translation engine in a multi-stage intelligence pipeline.
+    // Build GDELT summary for historical analysis
+    const gdeltSummary = recentSignals?.reduce((acc, s) => {
+      const domain = s.domain || 'unknown';
+      acc[domain] = (acc[domain] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>) || {};
+
+    // ============================================================
+    // MODE-SPECIFIC PROMPT GENERATION
+    // ============================================================
+    let systemPrompt: string;
+    let userPrompt: string;
+    let modelId: string;
+    let maxTokens: number;
+
+    if (mode === 'historical') {
+      // HISTORICAL MODE: Meta-analysis using Claude's verified knowledge
+      // No hallucination risk - we only ask about events within training data
+      modelId = depth === 'deep' ? 'claude-sonnet-4-20250514' : 'claude-haiku-4-5-20251001';
+      maxTokens = depth === 'deep' ? 8000 : depth === 'standard' ? 4000 : 2000;
+
+      systemPrompt = `You are a senior intelligence historian specializing in pattern analysis.
+
+YOUR EXPERTISE:
+You have comprehensive, verified knowledge of world history from ancient civilizations through early 2025.
+Your role is to identify historical patterns, precedents, and cycles that inform current analysis.
+
+ANALYSIS FRAMEWORK:
+1. PATTERN RECOGNITION: Identify recurring patterns across historical eras
+2. PRECEDENT MAPPING: Find historical analogues to current situations
+3. CYCLE IDENTIFICATION: Detect geopolitical, economic, and social cycles
+4. LESSONS EXTRACTION: Distill actionable insights from history
+
+CRITICAL RULES:
+- Ground ALL claims in verifiable historical events with dates
+- Clearly distinguish established facts from analytical interpretation
+- Acknowledge uncertainty when extrapolating patterns
+- Connect historical patterns to the current nation data provided
+
+VOICE: Academic intelligence analysis - precise, well-sourced, actionable.`;
+
+      const historicalFocus = body.historicalFocus || 'geopolitical transitions and power shifts';
+      const periodDesc = body.gdeltPeriod
+        ? `GDELT period: ${body.gdeltPeriod.start} to ${body.gdeltPeriod.end}`
+        : 'No specific GDELT period selected';
+
+      userPrompt = `HISTORICAL META-ANALYSIS REQUEST
+
+FOCUS AREA: ${historicalFocus}
+
+CURRENT NATION RISK DATA:
+${highRiskNations.length > 0 ? highRiskNations.join('\n') : 'No nations currently exceed 50% threshold'}
+
+GDELT SIGNAL CONTEXT:
+${Object.entries(gdeltSummary).map(([d, c]) => `- ${d}: ${c} signals`).join('\n') || 'No GDELT data for period'}
+${periodDesc}
+
+YOUR TASK: Generate a meta-analysis connecting historical patterns to the current data.
+
+Identify:
+1. **HISTORICAL PRECEDENTS**: Events from history (with dates) that parallel current nation risks
+2. **PATTERN ANALYSIS**: Recurring cycles relevant to the focus area
+3. **LESSONS**: What history suggests about likely outcomes
+4. **EARLY WARNINGS**: Historical indicators that preceded similar situations
+
+Format as JSON:
+{
+  "summary": "<executive summary connecting history to current data>",
+  "precedents": [
+    {"event": "<historical event>", "date": "<when>", "parallel": "<current situation it mirrors>", "outcome": "<what happened then>"}
+  ],
+  "patterns": [
+    {"name": "<pattern name>", "cycle_length": "<if applicable>", "examples": ["<ex1>", "<ex2>"], "current_phase": "<where we are in cycle>"}
+  ],
+  "lessons": ["<lesson 1>", "<lesson 2>"],
+  "warnings": ["<warning indicator 1>", "<warning indicator 2>"],
+  "political": "<historical political analysis>",
+  "economic": "<historical economic patterns>",
+  "security": "<historical security parallels>",
+  "military": "<historical military doctrine insights>",
+  "nsm": "<Next Strategic Move based on historical lessons>"
+}
+
+Respond ONLY with valid JSON.`;
+
+    } else if (mode === 'hybrid') {
+      // HYBRID MODE: Combine current metrics with historical context
+      modelId = depth === 'deep' ? 'claude-sonnet-4-20250514' : 'claude-haiku-4-5-20251001';
+      maxTokens = depth === 'deep' ? 6000 : 4000;
+
+      systemPrompt = `You are a dual-mode intelligence analyst combining real-time metrics with historical perspective.
+
+DUAL ANALYSIS FRAMEWORK:
+┌─────────────────────────────────────────────────────────────┐
+│  LAYER 1: Current Metrics → What the numbers show NOW       │
+│  LAYER 2: Historical Context → What similar patterns meant  │
+│  LAYER 3: Synthesis → Combined assessment                   │
+└─────────────────────────────────────────────────────────────┘
+
+Your job is to:
+1. Translate current metrics into prose (numbers → sentences)
+2. Overlay historical context where relevant (patterns, precedents)
+3. Provide synthesized assessment combining both perspectives
+
+RULES:
+- Current metrics are ground truth - describe what they show
+- Historical references must cite specific events with dates
+- Clearly separate "current data shows" from "historically, this meant"
+- Synthesis should integrate both, not favor one over the other`;
+
+      userPrompt = `HYBRID ANALYSIS REQUEST
+
+CURRENT METRICS (from live pipeline):
+Nations at elevated risk: ${highRiskNations.length > 0 ? highRiskNations.join(', ') : 'None above threshold'}
+GDELT signals: ${gdeltSignalCount} in analysis window
+Signal breakdown: ${Object.entries(gdeltSummary).map(([d, c]) => `${d}: ${c}`).join(', ') || 'No signals'}
+
+HISTORICAL FOCUS: ${body.historicalFocus || 'General geopolitical patterns'}
+
+Generate a hybrid briefing combining current metrics with historical context.
+
+Format as JSON:
+{
+  "summary": "<synthesis of current data + historical perspective>",
+  "current_assessment": {
+    "political": "<current political metrics>",
+    "economic": "<current economic indicators>",
+    "security": "<current security posture>"
+  },
+  "historical_context": {
+    "most_relevant_precedent": "<historical parallel with date>",
+    "pattern_match": "<what historical pattern this resembles>",
+    "historical_outcome": "<what happened in similar situations>"
+  },
+  "synthesis": {
+    "political": "<integrated political analysis>",
+    "economic": "<integrated economic analysis>",
+    "security": "<integrated security analysis>",
+    "military": "<integrated military analysis>",
+    "cyber": "<integrated cyber analysis>"
+  },
+  "risk_assessment": "<overall risk based on current + historical>",
+  "nsm": "<Next Strategic Move informed by both analyses>"
+}
+
+Respond ONLY with valid JSON.`;
+
+    } else {
+      // REALTIME MODE (default): Pure metric translation
+      modelId = 'claude-haiku-4-5-20251001';
+      maxTokens = 4000;
+
+      systemPrompt = `You are a prose translation engine in a multi-stage intelligence pipeline.
 
 YOUR ROLE IN THE SYSTEM:
 ┌─────────────────────────────────────────────────────────────┐
@@ -181,7 +365,7 @@ VOICE: Professional intelligence analyst. Use phrases like "Risk indicators show
 
 OUTPUT: Generate actionable intelligence prose for each domain, referencing the specific metrics provided.`;
 
-    const userPrompt = `UPSTREAM PIPELINE OUTPUT (computed just now from live feeds):
+      userPrompt = `UPSTREAM PIPELINE OUTPUT (computed just now from live feeds):
 
 MONITORED NATIONS WITH ELEVATED RISK:
 ${highRiskNations.length > 0 ? highRiskNations.join('\n') : 'No nations currently exceed 50% transition risk threshold'}
@@ -212,10 +396,15 @@ Format your response as JSON:
 
 Reference the SPECIFIC metrics provided. Do not fabricate events - describe what the NUMBERS indicate.
 Respond ONLY with valid JSON.`;
+    }
+
+    debugInfo.mode = mode;
+    debugInfo.depth = depth;
+    debugInfo.model = modelId;
 
     const briefingResponse = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 4000,
+      model: modelId,
+      max_tokens: maxTokens,
       system: systemPrompt,
       messages: [{
         role: 'user',
@@ -247,6 +436,18 @@ Respond ONLY with valid JSON.`;
       }, { status: 500 });
     }
 
+    // Estimate cost based on mode/depth
+    const costEstimates: Record<string, string> = {
+      'realtime': '$0.25-0.50',
+      'historical-quick': '$0.25-0.50',
+      'historical-standard': '$0.40-0.75',
+      'historical-deep': '$1.00-2.00',
+      'hybrid-quick': '$0.30-0.60',
+      'hybrid-standard': '$0.50-1.00',
+      'hybrid-deep': '$1.50-2.50',
+    };
+    const costKey = mode === 'realtime' ? 'realtime' : `${mode}-${depth}`;
+
     // Prepare cache data
     const cacheData = {
       briefings,
@@ -254,11 +455,15 @@ Respond ONLY with valid JSON.`;
         region: 'Global',
         preset: 'global',
         timestamp: new Date().toISOString(),
-        overallRisk: 'elevated' as const, // Default to elevated for emergency refresh
+        overallRisk: 'elevated' as const,
         source: 'emergency_refresh',
-        model: 'claude-haiku-4-5-20251001',
-        estimatedCost: '$0.25-0.75',
+        mode,
+        depth: mode !== 'realtime' ? depth : undefined,
+        model: modelId,
+        estimatedCost: costEstimates[costKey] || '$0.50-1.00',
         cached: false,
+        gdeltPeriod: body.gdeltPeriod,
+        historicalFocus: body.historicalFocus,
       },
     };
 
@@ -281,6 +486,7 @@ Respond ONLY with valid JSON.`;
     }
 
     // Also cache in Supabase as backup
+    const currentDate = new Date().toISOString().split('T')[0];
     const supabaseCacheKey = `emergency_briefing_global_${currentDate}`;
     try {
       // Delete ALL expired cache entries

@@ -279,5 +279,178 @@ export async function getAggregatedSignals(
   };
 }
 
+/**
+ * Query GDELT for a specific historical date range
+ *
+ * GDELT data availability:
+ * - v2 API: 2015-02-18 to present
+ * - Updates: Every 15 minutes
+ * - Historical queries: Use startdatetime/enddatetime params
+ */
+export async function queryHistoricalGDELT(
+  startDate: string, // ISO date: '2022-01-01'
+  endDate: string,   // ISO date: '2022-12-31'
+  themes: string[] = ['MILITARY', 'TERROR', 'ELECTION', 'PROTEST'],
+  maxRecords: number = 250
+): Promise<{
+  signals: GDELTSignal[];
+  summary: {
+    totalArticles: number;
+    dateRange: { start: string; end: string };
+    topCountries: Array<{ country: string; count: number; avgTone: number }>;
+    topThemes: Array<{ theme: string; count: number; avgTone: number }>;
+  };
+}> {
+  const signals: GDELTSignal[] = [];
+  const countryStats: Record<string, { count: number; tones: number[] }> = {};
+  const themeStats: Record<string, { count: number; tones: number[] }> = {};
+
+  // Convert dates to GDELT format (YYYYMMDDHHMMSS)
+  const startDT = startDate.replace(/-/g, '') + '000000';
+  const endDT = endDate.replace(/-/g, '') + '235959';
+
+  for (const theme of themes) {
+    try {
+      const params = new URLSearchParams({
+        query: `theme:${theme}`,
+        mode: 'artlist',
+        maxrecords: String(maxRecords),
+        format: 'json',
+        startdatetime: startDT,
+        enddatetime: endDT,
+        sort: 'datedesc',
+      });
+
+      const response = await fetch(`${GDELT_DOC_API}?${params}`, {
+        headers: { 'User-Agent': 'LatticeForge/2.0 HistoricalAnalysis' },
+      });
+
+      if (!response.ok) {
+        console.warn(`GDELT historical ${theme}: ${response.status}`);
+        continue;
+      }
+
+      const data = await response.json();
+      const articles: GDELTArticle[] = data.articles || [];
+
+      // Aggregate stats
+      for (const article of articles) {
+        const country = article.sourcecountry || 'UNKNOWN';
+
+        // Country stats
+        if (!countryStats[country]) {
+          countryStats[country] = { count: 0, tones: [] };
+        }
+        countryStats[country].count++;
+        countryStats[country].tones.push(article.tone);
+
+        // Theme stats
+        if (!themeStats[theme]) {
+          themeStats[theme] = { count: 0, tones: [] };
+        }
+        themeStats[theme].count++;
+        themeStats[theme].tones.push(article.tone);
+      }
+
+      // Create signal
+      if (articles.length > 0) {
+        const avgTone = articles.reduce((sum, a) => sum + a.tone, 0) / articles.length;
+        const riskScore = Math.max(0, Math.min(1, (50 - avgTone) / 100));
+
+        signals.push({
+          theme,
+          country: 'GLOBAL',
+          articleCount: articles.length,
+          avgTone,
+          riskScore,
+          headlines: articles.slice(0, 10).map(a => a.title),
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // Rate limit
+      await new Promise(r => setTimeout(r, 1000));
+
+    } catch (error) {
+      console.error(`GDELT historical ${theme} error:`, error);
+    }
+  }
+
+  // Build summary
+  const topCountries = Object.entries(countryStats)
+    .map(([country, stats]) => ({
+      country,
+      count: stats.count,
+      avgTone: stats.tones.reduce((a, b) => a + b, 0) / stats.tones.length,
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 20);
+
+  const topThemes = Object.entries(themeStats)
+    .map(([theme, stats]) => ({
+      theme,
+      count: stats.count,
+      avgTone: stats.tones.reduce((a, b) => a + b, 0) / stats.tones.length,
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  return {
+    signals,
+    summary: {
+      totalArticles: Object.values(countryStats).reduce((sum, s) => sum + s.count, 0),
+      dateRange: { start: startDate, end: endDate },
+      topCountries,
+      topThemes,
+    },
+  };
+}
+
+/**
+ * Get GDELT timeline data for trend analysis
+ *
+ * Queries GDELT's timeline API for event counts over time
+ */
+export async function getGDELTTimeline(
+  query: string = 'conflict OR protest OR election',
+  startDate: string,
+  endDate: string,
+  resolution: 'day' | 'week' | 'month' = 'day'
+): Promise<Array<{ date: string; count: number; tone: number }>> {
+  try {
+    const startDT = startDate.replace(/-/g, '') + '000000';
+    const endDT = endDate.replace(/-/g, '') + '235959';
+
+    const params = new URLSearchParams({
+      query,
+      mode: 'timelinevol',
+      format: 'json',
+      startdatetime: startDT,
+      enddatetime: endDT,
+      timeres: resolution,
+    });
+
+    const response = await fetch(`${GDELT_DOC_API}?${params}`, {
+      headers: { 'User-Agent': 'LatticeForge/2.0 Timeline' },
+    });
+
+    if (!response.ok) {
+      throw new Error(`GDELT timeline: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const timeline = data.timeline || [];
+
+    return timeline.map((point: { date: string; value: number; tone?: number }) => ({
+      date: point.date,
+      count: point.value,
+      tone: point.tone || 0,
+    }));
+
+  } catch (error) {
+    console.error('GDELT timeline error:', error);
+    return [];
+  }
+}
+
 // Export for use in cron routes
 export { THEMES };
