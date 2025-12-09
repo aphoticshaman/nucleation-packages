@@ -118,50 +118,174 @@ Select: **No**
 ## Pre-order
 Select: **"I am ready to release my book now"**
 
-*(Unless you need more time for cover/content finalization)*
+---
+
+## Cover Image Specifications (Official KDP Requirements)
+
+### Technical Requirements
+
+| Specification | Requirement |
+|---------------|-------------|
+| **Format** | TIFF (.tif/.tiff) or JPEG (.jpeg/.jpg) |
+| **Ideal Dimensions** | **2,560 × 1,600 pixels** (height × width) |
+| **Minimum Dimensions** | 1,000 × 625 pixels |
+| **Maximum Dimensions** | 10,000 × 10,000 pixels |
+| **Aspect Ratio** | **1.6:1** (for every 1,000px width → 1,600px height) |
+| **DPI** | 72 dpi |
+| **Resolution** | 300 PPI recommended for best quality on HD devices |
+| **Max File Size** | 50MB |
+| **Color Profile** | **RGB** (no color separation) |
+| **Min Height for HD** | 2,500 pixels |
+
+### Important Notes
+
+1. **Avoid compression** - Upload at full quality for best results
+2. **No color separation** - Check in image editor before saving
+3. **White/light backgrounds** - Add 3-4 pixel **medium gray border** so cover doesn't disappear against Amazon's white background
+4. **Test at thumbnail size** - Your cover will display small in search results
+
+### Quick Reference
+
+```
+IDEAL:     2,560h × 1,600w pixels (1.6:1 ratio)
+MINIMUM:   1,000h × 625w pixels
+MAXIMUM:   10,000 × 10,000 pixels
+FORMAT:    JPEG or TIFF
+COLOR:     RGB only
+SIZE:      Under 50MB
+```
 
 ---
 
-## Next Steps After This Form
+## Kindle Create Software Guide
 
-### Content Tab (Next)
-- Upload manuscript (EPUB, MOBI, or DOCX)
-- Upload cover image (1600×2400 px JPEG recommended)
-- Preview and verify formatting
+### What Is Kindle Create?
+Amazon's FREE book formatting software that converts your manuscript into a professional eBook or print book.
 
-### Pricing Tab (After Content)
-- Set price (typically $9.99-$14.99 for technical books)
-- Choose royalty option (70% for $2.99-$9.99, 35% otherwise)
-- Enroll in KDP Select (optional - gives Kindle Unlimited access)
+**Download:** [Kindle Create](https://www.amazon.com/Kindle-Create/b?ie=UTF8&node=18292298011)
+
+### Supported Input Formats
+- **DOCX** (recommended) - Microsoft Word
+- **HTML** - Web format
+- **RTF** - Rich Text Format
+- **TXT** - Plain text
+- **PDF** - For fixed layout only
+
+### Output Formats
+- **KPF** - Kindle Package Format (recommended for KDP)
+- **EPUB** - Standard eBook format
+
+### Project Types
+
+| Type | Best For |
+|------|----------|
+| **Reflowable** | Novels, nonfiction, technical books |
+| **Comics** | Graphic novels, sequential art |
+| **Kids** | Children's picture books |
+| **Print Replica** | Textbooks, PDFs with exact layout |
+
+**For "Mathematics of Intelligence":** Use **Reflowable** - best for technical content with text-heavy chapters.
+
+### Key Features
+- **Auto Table of Contents** - Generated from chapter headings
+- **Theme Presets** - Professional formatting templates
+- **Multi-Device Preview** - See how it looks on Kindle, tablet, phone
+- **Print + eBook** - One file for both formats
+
+### Limitations to Know
+- KPF only works on Amazon/KDP (not other stores)
+- Print books: can't customize margins/fonts (auto-calculated)
+- Tables, footnotes, endnotes not supported for print
+- No bleed images for paperback
+
+### Workflow
+
+```
+1. Prepare DOCX with proper Heading styles
+   └── Heading 1 = Chapter titles
+   └── Heading 2 = Subheadings
+   └── Normal = Body text
+
+2. Import into Kindle Create
+   └── Select "Reflowable" project type
+   └── Choose theme
+
+3. Auto-detect chapters from Heading 1
+
+4. Preview on different devices
+
+5. Export as KPF
+
+6. Upload KPF to KDP
+```
 
 ---
 
-## Cover Image Specifications
+## Top Cover Candidates (From Your Art Assets)
 
-**For eBook:**
-- Minimum: 1000 × 1600 pixels
-- Recommended: 1600 × 2400 pixels
-- Format: JPEG or TIFF
-- Color: RGB
+| Asset | Why It Works |
+|-------|--------------|
+| **Infinity Symbol** (cyan-purple particles) | Mathematical elegance, clean composition, room for title |
+| **Cyan Neural Network** | Literal AI imagery, professional, dark background |
+| **Mercury Earth Droplet** | Unique, memorable, conversation-starter |
+| **LatticeForge Globe** | Wireframe aesthetic, adaptable (remove existing text) |
 
-**Top cover candidates from your art assets:**
-1. `aphoticshaman_Infinity_symbol_made_of_flowing_light_particles_*` - Mathematical elegance
-2. `aphoticshaman_Abstract_visualization_of_interconnected_nodes_*` - Neural network
-3. `aphoticshaman_Mercury_droplet_shaped_like_earth_*` - Unique, memorable
-
-See `book/COVER_ART_GUIDE.md` for Midjourney prompts and full specs.
+**File paths:**
+- `art_assets/aphoticshaman_Infinity_symbol_made_of_flowing_light_particles_786821d7-*`
+- `art_assets/aphoticshaman_Abstract_visualization_of_interconnected_nodes__dcc2e015-*`
+- `art_assets/aphoticshaman_Mercury_droplet_shaped_like_earth_hovering_refl_48219cf9-*`
 
 ---
 
-## Quick Validation Checklist
+## Next Steps After eBook Details
 
+### Kindle eBook Content Tab
+1. Upload manuscript (DOCX → Kindle Create → KPF)
+2. Upload cover image (use specs above)
+3. Preview in Kindle Previewer
+4. Verify formatting on different device types
+
+### Kindle eBook Pricing Tab
+- Set price ($9.99-$14.99 typical for technical)
+- Choose royalty: **70%** for $2.99-$9.99, 35% otherwise
+- KDP Select enrollment (optional - gives Kindle Unlimited)
+
+---
+
+## Validation Checklist
+
+### eBook Details
 - [ ] Title matches cover exactly
-- [ ] Description under 4,000 characters
-- [ ] 7 keywords, each under 50 characters
-- [ ] 3 categories selected
+- [ ] Description under 4,000 characters ✓ (~1,650)
+- [ ] 7 keywords, each under 50 characters ✓
+- [ ] 3 categories selected ✓
 - [ ] Publishing rights confirmed
-- [ ] Age rating appropriate
-- [ ] Cover meets minimum resolution
+- [ ] Age rating set (18+)
+
+### Cover Image
+- [ ] Dimensions: 2,560 × 1,600 (or 1.6:1 ratio)
+- [ ] Format: JPEG or TIFF
+- [ ] Color: RGB (no CMYK/separation)
+- [ ] Size: Under 50MB
+- [ ] Gray border if light background
+
+### Manuscript
+- [ ] All chapters included
+- [ ] Heading styles applied (H1 for chapters)
+- [ ] Imported into Kindle Create
+- [ ] TOC auto-generated
+- [ ] Previewed on multiple devices
+- [ ] Exported as KPF
+
+---
+
+## Sources
+
+- [Kindle Create Download](https://www.amazon.com/Kindle-Create/b?ie=UTF8&node=18292298011)
+- [KDP Help: Prepare with Kindle Create](https://kdp.amazon.com/en_US/help/topic/G93BCLJGZFGK39BT)
+- [Getting Started with Kindle Create](https://kdp.amazon.com/en_US/help/topic/GUGQ4WDZ92F733GC)
+- [eBook Manuscript Formatting Guide](https://kdp.amazon.com/help?topicId=G200645680)
+- [Kindlepreneur Kindle Create Tutorial](https://kindlepreneur.com/kindle-create-tutorial/)
 
 ---
 
