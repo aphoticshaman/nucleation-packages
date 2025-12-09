@@ -714,20 +714,96 @@ export async function POST(req: Request) {
         overallRisk: computeOverallRisk(templateNationData),
       };
 
-      // Generate briefing using template engine (no LLM, instant)
-      const templateBriefing = generateBriefingFromMetrics(templateMetrics);
-
-      // Build richer summary with actual data
+      // ================================================================
+      // GENERATE DATA-DRIVEN PROSE (no LLM, uses actual DB data)
+      // ================================================================
       const dataPointCount = gdeltData.length + signalsData.length + templateNationData.length;
-      const topRiskNation = highRiskNations[0]?.name || 'multiple regions';
 
-      // Convert to expected response format with enhanced prose
+      // Get specific country names and stats
+      const topRiskNames = highRiskNations.slice(0, 3).map(n => n.name);
+      const avgTransitionRisk = templateNationData.length > 0
+        ? (templateNationData.reduce((s, n) => s + (n.transition_risk || 0), 0) / templateNationData.length * 100).toFixed(0)
+        : '0';
+      const avgBasinStrength = templateNationData.length > 0
+        ? (templateNationData.reduce((s, n) => s + (n.basin_strength || 0), 0) / templateNationData.length * 100).toFixed(0)
+        : '0';
+
+      // Get specific economic data
+      const inflationCountries = Object.entries(signalsByCountry)
+        .filter(([_, sigs]) => (sigs['inflation'] || 0) > 5)
+        .sort((a, b) => (b[1]['inflation'] || 0) - (a[1]['inflation'] || 0))
+        .slice(0, 3);
+
+      const gdpGrowthData = Object.entries(signalsByCountry)
+        .filter(([_, sigs]) => sigs['gdp_growth'] !== undefined)
+        .sort((a, b) => (a[1]['gdp_growth'] || 0) - (b[1]['gdp_growth'] || 0))
+        .slice(0, 3);
+
+      // Build specific briefings per category
       const briefingsMap: Record<string, string> = {};
-      for (const b of templateBriefing.briefings) {
-        briefingsMap[b.category] = `${b.summary} Risk: ${b.riskLevel}. Trend: ${b.trend}. ${b.keyPoints.map(p => '• ' + p).join(' ')}`;
+
+      // Political briefing - use actual nation data
+      const politicalRisk = templateMetrics.categories.political?.riskLevel || 35;
+      briefingsMap['political'] = topRiskNames.length > 0
+        ? `Political stability monitoring across ${templateNationData.length} nations. ${topRiskNames.join(', ')} showing elevated transition indicators (avg ${avgTransitionRisk}% risk). Institutional resilience at ${avgBasinStrength}% across monitored states.`
+        : `Political environment stable across ${templateNationData.length} monitored nations. Average transition risk at ${avgTransitionRisk}%, institutional strength at ${avgBasinStrength}%.`;
+
+      // Economic briefing - use actual inflation/GDP data
+      if (inflationCountries.length > 0 || gdpGrowthData.length > 0) {
+        const inflationParts = inflationCountries.map(([code, sigs]) =>
+          `${code}: ${(sigs['inflation'] || 0).toFixed(1)}%`
+        );
+        const gdpParts = gdpGrowthData.map(([code, sigs]) =>
+          `${code}: ${(sigs['gdp_growth'] || 0).toFixed(1)}%`
+        );
+        briefingsMap['economic'] = `Economic indicators from ${Object.keys(signalsByCountry).length} markets. ${inflationParts.length > 0 ? `Inflation hotspots: ${inflationParts.join(', ')}. ` : ''}${gdpParts.length > 0 ? `GDP growth concerns: ${gdpParts.join(', ')}.` : ''}`;
+      } else {
+        briefingsMap['economic'] = `Monitoring ${Object.keys(signalsByCountry).length} economies. No critical inflation or growth anomalies detected in current data window.`;
       }
-      briefingsMap['nsm'] = templateBriefing.nsm;
-      briefingsMap['summary'] = `Analysis of ${dataPointCount} data points indicates ${templateMetrics.overallRisk} overall risk. Primary concern: ${topRiskNation}. ${highInflation.length > 0 ? `Economic stress in ${highInflation.length} markets. ` : ''}${negativeGdelt.length > 0 ? `Media sentiment deteriorating in ${negativeGdelt.length} regions.` : ''}`;
+
+      // Security briefing - use transition risk data
+      const securityRisk = templateMetrics.categories.security?.riskLevel || 35;
+      const highTransitionNations = templateNationData
+        .filter(n => (n.transition_risk || 0) > 0.6)
+        .map(n => n.name);
+      briefingsMap['security'] = highTransitionNations.length > 0
+        ? `Security environment requires monitoring. Elevated transition indicators in: ${highTransitionNations.slice(0, 4).join(', ')}. Regional stability index at ${100 - securityRisk}%.`
+        : `Security posture stable across ${preset.toUpperCase()} region. No critical transition thresholds exceeded. Stability index: ${100 - securityRisk}%.`;
+
+      // GDELT-driven media sentiment briefing
+      const gdeltCountries = Object.keys(gdeltRiskByCountry);
+      if (gdeltCountries.length > 0) {
+        const negSentiment = Object.entries(gdeltRiskByCountry)
+          .filter(([_, r]) => r > 0.6)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3);
+        briefingsMap['media'] = negSentiment.length > 0
+          ? `Media sentiment analysis from ${gdeltData.length} GDELT signals. Negative coverage trending in: ${negSentiment.map(([c, r]) => `${c} (${(r * 100).toFixed(0)}% risk)`).join(', ')}.`
+          : `Media sentiment neutral to positive across ${gdeltCountries.length} monitored regions. ${gdeltData.length} signals processed.`;
+      } else {
+        briefingsMap['media'] = 'Media sentiment data pending next GDELT sync cycle.';
+      }
+
+      // Financial/Markets
+      briefingsMap['financial'] = `Financial stability tracking ${templateNationData.length} economies. ${highInflation.length > 0 ? `Inflationary pressure in ${highInflation.length} markets may affect credit conditions.` : 'No systemic stress indicators.'}`;
+
+      // Energy
+      briefingsMap['energy'] = `Energy security baseline. Monitoring supply chain dynamics across ${preset.toUpperCase()} corridor.`;
+
+      // Cyber
+      briefingsMap['cyber'] = `Cyber threat assessment at baseline. Standard monitoring protocols active.`;
+
+      // Summary - specific and data-driven
+      briefingsMap['summary'] = `${preset.toUpperCase()} intelligence synthesis from ${dataPointCount} data points across ${templateNationData.length} nations. ${topRiskNames.length > 0 ? `Primary watchlist: ${topRiskNames.join(', ')}.` : 'No critical alerts.'} ${highInflation.length > 0 ? `${highInflation.length} economies under inflationary stress.` : ''} ${negativeGdelt.length > 0 ? `Media sentiment deteriorating in ${negativeGdelt.length} regions.` : ''} Overall risk: ${templateMetrics.overallRisk.toUpperCase()}.`;
+
+      // NSM - actionable based on data
+      if (highRiskNations.length > 2 || negativeGdelt.length > 3) {
+        briefingsMap['nsm'] = `Increase monitoring frequency on ${topRiskNames[0] || 'flagged regions'}. Review exposure to ${highInflation.length > 0 ? 'inflation-stressed markets' : 'elevated-risk zones'}. Consider scenario planning for transition events.`;
+      } else if (highRiskNations.length > 0) {
+        briefingsMap['nsm'] = `Maintain enhanced awareness on ${topRiskNames.join(' and ')}. Standard protocols sufficient for remaining regions.`;
+      } else {
+        briefingsMap['nsm'] = `Continue routine monitoring. No immediate escalation required. Next assessment in 4 hours.`;
+      }
 
       return NextResponse.json({
         briefings: briefingsMap,
