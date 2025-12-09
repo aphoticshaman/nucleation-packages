@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MessageSquarePlus, Bug, Lightbulb, HelpCircle, FileText, X, Send, CheckCircle, Loader2 } from 'lucide-react';
+import { MessageSquarePlus, Bug, Lightbulb, HelpCircle, FileText, X, Send, CheckCircle, Loader2, Sparkles } from 'lucide-react';
 
-// Feedback types
+// Feedback types - Elle handles questions directly
 const FEEDBACK_TYPES = [
   { id: 'bug', label: 'Bug Report', icon: Bug, color: 'text-red-400', bgColor: 'bg-red-500/20' },
   { id: 'idea', label: 'Feature Idea', icon: Lightbulb, color: 'text-amber-400', bgColor: 'bg-amber-500/20' },
-  { id: 'question', label: 'Question', icon: HelpCircle, color: 'text-blue-400', bgColor: 'bg-blue-500/20' },
+  { id: 'question', label: 'Ask Elle', icon: Sparkles, color: 'text-cyan-400', bgColor: 'bg-cyan-500/20', elleMode: true },
   { id: 'other', label: 'Other Feedback', icon: FileText, color: 'text-slate-400', bgColor: 'bg-slate-500/20' },
 ] as const;
 
@@ -22,12 +22,13 @@ interface FeedbackButtonProps {
 
 export default function FeedbackButton({ position = 'bottom-right', className = '' }: FeedbackButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [step, setStep] = useState<'type' | 'form' | 'success'>('type');
+  const [step, setStep] = useState<'type' | 'form' | 'success' | 'elle'>('type');
   const [selectedType, setSelectedType] = useState<FeedbackType | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [elleResponse, setElleResponse] = useState<string | null>(null);
 
   // Reset state when modal closes
   useEffect(() => {
@@ -39,6 +40,7 @@ export default function FeedbackButton({ position = 'bottom-right', className = 
         setTitle('');
         setDescription('');
         setError(null);
+        setElleResponse(null);
       }, 300);
       return () => clearTimeout(timer);
     }
@@ -47,7 +49,42 @@ export default function FeedbackButton({ position = 'bottom-right', className = 
   // Handle type selection
   const handleTypeSelect = (type: FeedbackType) => {
     setSelectedType(type);
-    setStep('form');
+    // Questions go to Elle mode, others to regular form
+    setStep(type === 'question' ? 'elle' : 'form');
+  };
+
+  // Handle Elle question submission
+  const handleElleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!description.trim()) return;
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      // Call Elle API
+      const response = await fetch('/api/elle/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          question: description.trim(),
+          pageUrl: window.location.href,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Elle is currently unavailable');
+      }
+
+      setElleResponse(data.response);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Handle form submission
@@ -123,6 +160,12 @@ export default function FeedbackButton({ position = 'bottom-right', className = 
               <h2 className="text-lg font-semibold text-white">
                 {step === 'type' && 'Send Feedback'}
                 {step === 'form' && FEEDBACK_TYPES.find(t => t.id === selectedType)?.label}
+                {step === 'elle' && (
+                  <span className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-cyan-400" />
+                    Ask Elle
+                  </span>
+                )}
                 {step === 'success' && 'Thank You!'}
               </h2>
               <button
@@ -239,6 +282,104 @@ export default function FeedbackButton({ position = 'bottom-right', className = 
                     Your feedback helps us improve LatticeForge
                   </p>
                 </form>
+              )}
+
+              {/* Elle Mode: Ask a question */}
+              {step === 'elle' && (
+                <div className="space-y-4">
+                  {/* Back button */}
+                  <button
+                    type="button"
+                    onClick={() => { setStep('type'); setElleResponse(null); }}
+                    className="text-sm text-slate-400 hover:text-white transition-colors"
+                  >
+                    &larr; Back
+                  </button>
+
+                  {!elleResponse ? (
+                    <form onSubmit={handleElleSubmit} className="space-y-4">
+                      <div className="flex items-center gap-3 p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
+                        <Sparkles className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+                        <p className="text-sm text-cyan-200">
+                          Hi! I'm Elle, your LatticeForge assistant. Ask me anything about using the platform.
+                        </p>
+                      </div>
+
+                      <div>
+                        <label htmlFor="elle-question" className="block text-sm font-medium text-slate-300 mb-2">
+                          Your Question
+                        </label>
+                        <textarea
+                          id="elle-question"
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          placeholder="How do I interpret the risk scores? What does NSM mean?"
+                          rows={4}
+                          maxLength={2000}
+                          required
+                          className="w-full px-4 py-3 bg-slate-800 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 resize-none"
+                        />
+                      </div>
+
+                      {error && (
+                        <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-300 text-sm">
+                          {error}
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        disabled={isSubmitting || !description.trim()}
+                        className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            Elle is thinking...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-5 h-5" />
+                            Ask Elle
+                          </>
+                        )}
+                      </button>
+                    </form>
+                  ) : (
+                    <div className="space-y-4">
+                      {/* User's question */}
+                      <div className="p-3 bg-slate-800 rounded-xl">
+                        <p className="text-xs text-slate-400 mb-1">You asked:</p>
+                        <p className="text-white">{description}</p>
+                      </div>
+
+                      {/* Elle's response */}
+                      <div className="p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Sparkles className="w-4 h-4 text-cyan-400" />
+                          <span className="text-sm font-medium text-cyan-300">Elle</span>
+                        </div>
+                        <p className="text-slate-200 whitespace-pre-wrap">{elleResponse}</p>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => { setDescription(''); setElleResponse(null); }}
+                          className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-colors text-sm"
+                        >
+                          Ask Another
+                        </button>
+                        <button
+                          onClick={() => setIsOpen(false)}
+                          className="flex-1 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl transition-colors text-sm"
+                        >
+                          Done
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
 
               {/* Step 3: Success */}

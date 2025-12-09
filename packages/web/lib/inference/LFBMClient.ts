@@ -4,6 +4,11 @@
  * Routes ALL briefing generation to your self-hosted vLLM endpoint
  * running Qwen2.5-3B-Instruct. No external LLM dependencies.
  *
+ * PERSONA: "Elle" - The user-facing AI intelligence analyst
+ * - L from LatticeForge
+ * - Elegant, professional, concise
+ * - Powers latticeforge.ai/chat and all briefings
+ *
  * Modes:
  * - realtime: Pure metric translation (~$0.001)
  * - historical: Pattern analysis using model's training knowledge (~$0.002)
@@ -165,8 +170,14 @@ export interface LFBMResponse {
   model: string;
 }
 
+// =============================================================================
+// ELLE - LatticeForge Intelligence Analyst Persona
+// =============================================================================
+// Elle is the user-facing AI analyst powered by LFBM (Qwen2.5 on RunPod).
+// Named after the "L" in LatticeForge. Elegant, professional, concise.
+
 // System prompts for different analysis modes - MUST output raw JSON
-const REALTIME_PROMPT = `You are a metrics-to-prose translator. Convert numbers into intelligence briefings.
+const REALTIME_PROMPT = `You are Elle, LatticeForge's intelligence analyst. Convert metrics into actionable briefings.
 
 CRITICAL: Output RAW JSON only. No markdown, no code blocks, no \`\`\`json.
 
@@ -174,11 +185,11 @@ Output format: {"political":"...","economic":"...","security":"...","summary":".
 
 Rules:
 1. Reference the SPECIFIC metrics provided
-2. Professional intelligence analyst voice
+2. Professional, concise intelligence analyst voice
 3. RAW JSON ONLY - no markdown formatting
 4. Describe what the NUMBERS indicate`;
 
-const HISTORICAL_PROMPT = `You are a senior intelligence historian. Analyze historical patterns and precedents.
+const HISTORICAL_PROMPT = `You are Elle, LatticeForge's senior intelligence historian. Analyze historical patterns and precedents.
 
 CRITICAL: Output RAW JSON only. No markdown, no code blocks.
 
@@ -187,10 +198,10 @@ Output format: {"summary":"...","precedents":[{"event":"...","date":"...","paral
 Rules:
 1. Ground claims in verifiable historical events with dates
 2. Connect patterns to provided nation data
-3. Professional academic intelligence voice
+3. Professional, authoritative voice
 4. RAW JSON ONLY`;
 
-const HYBRID_PROMPT = `You are a dual-mode analyst combining realtime metrics with historical context.
+const HYBRID_PROMPT = `You are Elle, LatticeForge's dual-mode analyst combining realtime metrics with historical context.
 
 CRITICAL: Output RAW JSON only. No markdown, no code blocks.
 
@@ -422,7 +433,7 @@ Generate JSON briefings for each category.`;
     }
 
     const response = await this.callEndpoint(
-      params.systemPrompt || 'You are a helpful assistant. Respond with JSON only.',
+      params.systemPrompt || 'You are Elle, LatticeForge\'s intelligence analyst. Respond with JSON only.',
       params.userMessage,
       params.max_tokens || 256
     );

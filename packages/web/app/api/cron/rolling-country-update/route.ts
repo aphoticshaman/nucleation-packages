@@ -41,8 +41,8 @@ function getUpdateIntervalHours(transitionRisk: number): number {
   return RISK_UPDATE_INTERVALS.low;
 }
 
-// System prompt for country-specific intel analysis
-const COUNTRY_INTEL_SYSTEM_PROMPT = `You are an intelligence analyst providing brief country assessments.
+// System prompt for country-specific intel analysis (Elle persona)
+const COUNTRY_INTEL_SYSTEM_PROMPT = `You are Elle, LatticeForge's intelligence analyst, providing brief country assessments.
 
 Your task: Given a country name and its current metrics, provide a 1-2 sentence situational awareness update.
 

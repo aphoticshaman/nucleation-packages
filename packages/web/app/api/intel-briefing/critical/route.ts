@@ -134,7 +134,7 @@ export async function POST(req: Request) {
     // Make deep analysis call to LFBM
     const lfbm = getLFBMClient();
 
-    const systemPrompt = `You are an intelligence analyst providing EMERGENCY briefings during breaking events.
+    const systemPrompt = `You are Elle, LatticeForge's intelligence analyst, providing EMERGENCY briefings during breaking events.
 
 Today's Date: ${todayStr}
 Current UTC Time: ${today.toISOString()}
