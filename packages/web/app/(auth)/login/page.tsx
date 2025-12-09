@@ -184,21 +184,29 @@ function LoginForm() {
             />
           </div>
 
-          <div className="flex items-center justify-between text-sm">
-            <label className="flex items-center gap-2 text-slate-400 cursor-pointer min-h-[44px] select-none group">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded bg-black/30 border-white/20 text-blue-500 focus:ring-blue-500/30 focus:ring-offset-0"
-              />
-              <span className="group-hover:text-slate-300 transition-colors">
-                Remember me for 30 days
-              </span>
-            </label>
-            <Link href="/forgot-password" className="text-blue-400 hover:text-blue-300 min-h-[44px] flex items-center">
-              Forgot password?
-            </Link>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <label className="flex items-center gap-2 text-slate-400 cursor-pointer min-h-[44px] select-none group">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded bg-black/30 border-white/20 text-blue-500 focus:ring-blue-500/30 focus:ring-offset-0"
+                />
+                <span className="group-hover:text-slate-300 transition-colors">
+                  Remember me for 30 days
+                </span>
+              </label>
+              <Link href="/forgot-password" className="text-blue-400 hover:text-blue-300 min-h-[44px] flex items-center">
+                Forgot password?
+              </Link>
+            </div>
+            {rememberMe && (
+              <p className="text-xs text-amber-400/80 flex items-start gap-1.5 pl-6">
+                <span className="mt-0.5">&#9888;</span>
+                <span>Don&apos;t use on shared or public devices. This keeps you signed in even after closing your browser.</span>
+              </p>
+            )}
           </div>
 
           <button
