@@ -39,7 +39,8 @@ FROM public.training_examples;
 -- ============================================================================
 
 -- Fix record_nation_snapshot
-CREATE OR REPLACE FUNCTION public.record_nation_snapshot()
+DROP FUNCTION IF EXISTS public.record_nation_snapshot();
+CREATE FUNCTION public.record_nation_snapshot()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -68,7 +69,8 @@ END;
 $$;
 
 -- Fix sync_profile_to_client (we just created this)
-CREATE OR REPLACE FUNCTION public.sync_profile_to_client()
+DROP FUNCTION IF EXISTS public.sync_profile_to_client();
+CREATE FUNCTION public.sync_profile_to_client()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -109,6 +111,17 @@ BEGIN
     RETURN NULL;
 END;
 $$;
+
+-- Recreate triggers (dropped when functions were dropped)
+DROP TRIGGER IF EXISTS nation_snapshot_trigger ON public.nations;
+CREATE TRIGGER nation_snapshot_trigger
+    AFTER INSERT OR UPDATE ON public.nations
+    FOR EACH ROW EXECUTE FUNCTION public.record_nation_snapshot();
+
+DROP TRIGGER IF EXISTS sync_profile_to_client_trigger ON public.profiles;
+CREATE TRIGGER sync_profile_to_client_trigger
+    AFTER INSERT OR UPDATE OR DELETE ON public.profiles
+    FOR EACH ROW EXECUTE FUNCTION public.sync_profile_to_client();
 
 -- ============================================================================
 -- PART 3: Revoke anon access to materialized views
