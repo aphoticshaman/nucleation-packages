@@ -12,15 +12,15 @@
 -- PART 1: Backfill - Create clients for profiles that don't have one
 -- ============================================================================
 
-INSERT INTO public.clients (uuid, name, email, tier, created_at)
+INSERT INTO public.clients (id, name, email, tier, created_at)
 SELECT
-    p.id as uuid,
+    p.id,
     COALESCE(p.full_name, split_part(p.email, '@', 1)) as name,
     p.email,
     'free' as tier,
     p.created_at
 FROM public.profiles p
-LEFT JOIN public.clients c ON c.uuid = p.id
+LEFT JOIN public.clients c ON c.id = p.id
 WHERE c.id IS NULL
 ON CONFLICT (email) DO NOTHING;
 
@@ -31,9 +31,9 @@ ON CONFLICT (email) DO NOTHING;
 CREATE OR REPLACE FUNCTION sync_profile_to_client()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- On INSERT: Create corresponding client
+    -- On INSERT: Create corresponding client with same id
     IF TG_OP = 'INSERT' THEN
-        INSERT INTO public.clients (uuid, name, email, tier, created_at)
+        INSERT INTO public.clients (id, name, email, tier, created_at)
         VALUES (
             NEW.id,
             COALESCE(NEW.full_name, split_part(NEW.email, '@', 1)),
@@ -42,7 +42,6 @@ BEGIN
             NEW.created_at
         )
         ON CONFLICT (email) DO UPDATE SET
-            uuid = EXCLUDED.uuid,
             name = EXCLUDED.name;
         RETURN NEW;
     END IF;
@@ -54,13 +53,13 @@ BEGIN
             name = COALESCE(NEW.full_name, split_part(NEW.email, '@', 1)),
             email = NEW.email,
             updated_at = NOW()
-        WHERE uuid = NEW.id;
+        WHERE id = NEW.id;
         RETURN NEW;
     END IF;
 
     -- On DELETE: Client cascades via FK (if configured) or delete here
     IF TG_OP = 'DELETE' THEN
-        DELETE FROM public.clients WHERE uuid = OLD.id;
+        DELETE FROM public.clients WHERE id = OLD.id;
         RETURN OLD;
     END IF;
 
@@ -84,7 +83,7 @@ CREATE TRIGGER sync_profile_to_client_trigger
 
 -- DELETE FROM public.clients c
 -- WHERE NOT EXISTS (
---     SELECT 1 FROM public.profiles p WHERE p.id = c.uuid
+--     SELECT 1 FROM public.profiles p WHERE p.id = c.id
 -- );
 
 -- ============================================================================
@@ -94,10 +93,10 @@ CREATE TRIGGER sync_profile_to_client_trigger
 -- -- Check all profiles have clients:
 -- SELECT p.id, p.email, c.id as client_id
 -- FROM profiles p
--- LEFT JOIN clients c ON c.uuid = p.id;
+-- LEFT JOIN clients c ON c.id = p.id;
 --
 -- -- Check for orphaned clients:
 -- SELECT c.id, c.email
 -- FROM clients c
--- LEFT JOIN profiles p ON p.id = c.uuid
+-- LEFT JOIN profiles p ON p.id = c.id
 -- WHERE p.id IS NULL;
