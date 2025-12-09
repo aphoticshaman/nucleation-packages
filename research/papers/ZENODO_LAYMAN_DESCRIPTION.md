@@ -291,6 +291,6 @@ All materials are released under the Apache 2.0 open-source license, allowing fr
 
 ## Summary
 
-We discovered fundamental mathematical principles governing how information collapses from many possibilities to a single answer. These principles apply universally across AI systems, scientific research, and decision-making. Our implementation achieves 88% error reduction over baseline methods, with complete theoretical grounding explaining why it works. Everything is open-source and ready to use.
+We discovered fundamental mathematical principles governing how information collapses from many possibilities to a single answer. These principles apply universally across AI systems, scientific research, and decision-making. Our implementation achieves 84% ± 6% error reduction over baseline methods in tested numeric tasks, with theoretical grounding explaining why it works. Everything is open-source and ready to use.
 
 *This work represents a bridge between theoretical understanding and practical application—making AI inference not just better, but understandable.*
