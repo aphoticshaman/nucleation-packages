@@ -59,20 +59,16 @@ WHERE type IN ('signal_observation', 'prediction_outcome');
 GRANT SELECT ON public.exportable_training_data TO authenticated;
 REVOKE ALL ON public.exportable_training_data FROM anon;
 
--- 2. Enable RLS on spatial_ref_sys (PostGIS system table)
--- This is a system table from PostGIS, typically read-only for coordinate lookups
-DO $$
-BEGIN
-    -- Check if table exists and enable RLS
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'spatial_ref_sys') THEN
-        ALTER TABLE public.spatial_ref_sys ENABLE ROW LEVEL SECURITY;
-
-        -- Allow read access for coordinate lookups (needed for geo queries)
-        DROP POLICY IF EXISTS "spatial_ref_sys_read_policy" ON public.spatial_ref_sys;
-        CREATE POLICY "spatial_ref_sys_read_policy" ON public.spatial_ref_sys
-            FOR SELECT USING (true);
-    END IF;
-END $$;
+-- 2. spatial_ref_sys (PostGIS system table)
+-- SKIPPED: This table is owned by PostGIS/postgres system and cannot be modified.
+-- The security linter warning for this table can be safely ignored because:
+-- - It's a read-only reference table for coordinate system definitions
+-- - It contains no user data, only standard EPSG coordinate system metadata
+-- - PostGIS requires it to be accessible for spatial queries to work
+--
+-- To suppress this linter warning, add to supabase config:
+--   [db.lint]
+--   exclude = ["rls_disabled_in_public:public.spatial_ref_sys"]
 
 -- ============================================================================
 -- WARNING FIXES
