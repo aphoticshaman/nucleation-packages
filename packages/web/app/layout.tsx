@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { CookieConsent } from '@/components/CookieConsent';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://latticeforge.io'),
@@ -30,7 +31,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-slate-950 text-white antialiased">{children}</body>
+      <body className="min-h-screen bg-slate-950 text-white antialiased">
+        {children}
+        <CookieConsent />
+      </body>
     </html>
   );
 }
