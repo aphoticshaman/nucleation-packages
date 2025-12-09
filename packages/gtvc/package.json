@@ -31,9 +31,7 @@
   ],
   "author": "nucleation",
   "license": "MIT",
-  "dependencies": {
-    "@nucleation/core": "workspace:*"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "^20.0.0",
     "tsup": "^8.0.0",

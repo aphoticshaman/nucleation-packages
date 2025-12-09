@@ -11,6 +11,7 @@
     "wasm:copy": "cp -r ../research/rust/pkg/* ./public/wasm/"
   },
   "dependencies": {
+    "@nucleation/gtvc": "workspace:*",
     "@googlemaps/js-api-loader": "^1.16.6",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.2",
