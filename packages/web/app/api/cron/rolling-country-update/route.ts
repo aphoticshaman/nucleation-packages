@@ -1,16 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLFBMClient } from '@/lib/inference/LFBMClient';
 
 export const runtime = 'edge';
-
-// PRODUCTION-ONLY: Block Anthropic API calls in non-production unless explicitly enabled
-function isAnthropicAllowed(): boolean {
-  const env = process.env.VERCEL_ENV || process.env.NODE_ENV;
-  if (env === 'production') return true;
-  if (process.env.ALLOW_ANTHROPIC_IN_DEV === 'true') return true;
-  return false;
-}
 
 /**
  * CRON: Rolling Country Update System
@@ -89,15 +81,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // BLOCK non-production Anthropic API calls
-  if (!isAnthropicAllowed()) {
-    return NextResponse.json({
-      success: false,
-      error: 'Anthropic API blocked in non-production environment',
-      environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
-    }, { status: 403 });
-  }
-
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -160,10 +143,8 @@ export async function GET(req: Request) {
 
     console.log(`[ROLLING UPDATE] Processing ${staleCountries.length} countries`);
 
-    // Initialize Anthropic client
-    const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY!,
-    });
+    // Initialize LFBM client
+    const lfbm = getLFBMClient();
 
     // Process each country
     for (const country of staleCountries as NationUpdate[]) {
@@ -178,22 +159,15 @@ Current metrics:
 
 Provide your assessment as JSON.`;
 
-        // Call Claude for country-specific intel
-        const message = await anthropic.messages.create({
-          model: 'claude-haiku-4-5-20251001',
+        // Call LFBM for country-specific intel
+        const lfbmResponse = await lfbm.generateBriefing({
+          systemPrompt: COUNTRY_INTEL_SYSTEM_PROMPT,
+          userMessage: userPrompt,
           max_tokens: 256,
-          system: COUNTRY_INTEL_SYSTEM_PROMPT,
-          messages: [{ role: 'user', content: userPrompt }],
         });
 
-        // Extract response
-        const textContent = message.content.find((c) => c.type === 'text');
-        if (!textContent || textContent.type !== 'text') {
-          throw new Error('No text response');
-        }
-
-        // Parse JSON response
-        const jsonMatch = textContent.text.match(/\{[\s\S]*\}/);
+        // Parse JSON response from LFBM
+        const jsonMatch = lfbmResponse.match(/\{[\s\S]*\}/);
         if (!jsonMatch) {
           throw new Error('Could not parse response JSON');
         }

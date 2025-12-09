@@ -1,18 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import Anthropic from '@anthropic-ai/sdk';
-
-// PRODUCTION-ONLY: Block Anthropic API calls in non-production unless explicitly enabled
-function isAnthropicAllowed(): boolean {
-  const env = process.env.VERCEL_ENV || process.env.NODE_ENV;
-  if (env === 'production') return true;
-  if (process.env.ALLOW_ANTHROPIC_IN_DEV === 'true') return true;
-  return false;
-}
+import { getLFBMClient } from '@/lib/inference/LFBMClient';
 
 // Lazy initialization
 let supabase: SupabaseClient | null = null;
-let anthropic: Anthropic | null = null;
 
 function getSupabase() {
   if (!supabase) {
@@ -22,15 +13,6 @@ function getSupabase() {
     );
   }
   return supabase;
-}
-
-function getAnthropic() {
-  if (!anthropic) {
-    anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY!,
-    });
-  }
-  return anthropic;
 }
 
 interface Prediction {
@@ -56,18 +38,9 @@ export async function POST(request: Request) {
     }
   }
 
-  // BLOCK non-production Anthropic API calls
-  if (!isAnthropicAllowed()) {
-    return NextResponse.json({
-      success: false,
-      error: 'Anthropic API blocked in non-production environment',
-      environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
-    }, { status: 403 });
-  }
-
   try {
     const db = getSupabase();
-    const ai = getAnthropic();
+    const lfbm = getLFBMClient();
 
     // Get expired unscored predictions
     const { data: predictions, error: fetchError } = await db
@@ -125,14 +98,13 @@ Score how accurate the prediction was from 0.0 to 1.0:
 Respond with ONLY a JSON object:
 {"accuracy": 0.X, "reasoning": "brief explanation"}`;
 
-        const response = await ai.messages.create({
-          model: 'claude-haiku-4-5-20251001',
+        const lfbmResponse = await lfbm.generateBriefing({
+          userMessage: prompt,
           max_tokens: 256,
-          messages: [{ role: 'user', content: prompt }],
         });
 
-        const text = response.content[0].type === 'text' ? response.content[0].text : '';
-        const parsed = JSON.parse(text);
+        const jsonMatch = lfbmResponse.match(/\{[\s\S]*\}/);
+        const parsed = JSON.parse(jsonMatch?.[0] || '{"accuracy": 0.5, "reasoning": "Could not parse"}');
         const accuracy = Math.max(0, Math.min(1, parsed.accuracy || 0.5));
 
         // Score the prediction (this updates training example weights)

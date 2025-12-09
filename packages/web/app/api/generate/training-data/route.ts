@@ -2,15 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
-import Anthropic from '@anthropic-ai/sdk';
-
-// PRODUCTION-ONLY: Block Anthropic API calls in non-production unless explicitly enabled
-function isAnthropicAllowed(): boolean {
-  const env = process.env.VERCEL_ENV || process.env.NODE_ENV;
-  if (env === 'production') return true;
-  if (process.env.ALLOW_ANTHROPIC_IN_DEV === 'true') return true;
-  return false;
-}
+import { getLFBMClient, type LFBMClient } from '@/lib/inference/LFBMClient';
 
 // Verify cron secret for scheduled jobs
 function verifyCronAuth(request: Request): boolean {
@@ -25,7 +17,7 @@ function verifyCronAuth(request: Request): boolean {
 
 // Lazy initialization to avoid build-time errors
 let supabase: SupabaseClient | null = null;
-let anthropic: Anthropic | null = null;
+let lfbm: LFBMClient | null = null;
 
 function getSupabase() {
   if (!supabase) {
@@ -37,13 +29,11 @@ function getSupabase() {
   return supabase;
 }
 
-function getAnthropic() {
-  if (!anthropic) {
-    anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY!,
-    });
+function getLFBM() {
+  if (!lfbm) {
+    lfbm = getLFBMClient();
   }
-  return anthropic;
+  return lfbm;
 }
 
 // Server-side auth verification - requires admin role
@@ -1125,14 +1115,13 @@ Respond in this exact JSON format:
 Only output the JSON.`;
 
   try {
-    const response = await getAnthropic().messages.create({
-      model: 'claude-haiku-4-5-20251001',
+    const lfbmResponse = await getLFBM().generateBriefing({
+      userMessage: prompt,
       max_tokens: 1200,
-      messages: [{ role: 'user', content: prompt }],
     });
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : '';
-    const parsed = JSON.parse(text);
+    const jsonMatch = lfbmResponse.match(/\{[\s\S]*\}/);
+    const parsed = JSON.parse(jsonMatch?.[0] || '{}');
 
     return {
       instruction: `As a ${HISTORIAN_AGENT.name}, identify historical patterns (500+ years old) that illuminate modern ${modernNews[0]?.domain || 'geopolitical'} developments`,
@@ -1296,14 +1285,13 @@ Respond in this exact JSON format:
 Only output the JSON, nothing else.`;
 
   try {
-    const response = await getAnthropic().messages.create({
-      model: 'claude-haiku-4-5-20251001',
+    const lfbmResponse = await getLFBM().generateBriefing({
+      userMessage: prompt,
       max_tokens: 1024,
-      messages: [{ role: 'user', content: prompt }],
     });
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : '';
-    const parsed = JSON.parse(text);
+    const jsonMatch = lfbmResponse.match(/\{[\s\S]*\}/);
+    const parsed = JSON.parse(jsonMatch?.[0] || '{}');
 
     return {
       instruction: `As a ${analyst.name}, analyze the ${news.domain} risk signals in the following situation`,
@@ -1328,15 +1316,6 @@ export async function GET(request: Request) {
         { status: 403 }
       );
     }
-  }
-
-  // BLOCK non-production Anthropic API calls
-  if (!isAnthropicAllowed()) {
-    return NextResponse.json({
-      success: false,
-      error: 'Anthropic API blocked in non-production environment',
-      environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
-    }, { status: 403 });
   }
 
   const results = {

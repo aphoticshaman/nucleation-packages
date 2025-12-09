@@ -1,16 +1,8 @@
 import { NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLFBMClient } from '@/lib/inference/LFBMClient';
 
 // Vercel Edge Runtime for low latency
 export const runtime = 'edge';
-
-// PRODUCTION-ONLY: Block Anthropic API calls in non-production unless explicitly enabled
-function isAnthropicAllowed(): boolean {
-  const env = process.env.VERCEL_ENV || process.env.NODE_ENV;
-  if (env === 'production') return true;
-  if (process.env.ALLOW_ANTHROPIC_IN_DEV === 'true') return true;
-  return false;
-}
 
 // =============================================================================
 // PULSE CHECK - Ultra-cheap breaking news detector
@@ -120,49 +112,27 @@ export async function GET(req: Request) {
     }, { status: 503 });
   }
 
-  // BLOCK non-production Anthropic API calls
-  if (!isAnthropicAllowed()) {
-    return NextResponse.json({
-      breaking: false,
-      severity: 'none',
-      timestamp: new Date().toISOString(),
-      cached: false,
-      message: 'Anthropic API blocked in non-production',
-      environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
-    }, { status: 403 });
-  }
-
   try {
-    const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY!,
-    });
+    const lfbm = getLFBMClient();
 
     // Ultra-minimal prompt - just checking for breaking news
-    // Uses Haiku for speed and cost (fraction of a cent)
-    const message = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 100,
-      system: `You check for breaking world events. Respond ONLY with JSON:
+    const systemPrompt = `You check for breaking world events. Respond ONLY with JSON:
 {"breaking":true/false,"severity":"none|significant|major|critical","headline":"brief if breaking"}
 Major = war outbreak, terror attack, market crash, natural disaster, leader death
-Be conservative - false positives waste resources.`,
-      messages: [
-        {
-          role: 'user',
-          content: `Current time: ${new Date().toISOString()}. Any earth-shattering global events in the last hour that would affect geopolitical intelligence analysis?`,
-        },
-      ],
-    });
+Be conservative - false positives waste resources.`;
 
-    // Parse response
-    const textContent = message.content.find((c) => c.type === 'text');
-    if (!textContent || textContent.type !== 'text') {
-      throw new Error('No response');
-    }
+    const userMessage = `Current time: ${new Date().toISOString()}. Any earth-shattering global events in the last hour that would affect geopolitical intelligence analysis?`;
+
+    const lfbmResponse = await lfbm.generateBriefing({
+      systemPrompt,
+      userMessage,
+      max_tokens: 100,
+    });
 
     let pulseResult: PulseResult;
     try {
-      const parsed = JSON.parse(textContent.text);
+      const jsonMatch = lfbmResponse.match(/\{[\s\S]*\}/);
+      const parsed = JSON.parse(jsonMatch?.[0] || '{"breaking":false,"severity":"none"}');
       pulseResult = {
         breaking: Boolean(parsed.breaking),
         severity: parsed.severity || 'none',
@@ -198,7 +168,7 @@ Be conservative - false positives waste resources.`,
     return NextResponse.json({
       ...pulseResult,
       cached: false,
-      tokensUsed: message.usage?.output_tokens || 0,
+      tokensUsed: 0, // LFBM doesn't track tokens
     });
   } catch (error) {
     console.error('Pulse check error:', error);

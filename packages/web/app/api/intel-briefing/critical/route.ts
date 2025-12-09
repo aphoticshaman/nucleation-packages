@@ -1,16 +1,8 @@
 import { NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLFBMClient } from '@/lib/inference/LFBMClient';
 
 // Vercel Edge Runtime for low latency
 export const runtime = 'edge';
-
-// PRODUCTION-ONLY: Block Anthropic API calls in non-production unless explicitly enabled
-function isAnthropicAllowed(): boolean {
-  const env = process.env.VERCEL_ENV || process.env.NODE_ENV;
-  if (env === 'production') return true;
-  if (process.env.ALLOW_ANTHROPIC_IN_DEV === 'true') return true;
-  return false;
-}
 
 // =============================================================================
 // CRITICAL EVENT HANDLER - Full analysis triggered by pulse detecting major event
@@ -112,15 +104,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    // BLOCK non-production Anthropic API calls
-    if (!isAnthropicAllowed()) {
-      return NextResponse.json({
-        success: false,
-        error: 'Anthropic API blocked in non-production environment',
-        environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
-      }, { status: 403 });
-    }
-
     const { severity, headline, preset = 'global' } = await req.json();
 
     // Only process major/critical events
@@ -148,21 +131,17 @@ export async function POST(req: Request) {
           .join('\n\n')}`
       : '';
 
-    // Make deep analysis call to Claude
-    const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY!,
-    });
+    // Make deep analysis call to LFBM
+    const lfbm = getLFBMClient();
 
-    const message = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 4096,
-      system: `You are an intelligence analyst providing EMERGENCY briefings during breaking events.
+    const systemPrompt = `You are an intelligence analyst providing EMERGENCY briefings during breaking events.
 
 Today's Date: ${todayStr}
 Current UTC Time: ${today.toISOString()}
 
 This is a ${severity.toUpperCase()} ALERT situation. Provide comprehensive, actionable analysis.
 
+CRITICAL: Output RAW JSON only. No markdown, no code blocks.
 Your response must be a JSON object with these fields:
 - political: 2-3 sentence analysis
 - economic: 2-3 sentence analysis
@@ -173,11 +152,9 @@ Your response must be a JSON object with these fields:
 - summary: 1 sentence overall assessment
 - nsm: Next Strategic Move - specific actionable recommendation
 - confidence: number 0-100 (how confident in this analysis)
-- sources_quality: "verified" | "unverified" | "mixed"`,
-      messages: [
-        {
-          role: 'user',
-          content: `CRITICAL EVENT DETECTED: ${headline}
+- sources_quality: "verified" | "unverified" | "mixed"`;
+
+    const userMessage = `CRITICAL EVENT DETECTED: ${headline}
 
 Severity: ${severity.toUpperCase()}
 Preset: ${preset}
@@ -187,18 +164,16 @@ Provide emergency intelligence briefing in JSON format. Focus on:
 1. Immediate implications
 2. Cascade effects across domains
 3. What decision-makers should do RIGHT NOW
-4. What to monitor in the next 1-6 hours`,
-        },
-      ],
+4. What to monitor in the next 1-6 hours`;
+
+    const lfbmResponse = await lfbm.generateBriefing({
+      systemPrompt,
+      userMessage,
+      max_tokens: 4096,
     });
 
-    const textContent = message.content.find((c) => c.type === 'text');
-    if (!textContent || textContent.type !== 'text') {
-      throw new Error('No response from Claude');
-    }
-
     // Parse JSON response
-    const jsonMatch = textContent.text.match(/\{[\s\S]*\}/);
+    const jsonMatch = lfbmResponse.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('Could not parse briefing JSON');
     }
@@ -218,12 +193,12 @@ Provide emergency intelligence briefing in JSON format. Focus on:
         newsArticlesAnalyzed: articles.length,
         performance: {
           totalLatencyMs: latency,
-          tokensUsed: message.usage?.output_tokens || 0,
+          tokensUsed: 0, // LFBM doesn't track tokens
         },
       },
     };
 
-    console.log(`[CRITICAL] Analysis complete in ${latency}ms, ${message.usage?.output_tokens} tokens`);
+    console.log(`[CRITICAL] Analysis complete in ${latency}ms via LFBM`);
 
     // Return the critical briefing - caller should update cache
     return NextResponse.json({
