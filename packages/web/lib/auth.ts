@@ -1,13 +1,13 @@
 import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 export type UserRole = 'admin' | 'enterprise' | 'consumer' | 'support';
 
 // Service role client for admin operations (bypasses RLS)
-function createServiceClient() {
-  return createClient(
+function createServiceRoleClient() {
+  return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
@@ -143,7 +143,7 @@ export async function getUser(): Promise<UserProfile | null> {
 
     // Update last_seen_at using service role (bypasses RLS, runs in background)
     // Using service role because user client RLS can fail in async context
-    const serviceClient = createServiceClient();
+    const serviceClient = createServiceRoleClient();
     serviceClient
       .from('profiles')
       .update({ last_seen_at: new Date().toISOString() })
