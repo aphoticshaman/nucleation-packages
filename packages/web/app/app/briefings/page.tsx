@@ -259,31 +259,32 @@ export default function BriefingsPage() {
   return (
     <div className="space-y-6">
       {/* Header - News Masthead Style */}
-      <div className="flex items-start justify-between border-b border-white/[0.06] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-white/[0.06] pb-4">
         <div>
           <div className="flex items-center gap-3">
             <div className="p-2 bg-cyan-500/20 rounded-lg">
               <Radio className="w-5 h-5 text-cyan-400" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white tracking-tight">Intelligence Briefing</h1>
-              <p className="text-slate-500 text-sm flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Intelligence Briefing</h1>
+              <p className="text-slate-500 text-xs sm:text-sm flex items-center gap-2">
                 <Clock className="w-3 h-3" />
-                Multi-source fusion • Real-time analysis • Actionable intelligence
+                <span className="hidden xs:inline">Multi-source fusion • Real-time analysis • Actionable intelligence</span>
+                <span className="xs:hidden">Real-time intel</span>
               </p>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Emergency Refresh Button - ADMIN ONLY */}
           {isAdmin && (
             <button
               onClick={() => setShowEmergencyModal(true)}
-              className="flex items-center gap-2 px-4 py-2 min-h-[44px] bg-red-600 hover:bg-red-500 rounded-xl border border-red-400/50 text-white font-bold shadow-lg shadow-red-500/30 hover:shadow-red-500/50 transition-all animate-pulse hover:animate-none"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] bg-red-600 hover:bg-red-500 rounded-xl border border-red-400/50 text-white font-bold shadow-lg shadow-red-500/30 hover:shadow-red-500/50 transition-all animate-pulse hover:animate-none"
               title="Force refresh all data from Claude API ($0.25-0.75) - ADMIN ONLY"
             >
               <Zap className="w-5 h-5" />
-              <span className="text-sm uppercase tracking-wide">Emergency Refresh</span>
+              <span className="text-xs sm:text-sm uppercase tracking-wide">Refresh</span>
             </button>
           )}
           <button
