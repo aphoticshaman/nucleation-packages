@@ -1,0 +1,26 @@
+[package]
+name = "causal_dampener"
+version = "0.1.0"
+edition = "2021"
+description = "Energy-based hypothesis verifier for ARC tasks"
+license = "Apache-2.0"
+
+[lib]
+name = "causal_dampener"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = { version = "0.21", features = ["extension-module"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "benchmarks"
+harness = false
+
+[build-dependencies]
+pyo3-build-config = "0.21"
