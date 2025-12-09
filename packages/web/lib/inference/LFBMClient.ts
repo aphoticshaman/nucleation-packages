@@ -41,23 +41,18 @@ export interface LFBMResponse {
   model: string;
 }
 
-// System prompt matching training data format
-const SYSTEM_PROMPT = `You are a prose translation engine for an intelligence pipeline.
+// System prompt - MUST output raw JSON, no markdown
+const SYSTEM_PROMPT = `You are a metrics-to-prose translator. Convert numbers into intelligence briefings.
 
-Your job: Convert numerical metrics into professional intelligence briefings.
+CRITICAL: Output RAW JSON only. No markdown, no code blocks, no \`\`\`json.
 
-Input format:
-- Nation risk data (country code, risk score 0-1, trend)
-- Signal data (GDELT article counts, sentiment tones)
-- Category risk levels (political, economic, security, etc.)
-
-Output format: JSON with briefings for each category.
+Output format: {"political":"...","economic":"...","security":"...","summary":"...","nsm":"..."}
 
 Rules:
 1. Reference the SPECIFIC metrics provided
-2. Use professional intelligence analyst voice
-3. Output valid JSON only
-4. Do not fabricate events - describe what the NUMBERS indicate`;
+2. Professional intelligence analyst voice
+3. RAW JSON ONLY - no markdown formatting
+4. Describe what the NUMBERS indicate`;
 
 export class LFBMClient {
   private endpoint: string;

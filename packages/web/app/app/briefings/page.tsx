@@ -276,8 +276,8 @@ export default function BriefingsPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Emergency Refresh Button - temporarily enabled for LFBM testing */}
-          {(isAdmin || true) && (
+          {/* Emergency Refresh Button - ADMIN ONLY */}
+          {isAdmin && (
             <button
               onClick={() => setShowEmergencyModal(true)}
               className="flex items-center gap-2 px-3 sm:px-4 py-2 min-h-[44px] bg-red-600 hover:bg-red-500 rounded-xl border border-red-400/50 text-white font-bold shadow-lg shadow-red-500/30 hover:shadow-red-500/50 transition-all animate-pulse hover:animate-none"
