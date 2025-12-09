@@ -1,8 +1,17 @@
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 export type UserRole = 'admin' | 'enterprise' | 'consumer' | 'support';
+
+// Service role client for admin operations (bypasses RLS)
+function createServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 export type UserTier = 'free' | 'starter' | 'pro' | 'enterprise_tier';
 
 export interface UserProfile {
@@ -132,12 +141,18 @@ export async function getUser(): Promise<UserProfile | null> {
   if (profile) {
     const dbProfile = profile as DBProfile;
 
-    // Update last_seen_at in background (don't await)
-    supabase
+    // Update last_seen_at using service role (bypasses RLS, runs in background)
+    // Using service role because user client RLS can fail in async context
+    const serviceClient = createServiceClient();
+    serviceClient
       .from('profiles')
       .update({ last_seen_at: new Date().toISOString() })
       .eq('id', user.id)
-      .then(() => {});
+      .then(({ error }) => {
+        if (error) {
+          console.error('[AUTH] Failed to update last_seen_at:', error.message);
+        }
+      });
 
     // Derive tier from org plan or role
     const tier = planToTier(dbProfile.organizations?.plan || null, dbProfile.role);
