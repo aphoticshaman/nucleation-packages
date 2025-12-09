@@ -35,18 +35,21 @@ const FOCUS_AREAS = [
 ] as const;
 
 // GDELT date ranges (goes back to 2015)
-const GDELT_PRESETS = [
-  { id: 'last48h', label: 'Last 48 Hours', start: () => new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString().split('T')[0] },
-  { id: 'lastWeek', label: 'Last Week', start: () => new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
-  { id: 'lastMonth', label: 'Last Month', start: () => new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
-  { id: 'last3Months', label: 'Last 3 Months', start: () => new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
-  { id: 'lastYear', label: 'Last Year', start: () => new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
+// All presets have both start and end functions for consistent typing
+const today = () => new Date().toISOString().split('T')[0];
+
+const GDELT_PRESETS: Array<{ id: string; label: string; start: () => string; end: () => string }> = [
+  { id: 'last48h', label: 'Last 48 Hours', start: () => new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString().split('T')[0], end: today },
+  { id: 'lastWeek', label: 'Last Week', start: () => new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end: today },
+  { id: 'lastMonth', label: 'Last Month', start: () => new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end: today },
+  { id: 'last3Months', label: 'Last 3 Months', start: () => new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end: today },
+  { id: 'lastYear', label: 'Last Year', start: () => new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end: today },
   { id: '2024', label: '2024', start: () => '2024-01-01', end: () => '2024-12-31' },
   { id: '2023', label: '2023', start: () => '2023-01-01', end: () => '2023-12-31' },
   { id: '2022', label: '2022 (Ukraine War Start)', start: () => '2022-01-01', end: () => '2022-12-31' },
   { id: '2020', label: '2020 (COVID)', start: () => '2020-01-01', end: () => '2020-12-31' },
   { id: 'custom', label: 'Custom Range', start: () => '', end: () => '' },
-] as const;
+];
 
 interface HistoricalAnalysisPanelProps {
   onAnalyze: (config: AnalysisConfig) => void;
@@ -83,8 +86,8 @@ export function HistoricalAnalysisPanel({ onAnalyze, isLoading, disabled }: Hist
       depth,
       ...(mode !== 'realtime' && {
         gdeltPeriod: gdeltPreset === 'custom'
-          ? { start: customStart, end: customEnd || today }
-          : { start: preset?.start() || '', end: preset?.end?.() || today },
+          ? { start: customStart, end: customEnd || today() }
+          : { start: preset?.start() || '', end: preset?.end() || today() },
         historicalFocus: FOCUS_AREAS.find(f => f.id === focusArea)?.description || focusArea,
         selectedEras,
       }),
