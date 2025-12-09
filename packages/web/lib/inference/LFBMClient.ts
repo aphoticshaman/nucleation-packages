@@ -1,17 +1,18 @@
 /**
  * LFBM Client - Drop-in replacement for Anthropic calls
  *
- * Routes briefing generation to your self-hosted LFBM model
- * instead of Anthropic API.
+ * Routes briefing generation to your self-hosted vLLM endpoint
+ * running a fine-tuned Qwen2.5-3B-Instruct model.
  *
  * Setup:
- * 1. Deploy LFBM on RunPod (see packages/lfbm/inference/server.py)
- * 2. Set LFBM_ENDPOINT in Vercel env vars
- * 3. Set LFBM_API_KEY (optional, for auth)
+ * 1. Fine-tune model on RunPod Axolotl (see packages/lfbm/axolotl/)
+ * 2. Deploy with vLLM serverless on RunPod
+ * 3. Set LFBM_ENDPOINT in Vercel env vars
+ * 4. Set LFBM_API_KEY to your RunPod API key
  *
  * Cost comparison:
  * - Anthropic Haiku: ~$0.25-0.75 per briefing
- * - LFBM on RunPod: ~$0.001 per briefing
+ * - LFBM on RunPod vLLM: ~$0.001 per briefing
  */
 
 export interface LFBMNationInput {
@@ -36,19 +37,74 @@ export interface LFBMResponse {
   model: string;
 }
 
+// System prompt matching training data format
+const SYSTEM_PROMPT = `You are a prose translation engine for an intelligence pipeline.
+
+Your job: Convert numerical metrics into professional intelligence briefings.
+
+Input format:
+- Nation risk data (country code, risk score 0-1, trend)
+- Signal data (GDELT article counts, sentiment tones)
+- Category risk levels (political, economic, security, etc.)
+
+Output format: JSON with briefings for each category.
+
+Rules:
+1. Reference the SPECIFIC metrics provided
+2. Use professional intelligence analyst voice
+3. Output valid JSON only
+4. Do not fabricate events - describe what the NUMBERS indicate`;
+
 export class LFBMClient {
   private endpoint: string;
   private apiKey?: string;
+  private model: string;
 
   constructor(endpoint?: string, apiKey?: string) {
     this.endpoint = endpoint || process.env.LFBM_ENDPOINT || '';
     this.apiKey = apiKey || process.env.LFBM_API_KEY;
+    this.model = process.env.LFBM_MODEL || 'Qwen/Qwen2.5-3B-Instruct';
   }
 
   isConfigured(): boolean {
     return !!this.endpoint;
   }
 
+  /**
+   * Format input data into the prompt format matching training data
+   */
+  private formatInput(request: LFBMRequest): string {
+    const nationLines = request.nations.slice(0, 10).map((n) => {
+      const trendStr = n.trend > 0 ? '↑' : n.trend < 0 ? '↓' : '→';
+      const riskPct = Math.round(n.risk * 100);
+      return `  ${n.code}: risk=${riskPct}% ${trendStr}`;
+    });
+
+    const signalLines = Object.entries(request.signals).map(
+      ([k, v]) => `  ${k}: ${typeof v === 'number' ? v.toFixed(1) : v}`
+    );
+
+    const catLines = Object.entries(request.categories).map(
+      ([k, v]) => `  ${k}: ${v}/100`
+    );
+
+    return `PIPELINE METRICS (translate to briefings):
+
+NATIONS:
+${nationLines.length > 0 ? nationLines.join('\n') : '  No nation data'}
+
+SIGNALS:
+${signalLines.length > 0 ? signalLines.join('\n') : '  No signal data'}
+
+CATEGORY RISKS:
+${catLines.length > 0 ? catLines.join('\n') : '  No category data'}
+
+Generate JSON briefings for each category.`;
+  }
+
+  /**
+   * Call vLLM's OpenAI-compatible chat completions API
+   */
   async generateBriefing(request: LFBMRequest): Promise<LFBMResponse> {
     if (!this.endpoint) {
       throw new Error('LFBM_ENDPOINT not configured');
@@ -62,36 +118,70 @@ export class LFBMClient {
       headers['Authorization'] = `Bearer ${this.apiKey}`;
     }
 
-    const response = await fetch(`${this.endpoint}/v1/completions`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        nations: request.nations,
-        signals: request.signals,
-        categories: request.categories,
-        max_tokens: request.max_tokens || 1024,
-        temperature: request.temperature || 0.7,
-      }),
-    });
+    const userMessage = this.formatInput(request);
+    const startTime = Date.now();
+
+    // Use vLLM's OpenAI-compatible endpoint
+    const response = await fetch(
+      `${this.endpoint}/openai/v1/chat/completions`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          model: this.model,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: userMessage },
+          ],
+          max_tokens: request.max_tokens || 1024,
+          temperature: request.temperature || 0.7,
+        }),
+      }
+    );
 
     if (!response.ok) {
       const error = await response.text();
       throw new Error(`LFBM error: ${response.status} ${error}`);
     }
 
-    return response.json();
+    const data = await response.json();
+    const latencyMs = Date.now() - startTime;
+
+    // Parse the response
+    const content = data.choices?.[0]?.message?.content || '{}';
+    let briefings: Record<string, string>;
+
+    try {
+      briefings = JSON.parse(content);
+    } catch {
+      // If not valid JSON, wrap the content as a single briefing
+      briefings = { raw: content };
+    }
+
+    return {
+      briefings,
+      latency_ms: latencyMs,
+      tokens_generated: data.usage?.completion_tokens || 0,
+      model: data.model || this.model,
+    };
   }
 
   /**
    * Convert from the format used in intel-briefing route
    */
   async generateFromMetrics(
-    nationData: Array<{ code: string; name: string; basin_strength?: number; transition_risk?: number; regime?: number }>,
+    nationData: Array<{
+      code: string;
+      name: string;
+      basin_strength?: number;
+      transition_risk?: number;
+      regime?: number;
+    }>,
     gdeltSignals: Record<string, number>,
     categoryRisks: Record<string, number>
   ): Promise<Record<string, string>> {
     const request: LFBMRequest = {
-      nations: nationData.map(n => ({
+      nations: nationData.map((n) => ({
         code: n.code,
         name: n.name,
         risk: n.transition_risk || 0,
@@ -107,6 +197,37 @@ export class LFBMClient {
 
     const response = await this.generateBriefing(request);
     return response.briefings;
+  }
+
+  /**
+   * Health check for the vLLM endpoint
+   */
+  async healthCheck(): Promise<{
+    healthy: boolean;
+    latency_ms: number;
+    error?: string;
+  }> {
+    const startTime = Date.now();
+
+    try {
+      const response = await fetch(`${this.endpoint}/health`, {
+        method: 'GET',
+        headers: this.apiKey
+          ? { Authorization: `Bearer ${this.apiKey}` }
+          : undefined,
+      });
+
+      return {
+        healthy: response.ok,
+        latency_ms: Date.now() - startTime,
+      };
+    } catch (error) {
+      return {
+        healthy: false,
+        latency_ms: Date.now() - startTime,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
   }
 }
 

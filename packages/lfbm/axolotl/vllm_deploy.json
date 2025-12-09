@@ -1,0 +1,30 @@
+{
+  "name": "latticeforge-briefing-inference",
+  "input": {
+    "model_id": "Qwen/Qwen2.5-3B-Instruct",
+    "lora_adapters": [
+      {
+        "name": "briefing",
+        "path": "${HF_MODEL_REPO}"
+      }
+    ],
+    "tokenizer_id": "Qwen/Qwen2.5-3B-Instruct",
+    "max_model_len": 2048,
+    "gpu_memory_utilization": 0.9,
+    "enable_lora": true,
+    "max_loras": 1,
+    "trust_remote_code": true,
+    "dtype": "auto"
+  },
+  "scaling": {
+    "min_workers": 0,
+    "max_workers": 3,
+    "idle_timeout": 60,
+    "scale_type": "queue_delay",
+    "target_queue_delay": 2
+  },
+  "network": {
+    "public_dns": true,
+    "api_key_required": true
+  }
+}
