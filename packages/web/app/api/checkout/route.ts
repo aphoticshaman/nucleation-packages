@@ -20,12 +20,15 @@ export async function POST(req: Request) {
       );
     }
 
-    const { planId } = await req.json();
+    const { planId, startTrial } = await req.json();
 
     // Validate plan
     if (!['pro', 'team', 'enterprise'].includes(planId)) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
     }
+
+    // Trial is 14 days for new Pro users - CC saved but not charged until trial ends
+    const trialDays = startTrial && planId === 'pro' ? 14 : undefined;
 
     // Get current user
     const cookieStore = await cookies();
@@ -159,6 +162,7 @@ export async function POST(req: Request) {
       organizationId,
       successUrl: `${origin}/dashboard?checkout=success`,
       cancelUrl: `${origin}/pricing?checkout=canceled`,
+      trialDays,
     });
 
     return NextResponse.json({ url: session.url });

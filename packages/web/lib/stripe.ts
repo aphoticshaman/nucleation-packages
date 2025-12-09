@@ -279,12 +279,14 @@ export async function createCheckoutSession({
   organizationId,
   successUrl,
   cancelUrl,
+  trialDays,
 }: {
   priceId: string;
   customerId?: string;
   organizationId: string;
   successUrl: string;
   cancelUrl: string;
+  trialDays?: number; // Pass 14 for trial, undefined for immediate charge
 }) {
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
@@ -305,6 +307,8 @@ export async function createCheckoutSession({
       metadata: {
         organization_id: organizationId,
       },
+      // 14-day trial period - card saved but not charged until trial ends
+      ...(trialDays && { trial_period_days: trialDays }),
     },
     allow_promotion_codes: true,
   });

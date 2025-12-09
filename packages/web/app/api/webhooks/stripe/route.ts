@@ -44,10 +44,22 @@ export async function POST(req: Request) {
         break;
       }
 
-      case 'customer.subscription.created':
+      case 'customer.subscription.created': {
+        const subscription = event.data.object as Stripe.Subscription;
+        await handleSubscriptionUpdate(subscription, true); // isNew = true
+        break;
+      }
+
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
-        await handleSubscriptionUpdate(subscription);
+        await handleSubscriptionUpdate(subscription, false);
+        break;
+      }
+
+      case 'customer.subscription.trial_will_end': {
+        // Stripe sends this 3 days before trial ends
+        const subscription = event.data.object as Stripe.Subscription;
+        await handleTrialEndingReminder(subscription, 3);
         break;
       }
 
@@ -99,7 +111,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
   console.log(`Checkout complete for org ${organizationId}`);
 }
 
-async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
+async function handleSubscriptionUpdate(subscription: Stripe.Subscription, isNew: boolean = false) {
   const organizationId = subscription.metadata?.organization_id;
 
   if (!organizationId) {
@@ -129,7 +141,73 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     .update({ role: 'enterprise' })
     .eq('organization_id', organizationId);
 
-  console.log(`Subscription updated for org ${organizationId}: ${plan}`);
+  // Send welcome email for NEW subscriptions only
+  if (isNew) {
+    const { data: admin } = await getSupabaseAdmin()
+      .from('profiles')
+      .select('email, full_name')
+      .eq('organization_id', organizationId)
+      .limit(1)
+      .single();
+
+    if (admin?.email) {
+      // Check if this is a trial (trial_end is a Unix timestamp)
+      const trialDays = subscription.trial_end
+        ? Math.ceil((subscription.trial_end * 1000 - Date.now()) / (1000 * 60 * 60 * 24))
+        : undefined;
+
+      const template = emailTemplates.welcomeSubscription(
+        admin.full_name || 'there',
+        PLANS[plan as PlanId]?.name || plan,
+        trialDays && trialDays > 0 ? trialDays : undefined
+      );
+      await sendEmail({
+        to: admin.email,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+      });
+      console.log(`Welcome email sent to ${admin.email} (trial: ${trialDays || 'no'})`);
+    }
+  }
+
+  console.log(`Subscription ${isNew ? 'created' : 'updated'} for org ${organizationId}: ${plan}`);
+}
+
+async function handleTrialEndingReminder(subscription: Stripe.Subscription, daysLeft: number) {
+  const organizationId = subscription.metadata?.organization_id;
+
+  if (!organizationId) {
+    console.error('No organization_id in subscription metadata');
+    return;
+  }
+
+  const priceId = subscription.items.data[0]?.price.id;
+  const plan = getPlanFromPriceId(priceId);
+  const planInfo = PLANS[plan as PlanId];
+
+  const { data: admin } = await getSupabaseAdmin()
+    .from('profiles')
+    .select('email, full_name')
+    .eq('organization_id', organizationId)
+    .limit(1)
+    .single();
+
+  if (admin?.email) {
+    const template = emailTemplates.trialEndingReminder(
+      admin.full_name || 'there',
+      daysLeft,
+      planInfo?.name || 'Pro',
+      planInfo?.price || 79
+    );
+    await sendEmail({
+      to: admin.email,
+      subject: template.subject,
+      html: template.html,
+      text: template.text,
+    });
+    console.log(`Trial ending reminder (${daysLeft} days) sent to ${admin.email}`);
+  }
 }
 
 async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {

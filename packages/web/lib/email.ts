@@ -173,6 +173,156 @@ Resubscribe at: https://latticeforge.ai/pricing
 - LatticeForge Team`,
   }),
 
+  welcomeSubscription: (userName: string, planName: string, trialDays?: number) => ({
+    subject: trialDays
+      ? `Welcome to LatticeForge - Your ${trialDays}-Day Trial Starts Now!`
+      : `Welcome to LatticeForge ${planName}!`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 30px; border-radius: 8px 8px 0 0; text-align: center; }
+            .content { background: #f8fafc; padding: 30px; border-radius: 0 0 8px 8px; }
+            .success { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 15px; margin: 20px 0; }
+            .feature { display: flex; align-items: center; margin: 10px 0; }
+            .feature-icon { background: #dbeafe; padding: 8px; border-radius: 6px; margin-right: 12px; }
+            .button { display: inline-block; background: linear-gradient(135deg, #f97316, #fb923c); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; margin-top: 20px; font-weight: 600; }
+            .trial-note { background: #fef3c7; border: 1px solid #fcd34d; padding: 15px; border-radius: 8px; margin: 20px 0; }
+            .footer { text-align: center; color: #64748b; font-size: 12px; margin-top: 30px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="margin: 0; font-size: 28px;">Welcome to LatticeForge!</h1>
+              <p style="margin: 10px 0 0; opacity: 0.9;">${trialDays ? `Your ${trialDays}-day Pro trial is active` : `${planName} subscription activated`}</p>
+            </div>
+            <div class="content">
+              <p>Hi ${userName || 'there'},</p>
+              <div class="success">
+                <strong>You're all set!</strong>
+                <p>Your ${trialDays ? 'trial' : planName + ' subscription'} is now active. Start exploring:</p>
+              </div>
+              ${trialDays ? `
+              <div class="trial-note">
+                <strong>Trial Details</strong>
+                <p style="margin: 5px 0 0;">Your card won't be charged for ${trialDays} days. We'll send you a reminder before your trial ends.</p>
+              </div>
+              ` : ''}
+              <p><strong>What you can do now:</strong></p>
+              <div class="feature"><span class="feature-icon">🌍</span> Monitor 195 countries in real-time</div>
+              <div class="feature"><span class="feature-icon">⚡</span> Get instant alerts on breaking events</div>
+              <div class="feature"><span class="feature-icon">📊</span> Access predictive risk analytics</div>
+              <div class="feature"><span class="feature-icon">📧</span> Receive daily briefings in your inbox</div>
+              <center>
+                <a href="https://latticeforge.ai/app" class="button">Open Dashboard</a>
+              </center>
+            </div>
+            <div class="footer">
+              <p>LatticeForge - Know What Happens Next</p>
+              <p>Questions? Reply to this email or reach us at support@latticeforge.ai</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+    text: `Welcome to LatticeForge!
+
+Hi ${userName || 'there'},
+
+Your ${trialDays ? trialDays + '-day Pro trial' : planName + ' subscription'} is now active.
+
+${trialDays ? `Your card won't be charged for ${trialDays} days. We'll send you a reminder before your trial ends.` : ''}
+
+What you can do now:
+- Monitor 195 countries in real-time
+- Get instant alerts on breaking events
+- Access predictive risk analytics
+- Receive daily briefings in your inbox
+
+Open your dashboard: https://latticeforge.ai/app
+
+Questions? Reply to this email or reach us at support@latticeforge.ai
+
+- LatticeForge Team`,
+  }),
+
+  trialEndingReminder: (userName: string, daysLeft: number, planName: string, monthlyPrice: number) => ({
+    subject: daysLeft === 0
+      ? `Your LatticeForge trial ends today`
+      : `Your LatticeForge trial ends in ${daysLeft} day${daysLeft > 1 ? 's' : ''}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 30px; border-radius: 8px 8px 0 0; }
+            .content { background: #f8fafc; padding: 30px; border-radius: 0 0 8px 8px; }
+            .alert { background: ${daysLeft === 0 ? '#fef2f2' : '#fef3c7'}; border-left: 4px solid ${daysLeft === 0 ? '#ef4444' : '#f59e0b'}; padding: 15px; margin: 20px 0; }
+            .details { background: white; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #e2e8f0; }
+            .button { display: inline-block; background: linear-gradient(135deg, #f97316, #fb923c); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; margin-top: 10px; font-weight: 600; }
+            .button-secondary { display: inline-block; background: transparent; color: #64748b; padding: 14px 28px; text-decoration: none; border-radius: 8px; margin-top: 10px; border: 1px solid #e2e8f0; }
+            .footer { text-align: center; color: #64748b; font-size: 12px; margin-top: 30px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="margin: 0;">LatticeForge</h1>
+              <p style="margin: 10px 0 0; opacity: 0.9;">Trial Reminder</p>
+            </div>
+            <div class="content">
+              <p>Hi ${userName || 'there'},</p>
+              <div class="alert">
+                <strong>${daysLeft === 0 ? 'Your trial ends today!' : `${daysLeft} day${daysLeft > 1 ? 's' : ''} left in your trial`}</strong>
+                <p>${daysLeft === 0
+                  ? 'Your card will be charged today to continue your Pro subscription.'
+                  : 'Your Pro trial is coming to an end soon.'}</p>
+              </div>
+              <div class="details">
+                <p><strong>What happens next:</strong></p>
+                <p>Your card will be charged <strong>$${monthlyPrice}/month</strong> for ${planName} when the trial ends.</p>
+                <p>Don't want to continue? You can cancel anytime from your billing settings.</p>
+              </div>
+              <center>
+                <a href="https://latticeforge.ai/app" class="button">Continue with Pro</a>
+                <br/>
+                <a href="https://latticeforge.ai/settings/billing" class="button-secondary">Manage Subscription</a>
+              </center>
+            </div>
+            <div class="footer">
+              <p>LatticeForge - Know What Happens Next</p>
+              <p>Questions? Reply to this email or reach us at support@latticeforge.ai</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+    text: `Your LatticeForge trial ${daysLeft === 0 ? 'ends today' : `ends in ${daysLeft} day${daysLeft > 1 ? 's' : ''}`}
+
+Hi ${userName || 'there'},
+
+${daysLeft === 0
+  ? 'Your trial ends today! Your card will be charged to continue your Pro subscription.'
+  : `You have ${daysLeft} day${daysLeft > 1 ? 's' : ''} left in your Pro trial.`}
+
+What happens next:
+Your card will be charged $${monthlyPrice}/month for ${planName} when the trial ends.
+
+Don't want to continue? Cancel anytime: https://latticeforge.ai/settings/billing
+
+Continue with Pro: https://latticeforge.ai/app
+
+- LatticeForge Team`,
+  }),
+
   paymentSucceeded: (orgName: string, amount: number, planName: string) => ({
     subject: `Payment Received - ${orgName}`,
     html: `
