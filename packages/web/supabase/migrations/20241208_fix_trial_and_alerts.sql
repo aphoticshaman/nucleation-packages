@@ -76,6 +76,17 @@ CREATE TABLE IF NOT EXISTS alert_send_log (
   metadata JSONB DEFAULT '{}'::jsonb
 );
 
+-- 4b. Add sent_at column if table already existed without it
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'alert_send_log' AND column_name = 'sent_at'
+  ) THEN
+    ALTER TABLE alert_send_log ADD COLUMN sent_at TIMESTAMPTZ DEFAULT NOW();
+  END IF;
+END $$;
+
 -- 5. Create briefing_cache table if not exists (for storing LLM briefings)
 CREATE TABLE IF NOT EXISTS briefing_cache (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
