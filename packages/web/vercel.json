@@ -49,6 +49,10 @@
     {
       "path": "/api/cron/api-usage-monitor",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/llm-pipeline-monitor",
+      "schedule": "*/15 * * * *"
     }
   ]
 }
