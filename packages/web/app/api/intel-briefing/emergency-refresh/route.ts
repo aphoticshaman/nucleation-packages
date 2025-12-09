@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { Redis } from '@upstash/redis';
+import { getLFBMClient, shouldUseLFBM } from '@/lib/inference/LFBMClient';
 
 export const runtime = 'edge';
 export const maxDuration = 120; // Extended for meta-analysis
@@ -418,6 +419,89 @@ Reference the SPECIFIC metrics provided. Output ONLY valid JSON.`;
     debugInfo.mode = mode;
     debugInfo.depth = depth;
     debugInfo.model = modelId;
+
+    // ============================================================
+    // LFBM: Use self-hosted vLLM for realtime mode (250x cheaper)
+    // ============================================================
+    if (mode === 'realtime' && shouldUseLFBM()) {
+      console.log('[EMERGENCY REFRESH] Using LFBM (self-hosted vLLM) - 250x cheaper!');
+      const lfbmClient = getLFBMClient();
+      const lfbmStartTime = Date.now();
+
+      try {
+        // Prepare nation data for LFBM
+        const nationDataForLFBM = (nationRisks || []).map((n: { code: string; name: string; basin_strength?: number; transition_risk?: number; regime?: number }) => ({
+          code: n.code,
+          name: n.name,
+          basin_strength: n.basin_strength,
+          transition_risk: n.transition_risk,
+          regime: n.regime,
+        }));
+
+        const briefings = await lfbmClient.generateFromMetrics(
+          nationDataForLFBM,
+          {
+            count: gdeltSignalCount,
+            avg_tone: highRiskNations.length > 0 ? -0.3 : 0.1, // Negative if high risk nations
+            alerts: highRiskNations.length,
+          },
+          {
+            political: 50 + highRiskNations.length * 10,
+            economic: 45,
+            security: 50 + highRiskNations.length * 15,
+            cyber: 40,
+          }
+        );
+
+        const lfbmLatency = Date.now() - lfbmStartTime;
+        console.log(`[EMERGENCY REFRESH] LFBM completed in ${lfbmLatency}ms`);
+
+        // Prepare cache data
+        const lfbmCacheData = {
+          briefings,
+          metadata: {
+            region: 'Global',
+            preset: 'global',
+            timestamp: new Date().toISOString(),
+            overallRisk: 'elevated' as const,
+            source: 'emergency_refresh',
+            mode: 'realtime',
+            model: 'lfbm-vllm',
+            estimatedCost: '$0.001',
+            cached: false,
+          },
+        };
+
+        // Write to Redis cache
+        try {
+          const redisCacheKey = 'intel-briefing:global';
+          await redis.del(redisCacheKey);
+          await redis.set(redisCacheKey, {
+            data: lfbmCacheData,
+            timestamp: Date.now(),
+            generatedAt: new Date().toISOString(),
+          }, { ex: REDIS_CACHE_TTL_SECONDS });
+          console.log('[EMERGENCY REFRESH] ✅ LFBM result cached to Redis');
+        } catch (redisError) {
+          console.error('[EMERGENCY REFRESH] Redis cache write failed:', redisError);
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: 'Emergency refresh completed via LFBM (250x cheaper!)',
+          briefings,
+          metadata: lfbmCacheData.metadata,
+          usage: {
+            source: 'lfbm_vllm',
+            latencyMs: lfbmLatency,
+            estimatedCost: '$0.001',
+          },
+        });
+      } catch (lfbmError) {
+        console.error('[EMERGENCY REFRESH] LFBM failed, falling back to Anthropic:', lfbmError);
+        // Fall through to Anthropic
+      }
+    }
 
     const briefingResponse = await anthropic.messages.create({
       model: modelId,
