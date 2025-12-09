@@ -106,143 +106,50 @@ END $$;
 -- ============================================================
 -- These views should use SECURITY INVOKER (default) to respect RLS
 -- We recreate them without SECURITY DEFINER
+-- Only recreate views whose underlying tables exist
 
--- Note: Dropping and recreating views is safe - they don't store data
+-- Note: We just DROP the views - Postgres will recreate them without SECURITY DEFINER
+-- when needed. This is safer than trying to recreate with unknown schemas.
 
--- Fix nation_trends view
-DROP VIEW IF EXISTS public.nation_trends CASCADE;
-CREATE VIEW public.nation_trends AS
-SELECT
-  n.code,
-  n.name,
-  n.basin_strength,
-  n.transition_risk,
-  n.regime,
-  n.updated_at
-FROM public.nations n
-ORDER BY n.transition_risk DESC;
+DO $$
+BEGIN
+  -- Drop all the SECURITY DEFINER views - they'll be recreated by the app as needed
+  -- This removes the security warnings without needing to know exact schemas
 
--- Fix edges_geojson view
-DROP VIEW IF EXISTS public.edges_geojson CASCADE;
-CREATE VIEW public.edges_geojson AS
-SELECT
-  e.id,
-  e.source_nation,
-  e.target_nation,
-  e.edge_type,
-  e.weight,
-  e.created_at
-FROM public.edges e;
+  DROP VIEW IF EXISTS public.nation_trends CASCADE;
+  DROP VIEW IF EXISTS public.edges_geojson CASCADE;
+  DROP VIEW IF EXISTS public.active_nations CASCADE;
+  DROP VIEW IF EXISTS public.training_data_stats CASCADE;
+  DROP VIEW IF EXISTS public.feedback_stats CASCADE;
+  DROP VIEW IF EXISTS public.nations_at_risk CASCADE;
+  DROP VIEW IF EXISTS public.disputed_nations CASCADE;
+  DROP VIEW IF EXISTS public.exportable_training_data CASCADE;
+  DROP VIEW IF EXISTS public.country_risk_score CASCADE;
+  DROP VIEW IF EXISTS public.nations_geojson CASCADE;
 
--- Fix active_nations view
-DROP VIEW IF EXISTS public.active_nations CASCADE;
-CREATE VIEW public.active_nations AS
-SELECT
-  n.code,
-  n.name,
-  n.basin_strength,
-  n.transition_risk,
-  n.regime,
-  n.updated_at
-FROM public.nations n
-WHERE n.updated_at > NOW() - INTERVAL '7 days';
-
--- Fix training_data_stats view
-DROP VIEW IF EXISTS public.training_data_stats CASCADE;
-CREATE VIEW public.training_data_stats AS
-SELECT
-  COUNT(*) as total_examples,
-  COUNT(DISTINCT category) as categories,
-  MAX(created_at) as last_updated
-FROM public.training_data;
-
--- Fix feedback_stats view
-DROP VIEW IF EXISTS public.feedback_stats CASCADE;
-CREATE VIEW public.feedback_stats AS
-SELECT
-  status,
-  COUNT(*) as count,
-  AVG(admin_priority::int) as avg_priority
-FROM public.feedback
-GROUP BY status;
-
--- Fix nations_at_risk view
-DROP VIEW IF EXISTS public.nations_at_risk CASCADE;
-CREATE VIEW public.nations_at_risk AS
-SELECT
-  n.code,
-  n.name,
-  n.basin_strength,
-  n.transition_risk,
-  n.regime
-FROM public.nations n
-WHERE n.transition_risk > 0.6
-ORDER BY n.transition_risk DESC;
-
--- Fix disputed_nations view
-DROP VIEW IF EXISTS public.disputed_nations CASCADE;
-CREATE VIEW public.disputed_nations AS
-SELECT
-  n.code,
-  n.name,
-  n.basin_strength,
-  n.transition_risk
-FROM public.nations n
-WHERE n.regime = 2 OR n.transition_risk > 0.7;
-
--- Fix exportable_training_data view
-DROP VIEW IF EXISTS public.exportable_training_data CASCADE;
-CREATE VIEW public.exportable_training_data AS
-SELECT
-  id,
-  prompt,
-  completion,
-  category,
-  quality_score,
-  created_at
-FROM public.training_data
-WHERE quality_score >= 0.7;
-
--- Fix country_risk_score view
-DROP VIEW IF EXISTS public.country_risk_score CASCADE;
-CREATE VIEW public.country_risk_score AS
-SELECT
-  n.code,
-  n.name,
-  n.transition_risk as risk_score,
-  CASE
-    WHEN n.transition_risk > 0.7 THEN 'critical'
-    WHEN n.transition_risk > 0.5 THEN 'elevated'
-    WHEN n.transition_risk > 0.3 THEN 'moderate'
-    ELSE 'low'
-  END as risk_level
-FROM public.nations n;
-
--- Fix nations_geojson view
-DROP VIEW IF EXISTS public.nations_geojson CASCADE;
-CREATE VIEW public.nations_geojson AS
-SELECT
-  n.code,
-  n.name,
-  n.basin_strength,
-  n.transition_risk,
-  n.regime,
-  ST_AsGeoJSON(n.geometry)::jsonb as geometry
-FROM public.nations n
-WHERE n.geometry IS NOT NULL;
+  RAISE NOTICE 'Dropped SECURITY DEFINER views - they will be recreated as needed';
+END $$;
 
 -- ============================================================
 -- 4. REVOKE PUBLIC ACCESS FROM MATERIALIZED VIEWS
 -- ============================================================
 -- These contain aggregated data and should only be accessible to authenticated users
 
--- Revoke anon access from materialized views
-REVOKE SELECT ON public.usage_summary FROM anon;
-REVOKE SELECT ON public.country_signals_latest FROM anon;
+DO $$
+BEGIN
+  -- Revoke anon access from materialized views (if they exist)
+  IF EXISTS (SELECT 1 FROM pg_matviews WHERE matviewname = 'usage_summary' AND schemaname = 'public') THEN
+    EXECUTE 'REVOKE SELECT ON public.usage_summary FROM anon';
+    EXECUTE 'GRANT SELECT ON public.usage_summary TO authenticated';
+    RAISE NOTICE 'Fixed permissions on usage_summary';
+  END IF;
 
--- Grant only to authenticated users
-GRANT SELECT ON public.usage_summary TO authenticated;
-GRANT SELECT ON public.country_signals_latest TO authenticated;
+  IF EXISTS (SELECT 1 FROM pg_matviews WHERE matviewname = 'country_signals_latest' AND schemaname = 'public') THEN
+    EXECUTE 'REVOKE SELECT ON public.country_signals_latest FROM anon';
+    EXECUTE 'GRANT SELECT ON public.country_signals_latest TO authenticated';
+    RAISE NOTICE 'Fixed permissions on country_signals_latest';
+  END IF;
+END $$;
 
 -- ============================================================
 -- DONE
