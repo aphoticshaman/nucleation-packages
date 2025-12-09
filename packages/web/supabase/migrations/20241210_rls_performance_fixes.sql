@@ -64,23 +64,23 @@ CREATE POLICY "Admins can delete feedback" ON public.feedback
         EXISTS (SELECT 1 FROM public.profiles WHERE id = (select auth.uid()) AND role = 'admin')
     );
 
--- usage_records table
+-- usage_records table (uses client_id)
 DROP POLICY IF EXISTS "Users can view own usage" ON public.usage_records;
 
 CREATE POLICY "Users can view own usage" ON public.usage_records
-    FOR SELECT USING ((select auth.uid()) = user_id);
+    FOR SELECT USING ((select auth.uid()) = client_id);
 
--- alerts table
+-- alerts table (uses client_id)
 DROP POLICY IF EXISTS "Users can view own alerts" ON public.alerts;
 DROP POLICY IF EXISTS "Users can update own alerts" ON public.alerts;
 
 CREATE POLICY "Users can view own alerts" ON public.alerts
-    FOR SELECT USING ((select auth.uid()) = user_id);
+    FOR SELECT USING ((select auth.uid()) = client_id);
 
 CREATE POLICY "Users can update own alerts" ON public.alerts
-    FOR UPDATE USING ((select auth.uid()) = user_id);
+    FOR UPDATE USING ((select auth.uid()) = client_id);
 
--- alert_send_log table (consolidate duplicate policies)
+-- alert_send_log table (consolidate duplicate policies) - uses user_id
 DROP POLICY IF EXISTS "Users can view own alert logs" ON public.alert_send_log;
 DROP POLICY IF EXISTS "Users can view own alert log" ON public.alert_send_log;
 DROP POLICY IF EXISTS "Users can create own alert logs" ON public.alert_send_log;
@@ -92,11 +92,11 @@ CREATE POLICY "Users can manage own alert logs" ON public.alert_send_log
 CREATE POLICY "Service role full access to alert log" ON public.alert_send_log
     FOR ALL USING (auth.role() = 'service_role');
 
--- webhooks table
+-- webhooks table (uses client_id)
 DROP POLICY IF EXISTS "Users can manage own webhooks" ON public.webhooks;
 
 CREATE POLICY "Users can manage own webhooks" ON public.webhooks
-    FOR ALL USING ((select auth.uid()) = user_id);
+    FOR ALL USING ((select auth.uid()) = client_id);
 
 -- tier_limits table (consolidate)
 DROP POLICY IF EXISTS "Service role can manage tier_limits" ON public.tier_limits;
