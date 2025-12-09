@@ -107,7 +107,8 @@ Generate JSON briefings for each category.`;
   }
 
   /**
-   * Call vLLM's OpenAI-compatible chat completions API
+   * Call RunPod serverless vLLM endpoint
+   * RunPod uses /runsync for synchronous calls with { input: { ... } } wrapper
    */
   async generateBriefing(request: LFBMRequest): Promise<LFBMResponse> {
     if (!this.endpoint) {
@@ -125,7 +126,68 @@ Generate JSON briefings for each category.`;
     const userMessage = this.formatInput(request);
     const startTime = Date.now();
 
-    // Use vLLM's OpenAI-compatible endpoint
+    // Detect if this is a RunPod serverless endpoint
+    const isRunPod = this.endpoint.includes('api.runpod.ai');
+
+    if (isRunPod) {
+      // RunPod serverless format - use /runsync for synchronous response
+      // Replace /run with /runsync if present
+      const syncEndpoint = this.endpoint.replace(/\/run$/, '/runsync');
+
+      const response = await fetch(syncEndpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          input: {
+            messages: [
+              { role: 'system', content: SYSTEM_PROMPT },
+              { role: 'user', content: userMessage },
+            ],
+            max_tokens: request.max_tokens || 1024,
+            temperature: request.temperature || 0.7,
+            model: this.model,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`LFBM RunPod error: ${response.status} ${error}`);
+      }
+
+      const data = await response.json();
+      const latencyMs = Date.now() - startTime;
+
+      // RunPod wraps output in { output: { ... } } or { output: "..." }
+      let content: string;
+      if (typeof data.output === 'string') {
+        content = data.output;
+      } else if (data.output?.choices?.[0]?.message?.content) {
+        content = data.output.choices[0].message.content;
+      } else if (data.output?.text) {
+        content = data.output.text;
+      } else {
+        content = JSON.stringify(data.output || {});
+      }
+
+      let briefings: Record<string, string>;
+      try {
+        // Try to extract JSON from response
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        briefings = jsonMatch ? JSON.parse(jsonMatch[0]) : { raw: content };
+      } catch {
+        briefings = { raw: content };
+      }
+
+      return {
+        briefings,
+        latency_ms: latencyMs,
+        tokens_generated: data.output?.usage?.completion_tokens || 0,
+        model: this.model,
+      };
+    }
+
+    // Direct vLLM server (non-RunPod) - use OpenAI-compatible endpoint
     const response = await fetch(
       `${this.endpoint}/openai/v1/chat/completions`,
       {
