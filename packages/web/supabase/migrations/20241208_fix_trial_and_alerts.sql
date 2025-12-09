@@ -56,6 +56,17 @@ CREATE TABLE IF NOT EXISTS email_export_preferences (
   UNIQUE(user_id)
 );
 
+-- 3b. Add enabled column if table already existed without it
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'email_export_preferences' AND column_name = 'enabled'
+  ) THEN
+    ALTER TABLE email_export_preferences ADD COLUMN enabled BOOLEAN DEFAULT TRUE;
+  END IF;
+END $$;
+
 -- 4. Create alert_send_log table if not exists
 CREATE TABLE IF NOT EXISTS alert_send_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
