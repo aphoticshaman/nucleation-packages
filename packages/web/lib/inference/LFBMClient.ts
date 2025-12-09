@@ -9,6 +9,11 @@
  * - Elegant, professional, concise
  * - Powers latticeforge.ai/chat and all briefings
  *
+ * GUARDIAN INTEGRATION:
+ * - All output from Elle is validated by Guardian before caching
+ * - Guardian fixes common JSON malformation issues (nested JSON, markdown blocks)
+ * - Invalid output is rejected to prevent bad cache pollution
+ *
  * Modes:
  * - realtime: Pure metric translation (~$0.001)
  * - historical: Pattern analysis using model's training knowledge (~$0.002)
@@ -28,6 +33,8 @@
  * - Set ENABLE_LFBM_IN_PREVIEW=true to enable in preview/dev
  * - Without this, LFBM calls return fallback responses in non-prod
  */
+
+import { getOutputGuardian, type BriefingValidationResult } from '@/lib/reasoning/security';
 
 // =============================================================================
 // NON-PRODUCTION API BLOCKING
@@ -168,6 +175,8 @@ export interface LFBMResponse {
   latency_ms: number;
   tokens_generated: number;
   model: string;
+  /** Guardian validation result - included for transparency */
+  validation?: BriefingValidationResult;
 }
 
 // =============================================================================
@@ -350,20 +359,32 @@ Generate JSON briefings for each category.`;
         content = JSON.stringify(data.output || {});
       }
 
-      let briefings: Record<string, string>;
-      try {
-        // Try to extract JSON from response
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        briefings = jsonMatch ? JSON.parse(jsonMatch[0]) : { raw: content };
-      } catch {
-        briefings = { raw: content };
+      // GUARDIAN VALIDATION: Validate and fix Elle's output before returning
+      const guardian = getOutputGuardian();
+      const validation = guardian.validateBriefings(content);
+
+      if (validation.warnings.length > 0) {
+        console.log('[LFBM GUARDIAN] Warnings:', validation.warnings);
+      }
+      if (validation.errors.length > 0) {
+        console.warn('[LFBM GUARDIAN] Errors:', validation.errors);
+      }
+      if (validation.fixed) {
+        console.log('[LFBM GUARDIAN] Fixed malformed JSON from Elle');
+      }
+
+      // If Guardian couldn't validate, throw error instead of returning bad data
+      if (!validation.valid || !validation.briefings) {
+        console.error('[LFBM GUARDIAN] REJECTED - Output failed validation:', validation.errors);
+        throw new Error(`LFBM output validation failed: ${validation.errors.join(', ')}`);
       }
 
       return {
-        briefings,
+        briefings: validation.briefings,
         latency_ms: latencyMs,
         tokens_generated: data.output?.usage?.completion_tokens || 0,
         model: this.model,
+        validation,
       };
     }
 
@@ -395,20 +416,33 @@ Generate JSON briefings for each category.`;
 
     // Parse the response
     const content = data.choices?.[0]?.message?.content || '{}';
-    let briefings: Record<string, string>;
 
-    try {
-      briefings = JSON.parse(content);
-    } catch {
-      // If not valid JSON, wrap the content as a single briefing
-      briefings = { raw: content };
+    // GUARDIAN VALIDATION: Validate and fix Elle's output before returning
+    const guardian = getOutputGuardian();
+    const validation = guardian.validateBriefings(content);
+
+    if (validation.warnings.length > 0) {
+      console.log('[LFBM GUARDIAN] Warnings:', validation.warnings);
+    }
+    if (validation.errors.length > 0) {
+      console.warn('[LFBM GUARDIAN] Errors:', validation.errors);
+    }
+    if (validation.fixed) {
+      console.log('[LFBM GUARDIAN] Fixed malformed JSON from Elle');
+    }
+
+    // If Guardian couldn't validate, throw error instead of returning bad data
+    if (!validation.valid || !validation.briefings) {
+      console.error('[LFBM GUARDIAN] REJECTED - Output failed validation:', validation.errors);
+      throw new Error(`LFBM output validation failed: ${validation.errors.join(', ')}`);
     }
 
     return {
-      briefings,
+      briefings: validation.briefings,
       latency_ms: latencyMs,
       tokens_generated: data.usage?.completion_tokens || 0,
       model: data.model || this.model,
+      validation,
     };
   }
 
@@ -619,19 +653,29 @@ Generate hybrid briefing combining current metrics with historical context.`;
         content = JSON.stringify(data.output || {});
       }
 
-      let briefings: Record<string, string>;
-      try {
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        briefings = jsonMatch ? JSON.parse(jsonMatch[0]) : { raw: content };
-      } catch {
-        briefings = { raw: content };
+      // GUARDIAN VALIDATION: Validate and fix Elle's output
+      const guardian = getOutputGuardian();
+      const validation = guardian.validateBriefings(content);
+
+      if (validation.warnings.length > 0) {
+        console.log('[LFBM GUARDIAN callEndpoint] Warnings:', validation.warnings);
+      }
+      if (validation.fixed) {
+        console.log('[LFBM GUARDIAN callEndpoint] Fixed malformed JSON from Elle');
+      }
+
+      // If Guardian couldn't validate, throw error instead of returning bad data
+      if (!validation.valid || !validation.briefings) {
+        console.error('[LFBM GUARDIAN callEndpoint] REJECTED:', validation.errors);
+        throw new Error(`LFBM output validation failed: ${validation.errors.join(', ')}`);
       }
 
       return {
-        briefings,
+        briefings: validation.briefings,
         latency_ms: latencyMs,
         tokens_generated: data.output?.usage?.completion_tokens || 0,
         model: this.model,
+        validation,
       };
     }
 
@@ -659,18 +703,29 @@ Generate hybrid briefing combining current metrics with historical context.`;
     const latencyMs = Date.now() - startTime;
     const content = data.choices?.[0]?.message?.content || '{}';
 
-    let briefings: Record<string, string>;
-    try {
-      briefings = JSON.parse(content);
-    } catch {
-      briefings = { raw: content };
+    // GUARDIAN VALIDATION: Validate and fix Elle's output
+    const guardian = getOutputGuardian();
+    const validation = guardian.validateBriefings(content);
+
+    if (validation.warnings.length > 0) {
+      console.log('[LFBM GUARDIAN direct] Warnings:', validation.warnings);
+    }
+    if (validation.fixed) {
+      console.log('[LFBM GUARDIAN direct] Fixed malformed JSON from Elle');
+    }
+
+    // If Guardian couldn't validate, throw error instead of returning bad data
+    if (!validation.valid || !validation.briefings) {
+      console.error('[LFBM GUARDIAN direct] REJECTED:', validation.errors);
+      throw new Error(`LFBM output validation failed: ${validation.errors.join(', ')}`);
     }
 
     return {
-      briefings,
+      briefings: validation.briefings,
       latency_ms: latencyMs,
       tokens_generated: data.usage?.completion_tokens || 0,
       model: data.model || this.model,
+      validation,
     };
   }
 

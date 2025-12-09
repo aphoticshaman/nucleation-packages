@@ -1,0 +1,74 @@
+# =============================================================================
+# Axolotl QLoRA Config for LatticeForge Briefing Model
+# =============================================================================
+# For smaller GPUs (A100, A10, 3090, etc.) - uses 4-bit quantization
+# Base model: Qwen2.5-7B-Instruct
+# Method: QLoRA (4-bit) - ~12GB VRAM required
+# Training time: ~1-2 hours on A100
+# =============================================================================
+
+base_model: Qwen/Qwen2.5-7B-Instruct
+model_type: AutoModelForCausalLM
+tokenizer_type: AutoTokenizer
+trust_remote_code: true
+
+# QLoRA config (4-bit quantization)
+load_in_4bit: true
+adapter: qlora
+lora_r: 64
+lora_alpha: 128
+lora_dropout: 0.05
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+# Dataset
+datasets:
+  - path: aphoticshaman/latticeforge-briefing-data
+    type: sharegpt
+    conversation: chatml
+
+# Output
+output_dir: /workspace/output/latticeforge-briefing-7b-lora
+hub_model_id: aphoticshaman/latticeforge-briefing-7b-lora
+push_to_hub: true
+
+# Training hyperparameters
+sequence_len: 2048
+sample_packing: true
+pad_to_sequence_len: true
+
+gradient_accumulation_steps: 4
+micro_batch_size: 2
+num_epochs: 5
+learning_rate: 2e-4
+lr_scheduler: cosine
+warmup_ratio: 0.1
+
+optimizer: adamw_bnb_8bit
+weight_decay: 0.01
+max_grad_norm: 1.0
+
+# Precision
+bf16: auto
+tf32: true
+
+# Logging
+logging_steps: 10
+eval_steps: 100
+save_steps: 500
+save_total_limit: 3
+
+# Eval
+val_set_size: 0.05
+eval_sample_packing: false
+
+# Performance
+seed: 42
+gradient_checkpointing: true
+flash_attention: true
