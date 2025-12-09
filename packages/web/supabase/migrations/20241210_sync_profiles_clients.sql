@@ -12,12 +12,11 @@
 -- PART 1: Backfill - Create clients for profiles that don't have one
 -- ============================================================================
 
-INSERT INTO public.clients (id, name, email, tier, created_at)
+INSERT INTO public.clients (id, name, email, created_at)
 SELECT
     p.id,
     COALESCE(p.full_name, split_part(p.email, '@', 1)) as name,
     p.email,
-    'free' as tier,
     p.created_at
 FROM public.profiles p
 LEFT JOIN public.clients c ON c.id = p.id
@@ -33,12 +32,11 @@ RETURNS TRIGGER AS $$
 BEGIN
     -- On INSERT: Create corresponding client with same id
     IF TG_OP = 'INSERT' THEN
-        INSERT INTO public.clients (id, name, email, tier, created_at)
+        INSERT INTO public.clients (id, name, email, created_at)
         VALUES (
             NEW.id,
             COALESCE(NEW.full_name, split_part(NEW.email, '@', 1)),
             NEW.email,
-            'free',
             NEW.created_at
         )
         ON CONFLICT (email) DO UPDATE SET
