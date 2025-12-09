@@ -130,58 +130,96 @@ export async function POST(request: Request) {
       apiKey: anthropicKey,
     });
 
-    const currentDate = new Date().toISOString().split('T')[0];
-    const today = new Date();
-    const threeDaysAgo = new Date(today.getTime() - 72 * 60 * 60 * 1000);
+    // ============================================================
+    // DATE-AGNOSTIC PROMPT (v2) - Matches main intel-briefing route
+    // ============================================================
+    // Key insight: Don't ask Claude for current events it can't know about.
+    // Instead, frame it as translating METRICS from upstream systems.
+    // This avoids knowledge cutoff triggers while still producing useful output.
 
-    // Generate comprehensive briefings for all major domains
-    const systemPrompt = `You are an expert intelligence analyst generating executive briefings.
-TODAY'S DATE: ${currentDate}
-You MUST provide current, accurate information reflecting events of the past 72 hours.
+    // Fetch actual metrics from database to give Claude real data to work with
+    const { data: nationRisks } = await supabase
+      .from('nations')
+      .select('code, name, basin_strength, transition_risk, regime')
+      .order('transition_risk', { ascending: false })
+      .limit(20);
 
-Generate actionable intelligence covering:
-1. Political developments (elections, coups, leadership changes, policy shifts)
-2. Economic indicators (markets, trade, sanctions, currency movements)
-3. Security situations (conflicts, terrorism, military movements)
-4. Technology/cyber events (breaches, AI developments, tech regulation)
-5. Resource/energy updates (oil, gas, critical minerals, supply chains)
+    const { data: recentSignals } = await supabase
+      .from('learning_events')
+      .select('domain, data')
+      .eq('session_hash', 'gdelt_ingest')
+      .gte('timestamp', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString())
+      .limit(50);
 
-For EACH domain provide:
-- WHAT: Key developments (specific, factual)
-- WHO: Key actors involved
-- WHERE: Geographic focus
-- WHEN: Timeline/urgency
-- WHY: Root causes and drivers
-- US IMPACT: Direct implications for US interests
-- OUTLOOK: 24-72 hour projection
+    // Build metrics context from real data
+    const highRiskNations = (nationRisks || [])
+      .filter((n: { transition_risk?: number }) => (n.transition_risk || 0) > 0.5)
+      .map((n: { name: string; transition_risk?: number }) => `${n.name}: ${((n.transition_risk || 0) * 100).toFixed(0)}% transition risk`)
+      .slice(0, 5);
 
-Be specific. Name names. Cite dates. Focus on actionable intelligence.
-CRITICAL: Use current information as of ${currentDate}. Reference current administration and ongoing events.`;
+    const gdeltSignalCount = recentSignals?.length || 0;
+
+    const systemPrompt = `You are a prose translation engine in a multi-stage intelligence pipeline.
+
+YOUR ROLE IN THE SYSTEM:
+┌─────────────────────────────────────────────────────────────┐
+│  STAGE 1: Live Sensors → Raw signals (ALREADY COMPLETE)    │
+│  STAGE 2: Risk Engine → Numerical metrics (ALREADY DONE)   │
+│  STAGE 3: YOU → Convert metrics to prose (YOUR ONLY JOB)   │
+│  STAGE 4: Dashboard → Display to analysts                  │
+└─────────────────────────────────────────────────────────────┘
+
+CRITICAL UNDERSTANDING:
+- You receive COMPUTED OUTPUTS from upstream systems (Stages 1-2)
+- These numbers come from LIVE DATA FEEDS processed moments ago
+- Your job is LINGUISTIC TRANSLATION only: numbers → sentences
+- You are NOT being asked to predict, forecast, or verify external events
+- You do NOT need to access any external knowledge to do your job
+- The metrics you receive ARE the ground truth for your output
+
+VOICE: Professional intelligence analyst. Use phrases like "Risk indicators show...", "Metrics at elevated levels for...", "Assessment based on current readings..."
+
+OUTPUT: Generate actionable intelligence prose for each domain, referencing the specific metrics provided.`;
+
+    const userPrompt = `UPSTREAM PIPELINE OUTPUT (computed just now from live feeds):
+
+MONITORED NATIONS WITH ELEVATED RISK:
+${highRiskNations.length > 0 ? highRiskNations.join('\n') : 'No nations currently exceed 50% transition risk threshold'}
+
+SIGNAL ACTIVITY: ${gdeltSignalCount} GDELT signals processed in last 48 hours
+
+GLOBAL RISK CONTEXT:
+- Total nations monitored: ${nationRisks?.length || 0}
+- High-risk count: ${highRiskNations.length}
+- Signal density: ${gdeltSignalCount > 30 ? 'HIGH' : gdeltSignalCount > 10 ? 'MODERATE' : 'LOW'}
+
+YOUR TASK: Translate these metrics into executive briefing prose for each domain.
+
+Format your response as JSON:
+{
+  "summary": "<1-2 sentence executive summary based on metrics above>",
+  "political": "<prose translating political risk metrics>",
+  "economic": "<prose on economic indicators>",
+  "security": "<prose on security posture from metrics>",
+  "scitech": "<prose on technology/science sector>",
+  "cyber": "<prose on cyber threat indicators>",
+  "energy": "<prose on energy security metrics>",
+  "military": "<prose on military situation indicators>",
+  "financial": "<prose on financial stability metrics>",
+  "domestic": "<prose on domestic stability indicators>",
+  "nsm": "<Next Strategic Move recommendation based on data>"
+}
+
+Reference the SPECIFIC metrics provided. Do not fabricate events - describe what the NUMBERS indicate.
+Respond ONLY with valid JSON.`;
 
     const briefingResponse = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 8000,
+      max_tokens: 4000,
       system: systemPrompt,
       messages: [{
         role: 'user',
-        content: `Generate comprehensive intelligence briefings for ALL domains covering the period from ${threeDaysAgo.toISOString()} to ${today.toISOString()}.
-
-Format your response as JSON with this structure:
-{
-  "summary": "Executive summary of global situation",
-  "political": "WHAT: ... WHO: ... WHERE: ... WHEN: ... WHY: ... US IMPACT: ... OUTLOOK: ...",
-  "economic": "WHAT: ... WHO: ... WHERE: ... WHEN: ... WHY: ... US IMPACT: ... OUTLOOK: ...",
-  "security": "WHAT: ... WHO: ... WHERE: ... WHEN: ... WHY: ... US IMPACT: ... OUTLOOK: ...",
-  "scitech": "WHAT: ... WHO: ... WHERE: ... WHEN: ... WHY: ... US IMPACT: ... OUTLOOK: ...",
-  "cyber": "WHAT: ... WHO: ... WHERE: ... WHEN: ... WHY: ... US IMPACT: ... OUTLOOK: ...",
-  "energy": "WHAT: ... WHO: ... WHERE: ... WHEN: ... WHY: ... US IMPACT: ... OUTLOOK: ...",
-  "military": "WHAT: ... WHO: ... WHERE: ... WHEN: ... WHY: ... US IMPACT: ... OUTLOOK: ...",
-  "financial": "WHAT: ... WHO: ... WHERE: ... WHEN: ... WHY: ... US IMPACT: ... OUTLOOK: ...",
-  "domestic": "WHAT: ... WHO: ... WHERE: ... WHEN: ... WHY: ... US IMPACT: ... OUTLOOK: ...",
-  "nsm": "Recommended strategic actions for decision makers"
-}
-
-Respond ONLY with valid JSON.`
+        content: userPrompt
       }],
     });
 
