@@ -1,12 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { loadWasm, WasmCore, isWasmLoaded, getWasm } from '@/lib/wasm';
 
-// Stub interface - WASM removed, but keep interface for future use
-export interface WasmCore {
-  // Placeholder - WASM functionality removed
-  available: boolean;
-}
+// Re-export for convenience
+export type { WasmCore } from '@/lib/wasm';
 
 interface UseWasmResult {
   wasm: WasmCore | null;
@@ -15,22 +13,50 @@ interface UseWasmResult {
 }
 
 /**
- * WASM hook - currently returns stub since nucleation-wasm was removed.
- * The app runs without WASM; simulation features are disabled.
+ * React hook for loading and using LatticeForge WASM module.
+ *
+ * Provides:
+ * - CIC Framework (Compression-Integration-Coherence)
+ * - GTVC Clustering (Gauge-Theoretic Value Clustering)
+ * - Q-matrix operations for regime transitions
+ * - Geospatial system with nation dynamics
  */
 export function useWasm(): UseWasmResult {
-  const [ready, setReady] = useState(false);
+  const [wasm, setWasm] = useState<WasmCore | null>(
+    isWasmLoaded() ? { available: true, module: getWasm() ?? undefined } : null
+  );
+  const [loading, setLoading] = useState(!isWasmLoaded());
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // Simulate brief loading state for UI consistency
-    const timer = setTimeout(() => setReady(true), 100);
-    return () => clearTimeout(timer);
+    // Already loaded
+    if (isWasmLoaded()) {
+      setWasm({ available: true, module: getWasm() ?? undefined });
+      setLoading(false);
+      return;
+    }
+
+    // Load WASM module
+    let cancelled = false;
+
+    loadWasm()
+      .then((result) => {
+        if (!cancelled) {
+          setWasm(result);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err : new Error('Failed to load WASM'));
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // Return stub - WASM not available
-  return {
-    wasm: ready ? { available: false } : null,
-    loading: !ready,
-    error: null,
-  };
+  return { wasm, loading, error };
 }
