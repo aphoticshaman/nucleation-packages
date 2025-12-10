@@ -8,6 +8,8 @@ use crate::persistence::{compute_persistence, persistent_entropy, PersistenceDia
 use crate::q_matrix::{analyze_q, build_q_matrix, QMatrixAnalysis};
 use crate::geodesics::{integrate_geodesic, fisher_metric_gaussian, GeodesicTrajectory};
 use crate::geospatial::{GeospatialSystem, GeospatialConfig, AttractorLayer};
+use crate::cic::{CICConfig, CICState, CICPhase, compute_cic, compute_phi, compute_entropy, compute_coherence, determine_phase, detect_crystallization};
+use crate::clustering::{ClusteringConfig, Cluster, FusionResult, gauge_clustering, optimal_answer, fuse_signals, test_gauge_invariance};
 
 #[cfg(feature = "wasm")]
 use console_error_panic_hook;
@@ -444,4 +446,168 @@ impl WasmGeospatialSystem {
 #[wasm_bindgen]
 pub fn wasm_haversine_distance(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
     crate::geospatial::haversine_distance(lat1, lon1, lat2, lon2)
+}
+
+// ============================================================
+// CIC (Compression-Integration-Coherence) WASM Interface
+// ============================================================
+
+/// Compute CIC functional from samples and values (WASM)
+///
+/// samples: JSON array of string samples
+/// values: numeric values corresponding to samples
+/// lambda: entropy penalty weight (default 0.5)
+/// gamma: coherence bonus weight (default 0.3)
+#[wasm_bindgen]
+pub fn wasm_compute_cic(
+    samples_json: &str,
+    values: &[f64],
+    lambda: f64,
+    gamma: f64,
+) -> Result<JsValue, JsValue> {
+    let samples: Vec<String> = serde_json::from_str(samples_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid JSON: {}", e)))?;
+
+    let sample_refs: Vec<&str> = samples.iter().map(|s| s.as_str()).collect();
+
+    let config = CICConfig { lambda, gamma };
+    let state = compute_cic(&sample_refs, values, &config);
+
+    serde_wasm_bindgen::to_value(&state)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+/// Compute integrated information Φ from string samples (WASM)
+#[wasm_bindgen]
+pub fn wasm_compute_phi(samples_json: &str) -> Result<f64, JsValue> {
+    let samples: Vec<String> = serde_json::from_str(samples_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid JSON: {}", e)))?;
+
+    let sample_refs: Vec<&str> = samples.iter().map(|s| s.as_str()).collect();
+    Ok(compute_phi(&sample_refs))
+}
+
+/// Compute entropy of numeric values (WASM)
+#[wasm_bindgen]
+pub fn wasm_compute_entropy(values: &[f64]) -> f64 {
+    compute_entropy(values)
+}
+
+/// Compute multi-scale coherence (WASM)
+#[wasm_bindgen]
+pub fn wasm_compute_coherence(values: &[f64], epsilon: f64) -> f64 {
+    compute_coherence(values, epsilon)
+}
+
+/// Determine CIC phase from state (WASM)
+#[wasm_bindgen]
+pub fn wasm_determine_phase(
+    phi: f64,
+    entropy: f64,
+    coherence: f64,
+    functional: f64,
+    confidence: f64,
+) -> String {
+    let state = CICState {
+        phi,
+        entropy,
+        coherence,
+        functional,
+        confidence,
+    };
+    determine_phase(&state).as_str().to_string()
+}
+
+// ============================================================
+// Gauge-Theoretic Value Clustering WASM Interface
+// ============================================================
+
+/// Perform gauge-theoretic clustering (WASM)
+///
+/// values: numeric values to cluster
+/// epsilon: gauge tolerance (default 0.05)
+/// Returns JSON array of clusters
+#[wasm_bindgen]
+pub fn wasm_gauge_clustering(values: &[f64], epsilon: f64) -> Result<JsValue, JsValue> {
+    let config = ClusteringConfig {
+        epsilon,
+        min_cluster_size: 1,
+    };
+
+    let clusters = gauge_clustering(values, &config);
+
+    serde_wasm_bindgen::to_value(&clusters)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+/// Get optimal answer via value clustering (WASM)
+#[wasm_bindgen]
+pub fn wasm_optimal_answer(values: &[f64], epsilon: f64) -> f64 {
+    let config = ClusteringConfig {
+        epsilon,
+        min_cluster_size: 1,
+    };
+    optimal_answer(values, &config)
+}
+
+/// Test gauge invariance of values (WASM)
+#[wasm_bindgen]
+pub fn wasm_test_gauge_invariance(values: &[f64], epsilon: f64) -> Result<JsValue, JsValue> {
+    let result = test_gauge_invariance(values, epsilon);
+
+    serde_wasm_bindgen::to_value(&result)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+/// Fuse multiple signals into reliable value (WASM)
+///
+/// values: numeric signals to fuse
+/// epsilon: gauge tolerance
+/// lambda: CIC entropy weight
+/// gamma: CIC coherence weight
+#[wasm_bindgen]
+pub fn wasm_fuse_signals(
+    values: &[f64],
+    epsilon: f64,
+    lambda: f64,
+    gamma: f64,
+) -> Result<JsValue, JsValue> {
+    let cluster_config = ClusteringConfig {
+        epsilon,
+        min_cluster_size: 1,
+    };
+    let cic_config = CICConfig { lambda, gamma };
+
+    let result = fuse_signals(values, &cluster_config, &cic_config);
+
+    serde_wasm_bindgen::to_value(&result)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+/// Batch fuse multiple signal sets (WASM)
+///
+/// For high-throughput fusion - processes multiple value arrays at once
+#[wasm_bindgen]
+pub fn wasm_batch_fuse(
+    values_json: &str,
+    epsilon: f64,
+    lambda: f64,
+    gamma: f64,
+) -> Result<JsValue, JsValue> {
+    let value_sets: Vec<Vec<f64>> = serde_json::from_str(values_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid JSON: {}", e)))?;
+
+    let cluster_config = ClusteringConfig {
+        epsilon,
+        min_cluster_size: 1,
+    };
+    let cic_config = CICConfig { lambda, gamma };
+
+    let results: Vec<FusionResult> = value_sets
+        .iter()
+        .map(|values| fuse_signals(values, &cluster_config, &cic_config))
+        .collect();
+
+    serde_wasm_bindgen::to_value(&results)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
 }
