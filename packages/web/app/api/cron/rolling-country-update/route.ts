@@ -4,27 +4,19 @@ import { getLFBMClient } from '@/lib/inference/LFBMClient';
 
 export const runtime = 'edge';
 
-/**
- * CRON: Rolling Country Update System
- *
- * BUDGET-AWARE: Designed for $5/day target spend
- * - Only 4 runs/day (every 6 hours) instead of 48
- * - 3 countries per batch = 12 LFBM calls/day max
- * - Estimated cost: ~$0.60/day (assuming 60s cold start per call)
- *
- * Strategy:
- * - Runs every 6 hours (4 times/day)
- * - Updates 3 high-priority countries per run
- * - Uses CPU-first risk calculation, LFBM only for summary
- *
- * Vercel cron config (vercel.json):
- * {
- *   "crons": [{
- *     "path": "/api/cron/rolling-country-update",
- *     "schedule": "0 */6 * * *"
- *   }]
- * }
- */
+// CRON: Rolling Country Update System
+//
+// BUDGET-AWARE: Designed for $5/day target spend
+// - Only 4 runs/day (every 6 hours) instead of 48
+// - 3 countries per batch = 12 LFBM calls/day max
+// - Estimated cost: ~$0.60/day (assuming 60s cold start per call)
+//
+// Strategy:
+// - Runs every 6 hours (4 times/day)
+// - Updates 3 high-priority countries per run
+// - Uses CPU-first risk calculation, LFBM only for summary
+//
+// Schedule in vercel.json: "0 0,6,12,18 * * *"
 
 const BATCH_SIZE = 3; // Reduced from 5 to control costs
 
