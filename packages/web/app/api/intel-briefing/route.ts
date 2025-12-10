@@ -707,7 +707,97 @@ export async function POST(req: Request) {
       briefingsMap['energy'] = `Energy security baseline. Monitoring supply chain dynamics across ${preset.toUpperCase()} corridor.`;
 
       // Cyber
-      briefingsMap['cyber'] = `Cyber threat assessment at baseline. Standard monitoring protocols active.`;
+      briefingsMap['cyber'] = `Cyber threat landscape at baseline. ${highRiskNations.length > 2 ? 'Elevated monitoring on critical infrastructure.' : 'No critical signals.'}`;
+
+      // Health
+      briefingsMap['health'] = highRiskNations.length > 0
+        ? `Health security monitoring in ${highRiskNations.map(n => n.name).slice(0, 3).join(', ')}. Supply chain resilience under review.`
+        : 'No significant health security alerts.';
+
+      // Science & Tech
+      briefingsMap['scitech'] = negativeGdelt.length > 0
+        ? 'Technology transfer under review. Watch for sanctions impact on tech supply chains.'
+        : 'Innovation metrics stable. Normal operations.';
+
+      // Resources
+      briefingsMap['resources'] = highRiskNations.length > 0
+        ? `Resource competition elevated in ${highRiskNations.length} regions. Critical mineral access under review.`
+        : 'Resource access stable across monitored regions.';
+
+      // Crime
+      briefingsMap['crime'] = highRiskNations.length > 2
+        ? 'Organized crime monitoring elevated. Increased activity possible in unstable regions.'
+        : 'Crime indices at baseline. No significant changes.';
+
+      // Terrorism
+      briefingsMap['terrorism'] = highRiskNations.some(n => (n.transition_risk || 0) > 0.7)
+        ? 'Elevated monitoring in high-transition zones. Counter-terrorism posture active.'
+        : 'Threat assessment at baseline. Standard monitoring protocols.';
+
+      // Domestic
+      briefingsMap['domestic'] = highRiskNations.length > 0
+        ? `Domestic stability concerns in ${highRiskNations.map(n => n.name).slice(0, 3).join(', ')}. Social cohesion metrics under review.`
+        : 'Domestic stability indicators nominal across monitored nations.';
+
+      // Borders
+      briefingsMap['borders'] = negativeGdelt.length > 0
+        ? `Border tensions elevated in ${negativeGdelt.length} regions. Migration pattern shifts detected.`
+        : 'Border security posture stable. No significant incidents.';
+
+      // Info Ops
+      briefingsMap['infoops'] = negativeGdelt.length > 2
+        ? `Information environment deteriorating. ${negativeGdelt.length} regions showing coordinated narrative activity.`
+        : 'Information ecosystem baseline. Standard monitoring active.';
+
+      // Military
+      briefingsMap['military'] = highRiskNations.some(n => (n.transition_risk || 0) > 0.7)
+        ? `Military posture elevated in ${highRiskNations.filter(n => (n.transition_risk || 0) > 0.7).map(n => n.name).slice(0, 3).join(', ')}.`
+        : 'Force readiness at baseline. No significant deployments detected.';
+
+      // Space
+      briefingsMap['space'] = 'Space operations nominal. Standard orbital monitoring active.';
+
+      // Industry
+      briefingsMap['industry'] = highInflation.length > 0
+        ? `Industrial output under pressure in ${highInflation.length} economies. Supply chain shifts possible.`
+        : `Manufacturing metrics stable across ${preset.toUpperCase()} region.`;
+
+      // Logistics
+      briefingsMap['logistics'] = negativeGdelt.length > 2
+        ? `Logistics disruption risk elevated. ${negativeGdelt.length} chokepoint regions under watch.`
+        : 'Supply chain operations nominal. No critical bottlenecks detected.';
+
+      // Minerals
+      briefingsMap['minerals'] = 'Critical mineral supply stable. Strategic reserves adequate. Export controls unchanged.';
+
+      // Markets
+      briefingsMap['markets'] = negativeGdelt.length > 2
+        ? `Market volatility elevated. ${highInflation.length > 0 ? `${highInflation.length} markets showing stress.` : 'Sentiment deteriorating.'}`
+        : 'Market volatility within normal range. Sentiment stable.';
+
+      // Religious
+      briefingsMap['religious'] = highRiskNations.length > 2
+        ? `Religious tensions elevated in ${highRiskNations.length} regions. Sectarian dynamics under review.`
+        : 'Interfaith relations stable. No significant incidents.';
+
+      // Education
+      briefingsMap['education'] = 'Education sector stable. No critical disruptions to academic operations.';
+
+      // Employment
+      briefingsMap['employment'] = highInflation.length > 0
+        ? `Labor market stress in ${highInflation.length} economies. Unemployment pressure possible.`
+        : 'Employment metrics stable across monitored regions.';
+
+      // Housing
+      briefingsMap['housing'] = 'Housing market indicators within normal parameters. No systemic risks detected.';
+
+      // Crypto
+      briefingsMap['crypto'] = 'Cryptocurrency markets at baseline. Regulatory environment unchanged.';
+
+      // Emerging
+      briefingsMap['emerging'] = (highRiskNations.length > 2 || negativeGdelt.length > 3)
+        ? `Weak signals detected: ${highRiskNations.length > 2 ? 'multi-region instability convergence' : ''}${negativeGdelt.length > 3 ? ' sentiment deterioration cascade' : ''}. Monitor for second-order effects.`
+        : 'No significant emerging trends detected. Standard horizon scanning active.';
 
       // Summary - specific and data-driven
       briefingsMap['summary'] = `${preset.toUpperCase()} intelligence synthesis from ${dataPointCount} data points across ${templateNationData.length} nations. ${topRiskNames.length > 0 ? `Primary watchlist: ${topRiskNames.join(', ')}.` : 'No critical alerts.'} ${highInflation.length > 0 ? `${highInflation.length} economies under inflationary stress.` : ''} ${negativeGdelt.length > 0 ? `Media sentiment deteriorating in ${negativeGdelt.length} regions.` : ''} Overall risk: ${templateMetrics.overallRisk.toUpperCase()}.`;

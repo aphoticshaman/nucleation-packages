@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useWasm } from '@/hooks/useWasm';
 import { useSupabaseNations } from '@/hooks/useSupabaseNations';
@@ -8,6 +8,7 @@ import { useIntelBriefing, getRiskBadgeStyle } from '@/hooks/useIntelBriefing';
 import HelpTip from '@/components/HelpTip';
 import Glossary from '@/components/Glossary';
 import { Map, Share2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 // Dynamic import for map (client-side only)
 const AttractorMap = dynamic(() => import('@/components/AttractorMap'), {
@@ -201,6 +202,34 @@ export default function ConsumerDashboard() {
   const [selectedPreset, setSelectedPreset] = useState('global');
   // Intel briefing - auto-fetch from cache on page load (cron keeps cache warm)
   const { briefings, metadata, loading: intelLoading, refetch: loadBriefing } = useIntelBriefing(selectedPreset, { autoFetch: true });
+
+  // User role for conditional UI (hide upsell for admins/pro users)
+  const [userRole, setUserRole] = useState<string>('consumer');
+  const [userTier, setUserTier] = useState<string>('free');
+
+  useEffect(() => {
+    async function fetchUserRole() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role, tier')
+          .eq('id', user.id)
+          .single();
+
+        if (profile) {
+          const p = profile as { role?: string; tier?: string };
+          setUserRole(p.role || 'consumer');
+          setUserTier(p.tier || 'free');
+        }
+      } catch (err) {
+        console.error('Failed to fetch user role:', err);
+      }
+    }
+    void fetchUserRole();
+  }, []);
 
   // Refetch when preset changes
   const handlePresetChange = (preset: string) => {
@@ -724,13 +753,15 @@ export default function ConsumerDashboard() {
               </>
             )}
 
-            {/* Subscription upsell */}
-            <div className="mt-4 pt-4 border-t border-slate-800">
-              <p className="text-xs text-slate-500 text-center">
-                <span className="text-blue-400 cursor-pointer hover:underline">Upgrade to Pro</span>{' '}
-                for real-time alerts & deeper analysis
-              </p>
-            </div>
+            {/* Subscription upsell - hide for admins and pro users */}
+            {userRole !== 'admin' && userTier === 'free' && (
+              <div className="mt-4 pt-4 border-t border-slate-800">
+                <p className="text-xs text-slate-500 text-center">
+                  <span className="text-blue-400 cursor-pointer hover:underline">Upgrade to Pro</span>{' '}
+                  for real-time alerts & deeper analysis
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

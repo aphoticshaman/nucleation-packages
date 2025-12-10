@@ -37,6 +37,15 @@ pub mod lyapunov;
 pub mod cascade;
 pub mod simulation;
 
+// Content-addressed storage
+pub mod briefings;
+
+// Historical pattern matching
+pub mod patterns;
+
+// Epistemic uncertainty tracking
+pub mod epistemic;
+
 #[cfg(feature = "wasm")]
 pub mod wasm;
 
@@ -54,3 +63,6 @@ pub use dempster_shafer::*;
 pub use transfer_entropy::*;
 pub use lyapunov::*;
 pub use cascade::*;
+pub use briefings::*;
+pub use patterns::*;
+pub use epistemic::*;
