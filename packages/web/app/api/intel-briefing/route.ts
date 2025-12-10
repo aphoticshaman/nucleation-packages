@@ -501,13 +501,56 @@ export async function POST(req: Request) {
     );
 
     // ============================================================
-    // CACHE MISS - Use enhanced template engine with REAL DATA
+    // CACHE MISS - Return "warming" status so frontend shows loading
     // ============================================================
-    // Pulls actual GDELT tones, country signals, and nation state vectors
-    // to generate data-driven briefings WITHOUT calling Claude.
-    // Cost: $0 | Latency: <50ms | Quality: Dynamic, data-backed
+    // Instead of serving degraded template-only data, tell the frontend
+    // to show a loading screen while cron warms the cache. This ensures
+    // users ALWAYS get the best quality data once ready.
     if (!canGenerateFresh) {
-      console.log(`[CACHE MISS] No cached briefing for preset: ${preset}, using enhanced template engine with real data`);
+      console.log(`[CACHE MISS] No cached briefing for preset: ${preset}, returning warming status`);
+
+      // Check when cron last ran to estimate wait time
+      const cacheKey = getCacheKey(preset);
+      let estimatedWaitSeconds = 60; // Default: assume cron runs every minute
+
+      // If we have any cached data (even expired), use its timestamp
+      try {
+        const lastCached = await redis.get<CachedBriefing>(cacheKey);
+        if (lastCached?.timestamp) {
+          const cacheAge = (Date.now() - lastCached.timestamp) / 1000;
+          // Cron runs every 5 minutes, so estimate based on last cache
+          const cronIntervalSeconds = 5 * 60;
+          estimatedWaitSeconds = Math.max(10, cronIntervalSeconds - (cacheAge % cronIntervalSeconds));
+        }
+      } catch {
+        // Redis error, use default estimate
+      }
+
+      return NextResponse.json({
+        status: 'warming',
+        message: 'Intelligence briefing cache is warming up. Please wait...',
+        estimatedWaitSeconds,
+        preset,
+        retryAfterMs: 5000, // Frontend should poll every 5 seconds
+        metadata: {
+          region: req.headers.get('x-vercel-ip-country') || 'Global',
+          preset,
+          timestamp: new Date().toISOString(),
+          cached: false,
+          generatedBy: 'warmup-pending',
+        },
+      });
+    }
+
+    // ============================================================
+    // DEPRECATED: Template fallback - kept for reference but not used
+    // ============================================================
+    // Previously: Pulled GDELT tones, country signals, and nation state vectors
+    // to generate data-driven briefings WITHOUT calling Claude.
+    // Now: We return "warming" status instead, to ensure quality
+    const _DEPRECATED_TEMPLATE_FALLBACK = false;
+    if (_DEPRECATED_TEMPLATE_FALLBACK) {
+      console.log(`[DEPRECATED] Template engine fallback - should not reach here`);
 
       // Fetch nation data for template engine
       const presetFiltersForTemplate: Record<string, string[] | null> = {

@@ -48,6 +48,15 @@ export interface IntelMetadata {
   overallRisk: 'low' | 'moderate' | 'elevated' | 'high' | 'critical';
 }
 
+// Warmup status when cache is cold
+export interface WarmupStatus {
+  status: 'warming';
+  message: string;
+  estimatedWaitSeconds: number;
+  retryAfterMs: number;
+  preset: string;
+}
+
 export interface UseIntelBriefingOptions {
   /** If true, fetch briefing on mount. Default: false (prevents unwanted API calls on page load) */
   autoFetch?: boolean;
@@ -70,6 +79,10 @@ interface UseIntelBriefingResult {
   startPulse: () => void;
   /** Call this to stop pulse polling */
   stopPulse: () => void;
+  /** True when cache is warming up */
+  isWarming: boolean;
+  /** Warmup status details (estimated wait time, etc.) */
+  warmupStatus: WarmupStatus | null;
 }
 
 // Cache briefings for 5 minutes (server-side cache is 10 min, this is backup)
@@ -109,6 +122,9 @@ export function useIntelBriefing(
   const [pulseEnabled, setPulseEnabled] = useState(enablePulse);
   const pulseIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const hasFetchedRef = useRef(false); // Track if we've ever fetched
+  const [isWarming, setIsWarming] = useState(false);
+  const [warmupStatus, setWarmupStatus] = useState<WarmupStatus | null>(null);
+  const warmupIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Clear the local cache for this preset
   const clearCache = useCallback(() => {
@@ -125,6 +141,8 @@ export function useIntelBriefing(
       setBriefings(cached.data.briefings);
       setMetadata(cached.data.metadata);
       setLoading(false);
+      setIsWarming(false);
+      setWarmupStatus(null);
       return;
     }
 
@@ -154,6 +172,67 @@ export function useIntelBriefing(
 
       const data = await response.json();
 
+      // Check if cache is warming up
+      if (data.status === 'warming') {
+        console.log(`[INTEL HOOK] Cache warming for ${preset}, will poll every ${data.retryAfterMs}ms`);
+        setIsWarming(true);
+        setWarmupStatus(data as WarmupStatus);
+        setLoading(false); // Not "loading" in the traditional sense - show warmup UI
+
+        // Clear any existing warmup polling
+        if (warmupIntervalRef.current) {
+          clearInterval(warmupIntervalRef.current);
+        }
+
+        // Start polling for cache warmup completion
+        warmupIntervalRef.current = setInterval(async () => {
+          try {
+            const pollResponse = await fetch('/api/intel-briefing', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ preset }),
+            });
+
+            const pollData = await pollResponse.json();
+
+            // Cache is warm now!
+            if (pollData.briefings && Object.keys(pollData.briefings).length > 0) {
+              console.log(`[INTEL HOOK] Cache warmed up for ${preset}!`);
+
+              // Stop polling
+              if (warmupIntervalRef.current) {
+                clearInterval(warmupIntervalRef.current);
+                warmupIntervalRef.current = null;
+              }
+
+              // Update state
+              setIsWarming(false);
+              setWarmupStatus(null);
+              setBriefings(pollData.briefings);
+              setMetadata(pollData.metadata);
+
+              // Update cache
+              cache.set(cacheKey, {
+                data: {
+                  briefings: pollData.briefings,
+                  metadata: pollData.metadata,
+                },
+                timestamp: Date.now(),
+              });
+            }
+          } catch (pollErr) {
+            console.error('[INTEL HOOK] Warmup poll error:', pollErr);
+            // Keep polling on error
+          }
+        }, data.retryAfterMs || 5000);
+
+        return;
+      }
+
+      // Normal response - update cache and state
+      setIsWarming(false);
+      setWarmupStatus(null);
+
       // Update cache
       cache.set(cacheKey, {
         data: {
@@ -167,9 +246,21 @@ export function useIntelBriefing(
       setMetadata(data.metadata);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch briefing'));
+      setIsWarming(false);
+      setWarmupStatus(null);
     } finally {
       setLoading(false);
     }
+  }, [preset]);
+
+  // Cleanup warmup polling on unmount or preset change
+  useEffect(() => {
+    return () => {
+      if (warmupIntervalRef.current) {
+        clearInterval(warmupIntervalRef.current);
+        warmupIntervalRef.current = null;
+      }
+    };
   }, [preset]);
 
   // Only auto-fetch if explicitly enabled (default: false)
@@ -253,6 +344,8 @@ export function useIntelBriefing(
     pulseLoading,
     startPulse,
     stopPulse,
+    isWarming,
+    warmupStatus,
   };
 }
 

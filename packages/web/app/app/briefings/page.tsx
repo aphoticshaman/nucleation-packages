@@ -11,6 +11,7 @@ import Glossary from '@/components/Glossary';
 import HelpTip from '@/components/HelpTip';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
+import { WarmupScreen } from '@/components/ui/WarmupScreen';
 import { supabase } from '@/lib/supabase';
 
 const PRESETS = [
@@ -126,7 +127,7 @@ function parseBriefing(text: string) {
 
 export default function BriefingsPage() {
   const [selectedPreset, setSelectedPreset] = useState('global');
-  const { briefings, metadata, loading, refetch } = useIntelBriefing(selectedPreset);
+  const { briefings, metadata, loading, refetch, isWarming, warmupStatus } = useIntelBriefing(selectedPreset);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [showGlossary, setShowGlossary] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>('Political & Security');
@@ -321,8 +322,23 @@ export default function BriefingsPage() {
         })}
       </div>
 
+      {/* Warmup Screen - shown when cache is warming */}
+      {isWarming && warmupStatus && (
+        <WarmupScreen
+          estimatedWaitSeconds={warmupStatus.estimatedWaitSeconds}
+          message={warmupStatus.message}
+          preset={selectedPreset as 'global' | 'nato' | 'brics' | 'conflict'}
+          onComplete={() => {
+            // The hook handles refetching automatically
+            console.log('[BRIEFINGS] Warmup complete!');
+          }}
+          pollEndpoint="/api/intel-briefing"
+          pollBody={{ preset: selectedPreset }}
+        />
+      )}
+
       {/* Load button or briefing content */}
-      {!hasLoaded ? (
+      {!hasLoaded && !isWarming ? (
         <GlassCard blur="heavy" className="p-8 text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-cyan-500/20 flex items-center justify-center">
             <FileText className="w-8 h-8 text-cyan-400" />
@@ -346,7 +362,7 @@ export default function BriefingsPage() {
             Synthesized from wire services, OSINT, institutional research, and proprietary analysis
           </p>
         </GlassCard>
-      ) : loading ? (
+      ) : loading && !isWarming ? (
         <div className="space-y-4">
           <GlassCard blur="heavy" className="p-6">
             <div className="animate-pulse space-y-4">
@@ -365,7 +381,7 @@ export default function BriefingsPage() {
             </GlassCard>
           ))}
         </div>
-      ) : (
+      ) : !isWarming ? (
         <div className="space-y-6">
           {/* Executive Summary - Lead Story */}
           <GlassCard blur="heavy" className="p-6 border-l-4 border-cyan-500">
@@ -569,7 +585,7 @@ export default function BriefingsPage() {
             </GlassButton>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Glossary Modal */}
       <Glossary
