@@ -19,7 +19,7 @@ export const runtime = 'edge';
 // =============================================================================
 // LFBM: Self-hosted vLLM on RunPod - NO EXTERNAL LLM DEPENDENCIES
 // =============================================================================
-// All inference is routed through LFBM (250x cheaper than Anthropic)
+// All inference is routed through LFBM (self-hosted vLLM on RunPod)
 // Set LFBM_ENDPOINT and LFBM_API_KEY in Vercel environment variables
 
 // =============================================================================

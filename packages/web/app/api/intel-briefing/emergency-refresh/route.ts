@@ -25,7 +25,7 @@ export const maxDuration = 120; // Extended for meta-analysis
  * - historical: Meta-analysis using Qwen's training knowledge (~$0.002)
  * - hybrid: Combine current metrics with historical patterns (~$0.003)
  *
- * NO EXTERNAL LLM DEPENDENCIES - 250x cheaper than Anthropic
+ * NO EXTERNAL LLM DEPENDENCIES - Self-hosted vLLM on RunPod
  */
 type RefreshMode = AnalysisMode;
 
@@ -45,7 +45,7 @@ const redis = Redis.fromEnv();
 const REDIS_CACHE_TTL_SECONDS = 6 * 60 * 60; // 6 hours for emergency refresh
 
 // Emergency endpoint to force-refresh intel data via LFBM (self-hosted vLLM)
-// Estimated cost: ~$0.001-0.003 per call (250x cheaper than Anthropic)
+// Estimated cost: ~$0.001-0.003 per call via self-hosted vLLM
 export async function POST(request: Request) {
   const startTime = Date.now();
   const debugInfo: Record<string, unknown> = {};
@@ -383,7 +383,7 @@ export async function POST(request: Request) {
     const totalLatency = Date.now() - cpuStartTime;
     console.log(`[EMERGENCY REFRESH] Total pipeline: ${totalLatency}ms (CPU: ${cpuLatency}ms, inferences: ${inferenceResult.inferences.length})`);
 
-    // Cost estimates for LFBM (250x cheaper than Anthropic)
+    // Cost estimates for LFBM (self-hosted vLLM)
     const costEstimates: Record<string, string> = {
       'realtime': '$0.001',
       'historical-quick': '$0.001',

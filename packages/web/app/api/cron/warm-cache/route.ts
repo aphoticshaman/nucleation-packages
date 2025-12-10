@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
  *
  * Call this endpoint periodically (every 5-10 min) to pre-warm the intel briefing cache.
  * This ensures users get instant responses from cached data instead of waiting for
- * fresh Anthropic API calls.
+ * fresh LFBM inference.
  *
  * Vercel cron config (vercel.json):
  * {
