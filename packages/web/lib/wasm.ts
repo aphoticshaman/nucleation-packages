@@ -13,9 +13,10 @@
 let wasmModule: typeof import('@/public/wasm/latticeforge_core') | null = null;
 let wasmLoading: Promise<typeof wasmModule> | null = null;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface WasmCore {
   available: boolean;
-  module?: typeof wasmModule;
+  module?: any;
 }
 
 export interface WasmSwarm {
