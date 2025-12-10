@@ -471,16 +471,28 @@ export async function POST(req: Request) {
     const cached = await getCachedBriefing(preset);
     if (cached) {
       const cacheAge = Math.round((Date.now() - cached.timestamp) / 1000);
-      console.log(`[CACHE HIT] Serving cached briefing for preset: ${preset}, age: ${cacheAge}s, source: ${cached.data?.metadata?.source || 'unknown'}`);
-      return NextResponse.json({
-        ...cached.data,
-        metadata: {
-          ...cached.data.metadata,
-          cached: true,
-          cachedAt: cached.generatedAt,
-          cacheAgeSeconds: cacheAge,
-        },
-      });
+      const cachedSource = cached.data?.metadata?.source;
+      const briefingCount = cached.data?.briefings ? Object.keys(cached.data.briefings).length : 0;
+
+      // QUALITY CHECK: Reject degraded cache (emergency_refresh or incomplete data)
+      // Emergency refresh only generates 8 categories, we need 20+ for quality UX
+      const isDegradedCache = cachedSource === 'emergency_refresh' || briefingCount < 20;
+
+      if (isDegradedCache) {
+        console.log(`[CACHE REJECT] Degraded cache for ${preset}: source=${cachedSource}, categories=${briefingCount}. Treating as miss.`);
+        // Fall through to warmup status below
+      } else {
+        console.log(`[CACHE HIT] Serving cached briefing for preset: ${preset}, age: ${cacheAge}s, source: ${cachedSource}, categories: ${briefingCount}`);
+        return NextResponse.json({
+          ...cached.data,
+          metadata: {
+            ...cached.data.metadata,
+            cached: true,
+            cachedAt: cached.generatedAt,
+            cacheAgeSeconds: cacheAge,
+          },
+        });
+      }
     }
     console.log(`[CACHE MISS] No cached data for preset: ${preset}, canGenerateFresh: ${canGenerateFresh}`);
 
