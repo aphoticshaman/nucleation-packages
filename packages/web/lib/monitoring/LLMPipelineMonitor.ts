@@ -208,6 +208,16 @@ export async function checkRunPodHealth(): Promise<{
     return { healthy: false, latencyMs: 0, error: 'LFBM_ENDPOINT not configured' };
   }
 
+  // COST OPTIMIZATION: Skip expensive inference calls in non-prod
+  // This prevents health checks from triggering RunPod cold starts
+  if (process.env.LF_PROD_ENABLE !== 'true') {
+    return {
+      healthy: true,
+      latencyMs: 0,
+      error: 'Skipped - LF_PROD_ENABLE not true (cost savings)'
+    };
+  }
+
   const startTime = Date.now();
 
   try {
@@ -215,7 +225,26 @@ export async function checkRunPodHealth(): Promise<{
     const isRunPod = endpoint.includes('api.runpod.ai');
 
     if (isRunPod) {
-      // RunPod serverless - do a minimal request
+      // COST OPTIMIZATION: Use status endpoint instead of inference
+      // RunPod serverless has a status endpoint that doesn't trigger cold start
+      const statusEndpoint = endpoint.replace(/\/(run|runsync)$/, '/health');
+
+      try {
+        const response = await fetch(statusEndpoint, {
+          method: 'GET',
+          headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
+        });
+        const latencyMs = Date.now() - startTime;
+
+        // If status endpoint works, endpoint is healthy
+        if (response.ok) {
+          return { healthy: true, latencyMs };
+        }
+      } catch {
+        // Status endpoint might not exist, fall through to inference check
+      }
+
+      // Only do inference check if status endpoint failed
       const syncEndpoint = endpoint.replace(/\/run$/, '/runsync');
 
       const response = await fetch(syncEndpoint, {

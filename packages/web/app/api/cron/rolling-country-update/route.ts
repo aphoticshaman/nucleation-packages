@@ -7,25 +7,26 @@ export const runtime = 'edge';
 /**
  * CRON: Rolling Country Update System
  *
- * Ensures ALL countries get fresh intel analysis throughout the day,
- * not just when news breaks. This prevents stale data indicators on the map.
+ * BUDGET-AWARE: Designed for $5/day target spend
+ * - Only 4 runs/day (every 6 hours) instead of 48
+ * - 3 countries per batch = 12 LFBM calls/day max
+ * - Estimated cost: ~$0.60/day (assuming 60s cold start per call)
  *
  * Strategy:
- * - Runs every 30 minutes (48 times/day)
- * - Updates ~5 countries per run
- * - Prioritizes countries with oldest updated_at timestamps
- * - This ensures ~240 country updates per day (enough for ~200 countries)
+ * - Runs every 6 hours (4 times/day)
+ * - Updates 3 high-priority countries per run
+ * - Uses CPU-first risk calculation, LFBM only for summary
  *
  * Vercel cron config (vercel.json):
  * {
  *   "crons": [{
  *     "path": "/api/cron/rolling-country-update",
- *     "schedule": "15,45 * * * *"
+ *     "schedule": "0 */6 * * *"
  *   }]
  * }
  */
 
-const BATCH_SIZE = 5; // Countries to update per run
+const BATCH_SIZE = 3; // Reduced from 5 to control costs
 
 // Priority-based update intervals (hours) - high-risk countries get more frequent updates
 const RISK_UPDATE_INTERVALS = {

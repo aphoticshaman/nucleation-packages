@@ -153,12 +153,12 @@ const KEY_INSIGHTS = [
   },
   {
     icon: '🎲',
-    title: 'Accuracy',
-    simple: 'We get it right about 7 times out of 10.',
+    title: 'Methodology',
+    simple: 'Rigorous analysis with transparent uncertainty.',
     standard:
-      '72% recall on regime transitions at T-30. 85% precision on stability classifications.',
+      'Multi-source triangulation with explicit confidence intervals. All estimates include uncertainty bounds.',
     detailed:
-      'Backtested 2000-2023: 72% TPR at 30-day horizon, 15% FPR, AUC-ROC 0.84. Calibrated Brier scores across conflict, coup, and economic crisis domains.',
+      'Bayesian posterior distributions with calibrated uncertainty. No claims made without supporting evidence. Methodology documented and reproducible.',
   },
 ];
 

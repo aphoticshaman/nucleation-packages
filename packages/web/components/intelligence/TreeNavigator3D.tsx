@@ -299,14 +299,125 @@ function TemporalAxis() {
   );
 }
 
-// Camera controller with smooth transitions
+// FPS-style WASD + Mouse controller for desktop
+function FPSController({
+  enabled,
+  targetPosition,
+}: {
+  enabled: boolean;
+  targetPosition?: [number, number, number];
+}) {
+  const { camera, gl } = useThree();
+  const moveState = useRef({ forward: false, backward: false, left: false, right: false, up: false, down: false });
+  const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
+  const isLocked = useRef(false);
+  const MOVE_SPEED = 8;
+  const MOUSE_SENSITIVITY = 0.002;
+
+  // Handle keyboard
+  useEffect(() => {
+    if (!enabled) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.code) {
+        case 'KeyW': case 'ArrowUp': moveState.current.forward = true; break;
+        case 'KeyS': case 'ArrowDown': moveState.current.backward = true; break;
+        case 'KeyA': case 'ArrowLeft': moveState.current.left = true; break;
+        case 'KeyD': case 'ArrowRight': moveState.current.right = true; break;
+        case 'Space': moveState.current.up = true; break;
+        case 'ShiftLeft': case 'ShiftRight': moveState.current.down = true; break;
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      switch (e.code) {
+        case 'KeyW': case 'ArrowUp': moveState.current.forward = false; break;
+        case 'KeyS': case 'ArrowDown': moveState.current.backward = false; break;
+        case 'KeyA': case 'ArrowLeft': moveState.current.left = false; break;
+        case 'KeyD': case 'ArrowRight': moveState.current.right = false; break;
+        case 'Space': moveState.current.up = false; break;
+        case 'ShiftLeft': case 'ShiftRight': moveState.current.down = false; break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [enabled]);
+
+  // Handle mouse look (pointer lock)
+  useEffect(() => {
+    if (!enabled) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isLocked.current) return;
+
+      euler.current.setFromQuaternion(camera.quaternion);
+      euler.current.y -= e.movementX * MOUSE_SENSITIVITY;
+      euler.current.x -= e.movementY * MOUSE_SENSITIVITY;
+      euler.current.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, euler.current.x));
+      camera.quaternion.setFromEuler(euler.current);
+    };
+
+    const handleClick = () => {
+      gl.domElement.requestPointerLock();
+    };
+
+    const handleLockChange = () => {
+      isLocked.current = document.pointerLockElement === gl.domElement;
+    };
+
+    gl.domElement.addEventListener('click', handleClick);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('pointerlockchange', handleLockChange);
+
+    return () => {
+      gl.domElement.removeEventListener('click', handleClick);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('pointerlockchange', handleLockChange);
+    };
+  }, [enabled, camera, gl]);
+
+  // Movement update
+  useFrame((_, delta) => {
+    if (!enabled) return;
+
+    const direction = new THREE.Vector3();
+    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+
+    if (moveState.current.forward) direction.add(forward);
+    if (moveState.current.backward) direction.sub(forward);
+    if (moveState.current.left) direction.sub(right);
+    if (moveState.current.right) direction.add(right);
+    if (moveState.current.up) direction.y += 1;
+    if (moveState.current.down) direction.y -= 1;
+
+    direction.normalize().multiplyScalar(MOVE_SPEED * delta);
+    camera.position.add(direction);
+
+    // Fly to target on selection
+    if (targetPosition) {
+      const target = new THREE.Vector3(...targetPosition);
+      target.add(new THREE.Vector3(2, 1, 3));
+      camera.position.lerp(target, 0.02);
+    }
+  });
+
+  return null;
+}
+
+// Camera controller with smooth transitions (fallback for mobile)
 function CameraController({
   targetPosition,
 }: {
   targetPosition?: [number, number, number];
 }) {
   const { camera } = useThree();
-  const targetRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 5));
+  const targetRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 8));
 
   useEffect(() => {
     if (targetPosition) {
@@ -318,9 +429,9 @@ function CameraController({
     // Smooth camera movement
     camera.position.lerp(
       new THREE.Vector3(
-        targetRef.current.x + 3,
-        targetRef.current.y + 2,
-        targetRef.current.z + 5
+        targetRef.current.x + 5,
+        targetRef.current.y + 3,
+        targetRef.current.z + 8
       ),
       0.02
     );
@@ -357,9 +468,9 @@ function TreeScene({
           break;
       }
 
-      // Radial position based on category
-      const radius = node.category === 'executive' ? 0.3 : 1.5 + Math.random() * 0.5;
-      const angle = config.angle + (Math.random() - 0.5) * 0.3;
+      // Radial position based on category - SPREAD OUT for better navigation
+      const radius = node.category === 'executive' ? 0.5 : 5 + Math.random() * 2;
+      const angle = config.angle + (Math.random() - 0.5) * 0.4;
 
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
@@ -402,17 +513,18 @@ function TreeScene({
         />
       ))}
 
-      {/* Camera controls */}
+      {/* FPS Controls for desktop (WASD + Mouse) */}
+      <FPSController enabled={true} targetPosition={selectedNode?.position} />
+
+      {/* OrbitControls as fallback - disabled when FPS is active */}
       <OrbitControls
         enableDamping
         dampingFactor={0.05}
         minDistance={2}
-        maxDistance={15}
+        maxDistance={30}
         maxPolarAngle={Math.PI * 0.85}
+        enabled={false}
       />
-
-      {/* Camera follow selected */}
-      <CameraController targetPosition={selectedNode?.position} />
 
       {/* Background stars for depth */}
       <mesh>
@@ -503,7 +615,7 @@ export function TreeNavigator3D({
     <div className="relative w-full h-full min-h-[400px]">
       <Suspense fallback={<LoadingFallback />}>
         <Canvas
-          camera={{ position: [4, 3, 6], fov: 50 }}
+          camera={{ position: [0, 5, 15], fov: 60 }}
           className="bg-slate-950"
           dpr={[1, 2]}
         >
@@ -526,8 +638,10 @@ export function TreeNavigator3D({
       />
 
       {/* Instructions */}
-      <div className="absolute bottom-4 right-4 text-xs text-slate-500 bg-slate-900/80 backdrop-blur-sm rounded px-2 py-1">
-        Click nodes to explore • Use mouse to navigate 4D space
+      <div className="absolute bottom-4 right-4 text-xs text-slate-400 bg-slate-900/90 backdrop-blur-sm rounded-lg px-3 py-2 border border-slate-700">
+        <div className="font-medium text-slate-300 mb-1">Controls</div>
+        <div>WASD = Move • Mouse = Look • Space/Shift = Up/Down</div>
+        <div className="text-slate-500 mt-1">Click canvas to enable mouse look • ESC to release</div>
       </div>
     </div>
   );

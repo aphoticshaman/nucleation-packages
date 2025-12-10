@@ -316,10 +316,92 @@ const IntegrationsSettings = dynamic(
   }
 );
 
+// Generate time options for the email time picker
+function generateTimeOptions() {
+  const options = [];
+  for (let h = 0; h < 24; h++) {
+    const hour = h % 12 || 12;
+    const ampm = h < 12 ? 'AM' : 'PM';
+    const label = `${hour}:00 ${ampm}`;
+    options.push({ value: h.toString().padStart(2, '0'), label });
+  }
+  return options;
+}
+
+const TIME_OPTIONS = generateTimeOptions();
+
 export default function ConsumerSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [autoSave, setAutoSave] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
+
+  // Daily intel email settings
+  const [dailyEmailEnabled, setDailyEmailEnabled] = useState(false);
+  const [dailyEmailTime, setDailyEmailTime] = useState('08'); // Default 8 AM UTC
+  const [loadingEmailPrefs, setLoadingEmailPrefs] = useState(true);
+
+  // Load email preferences from DB
+  useEffect(() => {
+    async function loadEmailPrefs() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: prefs } = await supabase
+          .from('email_export_preferences')
+          .select('enabled, preferred_time')
+          .eq('user_id', user.id)
+          .single();
+
+        if (prefs) {
+          const p = prefs as { enabled?: boolean; preferred_time?: string };
+          setDailyEmailEnabled(p.enabled ?? false);
+          if (p.preferred_time) {
+            // preferred_time is stored as "HH:00" or just hour number
+            const hour = parseInt(p.preferred_time.split(':')[0], 10);
+            setDailyEmailTime(hour.toString().padStart(2, '0'));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load email preferences:', err);
+      } finally {
+        setLoadingEmailPrefs(false);
+      }
+    }
+    void loadEmailPrefs();
+  }, []);
+
+  // Save email preferences to DB
+  const saveEmailPrefs = async (enabled: boolean, time: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase
+        .from('email_export_preferences')
+        .upsert({
+          user_id: user.id,
+          enabled,
+          frequency: 'daily',
+          preferred_time: `${time}:00`,
+          include_global: true,
+          include_watchlist: true,
+          format: 'summary',
+        }, { onConflict: 'user_id' });
+    } catch (err) {
+      console.error('Failed to save email preferences:', err);
+    }
+  };
+
+  const handleEmailToggle = (enabled: boolean) => {
+    setDailyEmailEnabled(enabled);
+    void saveEmailPrefs(enabled, dailyEmailTime);
+  };
+
+  const handleEmailTimeChange = (time: string) => {
+    setDailyEmailTime(time);
+    void saveEmailPrefs(dailyEmailEnabled, time);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -388,6 +470,48 @@ export default function ConsumerSettingsPage() {
               description="Updates and announcements"
             />
           </div>
+        </div>
+      </GlassCard>
+
+      {/* Daily Intel Email */}
+      <GlassCard>
+        <h2 className="text-lg font-medium text-white mb-5">Daily Intel Brief</h2>
+        <div className="space-y-5">
+          <GlassToggle
+            checked={dailyEmailEnabled}
+            onChange={handleEmailToggle}
+            label="Daily intelligence email"
+            description="Receive a summary of global developments"
+            disabled={loadingEmailPrefs}
+          />
+
+          {dailyEmailEnabled && (
+            <div className="border-t border-white/[0.06] pt-5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex-1">
+                  <p className="text-white text-sm sm:text-base">Delivery time</p>
+                  <p className="text-xs sm:text-sm text-slate-400">
+                    When to receive your daily briefing (UTC)
+                  </p>
+                </div>
+                <GlassSelect
+                  className="sm:w-40"
+                  value={dailyEmailTime}
+                  onChange={(e) => handleEmailTimeChange(e.target.value)}
+                  disabled={loadingEmailPrefs}
+                >
+                  {TIME_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </GlassSelect>
+              </div>
+              <p className="text-xs text-slate-500 mt-2">
+                Your local time: {new Date(`2024-01-01T${dailyEmailTime}:00:00Z`).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}
+              </p>
+            </div>
+          )}
         </div>
       </GlassCard>
 
