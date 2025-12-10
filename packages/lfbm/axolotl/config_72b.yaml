@@ -1,0 +1,72 @@
+# =============================================================================
+# Axolotl Config for Qwen2.5-72B-Instruct - THE ULTIMATE ELLE
+# =============================================================================
+# Target: 4x H200 (~320GB VRAM) with DeepSpeed ZeRO-3
+# Budget: $50 (~3 hours at $15/hr)
+# Method: Full fine-tune with ZeRO-3 CPU offloading
+# =============================================================================
+
+base_model: Qwen/Qwen2.5-72B-Instruct
+model_type: AutoModelForCausalLM
+tokenizer_type: AutoTokenizer
+trust_remote_code: true
+
+# NO QLoRA - Full fine-tune for maximum quality
+load_in_4bit: false
+load_in_8bit: false
+
+# Dataset
+datasets:
+  - path: aphoticshaman/latticeforge-briefing-data
+    type: sharegpt
+    conversation: chatml
+
+# Output
+output_dir: /workspace/output/latticeforge-briefing-72b
+hub_model_id: aphoticshaman/latticeforge-briefing-72b
+push_to_hub: true
+
+# Training hyperparameters (optimized for 72B on 4x H200)
+sequence_len: 2048
+sample_packing: true
+pad_to_sequence_len: true
+
+# Batch sizes - conservative for 72B
+gradient_accumulation_steps: 16
+micro_batch_size: 1  # Per GPU
+num_epochs: 2        # 2 epochs in ~2.5 hours
+
+learning_rate: 5e-6  # Lower for larger models
+lr_scheduler: cosine
+warmup_ratio: 0.05
+
+optimizer: adamw_torch_fused
+weight_decay: 0.01
+max_grad_norm: 1.0
+
+# Precision - BF16 for H200
+bf16: true
+tf32: true
+
+# DeepSpeed ZeRO-3 for 72B distribution
+deepspeed: deepspeed_configs/zero3_offload.json
+
+# Logging
+logging_steps: 5
+eval_steps: 50
+save_steps: 200
+save_total_limit: 2
+
+# Eval
+val_set_size: 0.02
+eval_sample_packing: false
+
+# Performance
+seed: 42
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+flash_attention: true
+
+# Memory optimization
+fsdp: null  # Use DeepSpeed instead

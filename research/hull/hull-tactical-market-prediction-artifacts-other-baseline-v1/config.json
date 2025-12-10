@@ -1,0 +1,55 @@
+{
+    "exp_name": "baseline",
+    "sliding_window_view_size": 300,
+    "feature_encoders": [
+        {
+            "name": "RawEncoder",
+            "params": {
+                "log_transform": false,
+                "exclude_features": [
+                    "date_id",
+                    "lagged_forward_returns",
+                    "lagged_risk_free_rate",
+                    "lagged_market_forward_excess_returns"
+                ]
+            }
+        }
+    ],
+    "use_fp16": false,
+    "max_grad_norm": 1.0,
+    "batch_size": 256,
+    "lr": 0.0001,
+    "betas": [
+        0.9,
+        0.999
+    ],
+    "num_epochs": 64,
+    "use_ema": false,
+    "ema_use_warmup": true,
+    "ema_decay": 0.9999,
+    "early_stopping_patience": 10,
+    "early_stopping_min_delta": 0.0,
+    "early_stopping_min_epochs": 0,
+    "num_recent_steps": 0,
+    "d_model": 200,
+    "no_embd": false,
+    "use_norm": true,
+    "default_risk_aversion": 10.0,
+    "default_scale_factor": 1.0,
+    "default_base_position": 1.0,
+    "feature_prefix": "f_",
+    "debug": false,
+    "seeds": [
+        1,
+        2,
+        3
+    ],
+    "only_test": false,
+    "full_train": false,
+    "online_training_frequency": 0,
+    "online_training_epochs": 1,
+    "online_training_lr": 1e-05,
+    "online_training_batch_size": 32,
+    "test_window_size": 180,
+    "test_start_date_id": 8809
+}
