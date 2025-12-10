@@ -611,3 +611,486 @@ pub fn wasm_batch_fuse(
     serde_wasm_bindgen::to_value(&results)
         .map_err(|e| JsValue::from_str(&e.to_string()))
 }
+
+// ============================================================
+// Graph Laplacian Anomaly Detection WASM Interface
+// ============================================================
+
+use crate::graph_laplacian::{
+    GraphAnomalyConfig, GraphLatentDetector, AnomalyResult, SpectralAnomalyResult,
+    construct_similarity_matrix, graph_laplacian, normalized_laplacian,
+    spectral_anomaly_detection, detect_coherence_amplification, embedding_dispersion,
+};
+
+/// Create graph Laplacian anomaly detector (WASM)
+#[wasm_bindgen]
+pub struct WasmGraphLaplacian {
+    detector: GraphLatentDetector,
+    config: GraphAnomalyConfig,
+}
+
+#[wasm_bindgen]
+impl WasmGraphLaplacian {
+    /// Create new detector with parameters
+    #[wasm_bindgen(constructor)]
+    pub fn new(
+        latent_dim: usize,
+        lambda_reg: f64,
+        learning_rate: f64,
+        max_iter: usize,
+    ) -> WasmGraphLaplacian {
+        let config = GraphAnomalyConfig {
+            latent_dim,
+            lambda_reg,
+            learning_rate,
+            max_iter,
+            tol: 1e-6,
+            normal_similarity: 1.0,
+            anomaly_similarity: -1.0,
+            unlabeled_similarity: 0.0,
+        };
+        WasmGraphLaplacian {
+            detector: GraphLatentDetector::new(config.clone()),
+            config,
+        }
+    }
+
+    /// Create with default configuration
+    #[wasm_bindgen]
+    pub fn with_defaults() -> WasmGraphLaplacian {
+        let config = GraphAnomalyConfig::default();
+        WasmGraphLaplacian {
+            detector: GraphLatentDetector::new(config.clone()),
+            config,
+        }
+    }
+
+    /// Fit detector to data with labeled samples
+    /// x_json: JSON 2D array of features
+    /// labeled_normal: indices of known normal samples
+    /// labeled_anomaly: indices of known anomalous samples
+    #[wasm_bindgen]
+    pub fn fit(
+        &mut self,
+        x_json: &str,
+        labeled_normal: &[usize],
+        labeled_anomaly: &[usize],
+    ) -> Result<(), JsValue> {
+        use ndarray::Array2;
+
+        let data: Vec<Vec<f64>> = serde_json::from_str(x_json)
+            .map_err(|e| JsValue::from_str(&format!("Invalid JSON: {}", e)))?;
+
+        if data.is_empty() {
+            return Err(JsValue::from_str("Empty data"));
+        }
+
+        let n = data.len();
+        let d = data[0].len();
+        let flat: Vec<f64> = data.into_iter().flatten().collect();
+
+        let x = Array2::from_shape_vec((n, d), flat)
+            .map_err(|e| JsValue::from_str(&format!("Invalid shape: {}", e)))?;
+
+        self.detector.fit(&x, labeled_normal, labeled_anomaly);
+        Ok(())
+    }
+
+    /// Score samples for anomaly
+    #[wasm_bindgen]
+    pub fn score(&self, x_json: &str) -> Result<JsValue, JsValue> {
+        use ndarray::Array2;
+
+        let data: Vec<Vec<f64>> = serde_json::from_str(x_json)
+            .map_err(|e| JsValue::from_str(&format!("Invalid JSON: {}", e)))?;
+
+        if data.is_empty() {
+            return Ok(JsValue::NULL);
+        }
+
+        let n = data.len();
+        let d = data[0].len();
+        let flat: Vec<f64> = data.into_iter().flatten().collect();
+
+        let x = Array2::from_shape_vec((n, d), flat)
+            .map_err(|e| JsValue::from_str(&format!("Invalid shape: {}", e)))?;
+
+        let scores = self.detector.score(&x);
+        serde_wasm_bindgen::to_value(&scores)
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    /// Get latent embedding
+    #[wasm_bindgen]
+    pub fn get_embedding(&self) -> JsValue {
+        match self.detector.embedding() {
+            Some(emb) => serde_wasm_bindgen::to_value(&emb).unwrap_or(JsValue::NULL),
+            None => JsValue::NULL,
+        }
+    }
+}
+
+/// Spectral anomaly detection (WASM)
+#[wasm_bindgen]
+pub fn wasm_spectral_anomaly(
+    similarity_json: &str,
+    n_components: usize,
+) -> Result<JsValue, JsValue> {
+    use ndarray::Array2;
+
+    let data: Vec<Vec<f64>> = serde_json::from_str(similarity_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid JSON: {}", e)))?;
+
+    let n = data.len();
+    let flat: Vec<f64> = data.into_iter().flatten().collect();
+
+    let similarity = Array2::from_shape_vec((n, n), flat)
+        .map_err(|e| JsValue::from_str(&format!("Invalid shape: {}", e)))?;
+
+    let result = spectral_anomaly_detection(&similarity, n_components);
+    serde_wasm_bindgen::to_value(&result)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+/// Detect coherence amplification (WASM)
+#[wasm_bindgen]
+pub fn wasm_coherence_amplification(dispersions: &[f64]) -> Vec<f64> {
+    detect_coherence_amplification(dispersions)
+}
+
+/// Compute embedding dispersion (WASM)
+#[wasm_bindgen]
+pub fn wasm_embedding_dispersion(embedding: &[f64], n_samples: usize, n_dims: usize) -> f64 {
+    embedding_dispersion(embedding, n_samples, n_dims)
+}
+
+// ============================================================
+// Dempster-Shafer Belief Fusion WASM Interface
+// ============================================================
+
+use crate::dempster_shafer::{
+    ReliabilityConfig as DSReliabilityConfig, FusionMethod, FusedBelief,
+    logistic_reliability, additive_fusion, multiplicative_fusion, auto_fuse,
+};
+
+/// Compute reliability from quality metric (WASM)
+#[wasm_bindgen]
+pub fn wasm_logistic_reliability(
+    quality: f64,
+    alpha: f64,
+    beta: f64,
+    min_reliability: f64,
+    max_reliability: f64,
+) -> f64 {
+    let config = DSReliabilityConfig {
+        alpha,
+        beta,
+        min_reliability,
+        max_reliability,
+    };
+    logistic_reliability(quality, &config)
+}
+
+/// Additive belief fusion (WASM)
+///
+/// source_probs_json: JSON array of arrays [[p1,p2,p3], [p1,p2,p3], ...]
+/// reliabilities: reliability per source
+/// hypothesis_names_json: JSON array of hypothesis names
+#[wasm_bindgen]
+pub fn wasm_additive_fusion(
+    source_probs_json: &str,
+    reliabilities: &[f64],
+    hypothesis_names_json: &str,
+) -> Result<JsValue, JsValue> {
+    let source_probs: Vec<Vec<f64>> = serde_json::from_str(source_probs_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid source_probs JSON: {}", e)))?;
+    let names: Vec<String> = serde_json::from_str(hypothesis_names_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid names JSON: {}", e)))?;
+
+    let result = additive_fusion(&source_probs, reliabilities, names);
+    serde_wasm_bindgen::to_value(&result)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+/// Multiplicative belief fusion (WASM)
+#[wasm_bindgen]
+pub fn wasm_multiplicative_fusion(
+    source_probs_json: &str,
+    reliabilities: &[f64],
+    hypothesis_names_json: &str,
+) -> Result<JsValue, JsValue> {
+    let source_probs: Vec<Vec<f64>> = serde_json::from_str(source_probs_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid source_probs JSON: {}", e)))?;
+    let names: Vec<String> = serde_json::from_str(hypothesis_names_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid names JSON: {}", e)))?;
+
+    let result = multiplicative_fusion(&source_probs, reliabilities, names);
+    serde_wasm_bindgen::to_value(&result)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+/// Auto-select fusion method based on reliability (WASM)
+#[wasm_bindgen]
+pub fn wasm_auto_fuse(
+    source_probs_json: &str,
+    qualities: &[f64],
+    hypothesis_names_json: &str,
+    alpha: f64,
+    beta: f64,
+) -> Result<JsValue, JsValue> {
+    let source_probs: Vec<Vec<f64>> = serde_json::from_str(source_probs_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid source_probs JSON: {}", e)))?;
+    let names: Vec<String> = serde_json::from_str(hypothesis_names_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid names JSON: {}", e)))?;
+
+    let config = DSReliabilityConfig {
+        alpha,
+        beta,
+        min_reliability: 0.01,
+        max_reliability: 0.99,
+    };
+
+    let result = auto_fuse(&source_probs, qualities, names, &config);
+    serde_wasm_bindgen::to_value(&result)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+// ============================================================
+// Transfer Entropy Causal Graphs WASM Interface
+// ============================================================
+
+use crate::transfer_entropy::{
+    TransferEntropyConfig, CausalGraph, StructureShift,
+    transfer_entropy, build_causal_graph, detect_structure_shifts, intentionality_gradient,
+};
+
+/// Compute transfer entropy from source to target (WASM)
+///
+/// source, target: time series arrays
+/// k_neighbors: k for k-NN estimator
+/// lag_x: history length for source
+/// lag_y: history length for target
+/// normalize: whether to normalize by target entropy
+#[wasm_bindgen]
+pub fn wasm_transfer_entropy(
+    source: &[f64],
+    target: &[f64],
+    k_neighbors: usize,
+    lag_x: usize,
+    lag_y: usize,
+    normalize: bool,
+) -> f64 {
+    let config = TransferEntropyConfig {
+        k_neighbors,
+        lag_x,
+        lag_y,
+        threshold: 0.0,
+        normalize,
+    };
+    transfer_entropy(source, target, &config)
+}
+
+/// Build causal graph from multiple time series (WASM)
+///
+/// signals_json: JSON array of arrays [[series1], [series2], ...]
+/// names_json: JSON array of names ["name1", "name2", ...]
+/// k_neighbors, lag_x, lag_y: embedding parameters
+/// threshold: minimum TE for edge
+#[wasm_bindgen]
+pub fn wasm_build_causal_graph(
+    signals_json: &str,
+    names_json: &str,
+    k_neighbors: usize,
+    lag_x: usize,
+    lag_y: usize,
+    threshold: f64,
+) -> Result<JsValue, JsValue> {
+    let signals: Vec<Vec<f64>> = serde_json::from_str(signals_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid signals JSON: {}", e)))?;
+    let names: Vec<String> = serde_json::from_str(names_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid names JSON: {}", e)))?;
+
+    let config = TransferEntropyConfig {
+        k_neighbors,
+        lag_x,
+        lag_y,
+        threshold,
+        normalize: true,
+    };
+
+    let graph = build_causal_graph(&signals, names, &config);
+    serde_wasm_bindgen::to_value(&graph)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+/// WASM wrapper for causal graph analysis
+#[wasm_bindgen]
+pub struct WasmCausalGraph {
+    graph: CausalGraph,
+}
+
+#[wasm_bindgen]
+impl WasmCausalGraph {
+    /// Build from time series data
+    #[wasm_bindgen(constructor)]
+    pub fn new(
+        signals_json: &str,
+        names_json: &str,
+        k_neighbors: usize,
+        lag: usize,
+        threshold: f64,
+    ) -> Result<WasmCausalGraph, JsValue> {
+        let signals: Vec<Vec<f64>> = serde_json::from_str(signals_json)
+            .map_err(|e| JsValue::from_str(&format!("Invalid signals JSON: {}", e)))?;
+        let names: Vec<String> = serde_json::from_str(names_json)
+            .map_err(|e| JsValue::from_str(&format!("Invalid names JSON: {}", e)))?;
+
+        let config = TransferEntropyConfig {
+            k_neighbors,
+            lag_x: lag,
+            lag_y: lag,
+            threshold,
+            normalize: true,
+        };
+
+        let graph = build_causal_graph(&signals, names, &config);
+        Ok(WasmCausalGraph { graph })
+    }
+
+    /// Get adjacency matrix as flat array
+    #[wasm_bindgen]
+    pub fn get_adjacency(&self) -> Vec<f64> {
+        self.graph.adjacency.clone()
+    }
+
+    /// Get node names
+    #[wasm_bindgen]
+    pub fn get_nodes(&self) -> JsValue {
+        serde_wasm_bindgen::to_value(&self.graph.nodes).unwrap_or(JsValue::NULL)
+    }
+
+    /// Get edge weight from source to target
+    #[wasm_bindgen]
+    pub fn get_edge(&self, source: usize, target: usize) -> f64 {
+        self.graph.get_edge(source, target)
+    }
+
+    /// Get out-degree (total influence of a node)
+    #[wasm_bindgen]
+    pub fn out_degree(&self, node: usize) -> f64 {
+        self.graph.out_degree(node)
+    }
+
+    /// Get in-degree (total influence on a node)
+    #[wasm_bindgen]
+    pub fn in_degree(&self, node: usize) -> f64 {
+        self.graph.in_degree(node)
+    }
+
+    /// Get drivers (nodes with highest out-degree)
+    #[wasm_bindgen]
+    pub fn get_drivers(&self, top_n: usize) -> JsValue {
+        let mut degrees: Vec<(usize, f64)> = (0..self.graph.n_nodes)
+            .map(|i| (i, self.graph.out_degree(i)))
+            .collect();
+        degrees.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+        let result: Vec<(&String, f64)> = degrees
+            .iter()
+            .take(top_n)
+            .map(|(i, d)| (&self.graph.nodes[*i], *d))
+            .collect();
+
+        serde_wasm_bindgen::to_value(&result).unwrap_or(JsValue::NULL)
+    }
+
+    /// Get responders (nodes with highest in-degree)
+    #[wasm_bindgen]
+    pub fn get_responders(&self, top_n: usize) -> JsValue {
+        let mut degrees: Vec<(usize, f64)> = (0..self.graph.n_nodes)
+            .map(|i| (i, self.graph.in_degree(i)))
+            .collect();
+        degrees.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+        let result: Vec<(&String, f64)> = degrees
+            .iter()
+            .take(top_n)
+            .map(|(i, d)| (&self.graph.nodes[*i], *d))
+            .collect();
+
+        serde_wasm_bindgen::to_value(&result).unwrap_or(JsValue::NULL)
+    }
+
+    /// Get normalized Laplacian
+    #[wasm_bindgen]
+    pub fn get_laplacian(&self) -> Vec<f64> {
+        self.graph.normalized_laplacian()
+    }
+
+    /// Get node count
+    #[wasm_bindgen]
+    pub fn node_count(&self) -> usize {
+        self.graph.n_nodes
+    }
+
+    /// Serialize to JSON
+    #[wasm_bindgen]
+    pub fn to_json(&self) -> Result<String, JsValue> {
+        serde_json::to_string(&self.graph)
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+}
+
+/// Detect causal structure shifts over time (WASM)
+#[wasm_bindgen]
+pub fn wasm_structure_shifts(
+    signals_json: &str,
+    names_json: &str,
+    window_size: usize,
+    step_size: usize,
+    k_neighbors: usize,
+    lag: usize,
+    threshold: f64,
+) -> Result<JsValue, JsValue> {
+    let signals: Vec<Vec<f64>> = serde_json::from_str(signals_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid signals JSON: {}", e)))?;
+    let names: Vec<String> = serde_json::from_str(names_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid names JSON: {}", e)))?;
+
+    let config = TransferEntropyConfig {
+        k_neighbors,
+        lag_x: lag,
+        lag_y: lag,
+        threshold,
+        normalize: true,
+    };
+
+    let shifts = detect_structure_shifts(&signals, names, window_size, step_size, &config);
+    serde_wasm_bindgen::to_value(&shifts)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+/// Compute intentionality gradient for a target (WASM)
+#[wasm_bindgen]
+pub fn wasm_intentionality_gradient(
+    signals_json: &str,
+    target_idx: usize,
+    window_size: usize,
+    k_neighbors: usize,
+    lag: usize,
+) -> Result<JsValue, JsValue> {
+    let signals: Vec<Vec<f64>> = serde_json::from_str(signals_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid JSON: {}", e)))?;
+
+    let config = TransferEntropyConfig {
+        k_neighbors,
+        lag_x: lag,
+        lag_y: lag,
+        threshold: 0.0,
+        normalize: true,
+    };
+
+    let gradient = intentionality_gradient(&signals, target_idx, window_size, &config);
+    serde_wasm_bindgen::to_value(&gradient)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+}
