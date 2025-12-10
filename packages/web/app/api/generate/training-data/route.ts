@@ -1401,7 +1401,8 @@ export async function GET(request: Request) {
   console.log(`Processing ${domains.length} domains in parallel...`);
 
   // Process each domain as an independent "analyst agent" - ALL IN PARALLEL
-  const ITEMS_PER_DOMAIN = 4; // 3-4 items per domain max
+  // COST OPTIMIZATION: Reduced from 4 to 2 to cut LLM costs by 50%
+  const ITEMS_PER_DOMAIN = 2;
 
   const domainPromises = domains.map(async (domain) => {
     const domainNews = newsByDomain[domain].slice(0, ITEMS_PER_DOMAIN);

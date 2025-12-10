@@ -36,7 +36,7 @@
     },
     {
       "path": "/api/generate/training-data",
-      "schedule": "*/10 * * * *"
+      "schedule": "0 6,18 * * *"
     },
     {
       "path": "/api/analyze/cascades",
@@ -52,7 +52,7 @@
     },
     {
       "path": "/api/cron/llm-pipeline-monitor",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 */6 * * *"
     }
   ]
 }
