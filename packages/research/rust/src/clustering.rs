@@ -79,7 +79,8 @@ pub fn gauge_clustering(values: &[f64], config: &ClusteringConfig) -> Vec<Cluste
     let mut indexed: Vec<(usize, f64)> = values.iter().copied().enumerate().collect();
     indexed.sort_by(|a, b| a.1.abs().partial_cmp(&b.1.abs()).unwrap_or(std::cmp::Ordering::Equal));
 
-    for (idx, val) in indexed {
+    for i in 0..indexed.len() {
+        let (idx, val) = indexed[i];
         if assigned[idx] {
             continue;
         }
@@ -89,10 +90,11 @@ pub fn gauge_clustering(values: &[f64], config: &ClusteringConfig) -> Vec<Cluste
         assigned[idx] = true;
 
         // Find all gauge-equivalent values
-        for (other_idx, other_val) in indexed.iter() {
-            if !assigned[*other_idx] && gauge_equivalent(val, *other_val, config.epsilon) {
-                members.push(*other_val);
-                assigned[*other_idx] = true;
+        for j in 0..indexed.len() {
+            let (other_idx, other_val) = indexed[j];
+            if !assigned[other_idx] && gauge_equivalent(val, other_val, config.epsilon) {
+                members.push(other_val);
+                assigned[other_idx] = true;
             }
         }
 

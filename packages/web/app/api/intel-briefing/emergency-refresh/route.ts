@@ -152,10 +152,12 @@ export async function POST(request: Request) {
       .slice(0, 5);
 
     // Fetch GDELT signals based on mode
+    // IMPORTANT: Filter for records with actual text content (articles, not aggregates)
     let gdeltQuery = supabase
       .from('learning_events')
       .select('domain, data, timestamp')
-      .eq('session_hash', 'gdelt_ingest');
+      .eq('session_hash', 'gdelt_ingest')
+      .not('data->title', 'is', null);  // Only get article records with titles
 
     // For historical/hybrid mode, use specified period; else last 48h
     if (body.gdeltPeriod && (mode === 'historical' || mode === 'hybrid')) {
@@ -167,8 +169,14 @@ export async function POST(request: Request) {
         .gte('timestamp', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString());
     }
 
-    const { data: recentSignals } = await gdeltQuery.limit(100);
+    // Increased limit from 100 to 500 to get more article signals
+    const { data: recentSignals, error: signalError } = await gdeltQuery.limit(500);
     const gdeltSignalCount = recentSignals?.length || 0;
+
+    console.log(`[EMERGENCY REFRESH] GDELT query: ${gdeltSignalCount} signals fetched (filter: title not null, last 48h)`);
+    if (signalError) {
+      console.error(`[EMERGENCY REFRESH] GDELT query error:`, signalError);
+    }
 
     // Build GDELT summary for historical analysis
     const gdeltSummary = recentSignals?.reduce((acc, s) => {
@@ -210,6 +218,8 @@ export async function POST(request: Request) {
         return data?.text || data?.title || data?.summary || '';
       })
       .filter((t) => t.length > 20);
+
+    console.log(`[EMERGENCY REFRESH] Text extraction: ${gdeltTexts.length} texts with length > 20 chars (from ${gdeltSignalCount} signals)`);
 
     let processedSignals: ProcessedSignal[] = [];
     let anomalyCount = 0;
