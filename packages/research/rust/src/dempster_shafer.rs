@@ -264,15 +264,9 @@ impl MetaFusionSelector {
         let add_score = self.score_method(&self.additive_history, add_belief.confidence);
         let mult_score = self.score_method(&self.multiplicative_history, mult_belief.confidence);
 
-        let best = if mult_score > add_score {
-            mult_belief
-        } else {
-            add_belief
-        };
-
         // Update performance history if we have feedback
         if let Some(outcome) = realized_outcome {
-            if outcome < best.probabilities.len() {
+            if outcome < add_belief.probabilities.len() {
                 let add_log_prob = (add_belief.probabilities.get(outcome).unwrap_or(&1e-10) + 1e-10).ln();
                 let mult_log_prob = (mult_belief.probabilities.get(outcome).unwrap_or(&1e-10) + 1e-10).ln();
 
@@ -289,7 +283,12 @@ impl MetaFusionSelector {
             }
         }
 
-        best
+        // Return the best method's result
+        if mult_score > add_score {
+            mult_belief
+        } else {
+            add_belief
+        }
     }
 
     fn score_method(&self, history: &[f64], current_confidence: f64) -> f64 {

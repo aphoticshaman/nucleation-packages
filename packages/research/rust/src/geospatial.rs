@@ -302,23 +302,33 @@ impl GeospatialSystem {
         let codes: Vec<String> = self.nations.keys().cloned().collect();
         for code in codes {
             let force = forces.get(&code).unwrap().clone();
-            let nation = self.nations.get_mut(&code).unwrap();
 
-            // Update velocity with damping
-            for (v, f) in nation.velocity.iter_mut().zip(force.iter()) {
-                *v = 0.9 * *v + f * dt;
+            // First update velocity and position
+            {
+                let nation = self.nations.get_mut(&code).unwrap();
+
+                // Update velocity with damping
+                for (v, f) in nation.velocity.iter_mut().zip(force.iter()) {
+                    *v = 0.9 * *v + f * dt;
+                }
+
+                // Update position with noise
+                for (p, v) in nation.position.iter_mut().zip(nation.velocity.iter()) {
+                    let noise: f64 = rng.gen::<f64>() * 2.0 - 1.0;
+                    *p += v * dt + self.config.diffusion * sqrt_dt * noise;
+                    *p = p.max(0.0).min(1.0);
+                }
             }
 
-            // Update position with noise
-            for (p, v) in nation.position.iter_mut().zip(nation.velocity.iter()) {
-                let noise: f64 = rng.gen::<f64>() * 2.0 - 1.0;
-                *p += v * dt + self.config.diffusion * sqrt_dt * noise;
-                *p = p.max(0.0).min(1.0);
-            }
+            // Now compute metrics (immutable borrow of self is ok)
+            let nation_ref = self.nations.get(&code).unwrap();
+            let basin_strength = self.compute_basin_strength(nation_ref);
+            let transition_risk = self.compute_transition_risk(nation_ref);
 
             // Update metrics
-            nation.basin_strength = self.compute_basin_strength(nation);
-            nation.transition_risk = self.compute_transition_risk(nation);
+            let nation = self.nations.get_mut(&code).unwrap();
+            nation.basin_strength = basin_strength;
+            nation.transition_risk = transition_risk;
         }
 
         self.time += dt;

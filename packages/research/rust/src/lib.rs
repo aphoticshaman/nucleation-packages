@@ -10,6 +10,8 @@
 //! - Graph Laplacian anomaly detection
 //! - Dempster-Shafer belief fusion
 //! - Transfer entropy causal graphs
+//! - Lyapunov exponent regime stability
+//! - Cascade probability via belief propagation
 
 #![allow(clippy::needless_range_loop)]
 
@@ -30,6 +32,10 @@ pub mod graph_laplacian;
 pub mod dempster_shafer;
 pub mod transfer_entropy;
 
+// Novel algorithms for intelligence analysis
+pub mod lyapunov;
+pub mod cascade;
+
 #[cfg(feature = "wasm")]
 pub mod wasm;
 
@@ -45,3 +51,5 @@ pub use geospatial::*;
 pub use graph_laplacian::*;
 pub use dempster_shafer::*;
 pub use transfer_entropy::*;
+pub use lyapunov::*;
+pub use cascade::*;
