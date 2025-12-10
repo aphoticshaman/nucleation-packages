@@ -6,17 +6,20 @@
 -- ============================================================
 
 -- Drop and recreate training_data_stats with SECURITY INVOKER
--- Uses actual column names from training_examples table
+-- Uses actual column names from training_examples table (domain, source_type, exported, confidence)
 DROP VIEW IF EXISTS public.training_data_stats;
 CREATE OR REPLACE VIEW public.training_data_stats
 WITH (security_invoker = true)
 AS
 SELECT
-  COUNT(*) as total_examples,
-  COUNT(*) FILTER (WHERE validated = true) as validated_examples,
-  COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '7 days') as recent_examples,
-  AVG(COALESCE(quality_score, 0)) as avg_quality
-FROM training_examples;
+  domain,
+  source_type,
+  COUNT(*) as total,
+  COUNT(*) FILTER (WHERE exported = FALSE) as pending_export,
+  AVG(confidence) as avg_confidence,
+  MAX(created_at) as latest
+FROM training_examples
+GROUP BY domain, source_type;
 
 -- Drop and recreate exportable_training_data with SECURITY INVOKER
 DROP VIEW IF EXISTS public.exportable_training_data;
@@ -24,16 +27,13 @@ CREATE OR REPLACE VIEW public.exportable_training_data
 WITH (security_invoker = true)
 AS
 SELECT
-  id,
-  input_text,
-  output_text,
-  category,
-  quality_score,
-  validated,
-  created_at
+  instruction,
+  input,
+  output
 FROM training_examples
-WHERE validated = true
-  AND quality_score >= 0.7;
+WHERE exported = FALSE
+  AND confidence >= 0.7
+ORDER BY created_at DESC;
 
 -- ============================================================
 -- 2. Fix function search_path issues
