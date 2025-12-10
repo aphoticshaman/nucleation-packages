@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Cover A - Neural Cosmos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    .cover {
+      width: 1600px;
+      height: 2560px;
+      position: relative;
+      overflow: hidden;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .overlay-top {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 40%;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+    }
+
+    .overlay-bottom {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 30%;
+      background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+    }
+
+    .content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 80px;
+    }
+
+    .title-block {
+      margin-top: 60px;
+    }
+
+    .the {
+      font-size: 72px;
+      font-weight: 900;
+      color: white;
+      letter-spacing: 8px;
+      text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+    }
+
+    .main-title {
+      font-size: 108px;
+      font-weight: 900;
+      color: white;
+      line-height: 1.1;
+      text-shadow: 0 0 40px rgba(255, 215, 0, 0.6);
+    }
+
+    .divider {
+      width: 70%;
+      height: 4px;
+      background: linear-gradient(to right, #FFD700, #FFA500);
+      margin: 40px 0;
+    }
+
+    .subtitle {
+      font-size: 36px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.85);
+      margin-top: auto;
+      margin-bottom: 40px;
+    }
+
+    .author {
+      font-size: 32px;
+      font-weight: 500;
+      color: white;
+      text-align: center;
+      letter-spacing: 4px;
+      margin-bottom: 60px;
+    }
+  </style>
+</head>
+<body>
+  <div class="cover">
+    <img class="background" src="../art/aphoticshaman_abstract_visualization_of_intelligence_emerging_498a7851-0fb4-4f34-b308-4330aec9b1ca_2.png" alt="background">
+    <div class="overlay-top"></div>
+    <div class="overlay-bottom"></div>
+    <div class="content">
+      <div class="title-block">
+        <div class="the">THE</div>
+        <div class="main-title">MATHEMATICS<br>OF<br>INTELLIGENCE</div>
+        <div class="divider"></div>
+      </div>
+      <div class="subtitle">From Transformers to Truth</div>
+      <div class="author">RYAN J. CARDWELL</div>
+    </div>
+  </div>
+</body>
+</html>
