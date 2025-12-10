@@ -28,6 +28,7 @@ const navItems = [
   { href: '/admin/models', label: 'ML Models', icon: '🤖' },
   { href: '/admin/compliance', label: 'Compliance', icon: '🛡️' },
   { href: '/admin/guardian', label: 'Guardian', icon: '🔮' },
+  { href: '/admin/training-data', label: 'Train Data', icon: '📚' },
   { href: '/admin/config', label: 'Config', icon: '⚙️' },
 ];
 
