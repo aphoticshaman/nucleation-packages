@@ -1,0 +1,140 @@
+# =============================================================================
+# GaLore: Full-Rank Training on a Budget
+# =============================================================================
+# Gradient Low-Rank Projection - Full fine-tuning with LoRA-like memory
+# Paper: https://arxiv.org/abs/2403.03507
+#
+# Expected: Full fine-tune quality (no rank bottleneck)
+# Hardware: 1x H200 (~$4/hr) or 2x H200 (~$8/hr)
+# Runtime: ~10 hours (1x) or ~5 hours (2x)
+# Cost: ~$40
+#
+# Best for: Math, reasoning, complex tasks where LoRA's rank bottleneck hurts
+# =============================================================================
+
+base_model: Qwen/Qwen2.5-72B-Instruct
+model_type: AutoModelForCausalLM
+tokenizer_type: AutoTokenizer
+trust_remote_code: true
+
+# FULL precision - no quantization (GaLore handles memory)
+load_in_4bit: false
+load_in_8bit: false
+
+# NO adapter - this is full fine-tuning via gradient projection
+# adapter: none
+
+# Dataset
+datasets:
+  - path: aphoticshaman/latticeforge-briefing-data
+    type: sharegpt
+    conversation: chatml
+
+# Output
+output_dir: /workspace/output/latticeforge-elle-galore
+hub_model_id: aphoticshaman/latticeforge-elle-72b-galore
+push_to_hub: true
+
+# =============================================================================
+# GaLore Configuration
+# =============================================================================
+# Instead of storing full optimizer states (huge for 72B),
+# GaLore projects gradients to low-rank space, updates there,
+# then projects back. Periodically recomputes projection matrices.
+
+optimizer: galore_adamw_8bit
+
+# Projection rank (like LoRA rank, but for gradients)
+# Higher = closer to full-rank, more memory
+# 128 is sweet spot for 72B
+galore_rank: 128
+
+# How often to recompute projection matrices (SVD)
+# Lower = more accurate, slower
+# 200 is good balance
+galore_update_proj_gap: 200
+
+# Scaling factor for projected gradients
+galore_scale: 0.25
+
+# Which layers to apply GaLore to
+# Can be "all" or specific layer patterns
+galore_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+# =============================================================================
+# Training Configuration
+# =============================================================================
+sequence_len: 4096
+sample_packing: true
+pad_to_sequence_len: true
+
+# Conservative for single GPU
+gradient_accumulation_steps: 8
+micro_batch_size: 1            # 1 per GPU × 8 accum = 8 effective
+num_epochs: 2
+
+# Lower LR for full fine-tuning
+learning_rate: 1e-5
+lr_scheduler: cosine
+warmup_ratio: 0.05
+
+weight_decay: 0.01
+max_grad_norm: 1.0
+
+# Precision
+bf16: true
+tf32: true
+
+# Can use DeepSpeed if multi-GPU
+# deepspeed: ../axolotl/deepspeed_configs/zero2.json
+
+# Logging
+logging_steps: 10
+eval_steps: 100
+save_steps: 500
+save_total_limit: 2
+
+# Eval
+val_set_size: 0.02
+eval_sample_packing: false
+
+# Performance
+seed: 42
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+flash_attention: true
+
+# =============================================================================
+# Why GaLore for LatticeForge
+# =============================================================================
+# The CIC framework involves complex mathematical computations:
+# - F[T] = Φ(T) - λ·H(T|X) + γ·C_multi(T)
+# - Phase detection (Landau-Ginzburg)
+# - UIPT transition dynamics
+#
+# These require the model to learn nuanced mathematical relationships.
+# Standard LoRA's low-rank constraint can bottleneck this learning.
+#
+# GaLore gives full-rank gradient updates while keeping memory bounded.
+# Result: Better mathematical reasoning without 1TB+ VRAM requirement.
+# =============================================================================
+
+# =============================================================================
+# Memory Estimation (1x H200, 141GB)
+# =============================================================================
+# Model (BF16): ~144GB
+# Gradients (projected): ~10GB (vs ~144GB full)
+# Optimizer states (8-bit projected): ~20GB (vs ~288GB full AdamW)
+# Activations (with checkpointing): ~30GB
+# Total: ~204GB → fits with gradient checkpointing
+#
+# With 2x H200 (282GB), can increase batch size significantly
+# =============================================================================
