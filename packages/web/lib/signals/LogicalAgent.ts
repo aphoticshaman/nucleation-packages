@@ -132,13 +132,13 @@ const RULES: Rule[] = [
   {
     id: 'alliance-cascade',
     name: 'Alliance Cascade Risk',
-    description: 'If ally has high risk, monitor for cascade',
+    description: 'If ally has elevated risk, monitor for cascade',
     priority: 100,
     category: 'cascade',
     condition: (facts, ctx) => {
-      // Find any nation with high risk
+      // Find any nation with elevated risk (lowered threshold from 0.7 to 0.4)
       for (const [nation, risk] of ctx.nationRisks) {
-        if (risk > 0.7) {
+        if (risk > 0.4) {
           const allies = ctx.alliances.get(nation) || [];
           if (allies.length > 0) return true;
         }
@@ -149,23 +149,23 @@ const RULES: Rule[] = [
       const inferences: Inference[] = [];
 
       for (const [nation, risk] of ctx.nationRisks) {
-        if (risk > 0.7) {
+        if (risk > 0.4) {  // Lowered from 0.7 to match condition
           const allies = ctx.alliances.get(nation) || [];
           for (const ally of allies) {
             const allyRisk = ctx.nationRisks.get(ally) || 0;
-            if (allyRisk < 0.5) {  // Ally not yet elevated
+            if (allyRisk < risk) {  // Ally has lower risk - potential cascade target
               inferences.push({
                 type: 'cascade_warning',
                 subject: ally,
                 conclusion: `${ally} may face cascade pressure from ${nation} instability`,
-                confidence: risk * 0.6,  // Damped by alliance distance
+                confidence: risk * 0.7,  // Higher confidence weighting
                 reasoning: [
                   `${nation} has risk score ${(risk * 100).toFixed(0)}%`,
                   `${nation} and ${ally} are allied`,
                   `Alliance stress may propagate to ${ally}`,
                 ],
                 affectedEntities: [nation, ally],
-                severity: risk > 0.85 ? 'high' : 'moderate',
+                severity: risk > 0.6 ? 'high' : 'moderate',
               });
             }
           }
@@ -184,11 +184,11 @@ const RULES: Rule[] = [
     priority: 90,
     category: 'causal',
     condition: (facts, ctx) => {
-      // Check if any major energy supplier has high risk
+      // Check if any major energy supplier has elevated risk
       const energySuppliers = new Set(['RUS', 'SAU', 'IRN', 'IRQ', 'ARE', 'QAT', 'USA', 'NOR']);
       for (const supplier of energySuppliers) {
         const risk = ctx.nationRisks.get(supplier) || 0;
-        if (risk > 0.5) return true;
+        if (risk > 0.3) return true;  // Lowered from 0.5
       }
       return false;
     },
@@ -198,7 +198,7 @@ const RULES: Rule[] = [
 
       for (const supplier of energySuppliers) {
         const supplierRisk = ctx.nationRisks.get(supplier) || 0;
-        if (supplierRisk > 0.5) {
+        if (supplierRisk > 0.3) {  // Lowered from 0.5
           // Find who depends on this supplier
           for (const [dependent, sources] of ctx.energyDependencies) {
             if (sources.includes(supplier)) {
@@ -235,7 +235,8 @@ const RULES: Rule[] = [
       for (const [a, b] of CONFLICT_PAIRS) {
         const riskA = ctx.nationRisks.get(a) || 0;
         const riskB = ctx.nationRisks.get(b) || 0;
-        if (riskA > 0.5 && riskB > 0.5) return true;
+        // Fire if EITHER party in conflict pair has elevated risk (was: both > 0.5)
+        if (riskA > 0.4 || riskB > 0.4) return true;
       }
       return false;
     },
@@ -246,7 +247,8 @@ const RULES: Rule[] = [
         const riskA = ctx.nationRisks.get(a) || 0;
         const riskB = ctx.nationRisks.get(b) || 0;
 
-        if (riskA > 0.5 && riskB > 0.5) {
+        // Generate inference if either party elevated (was: both > 0.5)
+        if (riskA > 0.4 || riskB > 0.4) {
           const combinedRisk = (riskA + riskB) / 2;
           inferences.push({
             type: 'cascade_warning',
@@ -278,9 +280,9 @@ const RULES: Rule[] = [
     category: 'cascade',
     condition: (facts, ctx) => {
       for (const [nation, risk] of ctx.nationRisks) {
-        if (risk > 0.6) {
+        if (risk > 0.35) {  // Lowered from 0.6
           const partners = ctx.tradeLinks.get(nation) || [];
-          if (partners.length >= 3) return true;  // Major trade hub
+          if (partners.length >= 2) return true;  // Lowered from 3
         }
       }
       return false;
@@ -289,9 +291,9 @@ const RULES: Rule[] = [
       const inferences: Inference[] = [];
 
       for (const [nation, risk] of ctx.nationRisks) {
-        if (risk > 0.6) {
+        if (risk > 0.35) {  // Lowered from 0.6
           const partners = ctx.tradeLinks.get(nation) || [];
-          if (partners.length >= 3) {
+          if (partners.length >= 2) {  // Lowered from 3
             for (const partner of partners.slice(0, 3)) {  // Top 3 partners
               inferences.push({
                 type: 'risk_elevation',
@@ -324,14 +326,14 @@ const RULES: Rule[] = [
     category: 'temporal',
     condition: (facts, ctx) => {
       // Look for consistent negative sentiment in recent signals
-      if (ctx.recentSignals.length < 5) return false;
+      if (ctx.recentSignals.length < 1) return false;  // Lowered from 5
 
       const recentSentiments = ctx.recentSignals
         .slice(-10)
         .map(s => s.features.sentimentScore);
 
       const avgSentiment = recentSentiments.reduce((a, b) => a + b, 0) / recentSentiments.length;
-      return avgSentiment < -0.2;  // Sustained negative
+      return avgSentiment < -0.1;  // Lowered threshold from -0.2
     },
     inference: (facts, ctx) => {
       const recentSentiments = ctx.recentSignals
@@ -374,7 +376,7 @@ const RULES: Rule[] = [
     priority: 75,
     category: 'correlation',
     condition: (facts, ctx) => {
-      if (ctx.recentSignals.length < 5) return false;
+      if (ctx.recentSignals.length < 1) return false;  // Lowered from 5
 
       // Count entity mentions
       const entityCounts: Record<string, number> = {};
@@ -384,9 +386,9 @@ const RULES: Rule[] = [
         }
       }
 
-      // Check if any entity appears in > 50% of signals
-      const threshold = ctx.recentSignals.length * 0.5;
-      return Object.values(entityCounts).some(count => count > threshold);
+      // Check if any entity appears in > 30% of signals (lowered from 50%)
+      const threshold = Math.max(1, ctx.recentSignals.length * 0.3);
+      return Object.values(entityCounts).some(count => count >= threshold);
     },
     inference: (facts, ctx) => {
       const entityCounts: Record<string, number> = {};
@@ -396,9 +398,9 @@ const RULES: Rule[] = [
         }
       }
 
-      const threshold = ctx.recentSignals.length * 0.5;
+      const threshold = Math.max(1, ctx.recentSignals.length * 0.3);  // Lowered from 0.5
       const concentratedEntities = Object.entries(entityCounts)
-        .filter(([_, count]) => count > threshold)
+        .filter(([_, count]) => count >= threshold)
         .sort((a, b) => b[1] - a[1]);
 
       return concentratedEntities.map(([entity, count]) => ({
@@ -425,13 +427,13 @@ const RULES: Rule[] = [
     priority: 85,
     category: 'temporal',
     condition: (facts, ctx) => {
-      if (ctx.recentSignals.length < 3) return false;
+      if (ctx.recentSignals.length < 1) return false;  // Lowered from 3
 
-      const urgentSignals = ctx.recentSignals.filter(s => s.features.urgencyScore > 0.5);
-      return urgentSignals.length >= 3;
+      const urgentSignals = ctx.recentSignals.filter(s => s.features.urgencyScore > 0.3);  // Lowered from 0.5
+      return urgentSignals.length >= 1;  // Lowered from 3
     },
     inference: (facts, ctx) => {
-      const urgentSignals = ctx.recentSignals.filter(s => s.features.urgencyScore > 0.5);
+      const urgentSignals = ctx.recentSignals.filter(s => s.features.urgencyScore > 0.3);  // Lowered from 0.5
 
       // Find common entities across urgent signals
       const entityCounts: Record<string, number> = {};

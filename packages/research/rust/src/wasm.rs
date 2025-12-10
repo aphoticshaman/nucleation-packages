@@ -1094,3 +1094,314 @@ pub fn wasm_intentionality_gradient(
     serde_wasm_bindgen::to_value(&gradient)
         .map_err(|e| JsValue::from_str(&e.to_string()))
 }
+
+// ============================================================
+// Lyapunov Exponent Regime Stability WASM Interface
+// ============================================================
+
+use crate::lyapunov::{
+    LyapunovConfig, LyapunovResult, AttractorType, NationStability,
+    rosenstein_lyapunov, multivariate_lyapunov, delay_embed, batch_stability_analysis,
+};
+
+/// Compute Lyapunov exponent for univariate time series (WASM)
+///
+/// Rosenstein algorithm for largest Lyapunov exponent.
+/// Negative = stable, Near zero = periodic, Positive = chaotic
+#[wasm_bindgen]
+pub fn wasm_lyapunov_univariate(
+    series: &[f64],
+    embedding_dim: usize,
+    tau: usize,
+    min_separation: usize,
+    k_neighbors: usize,
+    max_iterations: usize,
+) -> Result<JsValue, JsValue> {
+    let config = LyapunovConfig {
+        embedding_dim,
+        tau,
+        min_separation,
+        k_neighbors,
+        max_iterations,
+        epsilon: 1e-8,
+    };
+
+    let result = rosenstein_lyapunov(series, &config);
+    serde_wasm_bindgen::to_value(&result)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+/// Compute Lyapunov exponent for multivariate state series (WASM)
+///
+/// states_json: JSON 2D array [[economic, political, social, military, external], ...]
+#[wasm_bindgen]
+pub fn wasm_lyapunov_multivariate(
+    states_json: &str,
+    tau: usize,
+    min_separation: usize,
+    k_neighbors: usize,
+) -> Result<JsValue, JsValue> {
+    use ndarray::Array2;
+
+    let data: Vec<Vec<f64>> = serde_json::from_str(states_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid JSON: {}", e)))?;
+
+    if data.is_empty() {
+        return Err(JsValue::from_str("Empty data"));
+    }
+
+    let n = data.len();
+    let d = data[0].len();
+    let flat: Vec<f64> = data.into_iter().flatten().collect();
+
+    let states = Array2::from_shape_vec((n, d), flat)
+        .map_err(|e| JsValue::from_str(&format!("Invalid shape: {}", e)))?;
+
+    let config = LyapunovConfig {
+        embedding_dim: d,
+        tau,
+        min_separation,
+        k_neighbors,
+        max_iterations: 100,
+        epsilon: 1e-8,
+    };
+
+    let result = multivariate_lyapunov(&states, &config);
+    serde_wasm_bindgen::to_value(&result)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+/// Batch stability analysis for multiple nations (WASM)
+///
+/// nations_json: JSON object { "USA": [[...], [...]], "CHN": [[...], [...]], ... }
+#[wasm_bindgen]
+pub fn wasm_batch_stability(
+    nations_json: &str,
+    tau: usize,
+    min_separation: usize,
+    k_neighbors: usize,
+) -> Result<JsValue, JsValue> {
+    use ndarray::Array2;
+    use std::collections::HashMap;
+
+    let nations_map: HashMap<String, Vec<Vec<f64>>> = serde_json::from_str(nations_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid JSON: {}", e)))?;
+
+    let config = LyapunovConfig {
+        embedding_dim: 5,
+        tau,
+        min_separation,
+        k_neighbors,
+        max_iterations: 100,
+        epsilon: 1e-8,
+    };
+
+    let mut results: Vec<NationStability> = Vec::new();
+
+    for (code, data) in nations_map {
+        if data.is_empty() || data[0].is_empty() {
+            continue;
+        }
+
+        let n = data.len();
+        let d = data[0].len();
+        let flat: Vec<f64> = data.into_iter().flatten().collect();
+
+        if let Ok(states) = Array2::from_shape_vec((n, d), flat) {
+            let result = multivariate_lyapunov(&states, &config);
+            results.push(NationStability { code, result });
+        }
+    }
+
+    serde_wasm_bindgen::to_value(&results)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+/// Get basin strength from Lyapunov exponent (WASM)
+///
+/// Simple helper to convert λ to stability score [0,1]
+#[wasm_bindgen]
+pub fn wasm_basin_strength(lyapunov_exponent: f64) -> f64 {
+    if lyapunov_exponent > 0.0 {
+        (-lyapunov_exponent).exp().min(0.5)
+    } else if lyapunov_exponent < -0.1 {
+        (1.0 - (-lyapunov_exponent / 2.0).min(1.0)).max(0.7)
+    } else {
+        0.5 // Critical zone
+    }
+}
+
+/// Classify attractor type from Lyapunov exponent (WASM)
+#[wasm_bindgen]
+pub fn wasm_classify_attractor(lyapunov_exponent: f64) -> String {
+    if lyapunov_exponent < -0.1 {
+        "Stable".to_string()
+    } else if lyapunov_exponent > 0.1 {
+        "Chaotic".to_string()
+    } else if lyapunov_exponent.abs() < 0.02 {
+        "Periodic".to_string()
+    } else {
+        "Critical".to_string()
+    }
+}
+
+// ============================================================
+// Cascade Probability via Belief Propagation WASM Interface
+// ============================================================
+
+use crate::cascade::{
+    CascadeConfig, CascadeChannel, RegionCascade, CascadePrediction,
+    CascadeSimulation, RegionCascadeStats,
+    predict_cascade, quick_cascade_prediction, simulate_cascades,
+};
+
+/// Quick cascade prediction with simplified coupling (WASM)
+///
+/// neighbors_json: JSON array of [region_name, coupling_strength] pairs
+#[wasm_bindgen]
+pub fn wasm_quick_cascade(
+    origin_event: &str,
+    origin_region: &str,
+    neighbors_json: &str,
+) -> Result<JsValue, JsValue> {
+    let neighbors: Vec<(String, f64)> = serde_json::from_str(neighbors_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid JSON: {}", e)))?;
+
+    let neighbor_refs: Vec<(&str, f64)> = neighbors
+        .iter()
+        .map(|(s, f)| (s.as_str(), *f))
+        .collect();
+
+    let result = quick_cascade_prediction(origin_event, origin_region, &neighbor_refs);
+    serde_wasm_bindgen::to_value(&result)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+/// Full cascade prediction with explicit coupling matrices (WASM)
+///
+/// regions_json: JSON array of region names
+/// geo_json: JSON 2D array of geographic distances
+/// econ_json: JSON 2D array of economic ties [0,1]
+/// ethnic_json: JSON 2D array of ethnic ties [0,1]
+/// political_json: JSON 2D array of political alignment [-1,1]
+#[wasm_bindgen]
+pub fn wasm_predict_cascade(
+    origin_event: &str,
+    origin_region: &str,
+    regions_json: &str,
+    geo_json: &str,
+    econ_json: &str,
+    ethnic_json: &str,
+    political_json: &str,
+    max_iterations: usize,
+    damping: f64,
+) -> Result<JsValue, JsValue> {
+    use ndarray::Array2;
+
+    let regions: Vec<String> = serde_json::from_str(regions_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid regions JSON: {}", e)))?;
+
+    let n = regions.len();
+
+    let parse_matrix = |json: &str, name: &str| -> Result<Array2<f64>, JsValue> {
+        let data: Vec<Vec<f64>> = serde_json::from_str(json)
+            .map_err(|e| JsValue::from_str(&format!("Invalid {} JSON: {}", name, e)))?;
+        let flat: Vec<f64> = data.into_iter().flatten().collect();
+        Array2::from_shape_vec((n, n), flat)
+            .map_err(|e| JsValue::from_str(&format!("Invalid {} shape: {}", name, e)))
+    };
+
+    let geo = parse_matrix(geo_json, "geo")?;
+    let econ = parse_matrix(econ_json, "econ")?;
+    let ethnic = parse_matrix(ethnic_json, "ethnic")?;
+    let political = parse_matrix(political_json, "political")?;
+
+    let config = CascadeConfig {
+        max_iterations,
+        damping,
+        convergence_threshold: 1e-6,
+        base_prob: 0.1,
+        geo_decay: 0.001,
+        econ_weight: 0.3,
+        ethnic_weight: 0.2,
+        political_weight: 0.25,
+    };
+
+    let result = predict_cascade(
+        origin_event,
+        origin_region,
+        regions,
+        &geo,
+        &econ,
+        &ethnic,
+        &political,
+        config,
+    );
+
+    serde_wasm_bindgen::to_value(&result)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+/// Monte Carlo cascade simulation (WASM)
+///
+/// Runs multiple simulations with perturbed coupling matrices
+/// for uncertainty quantification
+#[wasm_bindgen]
+pub fn wasm_simulate_cascades(
+    origin_event: &str,
+    origin_region: &str,
+    regions_json: &str,
+    geo_json: &str,
+    econ_json: &str,
+    ethnic_json: &str,
+    political_json: &str,
+    n_simulations: usize,
+    perturbation_scale: f64,
+) -> Result<JsValue, JsValue> {
+    use ndarray::Array2;
+
+    let regions: Vec<String> = serde_json::from_str(regions_json)
+        .map_err(|e| JsValue::from_str(&format!("Invalid regions JSON: {}", e)))?;
+
+    let n = regions.len();
+
+    let parse_matrix = |json: &str, name: &str| -> Result<Array2<f64>, JsValue> {
+        let data: Vec<Vec<f64>> = serde_json::from_str(json)
+            .map_err(|e| JsValue::from_str(&format!("Invalid {} JSON: {}", name, e)))?;
+        let flat: Vec<f64> = data.into_iter().flatten().collect();
+        Array2::from_shape_vec((n, n), flat)
+            .map_err(|e| JsValue::from_str(&format!("Invalid {} shape: {}", name, e)))
+    };
+
+    let geo = parse_matrix(geo_json, "geo")?;
+    let econ = parse_matrix(econ_json, "econ")?;
+    let ethnic = parse_matrix(ethnic_json, "ethnic")?;
+    let political = parse_matrix(political_json, "political")?;
+
+    let result = simulate_cascades(
+        origin_event,
+        origin_region,
+        regions,
+        &geo,
+        &econ,
+        &ethnic,
+        &political,
+        n_simulations,
+        perturbation_scale,
+    );
+
+    serde_wasm_bindgen::to_value(&result)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+/// Get cascade channel name as string (WASM helper)
+#[wasm_bindgen]
+pub fn wasm_cascade_channel_name(channel: u8) -> String {
+    match channel {
+        0 => "Geographic".to_string(),
+        1 => "Economic".to_string(),
+        2 => "Ethnic".to_string(),
+        3 => "Political".to_string(),
+        _ => "Unknown".to_string(),
+    }
+}
