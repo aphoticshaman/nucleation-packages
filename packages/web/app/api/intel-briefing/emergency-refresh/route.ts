@@ -152,12 +152,12 @@ export async function POST(request: Request) {
       .slice(0, 5);
 
     // Fetch GDELT signals based on mode
-    // IMPORTANT: Filter for records with actual text content (articles, not aggregates)
+    // Get ALL gdelt records - PostgREST JSONB filter was returning 0 results
+    // We filter for text content in JS instead (line ~214)
     let gdeltQuery = supabase
       .from('learning_events')
       .select('domain, data, timestamp')
-      .eq('session_hash', 'gdelt_ingest')
-      .not('data->title', 'is', null);  // Only get article records with titles
+      .eq('session_hash', 'gdelt_ingest');
 
     // For historical/hybrid mode, use specified period; else last 48h
     if (body.gdeltPeriod && (mode === 'historical' || mode === 'hybrid')) {
