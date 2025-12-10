@@ -8,11 +8,11 @@
     },
     {
       "path": "/api/cron/warm-cache",
-      "schedule": "0 */2 * * *"
+      "schedule": "0 */4 * * *"
     },
     {
       "path": "/api/cron/rolling-country-update",
-      "schedule": "15,45 * * * *"
+      "schedule": "0 */6 * * *"
     },
     {
       "path": "/api/ingest/gdelt",
