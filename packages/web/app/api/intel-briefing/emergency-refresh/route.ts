@@ -4,6 +4,17 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { Redis } from '@upstash/redis';
 import { getLFBMClient, type AnalysisMode } from '@/lib/inference/LFBMClient';
+import {
+  processSignals,
+  extractFeatures,
+  decideLLMTier,
+  type ProcessedSignal,
+} from '@/lib/signals/SignalProcessor';
+import {
+  runInference,
+  generateLogicalBriefing,
+  type LogicalBriefing,
+} from '@/lib/signals/LogicalAgent';
 
 export const runtime = 'edge';
 export const maxDuration = 120; // Extended for meta-analysis
@@ -167,12 +178,17 @@ export async function POST(request: Request) {
     }, {} as Record<string, number>) || {};
 
     // ============================================================
-    // LFBM: ALL modes powered by self-hosted vLLM (250x cheaper)
+    // CPU-FIRST ARCHITECTURE: SignalProcessor + LogicalAgent
     // ============================================================
-    console.log(`[EMERGENCY REFRESH] Using LFBM (self-hosted vLLM) for ${mode} mode`);
-    const lfbmStartTime = Date.now();
+    // Step 1: CPU signal processing (anomaly detection, feature extraction)
+    // Step 2: CPU logical inference (rule-based analysis)
+    // Step 3: LFBM only for polish (if anomalies need LLM interpretation)
+    // Expected savings: 80-95% reduction in LLM calls
+    // ============================================================
+    console.log(`[EMERGENCY REFRESH] CPU-first pipeline starting for ${mode} mode`);
+    const cpuStartTime = Date.now();
 
-    // Prepare nation data for LFBM
+    // Prepare nation data
     const nationDataForLFBM = (nationRisks || []).map((n: { code: string; name: string; basin_strength?: number; transition_risk?: number; regime?: number }) => ({
       code: n.code,
       name: n.name,
@@ -180,6 +196,62 @@ export async function POST(request: Request) {
       transition_risk: n.transition_risk,
       regime: n.regime,
     }));
+
+    // Build nation risk map for LogicalAgent
+    const nationRiskMap: Record<string, number> = {};
+    for (const n of nationDataForLFBM) {
+      nationRiskMap[n.code] = n.transition_risk || 0;
+    }
+
+    // Process GDELT signals through SignalProcessor (CPU)
+    const gdeltTexts = (recentSignals || [])
+      .map((s) => {
+        const data = s.data as { text?: string; title?: string; summary?: string } | null;
+        return data?.text || data?.title || data?.summary || '';
+      })
+      .filter((t) => t.length > 20);
+
+    let processedSignals: ProcessedSignal[] = [];
+    let anomalyCount = 0;
+    let needsLLMPolish = false;
+
+    if (gdeltTexts.length > 0) {
+      const processingResult = await processSignals(gdeltTexts);
+      processedSignals = processingResult.processed;
+      anomalyCount = processingResult.anomalies.length;
+
+      // Check if any anomalies need LLM interpretation
+      for (const signal of processingResult.anomalies) {
+        const tier = decideLLMTier(signal);
+        if (tier === 'elle') {
+          needsLLMPolish = true;
+          break;
+        }
+      }
+
+      console.log(`[CPU] Processed ${gdeltTexts.length} signals, found ${anomalyCount} anomalies, needsLLM: ${needsLLMPolish}`);
+    }
+
+    // Run LogicalAgent inference (CPU) - rule-based analysis
+    const inferenceResult = runInference(
+      processedSignals,
+      nationRiskMap,
+      { // Baseline stats
+        sentimentMean: 0,
+        sentimentStd: 0.5,
+        urgencyMean: 0.2,
+        urgencyStd: 0.3,
+        topicDistribution: [0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125],
+        signalCount: processedSignals.length,
+        lastUpdated: new Date(),
+      }
+    );
+
+    // Generate logical briefing from inferences (CPU - NO LLM)
+    const logicalBriefing: LogicalBriefing = generateLogicalBriefing(inferenceResult, nationRiskMap);
+
+    const cpuLatency = Date.now() - cpuStartTime;
+    console.log(`[CPU] Inference completed in ${cpuLatency}ms: ${inferenceResult.inferences.length} inferences from ${inferenceResult.factsUsed} facts`);
 
     const categoryRisks = {
       political: 50 + highRiskNations.length * 10,
@@ -196,84 +268,110 @@ export async function POST(request: Request) {
 
     let briefings: Record<string, string>;
     let usedFallback = false;
+    let usedCPUOnly = false;
 
-    // Helper to create data-driven briefings when LFBM is unavailable
-    // These are NOT "fallback" - they're computed from real DB data, just without LLM prose
-    const createDataDrivenBriefings = () => {
-      const riskLevel = highRiskNations.length > 3 ? 'HIGH' : highRiskNations.length > 1 ? 'ELEVATED' : 'MODERATE';
+    // Helper to convert LogicalBriefing to briefings format
+    const convertLogicalBriefingToFormat = (lb: LogicalBriefing): Record<string, string> => {
       const timestamp = new Date().toLocaleString('en-US', {
         month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
       });
 
-      // Extract country names cleanly
+      // Extract country names from high risk nations
       const riskCountries = highRiskNations.slice(0, 3).map((n: string) => n.split(' (')[0]);
       const primaryWatch = riskCountries[0] || 'monitored regions';
 
       return {
-        summary: `GLOBAL SITUATION (${timestamp}): Risk level ${riskLevel}. Active monitoring of ${nationDataForLFBM.length} nations, ${highRiskNations.length} showing elevated indicators. ${gdeltSignalCount} GDELT signals processed. ${riskCountries.length > 0 ? `Priority watch: ${riskCountries.join(', ')}.` : 'No immediate escalations.'}`,
-        political: `Political dynamics across ${nationDataForLFBM.length} states under observation. ${riskCountries.length > 0 ? `Transition risk elevated in ${riskCountries.join(', ')} - monitoring institutional stability and succession indicators.` : 'Governance indicators within baseline parameters across monitored nations.'}`,
-        economic: `Economic intelligence synthesis from ${gdeltSignalCount} data points. Market sentiment tracking ${gdeltSignals.avg_tone > 0 ? 'positive' : 'cautionary'} across primary indices. Supply chain and trade flow monitoring active.`,
-        security: `Security assessment: ${highRiskNations.length > 2 ? 'HEIGHTENED vigilance recommended' : 'Standard monitoring protocols'}. ${highRiskNations.length} nations flagged for enhanced observation. Defense posture and alliance dynamics under review.`,
-        financial: `Financial stability indicators compiled from multi-source feeds. Credit conditions and currency dynamics under surveillance.`,
-        cyber: `Cyber threat landscape at baseline. Continuous monitoring of critical infrastructure and state-actor activity.`,
-        energy: `Energy security tracking across primary corridors. Supply disruption risk assessment ongoing.`,
-        nsm: highRiskNations.length > 0
-          ? `Recommended: Increase collection frequency on ${primaryWatch}. Review exposure to transition scenarios. Prepare stakeholder brief on regional developments.`
-          : 'Maintain routine collection tempo. No immediate escalation warranted. Standard 4-hour review cycle.',
+        summary: lb.summary || `GLOBAL SITUATION (${timestamp}): ${lb.keyFindings[0] || 'Monitoring active.'}`,
+        political: lb.keyFindings.find(f => f.toLowerCase().includes('political')) ||
+          `Political dynamics across ${nationDataForLFBM.length} states. ${riskCountries.length > 0 ? `Watch: ${riskCountries.join(', ')}.` : 'Stable.'}`,
+        economic: lb.keyFindings.find(f => f.toLowerCase().includes('economic') || f.toLowerCase().includes('trade')) ||
+          `Economic intelligence from ${gdeltSignalCount} signals. ${gdeltSignals.avg_tone > 0 ? 'Positive' : 'Cautionary'} sentiment.`,
+        security: lb.keyFindings.find(f => f.toLowerCase().includes('security') || f.toLowerCase().includes('military')) ||
+          `Security: ${lb.riskAlerts.length > 0 ? lb.riskAlerts.map(a => `${a.entity}: ${a.level}`).join(', ') : 'Baseline'}`,
+        financial: `Financial stability indicators compiled. ${lb.trends.length > 0 ? lb.trends[0] : 'Credit conditions stable.'}`,
+        cyber: `Cyber threat landscape at baseline. ${anomalyCount > 0 ? `${anomalyCount} anomalies under review.` : 'No critical signals.'}`,
+        energy: `Energy security tracking. ${lb.cascadeWarnings.length > 0 ? 'Cascade pathways detected.' : 'Supply corridors stable.'}`,
+        nsm: lb.actionItems.length > 0
+          ? lb.actionItems.join(' ')
+          : (highRiskNations.length > 0
+              ? `Recommend: Monitor ${primaryWatch}. Review transition scenarios.`
+              : 'Maintain routine collection. Standard 4-hour cycle.'),
       };
     };
 
-    // Wrap LFBM call with timeout (90 seconds - RunPod cold start can be 30-60s without FlashBoot)
-    // Route maxDuration is 120s, so 90s timeout leaves buffer for cache writes
-    const LFBM_TIMEOUT_MS = 90000;
+    // ============================================================
+    // DECISION: Use CPU-only OR call LFBM for polish
+    // ============================================================
+    // Only call LFBM if:
+    // 1. Mode is 'historical' or 'hybrid' (requires LLM knowledge)
+    // 2. We have critical anomalies that need LLM interpretation
+    // 3. Depth is 'deep' (user explicitly requested full analysis)
+    // Otherwise: Use CPU-generated briefing (saves ~$0.001 per call)
 
-    try {
-      const lfbmPromise = (async () => {
-        if (mode === 'historical') {
-          const response = await lfbmClient.generateHistoricalAnalysis({
-            nations: nationDataForLFBM.map(n => ({
-              code: n.code,
-              name: n.name,
-              risk: n.transition_risk || 0,
-              trend: (n.basin_strength || 0) > 0.5 ? 0.1 : -0.1,
-            })),
-            gdeltSummary,
-            focus: body.historicalFocus,
-            depth,
-          });
-          return response.briefings;
-        } else if (mode === 'hybrid') {
-          const response = await lfbmClient.generateHybridAnalysis(
-            nationDataForLFBM,
-            gdeltSignals,
-            categoryRisks,
-            body.historicalFocus
-          );
-          return response.briefings;
-        } else {
-          return await lfbmClient.generateFromMetrics(
-            nationDataForLFBM,
-            gdeltSignals,
-            categoryRisks
-          );
-        }
-      })();
+    const shouldUseLFBM = mode === 'historical' || mode === 'hybrid' || depth === 'deep' || needsLLMPolish;
 
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('LFBM_TIMEOUT')), LFBM_TIMEOUT_MS)
-      );
+    if (!shouldUseLFBM) {
+      // CPU-ONLY PATH - No LLM call, huge cost savings
+      console.log(`[EMERGENCY REFRESH] Using CPU-only path (mode=${mode}, anomalies=${anomalyCount}, needsLLM=${needsLLMPolish})`);
+      briefings = convertLogicalBriefingToFormat(logicalBriefing);
+      usedCPUOnly = true;
+    } else {
+      // LFBM PATH - Only for historical/hybrid modes or critical anomalies
+      console.log(`[EMERGENCY REFRESH] Using LFBM for ${mode} mode (anomalies=${anomalyCount})`);
+      const lfbmStartTime = Date.now();
+      const LFBM_TIMEOUT_MS = 90000;
 
-      briefings = await Promise.race([lfbmPromise, timeoutPromise]);
-    } catch (lfbmError) {
-      const isTimeout = lfbmError instanceof Error && lfbmError.message === 'LFBM_TIMEOUT';
-      console.warn(`[EMERGENCY REFRESH] LFBM ${isTimeout ? 'timed out (90s)' : 'failed'}: ${lfbmError instanceof Error ? lfbmError.message : 'unknown'}`);
-      console.warn('[EMERGENCY REFRESH] TIP: Enable FlashBoot on RunPod to reduce cold start from 60s to 2s');
-      briefings = createDataDrivenBriefings();
-      usedFallback = true;
+      try {
+        const lfbmPromise = (async () => {
+          if (mode === 'historical') {
+            const response = await lfbmClient.generateHistoricalAnalysis({
+              nations: nationDataForLFBM.map(n => ({
+                code: n.code,
+                name: n.name,
+                risk: n.transition_risk || 0,
+                trend: (n.basin_strength || 0) > 0.5 ? 0.1 : -0.1,
+              })),
+              gdeltSummary,
+              focus: body.historicalFocus,
+              depth,
+            });
+            return response.briefings;
+          } else if (mode === 'hybrid') {
+            const response = await lfbmClient.generateHybridAnalysis(
+              nationDataForLFBM,
+              gdeltSignals,
+              categoryRisks,
+              body.historicalFocus
+            );
+            return response.briefings;
+          } else {
+            return await lfbmClient.generateFromMetrics(
+              nationDataForLFBM,
+              gdeltSignals,
+              categoryRisks
+            );
+          }
+        })();
+
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('LFBM_TIMEOUT')), LFBM_TIMEOUT_MS)
+        );
+
+        briefings = await Promise.race([lfbmPromise, timeoutPromise]);
+      } catch (lfbmError) {
+        const isTimeout = lfbmError instanceof Error && lfbmError.message === 'LFBM_TIMEOUT';
+        console.warn(`[EMERGENCY REFRESH] LFBM ${isTimeout ? 'timed out (90s)' : 'failed'}: ${lfbmError instanceof Error ? lfbmError.message : 'unknown'}`);
+        console.warn('[EMERGENCY REFRESH] Falling back to CPU-generated briefing');
+        briefings = convertLogicalBriefingToFormat(logicalBriefing);
+        usedFallback = true;
+      }
+
+      const lfbmLatency = Date.now() - lfbmStartTime;
+      console.log(`[EMERGENCY REFRESH] LFBM ${mode} completed in ${lfbmLatency}ms`);
     }
 
-    const lfbmLatency = Date.now() - lfbmStartTime;
-    console.log(`[EMERGENCY REFRESH] LFBM ${mode} completed in ${lfbmLatency}ms`);
+    const totalLatency = Date.now() - cpuStartTime;
+    console.log(`[EMERGENCY REFRESH] Total pipeline: ${totalLatency}ms (CPU: ${cpuLatency}ms, inferences: ${inferenceResult.inferences.length})`);
 
     // Cost estimates for LFBM (250x cheaper than Anthropic)
     const costEstimates: Record<string, string> = {
@@ -403,7 +501,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `Emergency ${mode} refresh completed${usedFallback ? ' (data-driven mode)' : ' via LFBM'}`,
+      message: `Emergency ${mode} refresh completed${usedCPUOnly ? ' (CPU-first)' : usedFallback ? ' (CPU fallback)' : ' via LFBM'}`,
       briefings,
       metadata: cacheData.metadata,
       cache: {
@@ -412,10 +510,18 @@ export async function POST(request: Request) {
         key: redisCacheKey,
       },
       usage: {
-        source: usedFallback ? 'data_driven' : 'lfbm_vllm',
-        latencyMs: lfbmLatency,
-        estimatedCost: usedFallback ? '$0.00' : (costEstimates[costKey] || '$0.002'),
+        source: usedCPUOnly ? 'cpu_logical_agent' : usedFallback ? 'cpu_fallback' : 'lfbm_vllm',
+        cpuLatencyMs: cpuLatency,
+        totalLatencyMs: totalLatency,
+        estimatedCost: usedCPUOnly || usedFallback ? '$0.00' : (costEstimates[costKey] || '$0.002'),
+        usedCPUOnly,
         usedFallback,
+        inferenceStats: {
+          signalsProcessed: processedSignals.length,
+          anomaliesDetected: anomalyCount,
+          inferencesGenerated: inferenceResult.inferences.length,
+          factsUsed: inferenceResult.factsUsed,
+        },
       },
     });
 

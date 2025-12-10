@@ -3,36 +3,40 @@
   "outputDirectory": ".next",
   "crons": [
     {
+      "path": "/api/ingest/gdelt",
+      "schedule": "5 * * * *"
+    },
+    {
+      "path": "/api/ingest/sentiment",
+      "schedule": "15 */4 * * *"
+    },
+    {
+      "path": "/api/compute/nation-risk",
+      "schedule": "25 */4 * * *"
+    },
+    {
+      "path": "/api/cron/warm-cache",
+      "schedule": "35 */4 * * *"
+    },
+    {
+      "path": "/api/cron/rolling-country-update",
+      "schedule": "45 */6 * * *"
+    },
+    {
+      "path": "/api/ingest/usgs",
+      "schedule": "50 */6 * * *"
+    },
+    {
+      "path": "/api/flywheel/auto-score",
+      "schedule": "55 */6 * * *"
+    },
+    {
       "path": "/api/cron/daily-alerts",
       "schedule": "0 8 * * *"
     },
     {
-      "path": "/api/cron/warm-cache",
-      "schedule": "0 */4 * * *"
-    },
-    {
-      "path": "/api/cron/rolling-country-update",
-      "schedule": "0 */6 * * *"
-    },
-    {
-      "path": "/api/ingest/gdelt",
-      "schedule": "*/20 * * * *"
-    },
-    {
       "path": "/api/ingest/worldbank",
       "schedule": "0 6 * * 0"
-    },
-    {
-      "path": "/api/ingest/usgs",
-      "schedule": "0 */6 * * *"
-    },
-    {
-      "path": "/api/ingest/sentiment",
-      "schedule": "0 */2 * * *"
-    },
-    {
-      "path": "/api/compute/nation-risk",
-      "schedule": "30 */4 * * *"
     },
     {
       "path": "/api/generate/training-data",
@@ -40,19 +44,15 @@
     },
     {
       "path": "/api/analyze/cascades",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/flywheel/auto-score",
-      "schedule": "0 */6 * * *"
+      "schedule": "30 0 * * *"
     },
     {
       "path": "/api/cron/api-usage-monitor",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 */2 * * *"
     },
     {
       "path": "/api/cron/llm-pipeline-monitor",
-      "schedule": "0 */6 * * *"
+      "schedule": "30 */12 * * *"
     }
   ]
 }

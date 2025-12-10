@@ -218,6 +218,85 @@ export function wasm_simulate_markov_chain(
   seed: bigint
 ): any;
 
+// ============================================================
+// CIC (Compression-Integration-Coherence) Functions
+// ============================================================
+
+/**
+ * Compute CIC functional from samples and values
+ */
+export function wasm_compute_cic(
+  samples_json: string,
+  values: Float64Array,
+  lambda: number,
+  gamma: number
+): any;
+
+/**
+ * Compute integrated information Φ from string samples
+ */
+export function wasm_compute_phi(samples_json: string): number;
+
+/**
+ * Compute entropy of numeric values
+ */
+export function wasm_compute_entropy(values: Float64Array): number;
+
+/**
+ * Compute multi-scale coherence
+ */
+export function wasm_compute_coherence(values: Float64Array, epsilon: number): number;
+
+/**
+ * Determine CIC phase from state
+ */
+export function wasm_determine_phase(
+  phi: number,
+  entropy: number,
+  coherence: number,
+  functional: number,
+  confidence: number
+): string;
+
+// ============================================================
+// Gauge-Theoretic Value Clustering (GTVC) Functions
+// ============================================================
+
+/**
+ * Perform gauge-theoretic clustering
+ */
+export function wasm_gauge_clustering(values: Float64Array, epsilon: number): any;
+
+/**
+ * Get optimal answer via value clustering
+ */
+export function wasm_optimal_answer(values: Float64Array, epsilon: number): number;
+
+/**
+ * Test gauge invariance of values
+ */
+export function wasm_test_gauge_invariance(values: Float64Array, epsilon: number): any;
+
+/**
+ * Fuse multiple signals into reliable value
+ */
+export function wasm_fuse_signals(
+  values: Float64Array,
+  epsilon: number,
+  lambda: number,
+  gamma: number
+): any;
+
+/**
+ * Batch fuse multiple signal sets
+ */
+export function wasm_batch_fuse(
+  values_json: string,
+  epsilon: number,
+  lambda: number,
+  gamma: number
+): any;
+
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
