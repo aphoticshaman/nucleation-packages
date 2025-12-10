@@ -106,19 +106,22 @@ export function WarmupScreen({
     }
   }, [preset, videoUrl]);
 
-  // Progress animation
+  // Progress animation - runs every second
   useEffect(() => {
     const interval = setInterval(() => {
-      setElapsedSeconds((prev) => prev + 1);
-      setProgress((prev) => {
-        // Asymptotic approach to 95% - never quite reaches 100% until complete
-        const targetProgress = Math.min(95, (elapsedSeconds / estimatedWaitSeconds) * 100);
-        return prev + (targetProgress - prev) * 0.1;
+      setElapsedSeconds((prev) => {
+        const newElapsed = prev + 1;
+        // Update progress using the new elapsed value
+        setProgress((prevProgress) => {
+          const targetProgress = Math.min(95, (newElapsed / estimatedWaitSeconds) * 100);
+          return prevProgress + (targetProgress - prevProgress) * 0.1;
+        });
+        return newElapsed;
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [estimatedWaitSeconds, elapsedSeconds]);
+  }, [estimatedWaitSeconds]); // Only re-create interval if estimate changes
 
   // Rotate loading phrases
   useEffect(() => {
@@ -244,12 +247,12 @@ export function WarmupScreen({
 
         {/* Time estimate */}
         <p className="text-white/50 text-sm">
-          {progress < 95 ? (
-            <>
-              Estimated time: ~{Math.max(1, Math.round(estimatedWaitSeconds - elapsedSeconds))}s
-            </>
-          ) : (
+          {progress >= 95 ? (
             'Almost ready...'
+          ) : elapsedSeconds >= estimatedWaitSeconds ? (
+            `${elapsedSeconds}s elapsed (taking longer than usual)`
+          ) : (
+            `~${Math.round(estimatedWaitSeconds - elapsedSeconds)}s remaining`
           )}
         </p>
 
@@ -261,21 +264,6 @@ export function WarmupScreen({
         </div>
       </div>
 
-      {/* Animated particles (optional visual flair) */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-cyan-400/30 rounded-full animate-float"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${5 + Math.random() * 10}s`,
-            }}
-          />
-        ))}
-      </div>
     </div>
   );
 }
