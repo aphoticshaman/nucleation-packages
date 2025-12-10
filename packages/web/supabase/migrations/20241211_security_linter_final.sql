@@ -39,8 +39,12 @@ ORDER BY created_at DESC;
 -- 2. Fix function search_path issues
 -- ============================================================
 
--- Fix record_nation_snapshot function
-CREATE OR REPLACE FUNCTION public.record_nation_snapshot()
+-- Must DROP first because CREATE OR REPLACE cannot change return type
+DROP FUNCTION IF EXISTS public.record_nation_snapshot() CASCADE;
+DROP FUNCTION IF EXISTS public.sync_profile_to_client() CASCADE;
+
+-- Recreate record_nation_snapshot with search_path set
+CREATE FUNCTION public.record_nation_snapshot()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -66,8 +70,8 @@ BEGIN
 END;
 $$;
 
--- Fix sync_profile_to_client function
-CREATE OR REPLACE FUNCTION public.sync_profile_to_client()
+-- Recreate sync_profile_to_client with search_path set
+CREATE FUNCTION public.sync_profile_to_client()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -85,6 +89,19 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+
+-- Reattach triggers (they were dropped with CASCADE)
+DROP TRIGGER IF EXISTS nation_snapshot_trigger ON public.nations;
+CREATE TRIGGER nation_snapshot_trigger
+  AFTER INSERT OR UPDATE ON public.nations
+  FOR EACH ROW
+  EXECUTE FUNCTION public.record_nation_snapshot();
+
+DROP TRIGGER IF EXISTS sync_profile_trigger ON public.profiles;
+CREATE TRIGGER sync_profile_trigger
+  AFTER UPDATE ON public.profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION public.sync_profile_to_client();
 
 -- ============================================================
 -- 3. Fix materialized view API access
