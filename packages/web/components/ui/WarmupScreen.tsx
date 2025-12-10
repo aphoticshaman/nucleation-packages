@@ -106,19 +106,22 @@ export function WarmupScreen({
     }
   }, [preset, videoUrl]);
 
-  // Progress animation
+  // Progress animation - runs every second
   useEffect(() => {
     const interval = setInterval(() => {
-      setElapsedSeconds((prev) => prev + 1);
-      setProgress((prev) => {
-        // Asymptotic approach to 95% - never quite reaches 100% until complete
-        const targetProgress = Math.min(95, (elapsedSeconds / estimatedWaitSeconds) * 100);
-        return prev + (targetProgress - prev) * 0.1;
+      setElapsedSeconds((prev) => {
+        const newElapsed = prev + 1;
+        // Update progress using the new elapsed value
+        setProgress((prevProgress) => {
+          const targetProgress = Math.min(95, (newElapsed / estimatedWaitSeconds) * 100);
+          return prevProgress + (targetProgress - prevProgress) * 0.1;
+        });
+        return newElapsed;
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [estimatedWaitSeconds, elapsedSeconds]);
+  }, [estimatedWaitSeconds]); // Only re-create interval if estimate changes
 
   // Rotate loading phrases
   useEffect(() => {
