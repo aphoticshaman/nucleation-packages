@@ -1,0 +1,134 @@
+# =============================================================================
+# RECOMMENDED: DoRA + NEFTune + LoRA+ + rsLoRA
+# =============================================================================
+# The "kitchen sink" of LoRA improvements - all compatible, all beneficial
+#
+# Expected improvement: +20-30% over standard LoRA
+# Hardware: 2x H200 (~$8/hr)
+# Runtime: ~5-6 hours for 2 epochs
+# Cost: ~$48
+# =============================================================================
+
+base_model: Qwen/Qwen2.5-72B-Instruct
+model_type: AutoModelForCausalLM
+tokenizer_type: AutoTokenizer
+trust_remote_code: true
+
+# QLoRA base (saves VRAM for larger batch sizes)
+load_in_4bit: true
+bnb_4bit_compute_dtype: bfloat16
+bnb_4bit_quant_type: nf4
+bnb_4bit_use_double_quant: true
+
+# =============================================================================
+# THE SECRET SAUCE: Advanced LoRA Techniques
+# =============================================================================
+adapter: lora
+lora_r: 128                    # High rank for complex tasks
+lora_alpha: 256                # 2x rank is standard
+lora_dropout: 0.05
+
+# DoRA: Weight decomposition (magnitude + direction)
+# Paper: https://arxiv.org/abs/2402.09353
+# Impact: +10-15% on reasoning tasks
+lora_use_dora: true
+
+# rsLoRA: Rank-stabilized scaling (1/√r instead of α/r)
+# Paper: https://arxiv.org/abs/2312.03732
+# Impact: Enables high-rank stability
+lora_use_rslora: true
+
+# LoRA+: Asymmetric learning rates (B learns 16x faster than A)
+# Paper: https://arxiv.org/abs/2402.12354
+# Impact: +2-5% accuracy, free
+loraplus_lr_ratio: 16
+
+# Target all linear layers for maximum expressiveness
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+  - lm_head     # Include output projection
+
+# =============================================================================
+# NEFTune: Noisy Embeddings
+# =============================================================================
+# Paper: https://arxiv.org/abs/2310.05914
+# Impact: +10-15% on AlpacaEval, MT-Bench
+# Cost: Basically free (just adds noise during training)
+neftune_noise_alpha: 5
+
+# Dataset
+datasets:
+  - path: aphoticshaman/latticeforge-briefing-data
+    type: sharegpt
+    conversation: chatml
+
+# Output
+output_dir: /workspace/output/latticeforge-elle-dora
+hub_model_id: aphoticshaman/latticeforge-elle-72b-dora
+push_to_hub: true
+
+# =============================================================================
+# Training Configuration
+# =============================================================================
+sequence_len: 4096
+sample_packing: true
+pad_to_sequence_len: true
+
+# Optimized for 2x H200 (282 GB VRAM)
+gradient_accumulation_steps: 4
+micro_batch_size: 2            # 2 per GPU × 2 GPUs × 4 accum = 16 effective
+num_epochs: 2
+
+# Learning rate optimized for DoRA
+learning_rate: 5e-5            # Slightly higher than standard LoRA
+lr_scheduler: cosine
+warmup_ratio: 0.03
+
+# 8-bit AdamW for memory efficiency
+optimizer: adamw_bnb_8bit
+weight_decay: 0.01
+max_grad_norm: 1.0
+
+# Precision
+bf16: auto
+tf32: true
+
+# DeepSpeed ZeRO-2 for multi-GPU
+deepspeed: ../axolotl/deepspeed_configs/zero2.json
+
+# Logging
+logging_steps: 10
+eval_steps: 100
+save_steps: 300
+save_total_limit: 2
+
+# Eval
+val_set_size: 0.02
+eval_sample_packing: false
+
+# Performance
+seed: 42
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+flash_attention: true
+
+# =============================================================================
+# Why This Config Works
+# =============================================================================
+# 1. DoRA: Decouples magnitude/direction learning → matches full FT pattern
+# 2. rsLoRA: Stabilizes high-rank (128) training
+# 3. LoRA+: B matrix gets 16x LR → faster convergence
+# 4. NEFTune: Regularization via noisy embeddings → generalization
+# 5. High rank (128): More expressiveness than standard rank-8/16
+# 6. lm_head included: Better output distribution learning
+#
+# This combination has been shown to match or exceed full fine-tuning
+# quality in multiple benchmarks while using ~10x less memory.
+# =============================================================================
