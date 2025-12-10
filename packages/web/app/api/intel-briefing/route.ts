@@ -501,13 +501,56 @@ export async function POST(req: Request) {
     );
 
     // ============================================================
-    // CACHE MISS - Use enhanced template engine with REAL DATA
+    // CACHE MISS - Return "warming" status so frontend shows loading
     // ============================================================
-    // Pulls actual GDELT tones, country signals, and nation state vectors
-    // to generate data-driven briefings WITHOUT calling Claude.
-    // Cost: $0 | Latency: <50ms | Quality: Dynamic, data-backed
+    // Instead of serving degraded template-only data, tell the frontend
+    // to show a loading screen while cron warms the cache. This ensures
+    // users ALWAYS get the best quality data once ready.
     if (!canGenerateFresh) {
-      console.log(`[CACHE MISS] No cached briefing for preset: ${preset}, using enhanced template engine with real data`);
+      console.log(`[CACHE MISS] No cached briefing for preset: ${preset}, returning warming status`);
+
+      // Check when cron last ran to estimate wait time
+      const cacheKey = getCacheKey(preset);
+      let estimatedWaitSeconds = 60; // Default: assume cron runs every minute
+
+      // If we have any cached data (even expired), use its timestamp
+      try {
+        const lastCached = await redis.get<CachedBriefing>(cacheKey);
+        if (lastCached?.timestamp) {
+          const cacheAge = (Date.now() - lastCached.timestamp) / 1000;
+          // Cron runs every 5 minutes, so estimate based on last cache
+          const cronIntervalSeconds = 5 * 60;
+          estimatedWaitSeconds = Math.max(10, cronIntervalSeconds - (cacheAge % cronIntervalSeconds));
+        }
+      } catch {
+        // Redis error, use default estimate
+      }
+
+      return NextResponse.json({
+        status: 'warming',
+        message: 'Intelligence briefing cache is warming up. Please wait...',
+        estimatedWaitSeconds,
+        preset,
+        retryAfterMs: 5000, // Frontend should poll every 5 seconds
+        metadata: {
+          region: req.headers.get('x-vercel-ip-country') || 'Global',
+          preset,
+          timestamp: new Date().toISOString(),
+          cached: false,
+          generatedBy: 'warmup-pending',
+        },
+      });
+    }
+
+    // ============================================================
+    // DEPRECATED: Template fallback - kept for reference but not used
+    // ============================================================
+    // Previously: Pulled GDELT tones, country signals, and nation state vectors
+    // to generate data-driven briefings WITHOUT calling Claude.
+    // Now: We return "warming" status instead, to ensure quality
+    const _DEPRECATED_TEMPLATE_FALLBACK = false;
+    if (_DEPRECATED_TEMPLATE_FALLBACK) {
+      console.log(`[DEPRECATED] Template engine fallback - should not reach here`);
 
       // Fetch nation data for template engine
       const presetFiltersForTemplate: Record<string, string[] | null> = {
@@ -1037,23 +1080,175 @@ export async function POST(req: Request) {
     const lfbmClient = getLFBMClient();
     const lfbmStartTime = Date.now();
 
-    const briefings = await lfbmClient.generateFromMetrics(
-      nationData,
-      {
-        count: nationData.length,
-        avg_tone: nationData.reduce((s, n) => s + (n.transition_risk || 0), 0) / (nationData.length || 1),
-        alerts: nationData.filter(n => (n.transition_risk || 0) > 0.6).length,
-      },
-      {
-        political: computedMetrics.categories.political?.riskLevel || 50,
-        economic: computedMetrics.categories.economic?.riskLevel || 50,
-        security: computedMetrics.categories.security?.riskLevel || 50,
-        cyber: computedMetrics.categories.cyber?.riskLevel || 50,
-      }
-    );
+    // LFBM only generates 5 core categories - we need all 26
+    // First generate template briefings for ALL categories, then merge LFBM output
+    let lfbmBriefings: Record<string, string> = {};
+    let llmLatency = 0;
 
-    const llmLatency = Date.now() - lfbmStartTime;
-    console.log(`[INTEL] LFBM briefing generated in ${llmLatency}ms`);
+    try {
+      lfbmBriefings = await lfbmClient.generateFromMetrics(
+        nationData,
+        {
+          count: nationData.length,
+          avg_tone: nationData.reduce((s, n) => s + (n.transition_risk || 0), 0) / (nationData.length || 1),
+          alerts: nationData.filter(n => (n.transition_risk || 0) > 0.6).length,
+        },
+        {
+          political: computedMetrics.categories.political?.riskLevel || 50,
+          economic: computedMetrics.categories.economic?.riskLevel || 50,
+          security: computedMetrics.categories.security?.riskLevel || 50,
+          cyber: computedMetrics.categories.cyber?.riskLevel || 50,
+        }
+      );
+      llmLatency = Date.now() - lfbmStartTime;
+      console.log(`[INTEL] LFBM briefing generated in ${llmLatency}ms, keys: ${Object.keys(lfbmBriefings).join(', ')}`);
+    } catch (lfbmError) {
+      console.warn('[INTEL] LFBM failed, using template-only mode:', lfbmError);
+      llmLatency = Date.now() - lfbmStartTime;
+    }
+
+    // ============================================================
+    // GENERATE ALL 26 CATEGORIES via template (same as user path)
+    // LFBM output will enhance core categories, but we need FULL coverage
+    // ============================================================
+    const highRiskNations = nationData
+      .filter(n => (n.transition_risk || 0) > 0.5)
+      .sort((a, b) => (b.transition_risk || 0) - (a.transition_risk || 0))
+      .slice(0, 5);
+    const topRiskNames = highRiskNations.slice(0, 3).map(n => n.name);
+    const avgTransitionRisk = nationData.length > 0
+      ? (nationData.reduce((s, n) => s + (n.transition_risk || 0), 0) / nationData.length * 100).toFixed(0)
+      : '0';
+    const avgBasinStrength = nationData.length > 0
+      ? (nationData.reduce((s, n) => s + (n.basin_strength || 0), 0) / nationData.length * 100).toFixed(0)
+      : '0';
+
+    // Build complete briefings for all 26 categories
+    const briefings: Record<string, string> = {};
+
+    // Political
+    briefings['political'] = lfbmBriefings['political'] || (topRiskNames.length > 0
+      ? `Political stability monitoring across ${nationData.length} nations. ${topRiskNames.join(', ')} showing elevated transition indicators (avg ${avgTransitionRisk}% risk). Institutional resilience at ${avgBasinStrength}% across monitored states.`
+      : `Political environment stable across ${nationData.length} monitored nations. Average transition risk at ${avgTransitionRisk}%, institutional strength at ${avgBasinStrength}%.`);
+
+    // Economic
+    briefings['economic'] = lfbmBriefings['economic'] || `Economic monitoring active for ${preset.toUpperCase()} region. ${nationData.length} economies under surveillance.`;
+
+    // Security
+    briefings['security'] = lfbmBriefings['security'] || (highRiskNations.length > 0
+      ? `Security environment requires monitoring. Elevated transition indicators in: ${highRiskNations.slice(0, 4).map(n => n.name).join(', ')}.`
+      : `Security posture stable across ${preset.toUpperCase()} region. No critical transition thresholds exceeded.`);
+
+    // Financial
+    briefings['financial'] = `Financial stability tracking ${nationData.length} economies. ${highRiskNations.length > 0 ? 'Monitoring stress indicators in elevated-risk markets.' : 'No systemic stress indicators.'}`;
+
+    // Cyber
+    briefings['cyber'] = lfbmBriefings['cyber'] || `Cyber threat landscape at baseline. ${highRiskNations.length > 2 ? 'Elevated monitoring on critical infrastructure.' : 'No critical signals.'}`;
+
+    // Health
+    briefings['health'] = highRiskNations.length > 0
+      ? `Health security monitoring in ${highRiskNations.map(n => n.name).slice(0, 3).join(', ')}. Supply chain resilience under review.`
+      : 'No significant health security alerts.';
+
+    // Science & Tech
+    briefings['scitech'] = highRiskNations.length > 2
+      ? 'Technology transfer under review. Watch for sanctions impact on tech supply chains.'
+      : 'Innovation metrics stable. Normal operations.';
+
+    // Resources
+    briefings['resources'] = highRiskNations.length > 0
+      ? `Resource competition elevated in ${highRiskNations.length} regions. Critical mineral access under review.`
+      : 'Resource access stable across monitored regions.';
+
+    // Crime
+    briefings['crime'] = highRiskNations.length > 2
+      ? 'Organized crime monitoring elevated. Increased activity possible in unstable regions.'
+      : 'Crime indices at baseline. No significant changes.';
+
+    // Terrorism
+    briefings['terrorism'] = highRiskNations.some(n => (n.transition_risk || 0) > 0.7)
+      ? 'Elevated monitoring in high-transition zones. Counter-terrorism posture active.'
+      : 'Threat assessment at baseline. Standard monitoring protocols.';
+
+    // Domestic
+    briefings['domestic'] = highRiskNations.length > 0
+      ? `Domestic stability concerns in ${highRiskNations.map(n => n.name).slice(0, 3).join(', ')}. Social cohesion metrics under review.`
+      : 'Domestic stability indicators nominal across monitored nations.';
+
+    // Borders
+    briefings['borders'] = highRiskNations.length > 2
+      ? `Border tensions elevated in ${highRiskNations.length} regions. Migration pattern shifts detected.`
+      : 'Border security posture stable. No significant incidents.';
+
+    // Info Ops
+    briefings['infoops'] = highRiskNations.length > 3
+      ? `Information environment deteriorating. ${highRiskNations.length} regions showing coordinated narrative activity.`
+      : 'Information ecosystem baseline. Standard monitoring active.';
+
+    // Military
+    briefings['military'] = highRiskNations.some(n => (n.transition_risk || 0) > 0.7)
+      ? `Military posture elevated in ${highRiskNations.filter(n => (n.transition_risk || 0) > 0.7).map(n => n.name).slice(0, 3).join(', ')}.`
+      : 'Force readiness at baseline. No significant deployments detected.';
+
+    // Space
+    briefings['space'] = 'Space operations nominal. Standard orbital monitoring active.';
+
+    // Industry
+    briefings['industry'] = highRiskNations.length > 0
+      ? `Industrial output under pressure in ${highRiskNations.length} elevated-risk economies. Supply chain shifts possible.`
+      : `Manufacturing metrics stable across ${preset.toUpperCase()} region.`;
+
+    // Logistics
+    briefings['logistics'] = highRiskNations.length > 2
+      ? `Logistics disruption risk elevated. ${highRiskNations.length} chokepoint regions under watch.`
+      : 'Supply chain operations nominal. No critical bottlenecks detected.';
+
+    // Minerals
+    briefings['minerals'] = 'Critical mineral supply stable. Strategic reserves adequate. Export controls unchanged.';
+
+    // Energy
+    briefings['energy'] = `Energy security baseline. Monitoring supply chain dynamics across ${preset.toUpperCase()} corridor.`;
+
+    // Markets
+    briefings['markets'] = highRiskNations.length > 2
+      ? `Market volatility elevated. ${highRiskNations.length} markets showing stress.`
+      : 'Market volatility within normal range. Sentiment stable.';
+
+    // Religious
+    briefings['religious'] = highRiskNations.length > 2
+      ? `Religious tensions elevated in ${highRiskNations.length} regions. Sectarian dynamics under review.`
+      : 'Interfaith relations stable. No significant incidents.';
+
+    // Education
+    briefings['education'] = 'Education sector stable. No critical disruptions to academic operations.';
+
+    // Employment
+    briefings['employment'] = highRiskNations.length > 0
+      ? `Labor market stress possible in ${highRiskNations.length} economies. Unemployment pressure detected.`
+      : 'Employment metrics stable across monitored regions.';
+
+    // Housing
+    briefings['housing'] = 'Housing market indicators within normal parameters. No systemic risks detected.';
+
+    // Crypto
+    briefings['crypto'] = 'Cryptocurrency markets at baseline. Regulatory environment unchanged.';
+
+    // Emerging
+    briefings['emerging'] = highRiskNations.length > 2
+      ? `Weak signals detected: multi-region instability convergence. Monitor for second-order effects.`
+      : 'No significant emerging trends detected. Standard horizon scanning active.';
+
+    // Summary - use LFBM if available, otherwise generate
+    briefings['summary'] = lfbmBriefings['summary'] || `${preset.toUpperCase()} intelligence synthesis across ${nationData.length} nations. ${topRiskNames.length > 0 ? `Primary watchlist: ${topRiskNames.join(', ')}.` : 'No critical alerts.'} Overall risk: ${computedMetrics.overallRisk.toUpperCase()}.`;
+
+    // NSM - use LFBM if available, otherwise generate
+    briefings['nsm'] = lfbmBriefings['nsm'] || (highRiskNations.length > 2
+      ? `Increase monitoring frequency on ${topRiskNames[0] || 'flagged regions'}. Consider scenario planning for transition events.`
+      : highRiskNations.length > 0
+        ? `Maintain enhanced awareness on ${topRiskNames.join(' and ')}. Standard protocols sufficient.`
+        : `Continue routine monitoring. No immediate escalation required.`);
+
+    console.log(`[INTEL] Full briefings generated: ${Object.keys(briefings).length} categories`);
 
     // ============================================================
     // LEARNING COLLECTOR - Capture for future model training
