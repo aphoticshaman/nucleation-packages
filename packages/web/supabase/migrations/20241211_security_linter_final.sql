@@ -120,16 +120,13 @@ GRANT SELECT ON public.country_signals_latest TO service_role;
 -- 4. Fix spatial_ref_sys RLS (PostGIS system table)
 -- ============================================================
 
--- Enable RLS on spatial_ref_sys (PostGIS table)
--- This is a read-only reference table, so we allow all authenticated reads
-ALTER TABLE IF EXISTS public.spatial_ref_sys ENABLE ROW LEVEL SECURITY;
-
--- Allow read access for all (it's reference data)
-DROP POLICY IF EXISTS "spatial_ref_sys_read_policy" ON public.spatial_ref_sys;
-CREATE POLICY "spatial_ref_sys_read_policy" ON public.spatial_ref_sys
-  FOR SELECT
-  TO authenticated, anon
-  USING (true);
+-- NOTE: spatial_ref_sys is a PostGIS system table owned by postgres/superuser.
+-- Regular users cannot modify it. The linter warning can be safely ignored
+-- for this system table - it's read-only reference data by design.
+--
+-- If you need to fix this warning, contact Supabase support or run as superuser:
+-- ALTER TABLE public.spatial_ref_sys ENABLE ROW LEVEL SECURITY;
+-- CREATE POLICY "spatial_ref_sys_read_policy" ON public.spatial_ref_sys FOR SELECT USING (true);
 
 -- ============================================================
 -- 5. Grant proper view access

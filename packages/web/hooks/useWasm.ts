@@ -22,8 +22,8 @@ interface UseWasmResult {
  * - Geospatial system with nation dynamics
  */
 export function useWasm(): UseWasmResult {
-  const [wasm, setWasm] = useState<WasmCore | null>(
-    isWasmLoaded() ? { available: true, module: getWasm() ?? undefined } : null
+  const [wasm, setWasm] = useState<WasmCore | null>(() =>
+    isWasmLoaded() ? ({ available: true, module: getWasm() ?? undefined } as WasmCore) : null
   );
   const [loading, setLoading] = useState(!isWasmLoaded());
   const [error, setError] = useState<Error | null>(null);
@@ -31,7 +31,7 @@ export function useWasm(): UseWasmResult {
   useEffect(() => {
     // Already loaded
     if (isWasmLoaded()) {
-      setWasm({ available: true, module: getWasm() ?? undefined });
+      setWasm({ available: true, module: getWasm() ?? undefined } as WasmCore);
       setLoading(false);
       return;
     }

@@ -7,6 +7,9 @@
 //! - Geodesic integration on Riemannian manifolds
 //! - Persistent homology computation
 //! - McKean-Vlasov particle dynamics
+//! - Graph Laplacian anomaly detection
+//! - Dempster-Shafer belief fusion
+//! - Transfer entropy causal graphs
 
 #![allow(clippy::needless_range_loop)]
 
@@ -20,6 +23,12 @@ pub mod geodesics;
 pub mod persistence;
 pub mod particles;
 pub mod regime;
+pub mod geospatial;
+
+// Anomaly and fusion modules (replacing Python)
+pub mod graph_laplacian;
+pub mod dempster_shafer;
+pub mod transfer_entropy;
 
 #[cfg(feature = "wasm")]
 pub mod wasm;
@@ -32,3 +41,7 @@ pub use geodesics::*;
 pub use persistence::*;
 pub use particles::*;
 pub use regime::*;
+pub use geospatial::*;
+pub use graph_laplacian::*;
+pub use dempster_shafer::*;
+pub use transfer_entropy::*;

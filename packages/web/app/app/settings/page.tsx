@@ -347,7 +347,8 @@ export default function ConsumerSettingsPage() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { data: prefs } = await supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: prefs } = await (supabase as any)
           .from('email_export_preferences')
           .select('enabled, preferred_time')
           .eq('user_id', user.id)
@@ -377,7 +378,8 @@ export default function ConsumerSettingsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
         .from('email_export_preferences')
         .upsert({
           user_id: user.id,

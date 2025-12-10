@@ -67,10 +67,22 @@ export async function GET(req: Request) {
     errors: [] as string[],
   };
 
+  // Interface for storing article text data
+  interface ArticleRecord {
+    title: string;
+    url: string;
+    domain: string;
+    country: string;
+    tone: number;
+    theme: string;
+    timestamp: string;
+  }
+
   try {
     // Fetch recent articles for each risk theme
     const allSignals: Record<string, number> = {};
     const toneByCountry: Record<string, number[]> = {};
+    const articleRecords: ArticleRecord[] = [];
 
     for (const theme of RISK_THEMES) {
       try {
@@ -99,13 +111,27 @@ export async function GET(req: Request) {
         if (data.articles && data.articles.length > 0) {
           results.articles_found = (results.articles_found as number) + data.articles.length;
 
-          // Aggregate tone by country
+          // Aggregate tone by country AND collect individual articles
           for (const article of data.articles) {
             const country = article.sourcecountry || 'UNKNOWN';
             if (!toneByCountry[country]) {
               toneByCountry[country] = [];
             }
             toneByCountry[country].push(article.tone);
+
+            // Store articles with negative tone (risk signals) for text analysis
+            // Only store most relevant articles to avoid overwhelming storage
+            if (article.tone < 0 && article.title && articleRecords.length < 200) {
+              articleRecords.push({
+                title: article.title,
+                url: article.url,
+                domain: article.domain || 'unknown',
+                country: country,
+                tone: article.tone,
+                theme: theme,
+                timestamp: article.seendate || new Date().toISOString(),
+              });
+            }
           }
 
           // Count theme occurrences as signal strength
@@ -168,6 +194,59 @@ export async function GET(req: Request) {
       } else {
         results.signals_stored = Object.keys(allSignals).length;
       }
+    }
+
+    // Store individual article records with text data for LogicalAgent
+    if (articleRecords.length > 0) {
+      // Batch insert articles - these have actual text for inference
+      const articleInserts = articleRecords.map((article) => ({
+        type: 'signal_observation' as const,
+        timestamp: article.timestamp,
+        session_hash: 'gdelt_ingest',
+        user_tier: 'system',
+        domain: article.country,
+        data: {
+          // These fields are what SignalProcessor/LogicalAgent expect
+          title: article.title,
+          text: article.title, // Use title as text for now
+          summary: `${article.theme} signal from ${article.domain}: ${article.title}`,
+          url: article.url,
+          source: 'gdelt',
+          // Also include numeric features for signal processing
+          numeric_features: {
+            tone: article.tone,
+            risk_score: Math.max(0, Math.min(1, (50 - article.tone) / 100)),
+          },
+          categorical_features: {
+            theme: article.theme,
+            country: article.country,
+            domain: article.domain,
+          },
+        },
+        metadata: {
+          source: 'gdelt_cron',
+          version: '1.1.0', // Version bump for text storage
+          article_url: article.url,
+          environment: process.env.NODE_ENV || 'production',
+        },
+      }));
+
+      // Insert in batches of 50 to avoid timeouts
+      const batchSize = 50;
+      let articlesStored = 0;
+      for (let i = 0; i < articleInserts.length; i += batchSize) {
+        const batch = articleInserts.slice(i, i + batchSize);
+        const { error: articleError } = await supabase.from('learning_events').insert(batch);
+        if (articleError) {
+          results.errors = [
+            ...(results.errors as string[]),
+            `Article batch ${i / batchSize}: ${articleError.message}`,
+          ];
+        } else {
+          articlesStored += batch.length;
+        }
+      }
+      results.articles_stored = articlesStored;
     }
 
     // Store country-level tone data
