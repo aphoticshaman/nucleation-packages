@@ -11,7 +11,8 @@
 
 // Dynamically imported WASM module
 let wasmModule: typeof import('@/public/wasm/latticeforge_core') | null = null;
-let wasmLoading: Promise<typeof wasmModule> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let wasmLoading: Promise<any> | null = null;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface WasmCore {
