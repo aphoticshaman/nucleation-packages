@@ -1,22 +1,20 @@
 """
-Module implementing generic communication patterns with Python in / Python out
-supporting many (nested) primitives + special data science types like DataFrames
-or np.ndarrays, with gRPC + protobuf as a backing implementation.
+RYANAIMO - Ground-Up AIMO3 Solver
+=================================
+
+Purpose-built race car for the AI Mathematical Olympiad.
+
+Core Philosophy:
+    F[T] = Φ(T) - λ·H(T|X) + γ·C_multi(T)
+
+Every component optimizes the CIC functional.
+
+Author: Ryan J Cardwell (Archer Phoenix)
 """
 
-import os
-import sys
+__version__ = "0.1.0"
+__author__ = "Ryan J Cardwell"
 
-# Provide additional import management since grpc_tools.protoc doesn't support relative imports
-module_dir = os.path.dirname(os.path.abspath(__file__))
-gen_dir = os.path.join(module_dir, 'core', 'generated')
+from ryanaimo.solver import RyanAIMOSolver
 
-if not os.path.exists(os.path.join(gen_dir, 'kaggle_evaluation_pb2.py')):
-    print('kaggle evaluation proto and gRPC generated files are missing')
-    sys.exit(1)
-
-sys.path.append(module_dir)
-sys.path.append(gen_dir)
-
-
-__version__ = '0.9.0'
+__all__ = ["RyanAIMOSolver"]
