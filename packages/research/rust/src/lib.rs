@@ -35,6 +35,7 @@ pub mod transfer_entropy;
 // Novel algorithms for intelligence analysis
 pub mod lyapunov;
 pub mod cascade;
+pub mod simulation;
 
 #[cfg(feature = "wasm")]
 pub mod wasm;
