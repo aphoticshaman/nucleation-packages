@@ -1,6 +1,6 @@
 # Competitive Landscape Analysis: Geopolitical Intelligence Platforms for LatticeForge.ai
 
-**LatticeForge.ai occupies a unique position in a rapidly consolidating market—but the window for acquisition-ready positioning is narrowing.** The geopolitical intelligence market has matured into a $100-150B ecosystem dominated by platform players like Palantir ($89B market cap), recently-acquired Recorded Future ($2.65B), and well-funded Dataminr ($4.1B valuation). LatticeForge's edge-native architecture, validated predictive methodology (F1=0.77, r=0.67 temporal precedence), and lightweight deployment profile (50KB WASM) address documented gaps that incumbents cannot easily fill—creating both differentiation opportunity and acquisition appeal.
+**LatticeForge.ai occupies a unique position in a rapidly consolidating market—but the window for acquisition-ready positioning is narrowing.** The geopolitical intelligence market has matured into a $100-150B ecosystem dominated by platform players like Palantir ($89B market cap), recently-acquired Recorded Future ($2.65B), and well-funded Dataminr ($4.1B valuation). LatticeForge's edge-native architecture, physics-based methodology, and lightweight deployment profile (50KB WASM) address documented gaps that incumbents cannot easily fill—creating both differentiation opportunity and acquisition appeal.
 
 The critical insight: **acquirers are paying 8-12x revenue for AI-powered intelligence platforms with unique data approaches and government traction**. Mastercard paid 8.8x for Recorded Future; Google paid 11x for Mandiant. Defense primes (Anduril, Booz Allen) and PE rollups (Thoma Bravo, Audax) are actively building portfolios. LatticeForge's technical differentiation aligns precisely with the capability gaps acquirers are seeking to fill.
 
@@ -47,13 +47,13 @@ Primer focuses specifically on **document-level NLP and intelligence automation*
 
 Predata's methodology most closely parallels LatticeForge's theoretical approach—**analyzing online metadata patterns rather than content** to predict geopolitical events. Their Political Volatility Index (PVIX) covers 125+ countries through Bloomberg Terminal integration. The CSIS Beyond Parallel partnership validated "correct prediction of the last seven North Korea ballistic missile test launches."
 
-**Critical difference from LatticeForge**: Predata analyzes web traffic and engagement patterns using exponential moving averages, while LatticeForge's nucleation approach applies phase transition physics (d²V/dt² variance inflection, symmetric KL-divergence compression). **FiscalNote's August 2021 acquisition** constrained Predata's growth trajectory—they raised only $14.3M total before acquisition. LatticeForge's more sophisticated methodology with validated accuracy metrics (F1=0.77) represents a generational advance.
+**Critical difference from LatticeForge**: Predata analyzes web traffic and engagement patterns using exponential moving averages, while LatticeForge's nucleation approach applies phase transition physics (d²V/dt² variance inflection, symmetric KL-divergence compression). **FiscalNote's August 2021 acquisition** constrained Predata's growth trajectory—they raised only $14.3M total before acquisition. LatticeForge's physics-based methodology represents a different analytical approach.
 
 ### Dataminr: The real-time detection leader with unique data moat
 
 Dataminr's **$4.1 billion valuation** reflects their privileged X/Twitter partnership—direct "firehose" access that competitors cannot replicate through scraping. Their multi-modal fusion AI synthesizes text, image, video, sound, and sensor data across 150+ languages using 50+ proprietary LLMs. Two-thirds of Fortune 50 and 100+ US government agencies are customers.
 
-**Technical gap LatticeForge addresses**: Dataminr excels at real-time event *detection* but not *prediction*. Their April 2025 Context Agents launch signals intent to move toward predictive intelligence, but they remain fundamentally reactive. **LatticeForge's validated temporal precedence (r=0.67 divergence leading conflict) fills this prediction gap**.
+**Technical gap LatticeForge addresses**: Dataminr excels at real-time event *detection* but not *prediction*. Their April 2025 Context Agents launch signals intent to move toward predictive intelligence, but they remain fundamentally reactive. **LatticeForge's forward-looking analysis aims to fill this prediction gap**.
 
 ---
 
@@ -127,13 +127,13 @@ Research across M&A activity reveals acquirers prioritizing:
 
 ### Technical gaps incumbents cannot easily address
 
-**Edge computing and disconnected deployment**: Current solutions are cloud-centric. Palantir's Apollo supports edge deployment but requires heavy infrastructure. **LatticeForge's 50KB WASM runtime enables deployment on bandwidth-constrained devices**—satellites, field units, maritime vessels—where cloud connectivity is unavailable. No competitor offers validated prediction at this footprint.
+**Edge computing and disconnected deployment**: Current solutions are cloud-centric. Palantir's Apollo supports edge deployment but requires heavy infrastructure. **LatticeForge's 50KB WASM runtime enables deployment on bandwidth-constrained devices**—satellites, field units, maritime vessels—where cloud connectivity is unavailable.
 
-**Uncertainty quantification**: Palantir, Recorded Future, and Dataminr provide risk scores but not probabilistic forecasts with confidence bounds. Financial services and defense decision-makers increasingly require **calibrated uncertainty estimates for risk-adjusted decisions**. LatticeForge's F1=0.77 with explicit validation methodology addresses this gap.
+**Uncertainty quantification**: Palantir, Recorded Future, and Dataminr provide risk scores but not probabilistic forecasts with confidence bounds. Financial services and defense decision-makers increasingly require **calibrated uncertainty estimates for risk-adjusted decisions**. LatticeForge provides explicit uncertainty bounds with all estimates.
 
 **Physics-based prediction methodology**: Competitors use statistical ML (pattern recognition, NLP) or behavioral analytics (web traffic patterns). **LatticeForge's phase transition approach (variance inflection detection, compression divergence) represents a fundamentally different—and more theoretically grounded—methodology**. This is defensible IP that cannot be easily copied.
 
-**Real-time prediction vs. detection**: Dataminr dominates real-time *detection* of events as they happen. The market gap is **prediction before events occur**. LatticeForge's validated temporal precedence (divergence leads conflict with r=0.67) fills this prediction gap that even Dataminr's new Agentic AI roadmap cannot address without fundamental architectural changes.
+**Real-time prediction vs. detection**: Dataminr dominates real-time *detection* of events as they happen. The market gap is **prediction before events occur**. LatticeForge's phase transition methodology aims to provide early warning signals. Dataminr's new Agentic AI roadmap cannot address this gap without fundamental architectural changes.
 
 ### Price point opportunity
 
@@ -183,7 +183,7 @@ Palantir's closed-source, proprietary data format creates lock-in that sophistic
 |-----------|------------|
 | Unique physics-based methodology | Early stage, limited market presence |
 | 50KB edge-native deployment | No government certifications yet |
-| Validated accuracy (F1=0.77, r=0.67) | Team likely lacks security clearances |
+| Physics-based methodology with uncertainty bounds | Team likely lacks security clearances |
 | Uncertainty quantification | No established contract vehicles |
 
 | Opportunities | Threats |
@@ -203,7 +203,7 @@ Palantir's closed-source, proprietary data format creates lock-in that sophistic
 
 1. **SOC 2 Type II certification** ($50-150K, 6-12 months)—table stakes for enterprise sales
 2. **Target financial services early adopters**: Hedge funds and macro traders value predictive signals with uncertainty quantification; Predata validated this market via Bloomberg integration
-3. **Publish validation methodology**: Academic paper or technical whitepaper establishing F1=0.77 and r=0.67 claims with reproducible methodology—creates defensible differentiation narrative
+3. **Publish validation methodology**: Academic paper or technical whitepaper documenting the physics-based approach with reproducible methodology—creates defensible differentiation narrative
 4. **Establish AFCEA presence**: TechNet Cyber (May-June), TechNet Augusta (August) for defense community visibility
 5. **Identify integration partners**: SIEM/SOAR compatibility (Splunk, Microsoft Sentinel) enables enterprise deployment
 
@@ -279,7 +279,7 @@ The threat intelligence M&A market is active now:
 ## Strategic conclusions
 
 LatticeForge.ai enters a market with clear structural gaps:
-- **No incumbent offers validated prediction with temporal precedence** (vs. detection or pattern recognition)
+- **No incumbent offers physics-based predictive methodology** (vs. detection or pattern recognition)
 - **Edge-native deployment at 50KB is unmatched** in an increasingly distributed threat environment
 - **Uncertainty quantification is universally absent** from competitor offerings
 - **Price points leave mid-market underserved**

@@ -99,13 +99,34 @@ async function getCachedBriefing(preset: string): Promise<CachedBriefing | null>
 
   // L2: Check Redis (warm)
   try {
+    console.log(`[L2 WARM] Checking Redis for key: ${key}`);
     const cached = await redis.get<CachedBriefing>(key);
     if (cached) {
-      console.log(`[L2 WARM] Redis hit for ${key}`);
+      // Deep logging of cache structure
+      console.log('[L2 WARM] Cache structure:', JSON.stringify({
+        hasData: !!cached.data,
+        hasBriefings: !!cached.data?.briefings,
+        hasMetadata: !!cached.data?.metadata,
+        briefingKeys: cached.data?.briefings ? Object.keys(cached.data.briefings) : [],
+        metadataSource: cached.data?.metadata?.source,
+        metadataPreset: cached.data?.metadata?.preset,
+        timestamp: cached.timestamp,
+        generatedAt: cached.generatedAt,
+        age: `${Math.round((Date.now() - (cached.timestamp || 0)) / 1000)}s`,
+      }, null, 2));
+
+      // Validate structure before returning
+      if (!cached.data?.briefings || Object.keys(cached.data.briefings).length === 0) {
+        console.warn('[L2 WARM] Cache data invalid - missing briefings, treating as miss');
+        return null;
+      }
+
+      console.log(`[L2 WARM] Redis hit for ${key}, briefing count: ${Object.keys(cached.data.briefings).length}, source: ${cached.data?.metadata?.source || 'unknown'}`);
       // Promote to L1 hot cache
       setHotCache(key, cached);
       return cached;
     }
+    console.log(`[L2 WARM] Redis miss for ${key} - no data found`);
   } catch (error) {
     console.error('[L2 WARM] Redis get error (falling through):', error);
     // Redis is down - continue to cold path
@@ -446,19 +467,22 @@ export async function POST(req: Request) {
     // ============================================================
     // CACHE CHECK - ALWAYS check cache first (Redis - shared across all edge instances)
     // ============================================================
+    console.log(`[INTEL] Checking cache for preset: ${preset}`);
     const cached = await getCachedBriefing(preset);
     if (cached) {
-      console.log(`[CACHE HIT] Serving cached briefing for preset: ${preset}, age: ${Math.round((Date.now() - cached.timestamp) / 1000)}s`);
+      const cacheAge = Math.round((Date.now() - cached.timestamp) / 1000);
+      console.log(`[CACHE HIT] Serving cached briefing for preset: ${preset}, age: ${cacheAge}s, source: ${cached.data?.metadata?.source || 'unknown'}`);
       return NextResponse.json({
         ...cached.data,
         metadata: {
           ...cached.data.metadata,
           cached: true,
           cachedAt: cached.generatedAt,
-          cacheAgeSeconds: Math.round((Date.now() - cached.timestamp) / 1000),
+          cacheAgeSeconds: cacheAge,
         },
       });
     }
+    console.log(`[CACHE MISS] No cached data for preset: ${preset}, canGenerateFresh: ${canGenerateFresh}`);
 
     // Create Supabase client (needed for both fallback and fresh generation)
     const cookieStore = await cookies();

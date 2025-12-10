@@ -1,7 +1,7 @@
 //! Gauge-Theoretic Value Clustering (GTVC)
 //!
 //! Implements value clustering with 5% tolerance as gauge symmetry.
-//! Achieves 84% ± 6% error reduction over naive majority voting.
+//! Provides robust consensus from noisy multi-agent outputs.
 //!
 //! Key insight: The tolerance defines an equivalence relation (gauge group)
 //! that preserves the CIC functional to O(ε²).
