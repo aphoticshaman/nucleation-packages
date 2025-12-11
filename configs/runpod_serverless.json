@@ -1,13 +1,13 @@
 {
-  "name": "elle-72b-full-serverless",
-  "description": "Elle-72B-Full model for latticeforge.ai inference",
+  "name": "elle-72b-ultimate-serverless",
+  "description": "Elle-72B-Ultimate model for latticeforge.ai inference, training data generation, and intel analysis",
 
   "docker_image": "runpod/worker-vllm:stable-cuda12.1.0",
 
   "env": {
-    "MODEL_NAME": "aphoticshaman/elle-72b-full",
+    "MODEL_NAME": "aphoticshaman/elle-72b-ultimate",
     "HF_TOKEN": "${HF_TOKEN}",
-    "TOKENIZER": "aphoticshaman/elle-72b-full",
+    "TOKENIZER": "aphoticshaman/elle-72b-ultimate",
     "DTYPE": "bfloat16",
     "GPU_MEMORY_UTILIZATION": "0.95",
     "MAX_MODEL_LEN": "8192",
@@ -43,7 +43,7 @@
   },
 
   "example_request": {
-    "model": "aphoticshaman/elle-72b-full",
+    "model": "aphoticshaman/elle-72b-ultimate",
     "messages": [
       {"role": "system", "content": "You are Elle, an advanced AI assistant with expertise in mathematics, geopolitics, and code generation."},
       {"role": "user", "content": "Solve this AIME problem..."}
