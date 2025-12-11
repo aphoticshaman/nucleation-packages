@@ -68,6 +68,7 @@ KAGGLE_PACKAGES = {
 # Packages that MUST be skipped (causes immediate crashes)
 CRITICAL_SKIP = {
     'torch', 'transformers', 'tokenizers', 'numpy', 'triton',
+    'xformers',  # Has hard PyTorch version dependency - causes flash attention schema mismatch
 }
 
 # Packages that are risky to override
