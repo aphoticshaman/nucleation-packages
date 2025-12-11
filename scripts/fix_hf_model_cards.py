@@ -7,7 +7,9 @@ Run this on RunPod with HF token
 import os
 from huggingface_hub import HfApi, create_repo
 
-HF_TOKEN = os.environ.get("HF_TOKEN", "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")
+HF_TOKEN = os.environ.get("HF_TOKEN")
+if not HF_TOKEN:
+    raise ValueError("HF_TOKEN environment variable is required. Set it with: export HF_TOKEN=your_token")
 api = HfApi(token=HF_TOKEN)
 
 # Model card templates

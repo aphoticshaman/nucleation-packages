@@ -39,7 +39,7 @@ except ImportError as e:
 # Configuration
 BASE_MODEL = "Qwen/Qwen2.5-72B-Instruct"
 HF_USERNAME = "aphoticshaman"
-HF_TOKEN = os.environ.get("HF_TOKEN", "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")
+HF_TOKEN = os.environ.get("HF_TOKEN")  # Set via: export HF_TOKEN=your_token
 
 # Adapter paths on RunPod
 ADAPTER_CONFIGS = {
