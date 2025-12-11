@@ -59,8 +59,33 @@
  * Total: ~$0.475/1000 requests - completely self-hosted, no API dependencies
  */
 
-import { guardianCheck } from './guardian';
-import { getOutputGuardian } from '@/lib/reasoning/security';
+import { getOutputGuardian, getSecurityGuardian } from '@/lib/reasoning/security';
+
+// Guardian check wrapper - validates input before sending to LLM
+async function guardianCheck(
+  _userId: string,
+  input: string
+): Promise<{ allowed: boolean; reason?: string }> {
+  // Quick injection pattern check (subset of SecurityGuardian patterns)
+  const blockedPatterns = [
+    /ignore\s+(previous|above|all)\s+instructions/i,
+    /disregard\s+(previous|above|all)/i,
+    /forget\s+(everything|all|previous)/i,
+    /you\s+are\s+now/i,
+    /pretend\s+(to\s+be|you\s+are)/i,
+    /system\s*:\s*/i,
+    /\[INST\]/i,
+    /<\|im_start\|>/i,
+  ];
+
+  for (const pattern of blockedPatterns) {
+    if (pattern.test(input)) {
+      return { allowed: false, reason: 'Invalid input pattern detected' };
+    }
+  }
+
+  return { allowed: true };
+}
 
 // =============================================================================
 // TYPES
