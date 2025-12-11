@@ -1,0 +1,92 @@
+# =============================================================================
+# THE ULTIMATE CONFIG: Qwen2.5-72B Full Fine-Tune on 8x H200
+# =============================================================================
+# Hardware: 8x H200 SXM (1128 GB VRAM) - PURE GPU POWER, NO OFFLOADING
+# Budget: $50 at $28.72/hr = ~1.7 hours
+# Method: FULL fine-tune with DeepSpeed ZeRO-2 (no CPU offload needed!)
+# Expected: 2 epochs in ~90 minutes
+# =============================================================================
+
+base_model: Qwen/Qwen2.5-72B-Instruct
+model_type: AutoModelForCausalLM
+tokenizer_type: AutoTokenizer
+trust_remote_code: true
+
+# FULL FINE-TUNE - Maximum quality
+load_in_4bit: false
+load_in_8bit: false
+
+# Dataset - your CIC-enhanced training data
+datasets:
+  - path: aphoticshaman/latticeforge-briefing-data
+    type: sharegpt
+    conversation: chatml
+
+# Output
+output_dir: /workspace/output/latticeforge-briefing-72b-ultimate
+hub_model_id: aphoticshaman/latticeforge-briefing-72b-ultimate
+push_to_hub: true
+
+# ═══════════════════════════════════════════════════════════════════════════
+# TRAINING HYPERPARAMETERS - OPTIMIZED FOR 8x H200 (1128GB VRAM)
+# ═══════════════════════════════════════════════════════════════════════════
+sequence_len: 4096           # Can afford longer contexts with this VRAM
+sample_packing: true
+pad_to_sequence_len: true
+
+# AGGRESSIVE batch sizes - we have the VRAM for it
+gradient_accumulation_steps: 2
+micro_batch_size: 4          # 4 per GPU × 8 GPUs = 32 effective batch
+num_epochs: 2                # 2 full epochs in ~90 minutes
+
+# Learning rate for 72B full fine-tune
+learning_rate: 2e-5
+lr_scheduler: cosine
+warmup_ratio: 0.03
+
+optimizer: adamw_torch_fused
+weight_decay: 0.01
+max_grad_norm: 1.0
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PRECISION - BF16 native on H200
+# ═══════════════════════════════════════════════════════════════════════════
+bf16: true
+tf32: true
+
+# ═══════════════════════════════════════════════════════════════════════════
+# DEEPSPEED - ZeRO-2 (NO CPU OFFLOAD - pure GPU speed)
+# ═══════════════════════════════════════════════════════════════════════════
+deepspeed: deepspeed_configs/zero2_8gpu.json
+
+# Logging
+logging_steps: 5
+eval_steps: 50
+save_steps: 200
+save_total_limit: 2
+
+# Eval
+val_set_size: 0.02
+eval_sample_packing: false
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PERFORMANCE - Maximum throughput
+# ═══════════════════════════════════════════════════════════════════════════
+seed: 42
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+flash_attention: true
+
+# Multi-GPU optimization
+ddp_find_unused_parameters: false
+ddp_bucket_cap_mb: 200
+
+# Flash attention 2 for H200
+flash_attention: true
+flash_attn_cross_entropy: false
+flash_attn_fuse_qkv: false
+flash_attn_fuse_mlp: false
+
+# Disable FSDP - use DeepSpeed instead
+fsdp: null

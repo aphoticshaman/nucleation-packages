@@ -1,0 +1,157 @@
+# =============================================================================
+# ORPO: Odds Ratio Preference Optimization
+# =============================================================================
+# Monolithic Preference Optimization without Reward Model
+# Paper: https://arxiv.org/abs/2403.07691
+#
+# Combines SFT + preference alignment in single training run
+# No separate reward model needed (unlike RLHF/PPO)
+#
+# Best for: Format compliance, style consistency, output quality
+# Hardware: 2x H200 (~$8/hr)
+# Runtime: ~3 hours
+# Cost: ~$24
+# =============================================================================
+
+base_model: Qwen/Qwen2.5-72B-Instruct
+# Or use your DoRA-trained model as base:
+# base_model: aphoticshaman/latticeforge-elle-72b-dora
+
+model_type: AutoModelForCausalLM
+tokenizer_type: AutoTokenizer
+trust_remote_code: true
+
+# QLoRA
+load_in_4bit: true
+bnb_4bit_compute_dtype: bfloat16
+bnb_4bit_quant_type: nf4
+bnb_4bit_use_double_quant: true
+
+# LoRA config
+adapter: lora
+lora_r: 64
+lora_alpha: 128
+lora_dropout: 0.05
+
+# Can combine with DoRA for extra boost
+lora_use_dora: true
+lora_use_rslora: true
+
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+# =============================================================================
+# ORPO Configuration
+# =============================================================================
+rl: orpo
+
+# ORPO alpha: weight of preference loss relative to SFT
+# Higher = more emphasis on preferences
+# 0.1 is standard starting point
+orpo_alpha: 0.1
+
+# =============================================================================
+# Dataset: Preference Format Required
+# =============================================================================
+# ORPO needs chosen/rejected pairs, not just completions
+# Format:
+# {
+#   "prompt": "...",
+#   "chosen": "good response",
+#   "rejected": "bad response"
+# }
+
+datasets:
+  - path: aphoticshaman/latticeforge-preferences
+    type: orpo
+    # Or use chatml_orpo for chat format
+
+# Output
+output_dir: /workspace/output/latticeforge-elle-orpo
+hub_model_id: aphoticshaman/latticeforge-elle-72b-orpo
+push_to_hub: true
+
+# =============================================================================
+# Training
+# =============================================================================
+sequence_len: 2048             # Shorter for preference pairs
+sample_packing: false          # Can't pack preference pairs
+pad_to_sequence_len: true
+
+gradient_accumulation_steps: 4
+micro_batch_size: 2
+num_epochs: 1                  # Preference training is quick
+
+learning_rate: 5e-5
+lr_scheduler: cosine
+warmup_ratio: 0.1
+
+optimizer: adamw_bnb_8bit
+weight_decay: 0.01
+max_grad_norm: 1.0
+
+# Precision
+bf16: auto
+tf32: true
+
+# DeepSpeed
+deepspeed: ../axolotl/deepspeed_configs/zero2.json
+
+# Logging
+logging_steps: 10
+eval_steps: 50
+save_steps: 200
+save_total_limit: 2
+
+# Eval
+val_set_size: 0.05
+eval_sample_packing: false
+
+# Performance
+seed: 42
+gradient_checkpointing: true
+flash_attention: true
+
+# =============================================================================
+# Creating Preference Data for LatticeForge
+# =============================================================================
+# For Elle, good vs bad responses might be:
+#
+# CHOSEN (good):
+# - Perfect JSON format
+# - Includes CIC functional computation
+# - References phase state correctly
+# - Applies epistemic bounds
+# - Provides historical parallel
+#
+# REJECTED (bad):
+# - Malformed JSON
+# - Missing required fields
+# - Wrong CIC formula
+# - Overconfident (>0.95)
+# - No mathematical reasoning
+#
+# Generate pairs using prepare_preference_data.py (TODO: create this)
+# =============================================================================
+
+# =============================================================================
+# ORPO vs DPO
+# =============================================================================
+# DPO: L = -log(σ(β(log π(y_w|x) - log π(y_l|x))))
+#      Requires reference model, separate from SFT
+#
+# ORPO: L = L_SFT + α * log(odds_chosen / odds_rejected)
+#       Single pass, no reference model
+#       Typically more stable and easier to tune
+#
+# For LatticeForge, ORPO is preferred because:
+# 1. Simpler setup (no reference model)
+# 2. Combined SFT+alignment (faster iteration)
+# 3. Works well with format compliance tasks
+# =============================================================================

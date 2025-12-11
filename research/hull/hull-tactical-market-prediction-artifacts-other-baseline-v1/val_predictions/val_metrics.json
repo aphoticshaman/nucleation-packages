@@ -1,0 +1,10 @@
+{
+    "adjusted_sharpe": 0.5563223952577989,
+    "sharpe": 0.5601694319253235,
+    "strategy_volatility": 15.614005459126346,
+    "market_volatility": 17.35681520933265,
+    "strategy_mean_excess_return": 8.746488568117705,
+    "market_mean_excess_return": 9.578060632389906,
+    "vol_penalty": 1.0,
+    "return_penalty": 1.0069151209807794
+}

@@ -1,0 +1,78 @@
+# =============================================================================
+# BUDGET BEAST: Your NF4 Math Model + QLoRA → LatticeForge CIC
+# =============================================================================
+# Base: aphoticshaman/qwen-72b-math-nf4 (already quantized!)
+# Hardware: 2-4x H200 (saves money)
+# Method: QLoRA on top of your AIMO3 math capabilities
+# Result: IMO-level math + CIC framework (budget-friendly)
+# =============================================================================
+
+base_model: aphoticshaman/qwen-72b-math-nf4
+model_type: AutoModelForCausalLM
+tokenizer_type: AutoTokenizer
+trust_remote_code: true
+
+# Model is already NF4 quantized - use QLoRA
+load_in_4bit: true
+adapter: qlora
+lora_r: 128
+lora_alpha: 256
+lora_dropout: 0.05
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+# Dataset
+datasets:
+  - path: aphoticshaman/latticeforge-briefing-data
+    type: sharegpt
+    conversation: chatml
+
+# Output
+output_dir: /workspace/output/latticeforge-elle-72b-math-lora
+hub_model_id: aphoticshaman/latticeforge-elle-72b-math-lora
+push_to_hub: true
+
+# Training
+sequence_len: 4096
+sample_packing: true
+pad_to_sequence_len: true
+
+gradient_accumulation_steps: 4
+micro_batch_size: 2
+num_epochs: 2
+
+learning_rate: 1e-4
+lr_scheduler: cosine
+warmup_ratio: 0.05
+
+optimizer: adamw_bnb_8bit
+weight_decay: 0.01
+max_grad_norm: 1.0
+
+# Precision
+bf16: auto
+tf32: true
+
+# DeepSpeed
+deepspeed: deepspeed_configs/zero2.json
+
+# Logging
+logging_steps: 10
+eval_steps: 100
+save_steps: 300
+save_total_limit: 2
+
+# Eval
+val_set_size: 0.05
+eval_sample_packing: false
+
+# Performance
+seed: 42
+gradient_checkpointing: true
+flash_attention: true

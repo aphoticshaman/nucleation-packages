@@ -1,0 +1,74 @@
+# =============================================================================
+# STACKED FINE-TUNE: Your AIMO3-trained Math Model → LatticeForge CIC
+# =============================================================================
+# Base: aphoticshaman/qwen-72b-math-v1 (YOUR AIMO3-trained model!)
+# Hardware: 8x H200 SXM (1128 GB VRAM)
+# Method: Full fine-tune on top of math capabilities
+# Result: IMO-level math + CIC framework + Intelligence analysis
+# =============================================================================
+
+base_model: aphoticshaman/qwen-72b-math-v1
+model_type: AutoModelForCausalLM
+tokenizer_type: AutoTokenizer
+trust_remote_code: true
+
+# FULL FINE-TUNE - preserve math, add intelligence
+load_in_4bit: false
+load_in_8bit: false
+
+# Dataset - your CIC-enhanced training data
+datasets:
+  - path: aphoticshaman/latticeforge-briefing-data
+    type: sharegpt
+    conversation: chatml
+
+# Output - the ULTIMATE stacked model
+output_dir: /workspace/output/latticeforge-elle-72b-math
+hub_model_id: aphoticshaman/latticeforge-elle-72b-math
+push_to_hub: true
+
+# ═══════════════════════════════════════════════════════════════════════════
+# TRAINING - LOWER learning rate to preserve math capabilities
+# ═══════════════════════════════════════════════════════════════════════════
+sequence_len: 4096
+sample_packing: true
+pad_to_sequence_len: true
+
+gradient_accumulation_steps: 2
+micro_batch_size: 4
+num_epochs: 1              # Single epoch to not overwrite math
+
+# LOWER learning rate for stacked fine-tune
+learning_rate: 5e-6        # 4x lower than from-scratch
+lr_scheduler: cosine
+warmup_ratio: 0.03
+
+optimizer: adamw_torch_fused
+weight_decay: 0.005        # Lower weight decay
+max_grad_norm: 1.0
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PRECISION
+# ═══════════════════════════════════════════════════════════════════════════
+bf16: true
+tf32: true
+
+# DeepSpeed ZeRO-2 (no offloading - pure GPU)
+deepspeed: deepspeed_configs/zero2_8gpu.json
+
+# Logging
+logging_steps: 5
+eval_steps: 50
+save_steps: 200
+save_total_limit: 2
+
+# Eval
+val_set_size: 0.02
+eval_sample_packing: false
+
+# Performance
+seed: 42
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+flash_attention: true

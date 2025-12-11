@@ -1,0 +1,74 @@
+{
+  "$schema": "https://api.runpod.io/schemas/pod-template.json",
+  "name": "LFBM Elle Trainer",
+  "description": "Ultimate fine-tuning pod for Qwen-72B → Elle geopolitical intelligence model",
+  "version": "1.0.0",
+
+  "pod": {
+    "name": "lfbm-elle-trainer",
+    "imageName": "aphoticshaman/lfbm-trainer:latest",
+
+    "gpu": {
+      "type": "NVIDIA H200",
+      "count": 1,
+      "minVram": 141000
+    },
+
+    "gpuFallback": [
+      {"type": "NVIDIA A100 80GB PCIe", "count": 2},
+      {"type": "NVIDIA A100-SXM4-80GB", "count": 2},
+      {"type": "NVIDIA H100 PCIe", "count": 1},
+      {"type": "NVIDIA H100 80GB HBM3", "count": 1}
+    ],
+
+    "vcpu": 16,
+    "memoryGb": 128,
+
+    "volumeInGb": 500,
+    "volumeMountPath": "/workspace",
+
+    "containerDiskInGb": 100,
+
+    "ports": [
+      {"port": 8888, "protocol": "TCP", "name": "Jupyter"},
+      {"port": 6006, "protocol": "TCP", "name": "TensorBoard"},
+      {"port": 7860, "protocol": "TCP", "name": "Gradio"},
+      {"port": 22, "protocol": "TCP", "name": "SSH"}
+    ],
+
+    "env": [
+      {"key": "HF_TOKEN", "value": "{{HF_TOKEN}}", "sensitive": true},
+      {"key": "WANDB_API_KEY", "value": "{{WANDB_API_KEY}}", "sensitive": true},
+      {"key": "KAGGLE_USERNAME", "value": "{{KAGGLE_USERNAME}}"},
+      {"key": "KAGGLE_KEY", "value": "{{KAGGLE_KEY}}", "sensitive": true},
+      {"key": "WANDB_PROJECT", "value": "lfbm-elle"},
+      {"key": "CUDA_VISIBLE_DEVICES", "value": "0"},
+      {"key": "NCCL_DEBUG", "value": "INFO"}
+    ],
+
+    "startupScript": "/workspace/scripts/startup.sh",
+
+    "dockerArgs": "--shm-size=64g --ulimit memlock=-1 --ulimit stack=67108864"
+  },
+
+  "storage": {
+    "networkVolume": {
+      "name": "lfbm-training-data",
+      "size": 200,
+      "region": "US"
+    }
+  },
+
+  "billing": {
+    "spotInstance": false,
+    "bidPerGpu": null,
+    "maxBidPerGpu": 5.0
+  },
+
+  "metadata": {
+    "author": "aphoticshaman",
+    "repository": "https://github.com/aphoticshaman/nucleation-packages",
+    "documentation": "https://github.com/aphoticshaman/nucleation-packages/tree/main/packages/lfbm",
+    "tags": ["fine-tuning", "qwen", "qlora", "geopolitical", "intelligence"]
+  }
+}

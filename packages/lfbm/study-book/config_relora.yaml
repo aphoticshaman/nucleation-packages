@@ -1,0 +1,114 @@
+# =============================================================================
+# ReLoRA: Single Iteration Config
+# =============================================================================
+# High-Rank Training Through Low-Rank Updates
+# Paper: https://arxiv.org/abs/2307.05695
+#
+# Run this config multiple times with relora_train.sh
+# Each iteration adds effective rank:
+#   3 iterations × rank-64 = rank-192 effective
+#
+# Hardware: 2x H200 (~$8/hr)
+# Runtime per iteration: ~1.5 hours
+# Total (3 iterations): ~4.5 hours = ~$36
+# =============================================================================
+
+base_model: Qwen/Qwen2.5-72B-Instruct
+# NOTE: After iteration 1, change to merged model path:
+# base_model: /workspace/output/latticeforge-relora-iter1/merged
+
+model_type: AutoModelForCausalLM
+tokenizer_type: AutoTokenizer
+trust_remote_code: true
+
+# QLoRA for memory efficiency
+load_in_4bit: true
+bnb_4bit_compute_dtype: bfloat16
+bnb_4bit_quant_type: nf4
+bnb_4bit_use_double_quant: true
+
+# Standard LoRA config for each iteration
+adapter: lora
+lora_r: 64                     # Moderate rank per iteration
+lora_alpha: 128
+lora_dropout: 0.05
+
+# Include rsLoRA for stability across iterations
+lora_use_rslora: true
+
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+# Dataset
+datasets:
+  - path: aphoticshaman/latticeforge-briefing-data
+    type: sharegpt
+    conversation: chatml
+
+# Output - will be modified by relora_train.sh
+output_dir: /workspace/output/latticeforge-relora-iter1
+# hub_model_id set after final iteration
+
+# =============================================================================
+# Training - Shorter epochs per iteration
+# =============================================================================
+sequence_len: 4096
+sample_packing: true
+pad_to_sequence_len: true
+
+gradient_accumulation_steps: 4
+micro_batch_size: 2
+num_epochs: 1                  # Only 1 epoch per iteration!
+
+# Reset learning rate each iteration (warm restarts)
+learning_rate: 1e-4
+lr_scheduler: cosine
+warmup_ratio: 0.1              # Higher warmup for reset
+
+optimizer: adamw_bnb_8bit
+weight_decay: 0.01
+max_grad_norm: 1.0
+
+# Precision
+bf16: auto
+tf32: true
+
+# DeepSpeed
+deepspeed: ../axolotl/deepspeed_configs/zero2.json
+
+# Logging
+logging_steps: 10
+eval_steps: 100
+save_steps: 500
+save_total_limit: 1            # Only keep latest
+
+# Eval
+val_set_size: 0.02
+eval_sample_packing: false
+
+# Performance
+seed: 42
+gradient_checkpointing: true
+flash_attention: true
+
+# =============================================================================
+# ReLoRA Theory
+# =============================================================================
+# Standard LoRA: W_final = W_0 + BA (rank r)
+#
+# ReLoRA iteration 1: W_1 = W_0 + B_1·A_1
+# Merge: W_1 becomes new base
+# ReLoRA iteration 2: W_2 = W_1 + B_2·A_2 = W_0 + B_1·A_1 + B_2·A_2
+# ...
+#
+# After N iterations: Effective rank = sum of all individual ranks
+#
+# Key insight: Each iteration's LoRA captures DIFFERENT subspaces
+# Combined effect approaches full-rank update
+# =============================================================================
