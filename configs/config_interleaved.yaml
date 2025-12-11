@@ -46,9 +46,9 @@ tf32: true
 gradient_checkpointing: true
 flash_attention: false  # Use SDPA - flash-attn has torch ABI mismatch
 
-# CRITICAL: No checkpointing to avoid ZeRO-3 dtype crash
-save_strategy: "no"
-save_steps: 0
+# Save only at end to avoid ZeRO-3 mid-training dtype crash
+save_strategy: "epoch"
+save_total_limit: 1
 logging_steps: 10
 
 deepspeed: /workspace/ds_config.json
