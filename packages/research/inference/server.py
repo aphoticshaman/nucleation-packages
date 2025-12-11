@@ -36,7 +36,7 @@ def get_llm():
 
         config = CognitiveLLMConfig(
             adapter_repo=os.getenv("ADAPTER_REPO", "aphoticshaman/latticeforge-unified"),
-            base_model=os.getenv("BASE_MODEL", "microsoft/Phi-3-mini-4k-instruct"),
+            base_model=os.getenv("BASE_MODEL", "aphoticshaman/elle-72b-geo-v1"),
             device="cuda" if os.getenv("USE_GPU", "1") == "1" else "cpu",
         )
         _llm = CognitiveLLM(config=config).load()
