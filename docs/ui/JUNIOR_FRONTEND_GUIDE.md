@@ -1,29 +1,23 @@
 # LatticeForge UI: Junior Frontend Developer Guide
 
+**Stack:** Next.js 16 / React 19 / TypeScript / Tailwind CSS
 **Audience:** Junior/Mid-level Frontend Developers, new team members
-**Prerequisites:** HTML, CSS, JavaScript basics. Rust experience helpful but not required.
-**Time to Onboard:** ~2 weeks to first meaningful PR
-**Mentor:** Assigned senior engineer (check your onboarding doc)
+**Prerequisites:** HTML, CSS, JavaScript/TypeScript basics, React fundamentals
+**Time to Onboard:** ~1 week to first meaningful PR
 
 ---
 
 ## Welcome
 
-You're joining the frontend team on a project that looks intimidating. Rust. WebAssembly. Reactive programming. Phase transitions. Causal emergence.
+You're joining the frontend team on LatticeForge - a real-time intelligence dashboard that processes streaming signal data and orchestrates LLM inference via our Elle-72B-Ultimate model on RunPod.
 
-Take a breath. You don't need to understand all of that on day one. This guide breaks down what you actually need to know, in the order you need to know it.
+The stack is familiar: Next.js, React, TypeScript, Tailwind. If you've done React before, you'll be productive quickly.
 
 By the end of week one, you'll have:
 - Set up your dev environment
 - Made a small component change
 - Understood the basic data flow
 - Submitted your first PR
-
-By the end of week two, you'll have:
-- Built a new component from scratch
-- Connected it to live data
-- Written tests for it
-- Understood why we chose this weird stack
 
 Let's go.
 
@@ -34,893 +28,488 @@ Let's go.
 ### 1.1 Install the Tools
 
 ```bash
-# Rust toolchain
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source ~/.cargo/env
-
-# Add WASM target
-rustup target add wasm32-unknown-unknown
-
-# Leptos tooling
-cargo install trunk
-cargo install leptos_cli
-
-# Node (for some tooling, not main development)
-# Use nvm or your preferred method
+# Node.js 20+ (use nvm)
 nvm install 20
 nvm use 20
 
 # Clone the repo
 git clone <repo-url>
-cd nucleation-packages/packages/web-leptos
+cd nucleation-packages/packages/web
+
+# Install dependencies
+npm install
+
+# Copy environment template
+cp .env.example .env.local
 ```
 
 ### 1.2 First Build
 
 ```bash
-# This will take 5-10 minutes the first time
-trunk serve
+# Start development server
+npm run dev
 
-# Open http://localhost:8080
+# Open http://localhost:3000
 ```
 
-If you see the dashboard, you're good. If you see errors, check:
-- Rust version: `rustc --version` (should be 1.75+)
-- WASM target: `rustup target list | grep wasm32`
-- Trunk version: `trunk --version`
-
-Still stuck? Ping #frontend-eng. First-build issues are common.
+If you see the landing page, you're good. If you see errors, check:
+- Node version: `node --version` (should be 20+)
+- Dependencies installed: Check for `node_modules/`
+- Environment variables: `.env.local` exists
 
 ### 1.3 Editor Setup
 
 We use VS Code with:
-- `rust-analyzer` extension (essential)
-- `Even Better TOML` (for Cargo.toml)
-- `Error Lens` (inline error display)
+- `ESLint` extension
+- `Prettier` extension
+- `Tailwind CSS IntelliSense` extension
 
 Your `settings.json` should include:
 ```json
 {
-  "rust-analyzer.cargo.target": "wasm32-unknown-unknown",
-  "rust-analyzer.checkOnSave.allTargets": false,
-  "editor.formatOnSave": true
-}
-```
-
-The first setting is important — without it, rust-analyzer will complain about web_sys types.
-
----
-
-## Part 2: Rust Crash Course for Frontend Devs (Days 1-2)
-
-You don't need to be a Rust expert. You need to understand these concepts:
-
-### 2.1 Variables and Ownership
-
-```rust
-// Immutable by default
-let x = 5;
-// x = 6; // ERROR
-
-// Mutable with mut
-let mut y = 5;
-y = 6; // OK
-
-// Ownership - values have one owner
-let s1 = String::from("hello");
-let s2 = s1; // s1 is now INVALID
-// println!("{}", s1); // ERROR: s1 moved
-
-// Clone to copy
-let s3 = s2.clone();
-println!("{} {}", s2, s3); // Both valid
-```
-
-Why this matters for UI: When you pass data to components, you need to think about whether you're moving it or cloning it.
-
-### 2.2 References and Borrowing
-
-```rust
-// Borrowing - temporary access without ownership
-fn print_length(s: &String) {
-    println!("{}", s.len());
-}
-
-let s = String::from("hello");
-print_length(&s); // Borrow s
-println!("{}", s); // s still valid
-
-// Mutable borrow
-fn append_world(s: &mut String) {
-    s.push_str(" world");
-}
-
-let mut s = String::from("hello");
-append_world(&mut s);
-println!("{}", s); // "hello world"
-```
-
-### 2.3 Structs and Enums
-
-```rust
-// Struct - like a JavaScript object but typed
-struct User {
-    name: String,
-    email: String,
-    age: u32,
-}
-
-let user = User {
-    name: "Alice".to_string(),
-    email: "alice@example.com".to_string(),
-    age: 30,
-};
-
-// Enum - like TypeScript union types but better
-enum Status {
-    Loading,
-    Success(String),    // Can hold data
-    Error { code: u32, message: String }, // Named fields
-}
-
-let status = Status::Success("Data loaded".to_string());
-
-// Pattern matching
-match status {
-    Status::Loading => println!("Loading..."),
-    Status::Success(msg) => println!("Success: {}", msg),
-    Status::Error { code, message } => println!("Error {}: {}", code, message),
-}
-```
-
-### 2.4 Option and Result
-
-No null in Rust. Instead:
-
-```rust
-// Option - might have a value
-let maybe_name: Option<String> = Some("Alice".to_string());
-let no_name: Option<String> = None;
-
-// Unwrap carefully
-if let Some(name) = maybe_name {
-    println!("Hello, {}", name);
-}
-
-// Or use unwrap_or
-let name = no_name.unwrap_or("Anonymous".to_string());
-
-// Result - might have an error
-fn divide(a: f64, b: f64) -> Result<f64, String> {
-    if b == 0.0 {
-        Err("Division by zero".to_string())
-    } else {
-        Ok(a / b)
-    }
-}
-
-match divide(10.0, 2.0) {
-    Ok(result) => println!("Result: {}", result),
-    Err(e) => println!("Error: {}", e),
-}
-```
-
-### 2.5 Closures
-
-Like JavaScript arrow functions, but with type inference:
-
-```rust
-// Basic closure
-let add = |a, b| a + b;
-println!("{}", add(2, 3)); // 5
-
-// Closure capturing environment
-let multiplier = 3;
-let multiply = |x| x * multiplier;
-println!("{}", multiply(5)); // 15
-
-// Move closure - takes ownership
-let name = String::from("Alice");
-let greet = move || println!("Hello, {}", name);
-greet();
-// name is now invalid here
-```
-
-In Leptos, you'll write closures constantly for event handlers and reactive computations:
-
-```rust
-let (count, set_count) = create_signal(0);
-
-// This closure captures `count` and `set_count`
-let increment = move |_| set_count.set(count.get() + 1);
-```
-
----
-
-## Part 3: Leptos Basics (Days 2-3)
-
-### 3.1 Your First Component
-
-Create a file `src/components/counter.rs`:
-
-```rust
-use leptos::*;
-
-#[component]
-pub fn Counter() -> impl IntoView {
-    // Reactive state
-    let (count, set_count) = create_signal(0);
-
-    // Event handler
-    let increment = move |_| set_count.set(count.get() + 1);
-    let decrement = move |_| set_count.set(count.get() - 1);
-
-    // JSX-like syntax
-    view! {
-        <div class="counter">
-            <button on:click=decrement>"-"</button>
-            <span>{count}</span>
-            <button on:click=increment>"+"</button>
-        </div>
-    }
-}
-```
-
-Register it in `src/components/mod.rs`:
-```rust
-mod counter;
-pub use counter::Counter;
-```
-
-Use it in a page:
-```rust
-use crate::components::Counter;
-
-view! {
-    <Counter />
-}
-```
-
-### 3.2 Props
-
-Components receive data via props:
-
-```rust
-#[component]
-pub fn Greeting(
-    /// The name to greet
-    name: String,
-    /// Whether to be formal
-    #[prop(default = false)]
-    formal: bool,
-) -> impl IntoView {
-    view! {
-        <p>
-            {if formal { "Good day, " } else { "Hey, " }}
-            {name}
-            "!"
-        </p>
-    }
-}
-
-// Usage
-view! {
-    <Greeting name="Alice".to_string() />
-    <Greeting name="Bob".to_string() formal=true />
-}
-```
-
-### 3.3 Reactive Signals
-
-The core of Leptos. Signals are reactive values:
-
-```rust
-// Create a signal
-let (value, set_value) = create_signal(0);
-
-// Read (subscribes to changes)
-let current = value.get();
-
-// Write (triggers updates)
-set_value.set(42);
-
-// Update based on current value
-set_value.update(|v| *v += 1);
-```
-
-When you call `.get()` inside a reactive context (component body, effect, memo), Leptos tracks the dependency. When the signal changes, only that specific usage updates.
-
-This is different from React's "re-render the whole component" model.
-
-### 3.4 Derived Signals (Memos)
-
-Compute values from other signals:
-
-```rust
-let (count, set_count) = create_signal(0);
-
-// This recomputes only when count changes
-let doubled = create_memo(move |_| count.get() * 2);
-
-view! {
-    <p>"Count: " {count} " Doubled: " {doubled}</p>
-}
-```
-
-### 3.5 Effects
-
-Side effects when signals change:
-
-```rust
-let (search, set_search) = create_signal("".to_string());
-
-// Runs every time search changes
-create_effect(move |_| {
-    let query = search.get();
-    log::info!("Search changed to: {}", query);
-    // Could trigger API call here
-});
-```
-
-### 3.6 Conditional Rendering
-
-```rust
-// Show/hide
-<Show when=move || count.get() > 0>
-    <p>"Count is positive"</p>
-</Show>
-
-// With fallback
-<Show
-    when=move || user.get().is_some()
-    fallback=|| view! { <p>"Please log in"</p> }
->
-    <p>"Welcome back!"</p>
-</Show>
-
-// Pattern matching
-{move || match status.get() {
-    Status::Loading => view! { <Spinner /> }.into_view(),
-    Status::Success(data) => view! { <DataView data /> }.into_view(),
-    Status::Error(e) => view! { <ErrorView error=e /> }.into_view(),
-}}
-```
-
-### 3.7 List Rendering
-
-```rust
-let (items, set_items) = create_signal(vec!["a", "b", "c"]);
-
-view! {
-    <ul>
-        <For
-            each=move || items.get()
-            key=|item| item.clone()
-            children=move |item| view! {
-                <li>{item}</li>
-            }
-        />
-    </ul>
-}
-```
-
-The `key` prop is crucial — it helps Leptos efficiently update the DOM when items change.
-
----
-
-## Part 4: Project Structure Walkthrough (Day 3)
-
-### 4.1 Where Things Live
-
-```
-src/
-├── main.rs          # Entry point, router
-├── app.rs           # Root component
-├── components/      # Reusable pieces
-├── pages/           # Route handlers
-├── state/           # Global state
-├── api/             # Backend communication
-└── compute/         # Heavy calculations
-```
-
-### 4.2 Component vs Page
-
-**Component:** Pure UI. Receives props, emits events. No API calls. No global state mutations.
-
-```rust
-// Good component
-#[component]
-fn UserCard(user: User, on_click: Callback<()>) -> impl IntoView {
-    view! {
-        <div class="user-card" on:click=move |_| on_click.call(())>
-            <img src=user.avatar />
-            <h3>{user.name}</h3>
-        </div>
-    }
-}
-```
-
-**Page:** Wires up state, makes API calls, passes data to components.
-
-```rust
-// Good page
-#[component]
-fn UsersPage() -> impl IntoView {
-    let (users, set_users) = create_signal(Vec::new());
-    let (selected, set_selected) = create_signal(None::<User>);
-
-    // API call
-    create_effect(move |_| {
-        spawn_local(async move {
-            let fetched = fetch_users().await;
-            set_users.set(fetched);
-        });
-    });
-
-    view! {
-        <div class="users-page">
-            <For
-                each=move || users.get()
-                key=|u| u.id
-                children=move |user| view! {
-                    <UserCard
-                        user=user.clone()
-                        on_click=move |_| set_selected.set(Some(user.clone()))
-                    />
-                }
-            />
-        </div>
-    }
-}
-```
-
-### 4.3 State Management Pattern
-
-Global state lives in `state/` modules:
-
-```rust
-// state/auth.rs
-#[derive(Clone)]
-pub struct AuthState {
-    pub user: ReadSignal<Option<User>>,
-    pub set_user: WriteSignal<Option<User>>,
-    pub is_authenticated: Memo<bool>,
-}
-
-impl AuthState {
-    pub fn new() -> Self {
-        let (user, set_user) = create_signal(None);
-        let is_authenticated = create_memo(move |_| user.get().is_some());
-        Self { user, set_user, is_authenticated }
-    }
-}
-
-// Provide at app root
-pub fn provide_auth() {
-    provide_context(AuthState::new());
-}
-
-// Access anywhere
-pub fn use_auth() -> AuthState {
-    expect_context::<AuthState>()
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  }
 }
 ```
 
 ---
 
-## Part 5: Your First Task (Days 3-4)
+## Part 2: Project Structure (Day 1-2)
 
-### 5.1 Warm-Up: Change a Button Color
+### 2.1 Where Things Live
 
-Find `src/components/glass_button.rs`. Find the "primary" variant. Change the background color from cyan to blue.
+```
+packages/web/
+├── app/                    # Next.js App Router (routes)
+│   ├── (auth)/             # Auth routes (login, signup)
+│   ├── admin/              # Admin panel
+│   ├── api/                # API routes (backend logic)
+│   │   └── elle/           # Elle-72B-Ultimate inference
+│   ├── dashboard/          # Dashboard pages
+│   ├── layout.tsx          # Root layout
+│   └── page.tsx            # Landing page
+├── components/             # Reusable React components
+│   ├── ui/                 # Base UI components (Glass* theme)
+│   └── ElleChat.tsx        # Elle chat interface
+├── lib/                    # Utilities and services
+│   ├── inference/          # RunPod/Elle client
+│   │   └── LFBMClient.ts   # Elle-72B-Ultimate API
+│   ├── supabase/           # Database client
+│   └── ...
+├── hooks/                  # Custom React hooks
+├── types/                  # TypeScript types
+└── styles/                 # Global CSS
+```
 
-1. Make the change
-2. Check `trunk serve` for compile errors
-3. Visually verify in browser
-4. Commit: `git commit -m "change primary button to blue"`
+### 2.2 App Router Basics
 
-This is a trivial change. The point is to verify your workflow works.
+Next.js 16 uses the App Router. Key concepts:
 
-### 5.2 Small Feature: Add a Tooltip
+**File-based routing:**
+- `app/page.tsx` → `/`
+- `app/dashboard/page.tsx` → `/dashboard`
+- `app/admin/insights/page.tsx` → `/admin/insights`
 
-We need tooltips on some icons. Here's your task:
+**Server vs Client Components:**
+- Files are **Server Components** by default (can fetch data, no useState/useEffect)
+- Add `'use client'` at the top for **Client Components** (interactivity)
 
-1. Create `src/components/tooltip.rs`
-2. Implement a simple tooltip that shows on hover
-3. Export it from `src/components/mod.rs`
-4. Use it somewhere in the dashboard
+```tsx
+// Server Component (default)
+export default async function Page() {
+  const data = await fetchData(); // Can fetch directly!
+  return <div>{data}</div>;
+}
 
-Here's a starting point:
+// Client Component
+'use client';
+import { useState } from 'react';
 
-```rust
-use leptos::*;
+export default function Counter() {
+  const [count, setCount] = useState(0);
+  return <button onClick={() => setCount(c => c + 1)}>{count}</button>;
+}
+```
 
-#[component]
-pub fn Tooltip(
-    children: Children,
-    text: String,
-) -> impl IntoView {
-    let (visible, set_visible) = create_signal(false);
+---
 
-    view! {
-        <div
-            class="relative inline-block"
-            on:mouseenter=move |_| set_visible.set(true)
-            on:mouseleave=move |_| set_visible.set(false)
+## Part 3: Component Patterns (Day 2-3)
+
+### 3.1 Glass Design System
+
+We use a glassmorphism aesthetic. The base components are in `components/ui/`:
+
+```tsx
+// Using GlassCard
+import { GlassCard } from '@/components/ui/GlassCard';
+
+export function MyComponent() {
+  return (
+    <GlassCard className="p-4">
+      <h2 className="text-white font-semibold">Title</h2>
+      <p className="text-slate-400">Content goes here</p>
+    </GlassCard>
+  );
+}
+```
+
+### 3.2 Tailwind Basics
+
+We use Tailwind CSS for styling. Common patterns:
+
+```tsx
+// Layout
+<div className="flex items-center justify-between gap-4">
+
+// Typography
+<h1 className="text-2xl font-bold text-white">
+<p className="text-sm text-slate-400">
+
+// Spacing
+<div className="p-4 m-2 space-y-4">
+
+// Colors (our theme)
+text-white        // Primary text
+text-slate-400    // Secondary text
+text-cyan-400     // Accent
+bg-slate-900      // Background
+border-white/10   // Subtle borders
+```
+
+### 3.3 Creating a Component
+
+```tsx
+// components/MyCard.tsx
+interface MyCardProps {
+  title: string;
+  description: string;
+  onAction?: () => void;
+}
+
+export function MyCard({ title, description, onAction }: MyCardProps) {
+  return (
+    <div className="bg-slate-900/70 backdrop-blur-md border border-white/10 rounded-xl p-4">
+      <h3 className="text-lg font-semibold text-white">{title}</h3>
+      <p className="text-slate-400 mt-2">{description}</p>
+      {onAction && (
+        <button
+          onClick={onAction}
+          className="mt-4 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-white transition-colors"
         >
-            {children()}
-            <Show when=move || visible.get()>
-                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
-                    {text.clone()}
-                </div>
-            </Show>
-        </div>
-    }
+          Take Action
+        </button>
+      )}
+    </div>
+  );
 }
 ```
 
-Try to:
-- Add an arrow pointing down
-- Add a fade-in animation
-- Handle edge cases (tooltip near screen edge)
+---
 
-### 5.3 PR Checklist
+## Part 4: Elle-72B-Ultimate Integration (Day 3-4)
 
-Before submitting:
+### 4.1 What is Elle?
+
+Elle-72B-Ultimate is our fine-tuned Qwen2.5-72B model running on RunPod Serverless. It powers:
+- Intel briefings and analysis
+- Training data generation
+- Chat interactions
+- Executive summaries
+
+Model: `aphoticshaman/elle-72b-ultimate` on HuggingFace
+
+### 4.2 Using Elle in Components
+
+```tsx
+// components/ElleChat.tsx
+'use client';
+import { useState } from 'react';
+
+export function ElleChat() {
+  const [input, setInput] = useState('');
+  const [response, setResponse] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function askElle() {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/elle/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: input })
+      });
+      const data = await res.json();
+      setResponse(data.response);
+    } catch (err) {
+      setResponse('Error communicating with Elle');
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="space-y-4">
+      <textarea
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        className="w-full p-4 bg-slate-800 border border-white/10 rounded-lg text-white"
+        placeholder="Ask Elle..."
+      />
+      <button
+        onClick={askElle}
+        disabled={loading}
+        className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-white disabled:opacity-50"
+      >
+        {loading ? 'Thinking...' : 'Ask Elle'}
+      </button>
+      {response && (
+        <div className="p-4 bg-slate-900/70 rounded-lg text-slate-300">
+          {response}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### 4.3 API Route for Elle
+
+```typescript
+// app/api/elle/ask/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { LFBMClient } from '@/lib/inference/LFBMClient';
+
+export async function POST(request: NextRequest) {
+  const { question } = await request.json();
+
+  const client = new LFBMClient();
+  const response = await client.chat([
+    { role: 'system', content: 'You are Elle, an advanced AI assistant.' },
+    { role: 'user', content: question }
+  ]);
+
+  return NextResponse.json({ response });
+}
+```
+
+---
+
+## Part 5: Data Fetching
+
+### 5.1 Server-Side Fetching
+
+For data that doesn't need real-time updates:
+
+```tsx
+// app/dashboard/page.tsx (Server Component)
+import { createClient } from '@/lib/supabase/server';
+
+export default async function DashboardPage() {
+  const supabase = await createClient();
+  const { data: signals } = await supabase
+    .from('signals')
+    .select('*')
+    .order('updated_at', { ascending: false });
+
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+      <SignalGrid signals={signals} />
+    </div>
+  );
+}
+```
+
+### 5.2 Client-Side Fetching with Real-Time
+
+```tsx
+// components/LiveData.tsx
+'use client';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
+
+export function LiveData() {
+  const [data, setData] = useState([]);
+  const supabase = createClient();
+
+  useEffect(() => {
+    // Initial fetch
+    supabase.from('signals').select('*').then(({ data }) => setData(data));
+
+    // Real-time subscription
+    const channel = supabase
+      .channel('signals')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'signals'
+      }, (payload) => {
+        console.log('Change:', payload);
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  return <div>{/* render data */}</div>;
+}
+```
+
+---
+
+## Part 6: Your First Task (Day 4-5)
+
+### 6.1 Warm-Up: Change a Button Color
+
+1. Find `components/ui/GlassButton.tsx`
+2. Find the "primary" variant
+3. Change the background from cyan to blue
+4. Check the dev server for changes
+5. Commit: `git commit -m "change primary button to blue"`
+
+### 6.2 Small Feature: Add a Tooltip
+
+Create a tooltip component:
+
+```tsx
+// components/ui/Tooltip.tsx
+'use client';
+import { useState } from 'react';
+
+interface TooltipProps {
+  children: React.ReactNode;
+  text: string;
+}
+
+export function Tooltip({ children, text }: TooltipProps) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <div
+      className="relative inline-block"
+      onMouseEnter={() => setVisible(true)}
+      onMouseLeave={() => setVisible(false)}
+    >
+      {children}
+      {visible && (
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap z-50">
+          {text}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### 6.3 PR Checklist
 
 ```bash
-# Format code
-cargo fmt
+# Lint
+npm run lint
 
-# Check for warnings
-cargo clippy -- -W clippy::all
+# Type check
+npx tsc --noEmit
 
-# Run tests
-cargo test
-
-# Build for production (catches more issues)
-trunk build --release
-```
-
-Write a clear PR description:
-- What you changed
-- Why you changed it
-- How to test it
-- Screenshot if visual
-
----
-
-## Part 6: Understanding the Domain (Week 2)
-
-Now that you can make changes, let's understand what you're building.
-
-### 6.1 What LatticeForge Does
-
-LatticeForge monitors data streams (signals) and detects:
-- **Phase transitions** — when a system shifts from one state to another (like water freezing)
-- **Causal relationships** — which signals affect which other signals
-- **Regime changes** — when the "rules" of the system change
-
-Think of it as a sophisticated early warning system.
-
-### 6.2 Key Concepts for UI
-
-**Signal:** A time series of data points. Could be stock price, temperature, social media sentiment, etc. Displayed as sparklines or charts.
-
-**Entropy:** How "confused" or "uncertain" a prediction is. Low entropy = confident. High entropy = uncertain. Displayed as gauges.
-
-**Micro-grokking:** When an AI model suddenly "gets it" — entropy drops sharply. We detect this in real-time and highlight it.
-
-**Causal graph:** A network showing which signals affect which. Edges have weights based on "transfer entropy."
-
-**Regime:** A labeled state the system is in. "Stable", "Transitioning", "Critical", etc.
-
-### 6.3 The Dashboard
-
-The main view shows:
-- Grid of signal cards (each showing latest value, sparkline, regime)
-- Causal graph visualization (force-directed)
-- Alert feed (when detectors trigger)
-- Phase timeline (history of transitions)
-
-When a user clicks a signal card, a detail panel slides up showing:
-- Full chart history
-- Related signals
-- Detected patterns
-- Confidence intervals
-
-### 6.4 The Briefings Page
-
-AI-generated intelligence reports:
-- Executive summary
-- Domain-specific breakdowns (political, economic, tech, etc.)
-- Next strategic move recommendation
-- Sources and confidence levels
-
-The tricky part: this content streams in via WebSocket as the AI generates it. You need to handle:
-- Progressive rendering
-- Highlighting as new content appears
-- Error states if generation fails
-
----
-
-## Part 7: Common Patterns and Gotchas
-
-### 7.1 The Clone Dance
-
-You'll clone things a lot. This is normal.
-
-```rust
-// Error: value moved
-let name = "Alice".to_string();
-view! {
-    <p>{name}</p>
-    <p>{name}</p> // ERROR: name already moved
-}
-
-// Fix: clone
-let name = "Alice".to_string();
-view! {
-    <p>{name.clone()}</p>
-    <p>{name}</p> // OK
-}
-```
-
-For closures that capture and need to use a value multiple times:
-
-```rust
-let (data, _) = create_signal(vec![1, 2, 3]);
-
-// Need to clone before closure
-let data_for_len = data.clone();
-let data_for_sum = data.clone();
-
-let len = create_memo(move |_| data_for_len.get().len());
-let sum = create_memo(move |_| data_for_sum.get().iter().sum::<i32>());
-```
-
-### 7.2 The Move Keyword
-
-`move` makes a closure take ownership of captured values:
-
-```rust
-let count = create_signal(0).0;
-
-// Without move: borrows count (might not live long enough)
-// let handler = |_| println!("{}", count.get());
-
-// With move: owns count (always works)
-let handler = move |_| println!("{}", count.get());
-```
-
-In Leptos, use `move` for event handlers and reactive closures. It's almost always what you want.
-
-### 7.3 Signal in Signal
-
-Don't nest signals:
-
-```rust
-// Bad
-let (outer, set_outer) = create_signal(create_signal(0));
-
-// Good
-#[derive(Clone)]
-struct State {
-    value: i32,
-}
-let (state, set_state) = create_signal(State { value: 0 });
-```
-
-### 7.4 Debugging Reactivity
-
-When something isn't updating:
-
-1. Check if you're using `.get()` inside a reactive context
-2. Check if the signal is actually changing (add a log in an effect)
-3. Check if you're comparing the right thing (`.get()` returns a snapshot)
-
-```rust
-// Add debug logging
-create_effect(move |_| {
-    log::debug!("Count changed to: {}", count.get());
-});
-```
-
-### 7.5 Async in Components
-
-Use `spawn_local` for async operations:
-
-```rust
-let (data, set_data) = create_signal(None);
-
-create_effect(move |_| {
-    spawn_local(async move {
-        let result = fetch_something().await;
-        set_data.set(Some(result));
-    });
-});
-```
-
-For data that depends on props, use `create_resource`:
-
-```rust
-let data = create_resource(
-    move || props.id.clone(),  // Source signal
-    |id| async move {          // Fetcher
-        fetch_by_id(id).await
-    }
-);
-
-view! {
-    {move || match data.get() {
-        None => view! { <p>"Loading..."</p> }.into_view(),
-        Some(d) => view! { <DataView data=d /> }.into_view(),
-    }}
-}
+# Build (catches more issues)
+npm run build
 ```
 
 ---
 
-## Part 8: Testing Your Code
+## Part 7: Understanding the Domain
 
-### 8.1 Unit Tests
+### 7.1 What LatticeForge Does
 
-For pure logic:
+LatticeForge monitors data streams and detects:
+- **Phase transitions** — when systems shift states
+- **Causal relationships** — which signals affect others
+- **Regime changes** — when the "rules" change
 
-```rust
-// In the same file or a tests module
-#[cfg(test)]
-mod tests {
-    use super::*;
+Think of it as an early warning system for geopolitical and market events.
 
-    #[test]
-    fn test_format_number() {
-        assert_eq!(format_number(1234.5), "1,234.50");
-    }
-}
-```
+### 7.2 Key Concepts
 
-Run: `cargo test`
+**Signal:** A time series (stock prices, sentiment, etc.). Displayed as sparklines.
 
-### 8.2 Component Tests
+**Elle-72B-Ultimate:** Our custom LLM on RunPod. Powers analysis and briefings.
 
-For components, we use browser tests:
+**Guardian:** Security layer protecting Elle from prompt injection attacks.
 
-```rust
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use wasm_bindgen_test::*;
-
-    wasm_bindgen_test_configure!(run_in_browser);
-
-    #[wasm_bindgen_test]
-    fn counter_increments() {
-        // Mount component
-        let document = web_sys::window().unwrap().document().unwrap();
-        let container = document.create_element("div").unwrap();
-        document.body().unwrap().append_child(&container).unwrap();
-
-        mount_to(container.clone(), Counter);
-
-        // Find and click button
-        let button = container.query_selector("button").unwrap().unwrap();
-        button.dyn_into::<HtmlElement>().unwrap().click();
-
-        // Assert
-        let span = container.query_selector("span").unwrap().unwrap();
-        assert_eq!(span.text_content().unwrap(), "1");
-    }
-}
-```
-
-Run: `wasm-pack test --headless --chrome`
-
-### 8.3 What to Test
-
-- Logic-heavy functions (formatters, validators, calculations)
-- Components with complex state
-- Edge cases (empty data, error states, boundaries)
-
-Don't test:
-- Simple rendering (if it compiles, it renders)
-- Framework behavior (Leptos is tested by Leptos)
+**Intel Briefing:** AI-generated intelligence reports with executive summaries.
 
 ---
 
-## Part 9: Getting Help
+## Part 8: Common Patterns
 
-### 9.1 When You're Stuck
+### 8.1 Loading States
 
-1. **Read the error message.** Rust errors are verbose but helpful.
-2. **Check the Leptos docs.** https://leptos.dev
-3. **Search Leptos Discord.** Someone probably hit the same issue.
-4. **Ask in #frontend-eng.** Include: what you tried, the error, your code.
+```tsx
+if (loading) return <div className="animate-pulse">Loading...</div>;
+if (error) return <div className="text-red-400">Error: {error.message}</div>;
+return <div>{/* render data */}</div>;
+```
 
-### 9.2 Code Review Expectations
+### 8.2 Conditional Rendering
 
-Your PRs will be reviewed for:
-- **Correctness:** Does it work?
-- **Style:** Does it match existing patterns?
-- **Performance:** Any unnecessary clones or re-renders?
-- **Tests:** Did you add them?
+```tsx
+{condition && <Component />}
+{condition ? <ComponentA /> : <ComponentB />}
+```
 
-Expect feedback. It's not personal. Everyone's code gets reviewed.
+### 8.3 List Rendering
 
-### 9.3 Pairing Sessions
-
-Book time with a senior engineer when:
-- You're stuck for > 30 minutes
-- You're about to make an architectural decision
-- You want to understand why something is the way it is
-
-Don't suffer in silence. Asking questions is part of the job.
+```tsx
+{items.map(item => (
+  <Card key={item.id} data={item} />
+))}
+```
 
 ---
 
-## Part 10: Milestones
+## Part 9: Quick Reference
 
-### Week 1 Checklist
+### Commands
+
+```bash
+npm run dev          # Start dev server
+npm run build        # Production build
+npm run lint         # Run linter
+npx tsc --noEmit     # Type check
+```
+
+### Tailwind Cheat Sheet
+
+```css
+flex items-center justify-between gap-4
+grid grid-cols-3 gap-4
+p-4 m-2 space-y-4
+text-lg font-bold text-white
+bg-slate-900 text-cyan-400 border-white/10
+transition-colors hover:bg-cyan-600
+```
+
+---
+
+## Milestones
+
+### Week 1
 - [ ] Environment running
-- [ ] Made a trivial change (button color)
-- [ ] Built a simple component (tooltip)
+- [ ] Made a trivial change
+- [ ] Built a simple component
 - [ ] Submitted first PR
-- [ ] Understood signal/memo/effect basics
+- [ ] Understood Server vs Client components
 
-### Week 2 Checklist
-- [ ] Built a component that uses real data
+### Week 2
+- [ ] Built component using real data
 - [ ] Handled loading/error states
-- [ ] Wrote tests for your component
-- [ ] Understood the domain (signals, entropy, graphs)
-- [ ] Can explain the folder structure to someone new
-
-### Month 1 Checklist
-- [ ] Owned a small feature end-to-end
-- [ ] Debugged a reactivity issue
-- [ ] Contributed to code review
-- [ ] Improved something proactively (docs, tests, cleanup)
+- [ ] Understood Elle integration
+- [ ] Can explain folder structure
 
 ---
 
-## Appendix: Quick Reference
-
-### Leptos Cheat Sheet
-
-```rust
-// State
-let (value, set_value) = create_signal(initial);
-let computed = create_memo(move |_| value.get() * 2);
-
-// Effects
-create_effect(move |_| { /* runs on dependency change */ });
-
-// Conditional
-<Show when=move || condition.get()>...</Show>
-
-// Lists
-<For each=move || items.get() key=|i| i.id children=|i| view! {...} />
-
-// Events
-<button on:click=move |_| do_thing()>
-
-// Two-way binding
-<input prop:value=move || v.get() on:input=move |e| set_v.set(event_target_value(&e)) />
-
-// Context
-provide_context(MyState::new());
-let state = expect_context::<MyState>();
-```
-
-### Common Errors and Fixes
-
-| Error | Fix |
-|-------|-----|
-| "value moved" | Clone before using again |
-| "closure may outlive" | Add `move` keyword |
-| "cannot find in scope" | Check imports, use `use leptos::*;` |
-| "expected impl IntoView" | Make sure view returns consistently typed views |
-| "borrow later used" | Restructure to avoid overlapping borrows |
-
----
-
-*You got this. Every senior engineer was once staring at their first Rust compiler error. Ping me if you need anything. — [Senior Engineer Name]*
+*Last updated: December 2024*
+*Stack: Next.js 16 / React 19 / TypeScript / Tailwind CSS*
+*Model: aphoticshaman/elle-72b-ultimate on RunPod*
