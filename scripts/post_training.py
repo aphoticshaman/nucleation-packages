@@ -17,7 +17,7 @@ import shutil
 from pathlib import Path
 
 # Configuration
-HF_TOKEN = os.environ.get("HF_TOKEN", "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")
+HF_TOKEN = os.environ.get("HF_TOKEN")  # Set via: export HF_TOKEN=your_token
 BASE_MODEL = "Qwen/Qwen2.5-72B-Instruct"
 
 # Paths
