@@ -1,0 +1,63 @@
+# Elle-72B Interleaved Training Config
+# Code + PROMETHEUS + NSM + XYZA + SDPM + CIC + LatticeForge
+# Framework examples spread throughout code training
+
+base_model: Qwen/Qwen2.5-72B-Instruct
+model_type: AutoModelForCausalLM
+tokenizer_type: AutoTokenizer
+trust_remote_code: true
+
+load_in_8bit: false
+load_in_4bit: true
+strict: false
+
+datasets:
+  - path: /workspace/datasets/elle_interleaved_training.jsonl
+    type: alpaca
+    ds_type: json
+
+dataset_prepared_path: /workspace/prepared_interleaved
+val_set_size: 0.0
+output_dir: /workspace/elle-interleaved-out
+
+adapter: lora
+lora_r: 64
+lora_alpha: 128
+lora_dropout: 0.05
+lora_target_linear: true
+lora_fan_in_fan_out: false
+
+sequence_len: 4096
+sample_packing: true
+pad_to_sequence_len: true
+
+gradient_accumulation_steps: 8
+micro_batch_size: 1
+num_epochs: 2
+learning_rate: 2e-5
+lr_scheduler: cosine
+warmup_ratio: 0.03
+optimizer: adamw_torch
+
+train_on_inputs: false
+group_by_length: false
+bf16: true
+tf32: true
+gradient_checkpointing: true
+flash_attention: true
+
+# CRITICAL: No checkpointing to avoid ZeRO-3 dtype crash
+save_strategy: "no"
+save_steps: 0
+logging_steps: 10
+
+deepspeed: /workspace/ds_config.json
+
+wandb_project: elle-interleaved
+wandb_entity:
+wandb_watch:
+wandb_name: elle-72b-interleaved-run
+wandb_log_model:
+
+special_tokens:
+  pad_token: "<|endoftext|>"
