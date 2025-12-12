@@ -671,3 +671,479 @@ export function getOutputGuardian(): OutputGuardian {
   }
   return outputGuardianInstance;
 }
+
+// =============================================================================
+// ELLE GUARDIAN - Master filter for ALL Elle interactions
+// =============================================================================
+// Guardian wraps every interaction Elle has:
+// - User → Elle (input validation)
+// - Elle → User (output filtering)
+// - Elle → Web (research request filtering)
+// - Elle → Database (query sanitization)
+// - Elle → Self (chain-of-thought filtering)
+// - Elle → Website (action validation)
+
+export type ElleInteractionType =
+  | 'user_to_elle'      // User message to Elle
+  | 'elle_to_user'      // Elle response to user
+  | 'elle_to_web'       // Elle initiating web research
+  | 'elle_to_db'        // Elle querying database
+  | 'elle_to_self'      // Elle chain-of-thought/reflection
+  | 'elle_to_website';  // Elle taking action on website
+
+export interface ElleInteraction {
+  type: ElleInteractionType;
+  content: string;
+  metadata?: {
+    userId?: string;
+    conversationId?: string;
+    mode?: string;
+    tool?: string;
+    query?: string;
+  };
+}
+
+export interface ElleGuardianResult {
+  allowed: boolean;
+  filtered: string;
+  blocked: boolean;
+  reason?: string;
+  riskScore: number;
+  redacted: string[];  // List of items redacted from content
+  logged: boolean;
+}
+
+/**
+ * Elle Guardian - Master filter for ALL Elle interactions
+ */
+export class ElleGuardian {
+  private securityGuardian: SecurityGuardian;
+  private outputGuardian: OutputGuardian;
+  private supabase;
+
+  // Patterns that should NEVER appear in Elle's output to users
+  private readonly outputBlockedPatterns = [
+    // API keys / secrets
+    /sk-[a-zA-Z0-9]{20,}/g,           // Anthropic/OpenAI keys
+    /ghp_[a-zA-Z0-9]{36}/g,           // GitHub tokens
+    /xoxb-[a-zA-Z0-9-]+/g,            // Slack tokens
+    /AKIA[A-Z0-9]{16}/g,              // AWS access keys
+    /eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+/g, // JWTs
+
+    // Internal system info
+    /supabase[_-]?service[_-]?role/gi,
+    /NEXT_PUBLIC_/g,
+    /process\.env\./g,
+    /Bearer\s+[a-zA-Z0-9._-]+/g,
+
+    // Database internals
+    /postgresql:\/\/[^\s]+/gi,
+    /postgres:\/\/[^\s]+/gi,
+    /connection\s*string/gi,
+
+    // File paths that could expose server structure
+    /\/home\/[a-zA-Z0-9_-]+\//g,
+    /\/var\/www\//g,
+    /\/etc\//g,
+    /C:\\Users\\[^\\]+\\/g,
+  ];
+
+  // Patterns to redact (replace with [REDACTED])
+  private readonly redactPatterns = [
+    // Email addresses (except in certain contexts)
+    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+    // Phone numbers
+    /\+?[1-9]\d{1,14}/g,
+    // Credit card numbers
+    /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g,
+    // SSN patterns
+    /\b\d{3}-\d{2}-\d{4}\b/g,
+  ];
+
+  // Research/web blocked patterns
+  private readonly webBlockedPatterns = [
+    /localhost/i,
+    /127\.0\.0\.1/,
+    /192\.168\./,
+    /10\.\d+\.\d+\.\d+/,
+    /172\.(1[6-9]|2[0-9]|3[0-1])\./,
+    /\.internal\./i,
+    /\.local$/i,
+    /file:\/\//,
+  ];
+
+  constructor(supabaseUrl?: string, supabaseKey?: string) {
+    this.securityGuardian = getSecurityGuardian();
+    this.outputGuardian = getOutputGuardian();
+    this.supabase = createClient(
+      supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      supabaseKey || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+  }
+
+  /**
+   * Filter any interaction to/from Elle
+   */
+  async filter(interaction: ElleInteraction): Promise<ElleGuardianResult> {
+    const startTime = Date.now();
+
+    switch (interaction.type) {
+      case 'user_to_elle':
+        return this.filterUserInput(interaction);
+
+      case 'elle_to_user':
+        return this.filterElleOutput(interaction);
+
+      case 'elle_to_web':
+        return this.filterWebRequest(interaction);
+
+      case 'elle_to_db':
+        return this.filterDbQuery(interaction);
+
+      case 'elle_to_self':
+        return this.filterSelfReflection(interaction);
+
+      case 'elle_to_website':
+        return this.filterWebsiteAction(interaction);
+
+      default:
+        // Unknown interaction type - block by default
+        return {
+          allowed: false,
+          filtered: '',
+          blocked: true,
+          reason: 'Unknown interaction type',
+          riskScore: 1.0,
+          redacted: [],
+          logged: await this.logInteraction(interaction, 'blocked_unknown', 1.0, Date.now() - startTime),
+        };
+    }
+  }
+
+  /**
+   * Filter user input to Elle
+   */
+  private async filterUserInput(interaction: ElleInteraction): Promise<ElleGuardianResult> {
+    const startTime = Date.now();
+    const redacted: string[] = [];
+
+    // Use SecurityGuardian for input validation
+    const securityResult = this.securityGuardian.validateInput(
+      interaction.content,
+      interaction.metadata?.userId || 'unknown',
+      'admin' // Study Book is admin-only
+    );
+
+    if (!securityResult.allowed) {
+      return {
+        allowed: false,
+        filtered: '',
+        blocked: true,
+        reason: securityResult.reason,
+        riskScore: securityResult.riskScore,
+        redacted: [],
+        logged: await this.logInteraction(interaction, 'blocked_input', securityResult.riskScore, Date.now() - startTime),
+      };
+    }
+
+    // Additional filtering for sensitive data in user input
+    let filtered = securityResult.sanitizedInput || interaction.content;
+
+    // Redact any sensitive patterns the user might accidentally include
+    for (const pattern of this.redactPatterns) {
+      const matches = filtered.match(pattern);
+      if (matches) {
+        redacted.push(...matches);
+        filtered = filtered.replace(pattern, '[REDACTED]');
+      }
+    }
+
+    return {
+      allowed: true,
+      filtered,
+      blocked: false,
+      riskScore: securityResult.riskScore,
+      redacted,
+      logged: await this.logInteraction(interaction, 'allowed', securityResult.riskScore, Date.now() - startTime),
+    };
+  }
+
+  /**
+   * Filter Elle's output to user
+   */
+  private async filterElleOutput(interaction: ElleInteraction): Promise<ElleGuardianResult> {
+    const startTime = Date.now();
+    const redacted: string[] = [];
+    let filtered = interaction.content;
+    let riskScore = 0;
+
+    // Block any output containing sensitive patterns
+    for (const pattern of this.outputBlockedPatterns) {
+      if (pattern.test(filtered)) {
+        // This is a serious issue - Elle is leaking secrets
+        return {
+          allowed: false,
+          filtered: '[Response blocked - contained sensitive information]',
+          blocked: true,
+          reason: 'Output contained sensitive patterns',
+          riskScore: 1.0,
+          redacted: [],
+          logged: await this.logInteraction(interaction, 'blocked_sensitive_output', 1.0, Date.now() - startTime),
+        };
+      }
+    }
+
+    // Redact PII from output
+    for (const pattern of this.redactPatterns) {
+      const matches = filtered.match(pattern);
+      if (matches) {
+        redacted.push(...matches);
+        filtered = filtered.replace(pattern, '[REDACTED]');
+        riskScore += 0.1;
+      }
+    }
+
+    // Check for injection attempts in Elle's output (could indicate compromise)
+    const injectionPatterns = [
+      /<script/gi,
+      /javascript:/gi,
+      /on\w+\s*=/gi,  // event handlers
+      /eval\s*\(/gi,
+      /document\./gi,
+      /window\./gi,
+    ];
+
+    for (const pattern of injectionPatterns) {
+      if (pattern.test(filtered)) {
+        filtered = filtered.replace(pattern, '[SANITIZED]');
+        riskScore += 0.3;
+        redacted.push('potential_xss');
+      }
+    }
+
+    return {
+      allowed: true,
+      filtered,
+      blocked: false,
+      riskScore: Math.min(riskScore, 1),
+      redacted,
+      logged: await this.logInteraction(interaction, 'allowed', riskScore, Date.now() - startTime),
+    };
+  }
+
+  /**
+   * Filter Elle's web research requests
+   */
+  private async filterWebRequest(interaction: ElleInteraction): Promise<ElleGuardianResult> {
+    const startTime = Date.now();
+    const url = interaction.metadata?.query || interaction.content;
+
+    // Block internal/localhost URLs
+    for (const pattern of this.webBlockedPatterns) {
+      if (pattern.test(url)) {
+        return {
+          allowed: false,
+          filtered: '',
+          blocked: true,
+          reason: 'Blocked internal URL access',
+          riskScore: 0.9,
+          redacted: [],
+          logged: await this.logInteraction(interaction, 'blocked_internal_url', 0.9, Date.now() - startTime),
+        };
+      }
+    }
+
+    // Block file:// protocol
+    if (url.startsWith('file://')) {
+      return {
+        allowed: false,
+        filtered: '',
+        blocked: true,
+        reason: 'File protocol not allowed',
+        riskScore: 1.0,
+        redacted: [],
+        logged: await this.logInteraction(interaction, 'blocked_file_protocol', 1.0, Date.now() - startTime),
+      };
+    }
+
+    return {
+      allowed: true,
+      filtered: url,
+      blocked: false,
+      riskScore: 0,
+      redacted: [],
+      logged: await this.logInteraction(interaction, 'allowed', 0, Date.now() - startTime),
+    };
+  }
+
+  /**
+   * Filter Elle's database queries
+   */
+  private async filterDbQuery(interaction: ElleInteraction): Promise<ElleGuardianResult> {
+    const startTime = Date.now();
+    const query = interaction.content;
+
+    // Block dangerous SQL operations
+    const dangerousPatterns = [
+      /DROP\s+TABLE/gi,
+      /DELETE\s+FROM\s+\*/gi,
+      /TRUNCATE/gi,
+      /ALTER\s+TABLE/gi,
+      /GRANT/gi,
+      /REVOKE/gi,
+      /CREATE\s+USER/gi,
+      /pg_dump/gi,
+    ];
+
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(query)) {
+        return {
+          allowed: false,
+          filtered: '',
+          blocked: true,
+          reason: 'Dangerous database operation blocked',
+          riskScore: 1.0,
+          redacted: [],
+          logged: await this.logInteraction(interaction, 'blocked_dangerous_sql', 1.0, Date.now() - startTime),
+        };
+      }
+    }
+
+    return {
+      allowed: true,
+      filtered: query,
+      blocked: false,
+      riskScore: 0,
+      redacted: [],
+      logged: await this.logInteraction(interaction, 'allowed', 0, Date.now() - startTime),
+    };
+  }
+
+  /**
+   * Filter Elle's self-reflection/chain-of-thought
+   */
+  private async filterSelfReflection(interaction: ElleInteraction): Promise<ElleGuardianResult> {
+    const startTime = Date.now();
+    let filtered = interaction.content;
+    const redacted: string[] = [];
+
+    // Redact any sensitive info that might appear in thinking
+    for (const pattern of [...this.outputBlockedPatterns, ...this.redactPatterns]) {
+      const matches = filtered.match(pattern);
+      if (matches) {
+        redacted.push(...matches.map(m => 'thinking_' + typeof m === 'string' ? m.slice(0, 10) : ''));
+        filtered = filtered.replace(pattern, '[THINKING_REDACTED]');
+      }
+    }
+
+    return {
+      allowed: true,
+      filtered,
+      blocked: false,
+      riskScore: redacted.length > 0 ? 0.3 : 0,
+      redacted,
+      logged: await this.logInteraction(interaction, 'allowed', redacted.length > 0 ? 0.3 : 0, Date.now() - startTime),
+    };
+  }
+
+  /**
+   * Filter Elle's website actions
+   */
+  private async filterWebsiteAction(interaction: ElleInteraction): Promise<ElleGuardianResult> {
+    const startTime = Date.now();
+
+    // Actions Elle is allowed to take
+    const allowedActions = [
+      'navigate',
+      'search',
+      'view',
+      'read',
+      'analyze',
+    ];
+
+    // Actions that require explicit admin confirmation
+    const confirmActions = [
+      'create',
+      'update',
+      'delete',
+      'modify',
+      'submit',
+      'execute',
+    ];
+
+    const action = interaction.metadata?.tool?.toLowerCase() || '';
+
+    // Block if action is not in allowed or confirm list
+    if (!allowedActions.includes(action) && !confirmActions.includes(action)) {
+      return {
+        allowed: false,
+        filtered: '',
+        blocked: true,
+        reason: `Action '${action}' not permitted`,
+        riskScore: 0.8,
+        redacted: [],
+        logged: await this.logInteraction(interaction, 'blocked_action', 0.8, Date.now() - startTime),
+      };
+    }
+
+    // Actions requiring confirmation should be flagged
+    if (confirmActions.includes(action)) {
+      return {
+        allowed: true,
+        filtered: interaction.content,
+        blocked: false,
+        reason: 'Action requires confirmation',
+        riskScore: 0.5,
+        redacted: [],
+        logged: await this.logInteraction(interaction, 'requires_confirmation', 0.5, Date.now() - startTime),
+      };
+    }
+
+    return {
+      allowed: true,
+      filtered: interaction.content,
+      blocked: false,
+      riskScore: 0,
+      redacted: [],
+      logged: await this.logInteraction(interaction, 'allowed', 0, Date.now() - startTime),
+    };
+  }
+
+  /**
+   * Log interaction for audit trail
+   */
+  private async logInteraction(
+    interaction: ElleInteraction,
+    result: string,
+    riskScore: number,
+    latencyMs: number
+  ): Promise<boolean> {
+    try {
+      await this.supabase.from('elle_guardian_logs').insert({
+        interaction_type: interaction.type,
+        result,
+        risk_score: riskScore,
+        latency_ms: latencyMs,
+        user_id: interaction.metadata?.userId,
+        conversation_id: interaction.metadata?.conversationId,
+        mode: interaction.metadata?.mode,
+        content_preview: interaction.content.slice(0, 100),
+        timestamp: new Date().toISOString(),
+      });
+      return true;
+    } catch (error) {
+      console.error('[ElleGuardian] Failed to log interaction:', error);
+      return false;
+    }
+  }
+}
+
+// Singleton
+let elleGuardianInstance: ElleGuardian | null = null;
+
+export function getElleGuardian(): ElleGuardian {
+  if (!elleGuardianInstance) {
+    elleGuardianInstance = new ElleGuardian();
+  }
+  return elleGuardianInstance;
+}
