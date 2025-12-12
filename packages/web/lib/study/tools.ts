@@ -50,7 +50,7 @@ export interface GDELTSignal {
 
 /**
  * Search the web using multiple providers for redundancy
- * Providers: Serper, Brave Search, DuckDuckGo (fallback)
+ * Priority: SearXNG (free/unlimited) → Serper → Brave → DuckDuckGo
  */
 export async function webSearch(
   query: string,
@@ -70,7 +70,62 @@ export async function webSearch(
     15
   );
 
-  // Try Serper first (Google results)
+  // Try SearXNG first (FREE - self-hosted meta-search)
+  // Aggregates Google, Bing, DuckDuckGo, Brave, etc.
+  const searxngUrl = process.env.SEARXNG_URL;
+  if (searxngUrl) {
+    try {
+      const params = new URLSearchParams({
+        q: query,
+        format: 'json',
+        categories: 'general',
+        language: 'en',
+        pageno: '1',
+      });
+
+      // Add time range for freshness
+      if (options?.freshness) {
+        const timeRanges: Record<string, string> = {
+          day: 'day',
+          week: 'week',
+          month: 'month',
+          year: 'year',
+        };
+        params.set('time_range', timeRanges[options.freshness] || '');
+      }
+
+      const response = await fetch(`${searxngUrl}/search?${params}`, {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'LatticeForge-Elle/1.0',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const results: WebSearchResult[] = (data.results || [])
+          .slice(0, numResults)
+          .map((r: {
+            title: string;
+            url: string;
+            content: string;
+            publishedDate?: string;
+          }) => ({
+            title: r.title,
+            url: r.url,
+            snippet: r.content,
+            publishedDate: r.publishedDate,
+          }));
+
+        console.log(`[WebSearch] SearXNG returned ${results.length} results in ${Date.now() - startTime}ms`);
+        return results;
+      }
+    } catch (e) {
+      console.warn('[WebSearch] SearXNG failed:', e);
+    }
+  }
+
+  // Fallback to Serper (Google results, paid)
   if (process.env.SERPER_API_KEY) {
     try {
       const response = await fetch('https://google.serper.dev/search', {
@@ -189,10 +244,38 @@ export async function webSearch(
 
 /**
  * Fetch and extract content from a URL
+ * Uses Jina Reader (free) for clean LLM-ready markdown, with fallback to raw fetch
  */
 export async function fetchWebPage(url: string): Promise<string> {
+  const startTime = Date.now();
+
+  // Try Jina Reader first (FREE - converts any URL to clean markdown)
+  // https://jina.ai/reader - 1M tokens/month free
   try {
-    // Use a simple fetch with timeout
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
+    const response = await fetch(`https://r.jina.ai/${url}`, {
+      signal: controller.signal,
+      headers: {
+        'Accept': 'text/plain',
+        'User-Agent': 'LatticeForge-Elle/1.0',
+      },
+    });
+
+    clearTimeout(timeout);
+
+    if (response.ok) {
+      const text = await response.text();
+      console.log(`[WebFetch] Jina Reader returned ${text.length} chars in ${Date.now() - startTime}ms`);
+      return text.slice(0, 15000); // Limit to 15k chars
+    }
+  } catch (e) {
+    console.warn(`[WebFetch] Jina Reader failed for ${url}:`, e);
+  }
+
+  // Fallback to raw fetch + basic extraction
+  try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
 
@@ -218,8 +301,9 @@ export async function fetchWebPage(url: string): Promise<string> {
       .replace(/<[^>]+>/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
-      .slice(0, 10000);  // Limit to 10k chars
+      .slice(0, 10000);
 
+    console.log(`[WebFetch] Raw fetch returned ${text.length} chars in ${Date.now() - startTime}ms`);
     return text;
   } catch (e) {
     console.warn(`[WebFetch] Failed to fetch ${url}:`, e);
