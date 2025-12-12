@@ -21,6 +21,7 @@ import { infer, type InferenceResponse, type RoutingContext } from '@/lib/infere
 import { StudyMemory, getStudyMemory, type StudyMessage, type StudyMode, type StudyConversation } from './memory';
 import { conductResearch, executeTool, type ResearchDepth, type ToolCall, type ResearchResult } from './tools';
 import { GitHubClient, getGitHubConnectionManager } from './github';
+import { getLearningEngine, type InteractionMetadata } from './learning';
 
 // =============================================================================
 // TYPES
@@ -349,6 +350,32 @@ ${options.githubContext.files?.length ? `- Files in context: ${options.githubCon
         mode: request.options.mode,
         thinking,
       },
+    });
+
+    // Log interaction for learning (fire-and-forget)
+    const learningEngine = getLearningEngine();
+    const interactionMetadata: InteractionMetadata = {
+      conversation_id: conversation.id!,
+      message_id: assistantMessage.id!,
+      user_id: this.userId,
+      mode: request.options.mode,
+      depth: request.options.depth,
+      unrestricted: request.options.unrestricted,
+      big_brain: request.options.bigBrain,
+      use_tools: request.options.useTools,
+      model: inferenceResponse.model,
+      tier: inferenceResponse.tier,
+      latency_ms: Date.now() - startTime,
+      research_conducted: !!research,
+      sources_count: research?.webResults.length,
+      gdelt_signals_count: research?.gdeltSignals.length,
+      pages_analyzed: research?.fetchedPages.length,
+      tools_used: research ? ['web_search', 'gdelt'] : [],
+      tool_results: [],
+      created_at: new Date().toISOString(),
+    };
+    learningEngine.logInteraction(interactionMetadata).catch((err) => {
+      console.error('[Study] Failed to log interaction for learning:', err);
     });
 
     return {
