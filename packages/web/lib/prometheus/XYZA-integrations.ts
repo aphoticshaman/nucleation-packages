@@ -338,14 +338,24 @@ export async function processElleWithGuardian(
   const guardian = new ElleGuardian();
   const guardrails: string[] = [];
 
-  // Pre-filter user input
+  // Pre-filter user input - convert context to compatible metadata type
+  const safeMetadata: Record<string, string | number | boolean | undefined> = {};
+  if (request.context) {
+    for (const [key, value] of Object.entries(request.context)) {
+      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' || value === undefined) {
+        safeMetadata[key] = value;
+      }
+    }
+  }
+
   const inputInteraction: ElleInteraction = {
     type: 'user_to_elle',
     content: request.message,
-    userId: request.userId,
-    sessionId: request.sessionId,
-    timestamp: new Date().toISOString(),
-    metadata: request.context || {},
+    metadata: {
+      userId: request.userId,
+      conversationId: request.sessionId,
+      ...safeMetadata,
+    },
   };
 
   const inputResult = await guardian.filter(inputInteraction);
@@ -388,10 +398,10 @@ export async function processElleWithGuardian(
   const outputInteraction: ElleInteraction = {
     type: 'elle_to_user',
     content: generated.content,
-    userId: request.userId,
-    sessionId: request.sessionId,
-    timestamp: new Date().toISOString(),
-    metadata: { entropy, reasoning: generated.reasoning },
+    metadata: {
+      userId: request.userId,
+      conversationId: request.sessionId,
+    },
   };
 
   const outputResult = await guardian.filter(outputInteraction);
