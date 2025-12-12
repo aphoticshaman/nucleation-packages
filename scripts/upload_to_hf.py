@@ -27,9 +27,9 @@ tags:
   - intelligence
   - fine-tuned
   - lora
-  - awq
   - qwen2.5
-base_model: Qwen/Qwen2.5-72B-Instruct-AWQ
+  - fp16
+base_model: Qwen/Qwen2.5-72B-Instruct
 datasets:
   - custom
 pipeline_tag: text-generation
@@ -52,10 +52,10 @@ model-index:
 
 | Attribute | Value |
 |-----------|-------|
-| Base Model | Qwen/Qwen2.5-72B-Instruct-AWQ |
+| Base Model | Qwen/Qwen2.5-72B-Instruct |
 | Fine-tuning Method | LoRA (r=64, alpha=128) |
 | Training Framework | Unsloth + PEFT |
-| Quantization | AWQ 4-bit |
+| Precision | FP16 (full precision merged) |
 | Context Length | 32,768 tokens |
 | Final Training Loss | 0.2544 |
 
@@ -91,8 +91,8 @@ Elle is designed for:
 ## Hardware Requirements
 
 - **Inference**: 4x H100/H200 80GB (vLLM recommended)
-- **Memory**: ~160GB VRAM for full model
-- AWQ quantization enables efficient deployment
+- **Memory**: ~280GB VRAM for FP16 model (4x H200 = 320GB)
+- Consider quantizing to AWQ/GPTQ for smaller deployments
 
 ## Usage with vLLM
 

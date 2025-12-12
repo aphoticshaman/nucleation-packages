@@ -20,7 +20,11 @@ python merge_lora.py \
     --output /workspace/elle-merged
 ```
 
-This takes ~10-15 minutes on H200s.
+**IMPORTANT**: The script uses `Qwen/Qwen2.5-72B-Instruct` (non-AWQ) as base because
+the LoRA was trained on the full-precision model. AWQ has different MLP dimensions
+(29696 vs 29568) which causes size mismatch errors.
+
+This takes ~15-20 minutes on H200s (downloads ~140GB base model).
 
 ### 3. Upload to HuggingFace (Optional)
 

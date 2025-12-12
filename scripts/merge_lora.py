@@ -13,7 +13,9 @@ import torch
 
 def main():
     parser = argparse.ArgumentParser(description="Merge LoRA adapter with base model")
-    parser.add_argument("--base", default="Qwen/Qwen2.5-72B-Instruct-AWQ", help="Base model path or HF ID")
+    # IMPORTANT: Use non-AWQ base model - the LoRA was trained on the full-precision model
+    # AWQ has different MLP dimensions (29696 vs 29568) which causes size mismatch errors
+    parser.add_argument("--base", default="Qwen/Qwen2.5-72B-Instruct", help="Base model path or HF ID")
     parser.add_argument("--adapter", default="/workspace/elle-interleaved-out", help="LoRA adapter path")
     parser.add_argument("--output", default="/workspace/elle-merged", help="Output path for merged model")
     args = parser.parse_args()
