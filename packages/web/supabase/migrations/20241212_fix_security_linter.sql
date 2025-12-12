@@ -252,12 +252,13 @@ BEGIN
 END;
 $$;
 
--- verify_audit_log_integrity (if exists)
+-- verify_audit_log_integrity (if exists) - drop and recreate due to signature change
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'verify_audit_log_integrity') THEN
+        EXECUTE 'DROP FUNCTION verify_audit_log_integrity()';
         EXECUTE $func$
-        CREATE OR REPLACE FUNCTION verify_audit_log_integrity()
+        CREATE FUNCTION verify_audit_log_integrity()
         RETURNS BOOLEAN
         LANGUAGE plpgsql
         SECURITY DEFINER
