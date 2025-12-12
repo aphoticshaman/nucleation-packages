@@ -10,15 +10,17 @@ interface UserProfile {
   email: string;
   full_name: string | null;
   role: 'admin' | 'enterprise' | 'consumer' | 'support';
-  tier: 'free' | 'starter' | 'pro' | 'enterprise_tier';
+  tier: 'free' | 'pro' | 'enterprise';
   is_active: boolean;
   last_seen_at: string | null;
   created_at: string;
   onboarding_completed_at: string | null;
+  subscription_status?: string;
 }
 
 const ROLES = ['admin', 'enterprise', 'consumer', 'support'] as const;
-const TIERS = ['free', 'starter', 'pro', 'enterprise_tier'] as const;
+// Standardized tiers: Free, Pro, Enterprise
+const TIERS = ['free', 'pro', 'enterprise'] as const;
 
 function UserRow({
   user,
@@ -108,14 +110,14 @@ function UserRow({
         ) : (
           <span
             className={`px-2 py-1 rounded text-xs uppercase ${
-              user.tier === 'enterprise_tier'
+              user.tier === 'enterprise'
                 ? 'bg-amber-500/20 text-amber-300'
                 : user.tier === 'pro'
                   ? 'bg-green-500/20 text-green-300'
                   : 'bg-slate-500/20 text-slate-300'
             }`}
           >
-            {user.tier}
+            {user.tier === 'free' ? 'Free' : user.tier === 'pro' ? 'Pro' : 'Enterprise'}
           </span>
         )}
       </td>
