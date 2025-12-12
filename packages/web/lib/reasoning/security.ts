@@ -700,6 +700,8 @@ export interface ElleInteraction {
     mode?: string;
     tool?: string;
     query?: string;
+    riskScore?: number;
+    [key: string]: string | number | boolean | undefined;
   };
 }
 
