@@ -304,9 +304,20 @@ ${options.githubContext.files?.length ? `- Files in context: ${options.githubCon
       forceModel: request.options.bigBrain ? 'elle' : undefined,
     };
 
+    // DIAGNOSTIC LOGGING
+    console.log('[Study] === INFERENCE REQUEST ===');
+    console.log('[Study] Mode:', request.options.mode);
+    console.log('[Study] Depth:', request.options.depth);
+    console.log('[Study] BigBrain:', request.options.bigBrain);
+    console.log('[Study] Routing context:', JSON.stringify(routingContext));
+    console.log('[Study] LFBM_ENDPOINT configured:', !!process.env.LFBM_ENDPOINT);
+    console.log('[Study] LF_PROD_ENABLE:', process.env.LF_PROD_ENABLE);
+    console.log('[Study] Prompt length:', fullPrompt.length, 'chars');
+
     // Call inference
     let inferenceResponse: InferenceResponse;
     try {
+      const inferStart = Date.now();
       inferenceResponse = await infer(
         {
           userMessage: fullPrompt,
@@ -315,7 +326,15 @@ ${options.githubContext.files?.length ? `- Files in context: ${options.githubCon
         },
         routingContext
       );
+      console.log('[Study] === INFERENCE RESPONSE ===');
+      console.log('[Study] Tier:', inferenceResponse.tier);
+      console.log('[Study] Model:', inferenceResponse.model);
+      console.log('[Study] Latency:', Date.now() - inferStart, 'ms');
+      console.log('[Study] Content length:', inferenceResponse.content.length, 'chars');
+      console.log('[Study] Content preview:', inferenceResponse.content.slice(0, 200));
     } catch (error) {
+      console.error('[Study] === INFERENCE ERROR ===');
+      console.error('[Study] Error:', error);
       // Handle inference errors gracefully
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       inferenceResponse = {
