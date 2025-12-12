@@ -76,17 +76,10 @@ DROP VIEW IF EXISTS v_training_items_active;
 DROP VIEW IF EXISTS v_training_audit_recent;
 
 -- =============================================================================
--- FIX SPATIAL_REF_SYS (PostGIS system table)
+-- NOTE: SPATIAL_REF_SYS
 -- =============================================================================
-
--- Enable RLS on spatial_ref_sys
-ALTER TABLE IF EXISTS spatial_ref_sys ENABLE ROW LEVEL SECURITY;
-
--- Allow read access to all authenticated users (it's a reference table)
-DROP POLICY IF EXISTS "Allow read access to spatial_ref_sys" ON spatial_ref_sys;
-CREATE POLICY "Allow read access to spatial_ref_sys" ON spatial_ref_sys
-    FOR SELECT
-    USING (true);
+-- spatial_ref_sys is owned by PostGIS extension - cannot modify RLS
+-- This linter warning can be safely ignored as it's a read-only reference table
 
 -- =============================================================================
 -- FIX FUNCTION SEARCH PATHS
