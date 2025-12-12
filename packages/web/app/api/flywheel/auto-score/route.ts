@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { getLFBMClient } from '@/lib/inference/LFBMClient';
+import { score as scoreWithRouter } from '@/lib/inference/ModelRouter';
 
 // Lazy initialization
 let supabase: SupabaseClient | null = null;
@@ -27,6 +27,7 @@ interface Prediction {
 }
 
 // Auto-score expired predictions by checking recent events
+// Uses WORKHORSE tier (Qwen-7B) for cost efficiency - simple scoring task
 export async function POST(request: Request) {
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
@@ -40,7 +41,6 @@ export async function POST(request: Request) {
 
   try {
     const db = getSupabase();
-    const lfbm = getLFBMClient();
 
     // Get expired unscored predictions
     const { data: predictions, error: fetchError } = await db
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
           .lte('created_at', predictionEnd.toISOString())
           .limit(10);
 
-        // Use Haiku to score the prediction
+        // Use ModelRouter score() - routes to WORKHORSE tier automatically
         const prompt = `You are evaluating whether a prediction came true.
 
 PREDICTION (made at ${pred.created_at}):
@@ -96,29 +96,23 @@ Score how accurate the prediction was from 0.0 to 1.0:
 - 0.0 = Prediction was completely wrong or opposite happened
 
 Respond with ONLY a JSON object:
-{"accuracy": 0.X, "reasoning": "brief explanation"}`;
+{"score": 0.X, "reasoning": "brief explanation"}`;
 
-        const lfbmResponse = await lfbm.generateRaw({
-          userMessage: prompt,
-          max_tokens: 256,
-        });
-
-        const jsonMatch = lfbmResponse.match(/\{[\s\S]*\}/);
-        const parsed = JSON.parse(jsonMatch?.[0] || '{"accuracy": 0.5, "reasoning": "Could not parse"}');
-        const accuracy = Math.max(0, Math.min(1, parsed.accuracy || 0.5));
+        const scoreResult = await scoreWithRouter(prompt, { maxTokens: 256 });
+        const accuracy = scoreResult.score;
 
         // Score the prediction (this updates training example weights)
         await db.rpc('score_prediction', {
           p_prediction_id: pred.id,
           p_accuracy: accuracy,
-          p_notes: parsed.reasoning || 'Auto-scored',
+          p_notes: scoreResult.reasoning || 'Auto-scored via workhorse',
         });
 
         results.push({
           id: pred.id,
           domain: pred.domain,
           accuracy,
-          reasoning: parsed.reasoning,
+          reasoning: scoreResult.reasoning,
         });
       } catch (e) {
         console.error(`Failed to score prediction ${pred.id}:`, e);

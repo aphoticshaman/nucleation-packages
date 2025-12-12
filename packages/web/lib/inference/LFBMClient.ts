@@ -2,12 +2,18 @@
  * LFBM Client - Self-hosted LLM inference for LatticeForge
  *
  * Routes ALL briefing generation to your self-hosted vLLM endpoint
- * running Qwen2.5-3B-Instruct. No external LLM dependencies.
+ * running Elle-72B-Ultimate (aphoticshaman/elle-72b-ultimate).
+ * No external LLM dependencies.
  *
  * PERSONA: "Elle" - The user-facing AI intelligence analyst
  * - L from LatticeForge
  * - Elegant, professional, concise
  * - Powers latticeforge.ai/chat and all briefings
+ *
+ * MODEL: aphoticshaman/elle-72b-ultimate
+ * - Fine-tuned Qwen2.5-72B for intelligence analysis
+ * - Deployed on RunPod Serverless with vLLM
+ * - GPU: 2x H100 80GB (recommended) or 4x A100 80GB
  *
  * GUARDIAN INTEGRATION:
  * - All output from Elle is validated by Guardian before caching
@@ -182,7 +188,7 @@ export interface LFBMResponse {
 // =============================================================================
 // ELLE - LatticeForge Intelligence Analyst Persona
 // =============================================================================
-// Elle is the user-facing AI analyst powered by LFBM (Qwen2.5 on RunPod).
+// Elle is the user-facing AI analyst powered by Elle-72B-Ultimate on RunPod.
 // Named after the "L" in LatticeForge. Elegant, professional, concise.
 
 // System prompts for different analysis modes - MUST output raw JSON
@@ -240,7 +246,7 @@ export class LFBMClient {
   constructor(endpoint?: string, apiKey?: string) {
     this.endpoint = endpoint || process.env.LFBM_ENDPOINT || '';
     this.apiKey = apiKey || process.env.LFBM_API_KEY;
-    this.model = process.env.LFBM_MODEL || 'Qwen/Qwen2.5-3B-Instruct';
+    this.model = process.env.LFBM_MODEL || 'aphoticshaman/elle-72b-ultimate';
   }
 
   isConfigured(): boolean {

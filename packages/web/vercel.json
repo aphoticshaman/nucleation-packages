@@ -3,6 +3,10 @@
   "outputDirectory": ".next",
   "crons": [
     {
+      "path": "/api/cron/elle-warmup",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/ingest/gdelt",
       "schedule": "5 * * * *"
     },
