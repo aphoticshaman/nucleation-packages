@@ -60,6 +60,7 @@
  */
 
 import { getOutputGuardian, getSecurityGuardian } from '@/lib/reasoning/security';
+import { isLFBMEnabled, isAdminOverrideActive, getAdminOverrideRemaining } from './LFBMClient';
 
 // Guardian check wrapper - validates input before sending to LLM
 async function guardianCheck(
@@ -372,6 +373,21 @@ export async function infer(
   context: RoutingContext
 ): Promise<InferenceResponse> {
   const startTime = Date.now();
+
+  // PRODUCTION CHECK: Block RunPod calls in non-production unless admin override active
+  if (!isLFBMEnabled()) {
+    const override = getAdminOverrideRemaining();
+    console.log(`[ModelRouter] BLOCKED - LF_PROD_ENABLE is not true, admin override: ${override.active ? `active (${override.remainingMinutes}m remaining)` : 'inactive'}`);
+
+    // Return a blocked response instead of throwing
+    return {
+      content: '[INFERENCE BLOCKED] RunPod APIs are disabled in non-production. Enable via admin override toggle or set LF_PROD_ENABLE=true.',
+      tier: 'elle',
+      model: 'blocked-nonprod',
+      latencyMs: Date.now() - startTime,
+      guardianValidation: { inputPassed: true, outputPassed: true, outputFixed: false },
+    };
+  }
 
   // Get routing decision
   const decision = routeRequest(context);
