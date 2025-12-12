@@ -65,98 +65,15 @@ GROUP BY current_stage
 ORDER BY current_stage;
 
 -- =============================================================================
--- FIX TRAINING VIEWS - Change to SECURITY INVOKER (only if tables exist)
+-- FIX TRAINING VIEWS - Drop old views that have wrong schema
 -- =============================================================================
 
--- Only recreate views if the underlying tables exist
-DO $$
-BEGIN
-    -- v_training_stats_by_domain
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'training_examples') THEN
-        DROP VIEW IF EXISTS v_training_stats_by_domain;
-        -- Check if selected_for_training column exists
-        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'training_examples' AND column_name = 'selected_for_training') THEN
-            EXECUTE $view$
-            CREATE VIEW v_training_stats_by_domain
-            WITH (security_invoker = true)
-            AS
-            SELECT
-                domain,
-                COUNT(*) as total,
-                COUNT(*) FILTER (WHERE selected_for_training = true) as selected,
-                AVG(quality_score) as avg_quality
-            FROM training_examples
-            GROUP BY domain
-            $view$;
-        ELSE
-            EXECUTE $view$
-            CREATE VIEW v_training_stats_by_domain
-            WITH (security_invoker = true)
-            AS
-            SELECT
-                domain,
-                COUNT(*) as total,
-                0::bigint as selected,
-                AVG(quality_score) as avg_quality
-            FROM training_examples
-            GROUP BY domain
-            $view$;
-        END IF;
-
-        -- v_training_items_selected
-        DROP VIEW IF EXISTS v_training_items_selected;
-        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'training_examples' AND column_name = 'selected_for_training') THEN
-            EXECUTE $view$
-            CREATE VIEW v_training_items_selected
-            WITH (security_invoker = true)
-            AS
-            SELECT *
-            FROM training_examples
-            WHERE selected_for_training = true
-            ORDER BY quality_score DESC
-            $view$;
-        ELSE
-            EXECUTE $view$
-            CREATE VIEW v_training_items_selected
-            WITH (security_invoker = true)
-            AS
-            SELECT *
-            FROM training_examples
-            WHERE status = 'approved'
-            ORDER BY quality_score DESC
-            $view$;
-        END IF;
-
-        -- v_training_items_active
-        DROP VIEW IF EXISTS v_training_items_active;
-        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'training_examples' AND column_name = 'status') THEN
-            EXECUTE $view$
-            CREATE VIEW v_training_items_active
-            WITH (security_invoker = true)
-            AS
-            SELECT *
-            FROM training_examples
-            WHERE status = 'pending' OR status = 'approved'
-            ORDER BY created_at DESC
-            $view$;
-        END IF;
-    END IF;
-
-    -- v_training_audit_recent
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'training_audit') THEN
-        DROP VIEW IF EXISTS v_training_audit_recent;
-        EXECUTE $view$
-        CREATE VIEW v_training_audit_recent
-        WITH (security_invoker = true)
-        AS
-        SELECT *
-        FROM training_audit
-        ORDER BY created_at DESC
-        LIMIT 100
-        $view$;
-    END IF;
-END;
-$$;
+-- These views reference columns that don't exist in the current schema
+-- Just drop them - they'll be recreated if needed later
+DROP VIEW IF EXISTS v_training_stats_by_domain;
+DROP VIEW IF EXISTS v_training_items_selected;
+DROP VIEW IF EXISTS v_training_items_active;
+DROP VIEW IF EXISTS v_training_audit_recent;
 
 -- =============================================================================
 -- FIX SPATIAL_REF_SYS (PostGIS system table)
