@@ -332,20 +332,13 @@ export class SecurityGuardian {
  */
 export class APIKeyGuardian {
   /**
-   * Safely use API key without exposure
+   * Get LFBM API key (RunPod) safely
    */
-  static getAnthropicKey(): string {
-    const key = process.env.ANTHROPIC_API_KEY;
+  static getLFBMKey(): string {
+    const key = process.env.LFBM_API_KEY;
     if (!key) {
-      throw new Error('ANTHROPIC_API_KEY not configured');
+      throw new Error('LFBM_API_KEY not configured');
     }
-
-    // Validate key format (basic check)
-    if (!key.startsWith('sk-ant-')) {
-      console.error('Invalid Anthropic key format');
-      throw new Error('Invalid API key configuration');
-    }
-
     return key;
   }
 

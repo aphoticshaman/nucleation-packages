@@ -772,33 +772,19 @@ export function getLFBMClient(): LFBMClient {
 }
 
 /**
- * Check if we should use LFBM instead of Anthropic
+ * Check if Elle (LFBM) is configured
  */
-export function shouldUseLFBM(): boolean {
-  // Use LFBM if configured and explicitly enabled
-  const endpoint = process.env.LFBM_ENDPOINT;
-  const preferLFBM = process.env.PREFER_LFBM === 'true';
-
-  if (!endpoint) return false;
-  if (preferLFBM) return true;
-
-  // Fall back to LFBM if Anthropic is disabled
-  const anthropicDisabled = process.env.DISABLE_LLM === 'true';
-  return anthropicDisabled;
+export function isElleConfigured(): boolean {
+  return !!process.env.LFBM_ENDPOINT;
 }
 
 /**
- * Example integration with existing intel-briefing route:
+ * Example integration with intel-briefing route:
  *
  * // In intel-briefing/route.ts:
- * import { getLFBMClient, shouldUseLFBM } from '@/lib/inference/LFBMClient';
+ * import { getLFBMClient } from '@/lib/inference/LFBMClient';
  *
- * // Instead of Anthropic call:
- * if (shouldUseLFBM()) {
- *   const lfbm = getLFBMClient();
- *   const briefings = await lfbm.generateFromMetrics(nationData, gdeltSignals, categoryRisks);
- *   return NextResponse.json({ briefings, metadata: { source: 'lfbm' } });
- * }
- *
- * // Otherwise continue with Anthropic...
+ * const elle = getLFBMClient();
+ * const briefings = await elle.generateFromMetrics(nationData, gdeltSignals, categoryRisks);
+ * return NextResponse.json({ briefings, metadata: { source: 'elle' } });
  */
