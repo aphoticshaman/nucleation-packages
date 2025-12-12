@@ -110,11 +110,11 @@ export async function encrypt(
   const ciphertextBuffer = await crypto.subtle.encrypt(
     { name: ALGORITHM, iv: iv as BufferSource, tagLength: TAG_LENGTH },
     key,
-    plaintextBuffer
+    plaintextBuffer as BufferSource
   );
 
   // Calculate integrity hash of plaintext
-  const hashBuffer = await crypto.subtle.digest('SHA-256', plaintextBuffer);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', plaintextBuffer as BufferSource);
   const integrityHash = bufferToBase64(new Uint8Array(hashBuffer));
 
   return {
@@ -148,7 +148,7 @@ export async function decrypt(
   const plaintextBuffer = await crypto.subtle.decrypt(
     { name: ALGORITHM, iv: iv as BufferSource, tagLength: TAG_LENGTH },
     key,
-    ciphertext
+    ciphertext as BufferSource
   );
 
   const plaintext = decoder.decode(plaintextBuffer);
