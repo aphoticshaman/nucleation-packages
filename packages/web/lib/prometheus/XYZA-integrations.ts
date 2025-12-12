@@ -359,20 +359,22 @@ export async function processElleWithGuardian(
   };
 
   const inputResult = await guardian.filter(inputInteraction);
-  guardrails.push(...inputResult.appliedGuardrails);
+  if (inputResult.redacted.length > 0) {
+    guardrails.push(...inputResult.redacted.map(r => `input_redacted:${r}`));
+  }
 
   if (inputResult.blocked) {
     return {
       request,
       inputFiltered: {
         blocked: true,
-        redacted: inputResult.filteredContent,
-        risks: inputResult.risks,
+        redacted: inputResult.filtered,
+        risks: inputResult.redacted,
       },
       response: {
         content: 'I cannot process this request due to security policies.',
         blocked: true,
-        blockReason: inputResult.risks.join(', '),
+        blockReason: inputResult.reason || 'Security policy violation',
         guardrails,
       },
       outputFiltered: {
@@ -389,7 +391,7 @@ export async function processElleWithGuardian(
   }
 
   // Generate response with filtered input
-  const generated = await generateResponse(inputResult.filteredContent, request.context || {});
+  const generated = await generateResponse(inputResult.filtered, request.context || {});
 
   // Calculate reasoning entropy (NSM Insight #10)
   const entropy = prometheusEngine.calculateEntropy(generated.reasoning || generated.content);
@@ -405,22 +407,24 @@ export async function processElleWithGuardian(
   };
 
   const outputResult = await guardian.filter(outputInteraction);
-  guardrails.push(...outputResult.appliedGuardrails);
+  if (outputResult.redacted.length > 0) {
+    guardrails.push(...outputResult.redacted.map(r => `output_redacted:${r}`));
+  }
 
   // NSM Insight #3: Check for communication divergence
   // Simplified heuristic: high entropy + multiple redactions = divergence
-  const divergence = (entropy > 4.5 ? 0.3 : 0) + (outputResult.risks.length * 0.1);
+  const divergence = (entropy > 4.5 ? 0.3 : 0) + (outputResult.redacted.length * 0.1);
   const divergenceWarning = divergence > 0.5;
 
   return {
     request,
     inputFiltered: {
       blocked: false,
-      redacted: inputResult.filteredContent,
-      risks: inputResult.risks,
+      redacted: inputResult.filtered,
+      risks: inputResult.redacted,
     },
     response: {
-      content: outputResult.filteredContent,
+      content: outputResult.filtered,
       reasoning: generated.reasoning,
       entropy,
       confidence: 1 - (entropy / 8), // Normalize to 0-1
@@ -430,8 +434,8 @@ export async function processElleWithGuardian(
     },
     outputFiltered: {
       blocked: outputResult.blocked,
-      redacted: outputResult.filteredContent,
-      risks: outputResult.risks,
+      redacted: outputResult.filtered,
+      risks: outputResult.redacted,
     },
     metrics: {
       entropy,
