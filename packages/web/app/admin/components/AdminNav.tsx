@@ -18,6 +18,7 @@ const navItems = [
   { href: '/admin', label: 'Overview', icon: '📊' },
   { href: '/admin/feedback', label: 'Feedback', icon: '💬' },
   { href: '/admin/users', label: 'Users', icon: '👤' },
+  { href: '/admin/banned-ips', label: 'Banned IPs', icon: '🚫' },
   { href: '/admin/builder', label: 'Builder', icon: '🎨' },
   { href: '/admin/training', label: 'Training', icon: '🧠' },
   { href: '/admin/customers', label: 'Customers', icon: '👥' },
@@ -30,7 +31,8 @@ const navItems = [
   { href: '/admin/config', label: 'Config', icon: '⚙️' },
 ];
 
-const quickLinks = [
+const quickLinks: Array<{ href: string; label: string; icon: string; highlight?: boolean }> = [
+  { href: '/study', label: 'Study Book (Elle)', icon: '✨', highlight: true },
   { href: '/app', label: 'Consumer App', icon: '👤' },
   { href: '/app/briefings', label: 'Briefings', icon: '📡' },
   { href: '/app/packages', label: 'Packages', icon: '📦' },
@@ -115,7 +117,11 @@ export default function AdminNav({ user }: AdminNavProps) {
               key={link.href}
               href={link.href}
               onClick={onNavClick}
-              className="flex items-center gap-2 px-3 lg:px-4 py-2 lg:py-2.5 text-sm text-slate-400 hover:text-white hover:bg-white/[0.03] active:bg-white/[0.06] rounded-lg transition-all touch-manipulation"
+              className={`flex items-center gap-2 px-3 lg:px-4 py-2 lg:py-2.5 text-sm rounded-lg transition-all touch-manipulation ${
+                link.highlight
+                  ? 'text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30'
+                  : 'text-slate-400 hover:text-white hover:bg-white/[0.03] active:bg-white/[0.06]'
+              }`}
             >
               <span>{link.icon}</span>
               <span>{link.label}</span>

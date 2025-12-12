@@ -28,11 +28,6 @@ const navItems = [
   { href: '/dashboard/team', label: 'Team', icon: '👥' },
 ];
 
-// Admin-only nav items
-const adminNavItems = [
-  { href: '/study', label: 'Study Book', fullLabel: 'Study Book (Elle)', icon: '✨' },
-];
-
 const docsItems = [
   { href: '/docs/api', label: 'API Reference', external: true },
   { href: '/docs/streams', label: 'Data Streams', external: true },
@@ -171,35 +166,6 @@ export default function EnterpriseNav({ user, org }: EnterpriseNavProps) {
               );
             })}
           </div>
-
-          {/* Admin Tools - only show for admins */}
-          {user.role === 'admin' && (
-            <div className="mt-6 lg:mt-8">
-              <p className="px-3 lg:px-4 text-xs 2xl:text-sm text-slate-500 uppercase tracking-wide mb-2">
-                Admin Tools
-              </p>
-              <div className="space-y-1 lg:space-y-2">
-                {adminNavItems.map((item) => {
-                  const isActive = pathname === item.href || pathname.startsWith(item.href);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center gap-3 px-3 lg:px-4 py-2.5 lg:py-3 2xl:py-3.5 rounded-lg transition-colors ${
-                        isActive
-                          ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white'
-                          : 'text-cyan-400 hover:bg-slate-800 hover:text-white border border-cyan-500/30'
-                      }`}
-                    >
-                      <span className="text-lg 2xl:text-xl">{item.icon}</span>
-                      <span className="text-sm 2xl:text-base">{item.fullLabel || item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          )}
 
           {/* Documentation links */}
           <div className="mt-6 lg:mt-8">
