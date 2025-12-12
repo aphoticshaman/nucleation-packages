@@ -528,7 +528,10 @@ export default function StudyPage() {
                     {bigBrain ? 'Big Brain' : 'Standard'}
                   </span>
                   <span className="flex items-center gap-1">
-                    {DEPTH_CONFIG[depth].icon && <DEPTH_CONFIG[depth].icon className="w-3 h-3" />}
+                    {(() => {
+                      const DepthIcon = DEPTH_CONFIG[depth].icon;
+                      return DepthIcon ? <DepthIcon className="w-3 h-3" /> : null;
+                    })()}
                     {DEPTH_CONFIG[depth].label}
                   </span>
                 </div>
