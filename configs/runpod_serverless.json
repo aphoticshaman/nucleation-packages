@@ -1,0 +1,63 @@
+{
+  "name": "elle-72b-ultimate-serverless",
+  "description": "Elle-72B-Ultimate model for latticeforge.ai inference, training data generation, and intel analysis",
+
+  "docker_image": "runpod/worker-vllm:stable-cuda12.1.0",
+
+  "env": {
+    "MODEL_NAME": "aphoticshaman/elle-72b-ultimate",
+    "HF_TOKEN": "${HF_TOKEN}",
+    "TOKENIZER": "aphoticshaman/elle-72b-ultimate",
+    "DTYPE": "bfloat16",
+    "GPU_MEMORY_UTILIZATION": "0.95",
+    "MAX_MODEL_LEN": "8192",
+    "TENSOR_PARALLEL_SIZE": "2",
+    "DISABLE_LOG_STATS": "true",
+    "DISABLE_LOG_REQUESTS": "true"
+  },
+
+  "gpu_config": {
+    "recommended": "2x H100 80GB",
+    "alternative": "4x A100 80GB",
+    "minimum": "2x A100 80GB (with max_model_len=4096)"
+  },
+
+  "scaling": {
+    "min_workers": 0,
+    "max_workers": 3,
+    "idle_timeout": 300,
+    "scale_type": "QUEUE_DELAY"
+  },
+
+  "pricing_estimate": {
+    "h100_80gb_per_hour": 3.99,
+    "workers_2x_h100": 7.98,
+    "monthly_estimate_low_usage": "~$200-400",
+    "monthly_estimate_high_usage": "~$800-1500"
+  },
+
+  "endpoints": {
+    "chat_completion": "/v1/chat/completions",
+    "completion": "/v1/completions",
+    "models": "/v1/models"
+  },
+
+  "example_request": {
+    "model": "aphoticshaman/elle-72b-ultimate",
+    "messages": [
+      {"role": "system", "content": "You are Elle, an advanced AI assistant with expertise in mathematics, geopolitics, and code generation."},
+      {"role": "user", "content": "Solve this AIME problem..."}
+    ],
+    "max_tokens": 4096,
+    "temperature": 0.7
+  },
+
+  "latticeforge_integration": {
+    "base_url": "https://api.runpod.ai/v2/${ENDPOINT_ID}",
+    "auth_header": "Authorization: Bearer ${RUNPOD_API_KEY}",
+    "frontend_env": {
+      "VITE_ELLE_ENDPOINT": "${ENDPOINT_URL}",
+      "VITE_ELLE_API_KEY": "${RUNPOD_API_KEY}"
+    }
+  }
+}
