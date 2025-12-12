@@ -1,0 +1,14 @@
+# Requirements for Elle deployment scripts
+# Install: pip install -r requirements-deploy.txt
+
+# Model merging
+torch>=2.0.0
+transformers>=4.36.0
+peft>=0.7.0
+accelerate>=0.25.0
+
+# HuggingFace upload
+huggingface_hub>=0.20.0
+
+# vLLM inference (install separately on RunPod)
+# vllm>=0.2.7
