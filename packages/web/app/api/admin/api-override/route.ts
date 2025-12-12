@@ -75,18 +75,19 @@ let armedAt: number | null = null;
 const ARM_TIMEOUT_MS = 60 * 1000; // 60 seconds to FIRE after arming
 
 export async function POST(request: Request) {
-  // SECURITY: Admin only
-  const auth = await verifyAdminAuth();
-  if (!auth.isAdmin) {
-    return NextResponse.json(
-      { error: auth.error || 'Admin access required' },
-      { status: 403 }
-    );
-  }
+  try {
+    // SECURITY: Admin only
+    const auth = await verifyAdminAuth();
+    if (!auth.isAdmin) {
+      return NextResponse.json(
+        { error: auth.error || 'Admin access required' },
+        { status: 403 }
+      );
+    }
 
-  const body = await request.json();
-  const action = body.action as string;
-  const minutes = body.minutes as number | undefined;
+    const body = await request.json();
+    const action = body.action as string;
+    const minutes = body.minutes as number | undefined;
 
   switch (action) {
     case 'arm': {
@@ -206,35 +207,50 @@ export async function POST(request: Request) {
         error: 'Invalid action. Use: arm, fire, disarm, or status',
       }, { status: 400 });
   }
+  } catch (error) {
+    console.error('[API-OVERRIDE] POST error:', error);
+    return NextResponse.json({
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    }, { status: 500 });
+  }
 }
 
 // GET endpoint for status check
-export async function GET(request: Request) {
-  // SECURITY: Admin only for status check
-  const auth = await verifyAdminAuth();
-  if (!auth.isAdmin) {
-    return NextResponse.json(
-      { error: auth.error || 'Admin access required' },
-      { status: 403 }
-    );
-  }
+export async function GET(_request: Request) {
+  try {
+    // SECURITY: Admin only for status check
+    const auth = await verifyAdminAuth();
+    if (!auth.isAdmin) {
+      return NextResponse.json(
+        { error: auth.error || 'Admin access required' },
+        { status: 403 }
+      );
+    }
 
-  const armExpired = armedAt && (Date.now() - armedAt > ARM_TIMEOUT_MS);
-  if (armExpired) {
-    isArmed = false;
-    armedAt = null;
-  }
+    const armExpired = armedAt && (Date.now() - armedAt > ARM_TIMEOUT_MS);
+    if (armExpired) {
+      isArmed = false;
+      armedAt = null;
+    }
 
-  return NextResponse.json({
-    armed: isArmed,
-    armedSecondsRemaining: isArmed && armedAt
-      ? Math.max(0, Math.round((ARM_TIMEOUT_MS - (Date.now() - armedAt)) / 1000))
-      : 0,
-    currentState: {
-      lfbmEnabled: isLFBMEnabled(),
-      override: getAdminOverrideRemaining(),
-      environment: process.env.LF_PROD_ENABLE === 'true' ? 'production' : 'non-production',
-      lfProdEnable: process.env.LF_PROD_ENABLE,
-    },
-  });
+    return NextResponse.json({
+      armed: isArmed,
+      armedSecondsRemaining: isArmed && armedAt
+        ? Math.max(0, Math.round((ARM_TIMEOUT_MS - (Date.now() - armedAt)) / 1000))
+        : 0,
+      currentState: {
+        lfbmEnabled: isLFBMEnabled(),
+        override: getAdminOverrideRemaining(),
+        environment: process.env.LF_PROD_ENABLE === 'true' ? 'production' : 'non-production',
+        lfProdEnable: process.env.LF_PROD_ENABLE,
+      },
+    });
+  } catch (error) {
+    console.error('[API-OVERRIDE] GET error:', error);
+    return NextResponse.json({
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    }, { status: 500 });
+  }
 }

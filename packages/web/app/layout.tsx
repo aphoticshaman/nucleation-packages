@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { CookieConsent } from '@/components/CookieConsent';
 import { NonProdApiToggle } from '@/components/admin/NonProdApiToggle';
+import { StudyBookProvider } from '@/lib/study/StudyBookContext';
+import { FloatingElleButton } from '@/components/admin/FloatingElleButton';
+import { StudyBookOverlay } from '@/components/admin/StudyBookOverlay';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://latticeforge.io'),
@@ -33,9 +36,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="min-h-screen bg-slate-950 text-white antialiased">
-        {children}
-        <CookieConsent />
-        <NonProdApiToggle />
+        <StudyBookProvider>
+          {children}
+          <CookieConsent />
+          <NonProdApiToggle />
+          <FloatingElleButton />
+          <StudyBookOverlay />
+        </StudyBookProvider>
       </body>
     </html>
   );
