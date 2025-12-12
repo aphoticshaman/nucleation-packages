@@ -302,9 +302,9 @@ CREATE POLICY "Admins can view all insights" ON insight_reports
     FOR SELECT
     USING (
         EXISTS (
-            SELECT 1 FROM clients
-            WHERE clients.user_id = auth.uid()
-            AND clients.role = 'admin'
+            SELECT 1 FROM profiles
+            WHERE profiles.id = auth.uid()
+            AND profiles.role = 'admin'
         )
     );
 
@@ -313,9 +313,9 @@ CREATE POLICY "Admins can modify insights" ON insight_reports
     FOR ALL
     USING (
         EXISTS (
-            SELECT 1 FROM clients
-            WHERE clients.user_id = auth.uid()
-            AND clients.role = 'admin'
+            SELECT 1 FROM profiles
+            WHERE profiles.id = auth.uid()
+            AND profiles.role = 'admin'
         )
     );
 
