@@ -20,7 +20,7 @@
     },
     {
       "path": "/api/cron/warm-cache",
-      "schedule": "35 */4 * * *"
+      "schedule": "*/10 * * * *"
     },
     {
       "path": "/api/cron/rolling-country-update",
