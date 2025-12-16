@@ -3,10 +3,6 @@
   "outputDirectory": ".next",
   "crons": [
     {
-      "path": "/api/cron/elle-warmup",
-      "schedule": "*/5 * * * *"
-    },
-    {
       "path": "/api/ingest/gdelt",
       "schedule": "5 * * * *"
     },
@@ -23,16 +19,8 @@
       "schedule": "*/10 * * * *"
     },
     {
-      "path": "/api/cron/rolling-country-update",
-      "schedule": "45 */6 * * *"
-    },
-    {
       "path": "/api/ingest/usgs",
       "schedule": "50 */6 * * *"
-    },
-    {
-      "path": "/api/flywheel/auto-score",
-      "schedule": "55 */6 * * *"
     },
     {
       "path": "/api/cron/daily-alerts",
@@ -43,20 +31,8 @@
       "schedule": "0 6 * * 0"
     },
     {
-      "path": "/api/generate/training-data",
-      "schedule": "0 6,18 * * *"
-    },
-    {
       "path": "/api/analyze/cascades",
       "schedule": "30 0 * * *"
-    },
-    {
-      "path": "/api/cron/api-usage-monitor",
-      "schedule": "0 */2 * * *"
-    },
-    {
-      "path": "/api/cron/llm-pipeline-monitor",
-      "schedule": "30 */12 * * *"
     },
     {
       "path": "/api/cron/guardian-audit",

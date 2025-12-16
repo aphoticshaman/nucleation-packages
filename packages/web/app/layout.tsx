@@ -5,11 +5,11 @@ import { CookieConsent } from '@/components/CookieConsent';
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://latticeforge.io'),
   title: 'LatticeForge - Know What Happens Next',
-  description: 'AI watches global news so you can stay ahead. Daily briefings on what matters.',
+  description: 'Deterministic geopolitical intelligence. Daily briefings on what matters.',
   openGraph: {
     title: 'LatticeForge - Know What Happens Next',
     description:
-      'AI-powered news intelligence. See what\'s happening around the world and what it means for you.',
+      'Deterministic geopolitical intelligence. See what\'s happening around the world and what it means.',
     images: [
       {
         url: '/images/og/og-image.png',
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'LatticeForge - Know What Happens Next',
-    description: 'AI watches global news so you can stay ahead. Daily briefings on what matters.',
+    description: 'Deterministic geopolitical intelligence. Daily briefings on what matters.',
     images: ['/images/og/og-image.png'],
   },
 };

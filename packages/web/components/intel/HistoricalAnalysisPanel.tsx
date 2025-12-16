@@ -5,13 +5,13 @@ import { useState } from 'react';
 /**
  * Historical Analysis Panel
  *
- * Granular controls for meta-analysis using LFBM (self-hosted vLLM).
+ * Granular controls for meta-analysis using deterministic templates.
  * Three modes:
  * - Realtime: Pure metric translation (~$0.001)
  * - Historical: Meta-analysis of historical patterns (~$0.002)
  * - Hybrid: Current metrics + historical context overlay (~$0.003)
  *
- * ALL inference via self-hosted vLLM - no external LLM dependencies
+ * Zero-LLM architecture - all analysis via deterministic templates
  */
 
 // Historical eras for analysis (from model training data)
@@ -97,7 +97,7 @@ export function HistoricalAnalysisPanel({ onAnalyze, isLoading, disabled }: Hist
     onAnalyze(config);
   };
 
-  // Cost estimates - LFBM is 250x cheaper than external LLMs
+  // Cost estimates - deterministic templates have near-zero cost
   const costEstimate = {
     realtime: '$0.001',
     'historical-quick': '$0.001',
@@ -280,13 +280,13 @@ export function HistoricalAnalysisPanel({ onAnalyze, isLoading, disabled }: Hist
         {mode === 'realtime' && (
           <>
             <strong className="text-blue-400">Realtime Mode:</strong> Translates current pipeline metrics into prose.
-            Fast (~$0.001). Self-hosted inference via LFBM.
+            Fast (~$0.001). Deterministic template-based analysis.
           </>
         )}
         {mode === 'historical' && (
           <>
-            <strong className="text-purple-400">Historical Mode:</strong> Meta-analysis using model training knowledge.
-            Identifies patterns, precedents, and cycles. Self-hosted via LFBM (~$0.002).
+            <strong className="text-purple-400">Historical Mode:</strong> Meta-analysis using historical pattern data.
+            Identifies patterns, precedents, and cycles. Deterministic analysis (~$0.002).
           </>
         )}
         {mode === 'hybrid' && (

@@ -933,7 +933,7 @@ export async function POST(req: Request) {
     console.log(`[CRON/INTERNAL] Generating fresh briefing for preset: ${preset}`);
 
     // For cron calls, use service account context
-    sessionHash = hasCronWarmWithSecret ? 'cron-service' : 'internal-service';
+    sessionHash = isVercelCron ? 'cron-service' : 'internal-service';
     const userTier = 'enterprise'; // Cron/internal gets enterprise-level analysis
 
     // ============================================================
