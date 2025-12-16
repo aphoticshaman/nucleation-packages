@@ -18,6 +18,14 @@ import {
   AlertTriangle,
   Clock,
   Database,
+  Users,
+  Home,
+  Bitcoin,
+  Lock,
+  Factory,
+  Pickaxe,
+  Microscope,
+  type LucideIcon,
 } from 'lucide-react';
 import { Card, Button } from '@/components/ui';
 
@@ -377,23 +385,23 @@ export default function DashboardDetailPage() {
             {domains.secondary.map((domain) => {
               const content = briefings?.[domain as keyof typeof briefings];
               if (!content) return null;
-              const domainLabels: Record<string, { label: string; icon: string }> = {
-                employment: { label: 'Labor Markets', icon: '👥' },
-                housing: { label: 'Real Estate', icon: '🏠' },
-                crypto: { label: 'Digital Assets', icon: '₿' },
-                energy: { label: 'Energy Sector', icon: '⚡' },
-                military: { label: 'Military', icon: '🎖️' },
-                cyber: { label: 'Cyber', icon: '🔒' },
-                industry: { label: 'Industry', icon: '🏭' },
-                minerals: { label: 'Critical Minerals', icon: '⛏️' },
-                resources: { label: 'Resources', icon: '🌍' },
-                emerging: { label: 'Emerging Tech', icon: '🔬' },
+              const domainLabels: Record<string, { label: string; Icon: LucideIcon }> = {
+                employment: { label: 'Labor Markets', Icon: Users },
+                housing: { label: 'Real Estate', Icon: Home },
+                crypto: { label: 'Digital Assets', Icon: Bitcoin },
+                energy: { label: 'Energy Sector', Icon: Zap },
+                military: { label: 'Military', Icon: Shield },
+                cyber: { label: 'Cyber', Icon: Lock },
+                industry: { label: 'Industry', Icon: Factory },
+                minerals: { label: 'Critical Minerals', Icon: Pickaxe },
+                resources: { label: 'Resources', Icon: Globe },
+                emerging: { label: 'Emerging Tech', Icon: Microscope },
               };
-              const meta = domainLabels[domain] || { label: domain, icon: '📊' };
+              const meta = domainLabels[domain] || { label: domain, Icon: BarChart3 };
               return (
                 <div key={domain} className="p-4 bg-white/[0.02] rounded-lg border border-white/5">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg">{meta.icon}</span>
+                    <meta.Icon className="w-4 h-4 text-slate-400" />
                     <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider">
                       {meta.label}
                     </h4>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Eye } from 'lucide-react';
 import { useImpersonation, VIEW_PERSPECTIVES, type ViewPerspective } from '@/contexts/ImpersonationContext';
 
 // Landing page mapping by role/tier
@@ -56,7 +57,7 @@ export default function ViewAsSwitcher() {
         }`}
       >
         <div className="flex items-center gap-2">
-          <span>👁️</span>
+          <Eye className="w-4 h-4" />
           <span className="text-sm font-medium">
             {isImpersonating ? `Viewing: ${viewAs?.label}` : 'View As...'}
           </span>

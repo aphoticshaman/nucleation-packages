@@ -13,7 +13,7 @@ import {
   Heart, Microscope, Leaf, AlertCircle, Laptop, Zap, Map, Monitor, Award,
   Satellite, Factory, Ship, Pickaxe, Bird, GraduationCap, Briefcase, Bitcoin,
   Sparkles, Palette, MapPin, Anchor, Landmark, AlertTriangle, Save, Settings,
-  Radio, Share2
+  Radio, Share2, Swords, DollarSign, Flame
 } from "lucide-react";
 import { supabase } from '@/lib/supabase';
 
@@ -446,7 +446,7 @@ export default function ConsumerDashboard() {
           <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 lg:p-5 space-y-4 lg:sticky lg:top-20 max-h-[calc(100vh-6rem)] overflow-y-auto">
             <div className="flex items-center justify-between">
               <h2 className="text-base lg:text-lg font-semibold text-white flex items-center gap-2">
-                <span>📡</span>
+                <Radio className="w-4 h-4 text-cyan-400" />
                 <span>Intel Briefing</span>
               </h2>
               {metadata && (
@@ -504,7 +504,7 @@ export default function ConsumerDashboard() {
                 {/* Security & Diplomacy */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-red-400 flex items-center gap-2">
-                    <span>⚔️</span> Security & Diplomacy
+                    <Swords className="w-4 h-4" /> Security & Diplomacy
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.security || 'No data available'}
@@ -514,7 +514,7 @@ export default function ConsumerDashboard() {
                 {/* Financial */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-blue-400 flex items-center gap-2">
-                    <span>💰</span> Financial
+                    <DollarSign className="w-4 h-4" /> Financial
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.financial || 'No data available'}
@@ -584,7 +584,7 @@ export default function ConsumerDashboard() {
                 {/* Domestic Instability */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-yellow-400 flex items-center gap-2">
-                    <span>🔥</span> Domestic Instability
+                    <Flame className="w-4 h-4" /> Domestic Instability
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.domestic || 'No data available'}
