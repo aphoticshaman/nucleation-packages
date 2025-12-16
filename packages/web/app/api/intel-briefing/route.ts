@@ -11,16 +11,16 @@ import {
 import {
   type ComputedMetrics as TemplateMetrics,
 } from '@/lib/briefing/template-engine';
-import { getLFBMClient } from '@/lib/inference/LFBMClient';
+// LFBM removed - all briefings now 100% deterministic (zero-LLM architecture)
 
 // Vercel Edge Runtime for low latency
 export const runtime = 'edge';
 
 // =============================================================================
-// LFBM: Self-hosted vLLM on RunPod - NO EXTERNAL LLM DEPENDENCIES
+// ZERO-LLM ARCHITECTURE - 100% DETERMINISTIC BRIEFINGS
 // =============================================================================
-// All inference is routed through LFBM (self-hosted vLLM on RunPod)
-// Set LFBM_ENDPOINT and LFBM_API_KEY in Vercel environment variables
+// All analysis via threshold-based math on nation state vectors
+// No inference calls, no API keys needed, no external dependencies
 
 // =============================================================================
 // CACHE TYPES
@@ -437,7 +437,7 @@ interface NationData {
   regime: number;
 }
 
-// NOTE: Prompts moved to LFBMClient - all inference via self-hosted vLLM
+// NOTE: Zero-LLM architecture - all briefings via deterministic template generation
 
 export async function POST(req: Request) {
   const startTime = Date.now();
@@ -1086,42 +1086,14 @@ export async function POST(req: Request) {
     }
 
     // ============================================================
-    // LFBM: ALL inference via self-hosted vLLM (250x cheaper)
+    // DETERMINISTIC BRIEFING GENERATION (zero-LLM architecture)
     // ============================================================
-    console.log('[INTEL] Using LFBM (self-hosted vLLM) for briefing generation');
-    const lfbmClient = getLFBMClient();
-    const lfbmStartTime = Date.now();
-
-    // LFBM only generates 5 core categories - we need all 26
-    // First generate template briefings for ALL categories, then merge LFBM output
-    let lfbmBriefings: Record<string, string> = {};
-    let llmLatency = 0;
-
-    try {
-      lfbmBriefings = await lfbmClient.generateFromMetrics(
-        nationData,
-        {
-          count: nationData.length,
-          avg_tone: nationData.reduce((s, n) => s + (n.transition_risk || 0), 0) / (nationData.length || 1),
-          alerts: nationData.filter(n => (n.transition_risk || 0) > 0.6).length,
-        },
-        {
-          political: computedMetrics.categories.political?.riskLevel || 50,
-          economic: computedMetrics.categories.economic?.riskLevel || 50,
-          security: computedMetrics.categories.security?.riskLevel || 50,
-          cyber: computedMetrics.categories.cyber?.riskLevel || 50,
-        }
-      );
-      llmLatency = Date.now() - lfbmStartTime;
-      console.log(`[INTEL] LFBM briefing generated in ${llmLatency}ms, keys: ${Object.keys(lfbmBriefings).join(', ')}`);
-    } catch (lfbmError) {
-      console.warn('[INTEL] LFBM failed, using template-only mode:', lfbmError);
-      llmLatency = Date.now() - lfbmStartTime;
-    }
+    console.log('[INTEL] Generating briefings via deterministic template engine');
+    const generationStartTime = Date.now();
 
     // ============================================================
-    // GENERATE ALL 26 CATEGORIES via template (same as user path)
-    // LFBM output will enhance core categories, but we need FULL coverage
+    // GENERATE ALL 26 CATEGORIES via deterministic template
+    // Pure math, no LLM calls - based on nation state vectors + signals
     // ============================================================
     const highRiskNations = nationData
       .filter(n => (n.transition_risk || 0) > 0.5)
@@ -1139,23 +1111,23 @@ export async function POST(req: Request) {
     const briefings: Record<string, string> = {};
 
     // Political
-    briefings['political'] = lfbmBriefings['political'] || (topRiskNames.length > 0
+    briefings['political'] = topRiskNames.length > 0
       ? `Political stability monitoring across ${nationData.length} nations. ${topRiskNames.join(', ')} showing elevated transition indicators (avg ${avgTransitionRisk}% risk). Institutional resilience at ${avgBasinStrength}% across monitored states.`
-      : `Political environment stable across ${nationData.length} monitored nations. Average transition risk at ${avgTransitionRisk}%, institutional strength at ${avgBasinStrength}%.`);
+      : `Political environment stable across ${nationData.length} monitored nations. Average transition risk at ${avgTransitionRisk}%, institutional strength at ${avgBasinStrength}%.`;
 
     // Economic
-    briefings['economic'] = lfbmBriefings['economic'] || `Economic monitoring active for ${preset.toUpperCase()} region. ${nationData.length} economies under surveillance.`;
+    briefings['economic'] = `Economic monitoring active for ${preset.toUpperCase()} region. ${nationData.length} economies under surveillance.`;
 
     // Security
-    briefings['security'] = lfbmBriefings['security'] || (highRiskNations.length > 0
+    briefings['security'] = highRiskNations.length > 0
       ? `Security environment requires monitoring. Elevated transition indicators in: ${highRiskNations.slice(0, 4).map(n => n.name).join(', ')}.`
-      : `Security posture stable across ${preset.toUpperCase()} region. No critical transition thresholds exceeded.`);
+      : `Security posture stable across ${preset.toUpperCase()} region. No critical transition thresholds exceeded.`;
 
     // Financial
     briefings['financial'] = `Financial stability tracking ${nationData.length} economies. ${highRiskNations.length > 0 ? 'Monitoring stress indicators in elevated-risk markets.' : 'No systemic stress indicators.'}`;
 
     // Cyber
-    briefings['cyber'] = lfbmBriefings['cyber'] || `Cyber threat landscape at baseline. ${highRiskNations.length > 2 ? 'Elevated monitoring on critical infrastructure.' : 'No critical signals.'}`;
+    briefings['cyber'] = `Cyber threat landscape at baseline. ${highRiskNations.length > 2 ? 'Elevated monitoring on critical infrastructure.' : 'No critical signals.'}`;
 
     // Health
     briefings['health'] = highRiskNations.length > 0
@@ -1250,15 +1222,15 @@ export async function POST(req: Request) {
       ? `Weak signals detected: multi-region instability convergence. Monitor for second-order effects.`
       : 'No significant emerging trends detected. Standard horizon scanning active.';
 
-    // Summary - use LFBM if available, otherwise generate
-    briefings['summary'] = lfbmBriefings['summary'] || `${preset.toUpperCase()} intelligence synthesis across ${nationData.length} nations. ${topRiskNames.length > 0 ? `Primary watchlist: ${topRiskNames.join(', ')}.` : 'No critical alerts.'} Overall risk: ${computedMetrics.overallRisk.toUpperCase()}.`;
+    // Summary - deterministic synthesis
+    briefings['summary'] = `${preset.toUpperCase()} intelligence synthesis across ${nationData.length} nations. ${topRiskNames.length > 0 ? `Primary watchlist: ${topRiskNames.join(', ')}.` : 'No critical alerts.'} Overall risk: ${computedMetrics.overallRisk.toUpperCase()}.`;
 
-    // NSM - use LFBM if available, otherwise generate
-    briefings['nsm'] = lfbmBriefings['nsm'] || (highRiskNations.length > 2
+    // NSM - actionable recommendations
+    briefings['nsm'] = highRiskNations.length > 2
       ? `Increase monitoring frequency on ${topRiskNames[0] || 'flagged regions'}. Consider scenario planning for transition events.`
       : highRiskNations.length > 0
         ? `Maintain enhanced awareness on ${topRiskNames.join(' and ')}. Standard protocols sufficient.`
-        : `Continue routine monitoring. No immediate escalation required.`);
+        : `Continue routine monitoring. No immediate escalation required.`;
 
     console.log(`[INTEL] Full briefings generated: ${Object.keys(briefings).length} categories`);
 
@@ -1267,13 +1239,15 @@ export async function POST(req: Request) {
     // ============================================================
     const learner = getLearningCollector();
 
-    // Log the LLM interaction (anonymized)
+    const generationLatency = Date.now() - generationStartTime;
+
+    // Log the generation (anonymized)
     void learner.logLLMInteraction(sessionHash, userTier, preset, {
-      promptTemplate: 'intel_briefing_lfbm',
-      inputTokens: 0, // LFBM doesn't report token counts
+      promptTemplate: 'deterministic_template',
+      inputTokens: 0,
       outputTokens: 0,
-      latencyMs: llmLatency,
-      model: 'lfbm-vllm',
+      latencyMs: generationLatency,
+      model: 'zero-llm',
       success: true,
     });
 
@@ -1314,8 +1288,8 @@ export async function POST(req: Request) {
         preset: computedMetrics.preset,
         timestamp: computedMetrics.timestamp,
         overallRisk: computedMetrics.overallRisk,
-        source: 'lfbm_vllm',
-        estimatedCost: '$0.001',
+        source: 'deterministic_template',
+        estimatedCost: '$0.00', // Zero LLM = zero inference cost
         // Include reasoning metadata for transparency
         reasoning: reasoningResult
           ? {
@@ -1327,7 +1301,7 @@ export async function POST(req: Request) {
           : null,
         performance: {
           totalLatencyMs: totalLatency,
-          llmLatencyMs: llmLatency,
+          generationLatencyMs: generationLatency,
         },
         rateLimitRemaining: rateLimit.remaining,
         cached: false,
@@ -1349,11 +1323,11 @@ export async function POST(req: Request) {
     try {
       const learner = getLearningCollector();
       void learner.logLLMInteraction(sessionHash, 'consumer', 'error', {
-        promptTemplate: 'intel_briefing_lfbm',
+        promptTemplate: 'deterministic_template',
         inputTokens: 0,
         outputTokens: 0,
         latencyMs: Date.now() - startTime,
-        model: 'lfbm-vllm',
+        model: 'zero-llm',
         success: false,
       });
     } catch {
@@ -1494,6 +1468,6 @@ async function getFallbackBriefings(preset: string, supabase: ReturnType<typeof 
 
     security: `[DATA AS OF ${currentDate}] Security assessment based on composite risk scores. Nations with elevated security concerns: ${riskData.filter(n => n.overall_risk > 0.5).map(n => n.name).slice(0, 5).join(', ') || 'None at critical levels'}. Overall security posture: ${highRiskNations.length > 5 ? 'ELEVATED' : highRiskNations.length > 2 ? 'MODERATE' : 'STABLE'}. Continuous monitoring of ${riskData.length} nations active.`,
 
-    summary: `[LIVE DATA SUMMARY - ${currentDate}] ${context}: Monitoring ${riskData.length} nations with ${highRiskNations.length} at high risk, ${elevatedRiskNations.length} at elevated risk. Economic data from ${signalsData.length} recent indicators. This is REAL stored data from your intelligence feeds. LFBM-enhanced briefings generated via self-hosted vLLM.`,
+    summary: `[LIVE DATA SUMMARY - ${currentDate}] ${context}: Monitoring ${riskData.length} nations with ${highRiskNations.length} at high risk, ${elevatedRiskNations.length} at elevated risk. Economic data from ${signalsData.length} recent indicators. Zero-LLM deterministic analysis from nation state vectors.`,
   };
 }
