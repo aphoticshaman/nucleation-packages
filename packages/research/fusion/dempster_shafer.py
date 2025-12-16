@@ -364,3 +364,92 @@ def fuse_sources(
         results.append(belief)
 
     return results
+
+
+# ============================================================
+# Hybrid Fusion: DS + Value Clustering
+# ============================================================
+
+def hybrid_fusion(
+    source_values: List[float],
+    source_reliabilities: List[float],
+    clustering_threshold: float = 0.05,
+    ds_weight: float = 0.5,
+    cluster_weight: float = 0.5,
+) -> Dict:
+    """
+    Hybrid fusion combining Dempster-Shafer with value clustering.
+
+    This is the "best of both worlds" approach:
+    - DS handles uncertainty and hypothesis reasoning
+    - Value clustering handles numeric convergence
+
+    Args:
+        source_values: Numeric estimates from each source
+        source_reliabilities: Reliability score [0,1] for each source
+        clustering_threshold: Relative distance for clustering
+        ds_weight: Weight for DS-based estimate
+        cluster_weight: Weight for cluster-based estimate
+
+    Returns:
+        Dict with fused_value, confidence, method_contributions
+    """
+    from .value_clustering import value_clustering, basin_refinement
+
+    n = len(source_values)
+    if n == 0:
+        return {
+            "fused_value": 0.0,
+            "confidence": 0.0,
+            "method_contributions": {"ds": 0.0, "clustering": 0.0},
+        }
+
+    # Value clustering approach
+    cluster_result = value_clustering(source_values, threshold=clustering_threshold)
+
+    if cluster_result.best is not None:
+        cluster_value = basin_refinement(cluster_result.best)
+        cluster_confidence = (
+            cluster_result.best.tightness * 0.5 +
+            cluster_result.consensus_strength * 0.5
+        )
+    else:
+        cluster_value = np.mean(source_values)
+        cluster_confidence = 0.0
+
+    # DS-weighted average approach
+    r = np.array(source_reliabilities)
+    if r.sum() > 1e-10:
+        weights = r / r.sum()
+        ds_value = np.dot(weights, source_values)
+        ds_confidence = np.mean(r)
+    else:
+        ds_value = np.mean(source_values)
+        ds_confidence = 0.0
+
+    # Combine approaches
+    total_confidence = ds_weight * ds_confidence + cluster_weight * cluster_confidence
+
+    if total_confidence > 1e-10:
+        # Weight by respective confidences
+        fused_value = (
+            (ds_weight * ds_confidence * ds_value +
+             cluster_weight * cluster_confidence * cluster_value) /
+            total_confidence
+        )
+    else:
+        fused_value = (ds_value + cluster_value) / 2
+
+    return {
+        "fused_value": float(fused_value),
+        "confidence": float(min(1.0, total_confidence)),
+        "method_contributions": {
+            "ds": {"value": float(ds_value), "confidence": float(ds_confidence)},
+            "clustering": {
+                "value": float(cluster_value),
+                "confidence": float(cluster_confidence),
+                "n_clusters": cluster_result.n_clusters,
+                "best_cluster_size": cluster_result.best.size if cluster_result.best else 0,
+            },
+        },
+    }
