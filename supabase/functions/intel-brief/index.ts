@@ -156,20 +156,6 @@ serve(async (req) => {
     // Gather and analyze signals - ALL DETERMINISTIC
     const brief = await generateDeterministicBrief(supabase);
 
-    // Record usage (no token cost - it's all math!)
-    await supabase.rpc('record_usage', {
-      p_client_id: keyData[0].client_id,
-      p_api_key_id: keyData[0].key_id,
-      p_operation: 'analysis.intel_brief_deterministic',
-      p_analysis_tokens: 0, // Zero LLM tokens
-      p_metadata: {
-        model: 'latticeforge-fusion-v1',
-        brief_type: 'intel',
-        signal_count: brief.signals.length,
-        anomaly_count: brief.anomaly_count,
-      },
-    });
-
     // Store the brief
     const { data: savedBrief, error } = await supabase
       .from('briefs')
