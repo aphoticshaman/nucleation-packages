@@ -5,7 +5,10 @@ import { useIntelBriefing, getRiskBadgeStyle } from '@/hooks/useIntelBriefing';
 import {
   Globe, Shield, TrendingUp, AlertTriangle, RefreshCw, Target, BookOpen,
   Landmark, DollarSign, Factory, Cpu, Clock, ChevronRight,
-  FileText, Users, Radio, Zap, X
+  FileText, Users, Radio, Zap, X, Swords, Scale, Bomb, MapPin,
+  Stethoscope, FlaskConical, Pickaxe, Skull, Monitor, Building,
+  Rocket, Truck, Church, GraduationCap, Briefcase, Home, Bitcoin, Flame,
+  type LucideIcon
 } from 'lucide-react';
 import Glossary from '@/components/Glossary';
 import HelpTip from '@/components/HelpTip';
@@ -59,34 +62,39 @@ const DOMAIN_CATEGORIES = {
   },
 };
 
-const DOMAIN_LABELS: Record<string, string> = {
-  political: 'Geopolitics',
-  economic: 'Economy',
-  security: 'Security',
-  financial: 'Finance',
-  health: 'Public Health',
-  scitech: 'Science & Tech',
-  resources: 'Resources',
-  crime: 'Crime',
-  cyber: 'Cyber',
-  terrorism: 'Terrorism',
-  domestic: 'Civil Society',
-  borders: 'Borders & Migration',
-  infoops: 'Information Ops',
-  military: 'Defense',
-  space: 'Space',
-  industry: 'Industry',
-  logistics: 'Logistics',
-  minerals: 'Critical Minerals',
-  energy: 'Energy',
-  markets: 'Markets',
-  religious: 'Religious Affairs',
-  education: 'Education',
-  employment: 'Labor',
-  housing: 'Housing',
-  crypto: 'Digital Assets',
-  emerging: 'Emerging Threats',
+const DOMAIN_CONFIG: Record<string, { label: string; Icon: LucideIcon }> = {
+  political: { label: 'Geopolitics', Icon: Landmark },
+  economic: { label: 'Economy', Icon: TrendingUp },
+  security: { label: 'Security', Icon: Shield },
+  financial: { label: 'Finance', Icon: DollarSign },
+  health: { label: 'Public Health', Icon: Stethoscope },
+  scitech: { label: 'Science & Tech', Icon: FlaskConical },
+  resources: { label: 'Resources', Icon: Globe },
+  crime: { label: 'Crime', Icon: Skull },
+  cyber: { label: 'Cyber', Icon: Monitor },
+  terrorism: { label: 'Terrorism', Icon: Bomb },
+  domestic: { label: 'Civil Society', Icon: Users },
+  borders: { label: 'Borders & Migration', Icon: MapPin },
+  infoops: { label: 'Information Ops', Icon: Radio },
+  military: { label: 'Defense', Icon: Swords },
+  space: { label: 'Space', Icon: Rocket },
+  industry: { label: 'Industry', Icon: Factory },
+  logistics: { label: 'Logistics', Icon: Truck },
+  minerals: { label: 'Critical Minerals', Icon: Pickaxe },
+  energy: { label: 'Energy', Icon: Zap },
+  markets: { label: 'Markets', Icon: TrendingUp },
+  religious: { label: 'Religious Affairs', Icon: Church },
+  education: { label: 'Education', Icon: GraduationCap },
+  employment: { label: 'Labor', Icon: Briefcase },
+  housing: { label: 'Housing', Icon: Home },
+  crypto: { label: 'Digital Assets', Icon: Bitcoin },
+  emerging: { label: 'Emerging Threats', Icon: Flame },
 };
+
+// Legacy accessor for label only
+const DOMAIN_LABELS: Record<string, string> = Object.fromEntries(
+  Object.entries(DOMAIN_CONFIG).map(([k, v]) => [k, v.label])
+);
 
 // Parse briefing text into structured sections (5Ws+H + OUTLOOK + Position)
 function parseBriefing(text: string) {
@@ -447,13 +455,17 @@ export default function BriefingsPage() {
                         const content = briefings?.[domain as keyof typeof briefings] as string;
                         const parsed = parseBriefing(content);
 
+                        const domainConfig = DOMAIN_CONFIG[domain];
+                        const DomainIcon = domainConfig?.Icon;
+
                         return (
                           <div
                             key={domain}
                             className={`p-4 ${idx !== categoryDomains.length - 1 ? 'border-b border-white/[0.04]' : ''}`}
                           >
-                            <h4 className={`text-sm font-medium ${config.color} mb-3 uppercase tracking-wider`}>
-                              {DOMAIN_LABELS[domain] || domain}
+                            <h4 className={`text-sm font-medium ${config.color} mb-3 uppercase tracking-wider flex items-center gap-2`}>
+                              {DomainIcon && <DomainIcon className="w-4 h-4" />}
+                              {domainConfig?.label || domain}
                             </h4>
 
                             {parsed.map((section, sIdx) => (
