@@ -74,18 +74,18 @@ const INTEREST_AREAS = [
 ];
 
 const FEATURED_NATIONS = [
-  { iso3: 'USA', name: 'United States', flag: '🇺🇸' },
-  { iso3: 'CHN', name: 'China', flag: '🇨🇳' },
-  { iso3: 'RUS', name: 'Russia', flag: '🇷🇺' },
-  { iso3: 'UKR', name: 'Ukraine', flag: '🇺🇦' },
-  { iso3: 'TWN', name: 'Taiwan', flag: '🇹🇼' },
-  { iso3: 'IRN', name: 'Iran', flag: '🇮🇷' },
-  { iso3: 'ISR', name: 'Israel', flag: '🇮🇱' },
-  { iso3: 'DEU', name: 'Germany', flag: '🇩🇪' },
-  { iso3: 'GBR', name: 'United Kingdom', flag: '🇬🇧' },
-  { iso3: 'IND', name: 'India', flag: '🇮🇳' },
-  { iso3: 'JPN', name: 'Japan', flag: '🇯🇵' },
-  { iso3: 'BRA', name: 'Brazil', flag: '🇧🇷' },
+  { iso3: 'USA', name: 'United States', flag: '🇺🇸', displayCode: 'USA' },
+  { iso3: 'CHN', name: 'China', flag: '🇨🇳', displayCode: 'CHN' },
+  { iso3: 'RUS', name: 'Russia', flag: '🇷🇺', displayCode: 'RUS' },
+  { iso3: 'UKR', name: 'Ukraine', flag: '🇺🇦', displayCode: 'UKR' },
+  { iso3: 'TWN', name: 'Taiwan', flag: '🇹🇼', displayCode: 'TWN' },
+  { iso3: 'IRN', name: 'Iran', flag: '🇮🇷', displayCode: 'IRN' },
+  { iso3: 'ISR', name: 'Israel', flag: '🇮🇱', displayCode: 'ISR' },
+  { iso3: 'DEU', name: 'Germany', flag: '🇩🇪', displayCode: 'DEU' },
+  { iso3: 'GBR', name: 'United Kingdom', flag: '🇬🇧', displayCode: 'GBR' },
+  { iso3: 'IND', name: 'India', flag: '🇮🇳', displayCode: 'IND' },
+  { iso3: 'JPN', name: 'Japan', flag: '🇯🇵', displayCode: 'JPN' },
+  { iso3: 'BRA', name: 'Brazil', flag: '🇧🇷', displayCode: 'BRA' },
 ];
 
 export default function OnboardingWizard({ isOpen, onClose, onComplete }: OnboardingWizardProps) {
@@ -380,7 +380,7 @@ function WatchlistStep({
                   : 'bg-black/20 border-white/[0.06] hover:border-white/[0.12]'
               }`}
             >
-              <span className="text-2xl mb-1 block">{nation.flag}</span>
+              <span className="text-lg mb-1 block">{nation.flag} <span className="text-xs text-slate-500 font-mono">{nation.displayCode}</span></span>
               <span className="text-xs text-slate-400">{nation.name}</span>
             </button>
           );

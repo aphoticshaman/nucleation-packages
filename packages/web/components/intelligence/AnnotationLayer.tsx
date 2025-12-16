@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useMemo } from 'react';
+import { FileText, Sparkles, HelpCircle, AlertTriangle, Link2, type LucideIcon } from 'lucide-react';
 
 type AnnotationType = 'note' | 'highlight' | 'question' | 'alert' | 'link';
 type AnnotationPriority = 'low' | 'medium' | 'high' | 'critical';
@@ -73,12 +74,12 @@ export function AnnotationLayer({
   const [filterType, setFilterType] = useState<AnnotationType | 'all'>('all');
   const [showResolved, setShowResolved] = useState(false);
 
-  const typeConfig: Record<AnnotationType, { icon: string; color: string; label: string }> = {
-    note: { icon: '📝', color: 'cyan', label: 'Note' },
-    highlight: { icon: '✨', color: 'amber', label: 'Highlight' },
-    question: { icon: '❓', color: 'purple', label: 'Question' },
-    alert: { icon: '⚠', color: 'red', label: 'Alert' },
-    link: { icon: '🔗', color: 'green', label: 'Link' },
+  const typeConfig: Record<AnnotationType, { Icon: LucideIcon; color: string; label: string }> = {
+    note: { Icon: FileText, color: 'cyan', label: 'Note' },
+    highlight: { Icon: Sparkles, color: 'amber', label: 'Highlight' },
+    question: { Icon: HelpCircle, color: 'purple', label: 'Question' },
+    alert: { Icon: AlertTriangle, color: 'red', label: 'Alert' },
+    link: { Icon: Link2, color: 'green', label: 'Link' },
   };
 
   const priorityConfig: Record<AnnotationPriority, { bg: string; text: string }> = {
@@ -136,7 +137,7 @@ export function AnnotationLayer({
         >
           <option value="all">All Types</option>
           {Object.entries(typeConfig).map(([type, config]) => (
-            <option key={type} value={type}>{config.icon} {config.label}</option>
+            <option key={type} value={type}>{config.label}</option>
           ))}
         </select>
 
@@ -191,7 +192,7 @@ export function AnnotationLayer({
                   boxShadow: `0 0 10px var(--${config.color}-500)`,
                 }}
               >
-                <span className="text-sm">{config.icon}</span>
+                <config.Icon className="w-4 h-4" />
               </button>
 
               {/* Reply count badge */}
@@ -260,7 +261,7 @@ function AnnotationCard({
   onClose,
 }: {
   annotation: Annotation;
-  config: { icon: string; color: string; label: string };
+  config: { Icon: LucideIcon; color: string; label: string };
   priorityConfig: Record<AnnotationPriority, { bg: string; text: string }>;
   currentUser: { id: string; name: string };
   editable: boolean;
@@ -285,7 +286,7 @@ function AnnotationCard({
         {/* Header */}
         <div className="flex items-center justify-between p-3 bg-slate-700/50 border-b border-slate-600">
           <div className="flex items-center gap-2">
-            <span>{config.icon}</span>
+            <config.Icon className="w-4 h-4" />
             <span className="text-sm font-medium text-slate-200">{config.label}</span>
             <span className={`px-1.5 py-0.5 rounded text-xs ${priority.bg} ${priority.text}`}>
               {annotation.priority.toUpperCase()}
@@ -452,7 +453,7 @@ function CreateAnnotationModal({
   onCreate,
 }: {
   position: { x: number; y: number };
-  typeConfig: Record<AnnotationType, { icon: string; color: string; label: string }>;
+  typeConfig: Record<AnnotationType, { Icon: LucideIcon; color: string; label: string }>;
   currentUser: { id: string; name: string };
   onClose: () => void;
   onCreate: (data: Omit<Annotation, 'id' | 'createdAt' | 'updatedAt' | 'position' | 'author' | 'replies' | 'resolved'>) => void;
@@ -496,7 +497,7 @@ function CreateAnnotationModal({
                   : 'bg-slate-700 text-slate-400 border border-transparent'
               }`}
             >
-              {config.icon}
+              <config.Icon className="w-4 h-4 mx-auto" />
             </button>
           ))}
         </div>

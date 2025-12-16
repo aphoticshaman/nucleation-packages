@@ -289,19 +289,19 @@ function buildTemporalFilters(): FilterNode {
   return {
     id: 'temporal',
     label: 'Temporal Dimension',
-    icon: '⏳',
+    icon: '',
     type: 'group',
     defaultExpanded: true,
     children: [
       {
         id: 'temporal_state',
         label: 'Time Focus',
-        icon: '📅',
+        icon: '',
         type: 'multi',
         options: [
-          { value: 'historical', label: 'Historical', icon: '📜' },
-          { value: 'current', label: 'Current', icon: '📍' },
-          { value: 'projected', label: 'Projected', icon: '🔮' },
+          { value: 'historical', label: 'Historical', icon: '' },
+          { value: 'current', label: 'Current', icon: '' },
+          { value: 'projected', label: 'Projected', icon: '' },
         ],
       },
       {
@@ -334,7 +334,7 @@ function buildEntityFilters(): FilterNode {
   return {
     id: 'entities',
     label: 'Entity Filters',
-    icon: '🌐',
+    icon: '',
     type: 'group',
     children: [
       {
@@ -342,11 +342,11 @@ function buildEntityFilters(): FilterNode {
         label: 'Entity Types',
         type: 'multi',
         options: [
-          { value: 'nation', label: 'Nations', icon: '🏳️' },
-          { value: 'organization', label: 'Organizations', icon: '🏢' },
-          { value: 'alliance', label: 'Alliances', icon: '🤝' },
-          { value: 'individual', label: 'Individuals', icon: '👤' },
-          { value: 'movement', label: 'Movements', icon: '✊' },
+          { value: 'nation', label: 'Nations', icon: '' },
+          { value: 'organization', label: 'Organizations', icon: '' },
+          { value: 'alliance', label: 'Alliances', icon: '' },
+          { value: 'individual', label: 'Individuals', icon: '' },
+          { value: 'movement', label: 'Movements', icon: '' },
         ],
       },
       {
@@ -357,7 +357,7 @@ function buildEntityFilters(): FilterNode {
           {
             id: 'group_nato',
             label: 'NATO',
-            icon: '🛡️',
+            icon: '',
             type: 'toggle',
             autoCompute: () => (
               <div className="space-y-1">
@@ -369,7 +369,7 @@ function buildEntityFilters(): FilterNode {
           {
             id: 'group_brics',
             label: 'BRICS+',
-            icon: '🌏',
+            icon: '',
             type: 'toggle',
             autoCompute: () => (
               <div className="space-y-1">
@@ -381,19 +381,19 @@ function buildEntityFilters(): FilterNode {
           {
             id: 'group_eu',
             label: 'European Union',
-            icon: '🇪🇺',
+            icon: '',
             type: 'toggle',
           },
           {
             id: 'group_asean',
             label: 'ASEAN',
-            icon: '🌸',
+            icon: '',
             type: 'toggle',
           },
           {
             id: 'group_gcc',
             label: 'Gulf States',
-            icon: '🏜️',
+            icon: '',
             type: 'toggle',
           },
         ],
@@ -406,7 +406,7 @@ function buildRelationFilters(): FilterNode {
   return {
     id: 'relations',
     label: 'Alliance & Hostility',
-    icon: '🔗',
+    icon: '',
     type: 'group',
     children: [
       {
@@ -414,14 +414,14 @@ function buildRelationFilters(): FilterNode {
         label: 'Relation Type',
         type: 'multi',
         options: [
-          { value: 'alliance', label: 'Alliance', icon: '🤝' },
-          { value: 'partnership', label: 'Partnership', icon: '🤝' },
-          { value: 'friendly', label: 'Friendly', icon: '😊' },
-          { value: 'neutral', label: 'Neutral', icon: '😐' },
-          { value: 'tension', label: 'Tension', icon: '😠' },
-          { value: 'rivalry', label: 'Rivalry', icon: '⚔️' },
-          { value: 'hostile', label: 'Hostile', icon: '💢' },
-          { value: 'conflict', label: 'Conflict', icon: '🔥' },
+          { value: 'alliance', label: 'Alliance', icon: '' },
+          { value: 'partnership', label: 'Partnership', icon: '' },
+          { value: 'friendly', label: 'Friendly', icon: '' },
+          { value: 'neutral', label: 'Neutral', icon: '' },
+          { value: 'tension', label: 'Tension', icon: '' },
+          { value: 'rivalry', label: 'Rivalry', icon: '' },
+          { value: 'hostile', label: 'Hostile', icon: '' },
+          { value: 'conflict', label: 'Conflict', icon: '' },
         ],
       },
       {
@@ -429,13 +429,13 @@ function buildRelationFilters(): FilterNode {
         label: 'Relation Basis',
         type: 'group',
         children: [
-          { id: 'basis_military', label: 'Military', icon: '🎖️', type: 'toggle' },
-          { id: 'basis_economic', label: 'Economic', icon: '💰', type: 'toggle' },
-          { id: 'basis_ideological', label: 'Ideological', icon: '📜', type: 'toggle' },
-          { id: 'basis_religious', label: 'Religious', icon: '🕊️', type: 'toggle' },
-          { id: 'basis_historical', label: 'Historical', icon: '📚', type: 'toggle' },
-          { id: 'basis_territorial', label: 'Territorial', icon: '🗺️', type: 'toggle' },
-          { id: 'basis_resource', label: 'Resource', icon: '⛏️', type: 'toggle' },
+          { id: 'basis_military', label: 'Military', icon: '', type: 'toggle' },
+          { id: 'basis_economic', label: 'Economic', icon: '', type: 'toggle' },
+          { id: 'basis_ideological', label: 'Ideological', icon: '', type: 'toggle' },
+          { id: 'basis_religious', label: 'Religious', icon: '', type: 'toggle' },
+          { id: 'basis_historical', label: 'Historical', icon: '', type: 'toggle' },
+          { id: 'basis_territorial', label: 'Territorial', icon: '', type: 'toggle' },
+          { id: 'basis_resource', label: 'Resource', icon: '', type: 'toggle' },
         ],
       },
       {
@@ -452,7 +452,7 @@ function buildIdeologicalFilters(): FilterNode {
   return {
     id: 'ideological',
     label: 'Ideological Spectrum',
-    icon: '⚖️',
+    icon: '',
     type: 'group',
     children: [
       {
@@ -491,7 +491,7 @@ function buildMilitaryFilters(): FilterNode {
   return {
     id: 'military',
     label: 'Military Dimension',
-    icon: '🎖️',
+    icon: '',
     type: 'group',
     children: [
       {
@@ -499,10 +499,10 @@ function buildMilitaryFilters(): FilterNode {
         label: 'Posture',
         type: 'multi',
         options: [
-          { value: 'defensive', label: 'Defensive', icon: '🛡️' },
-          { value: 'neutral', label: 'Neutral', icon: '⚖️' },
-          { value: 'forward', label: 'Forward', icon: '➡️' },
-          { value: 'aggressive', label: 'Aggressive', icon: '⚔️' },
+          { value: 'defensive', label: 'Defensive', icon: '' },
+          { value: 'neutral', label: 'Neutral', icon: '' },
+          { value: 'forward', label: 'Forward', icon: '' },
+          { value: 'aggressive', label: 'Aggressive', icon: '' },
         ],
       },
       {
@@ -513,7 +513,7 @@ function buildMilitaryFilters(): FilterNode {
           {
             id: 'nuclear',
             label: 'Nuclear capable',
-            icon: '☢️',
+            icon: '',
             type: 'toggle',
             autoCompute: () => (
               <span className="text-xs text-amber-400">9 nations with nuclear weapons</span>
@@ -522,19 +522,19 @@ function buildMilitaryFilters(): FilterNode {
           {
             id: 'blue_water_navy',
             label: 'Blue water navy',
-            icon: '🚢',
+            icon: '',
             type: 'toggle',
           },
           {
             id: 'space_capable',
             label: 'Space capable',
-            icon: '🛰️',
+            icon: '',
             type: 'toggle',
           },
           {
             id: 'cyber_tier1',
             label: 'Tier 1 cyber',
-            icon: '💻',
+            icon: '',
             type: 'toggle',
           },
         ],
@@ -553,7 +553,7 @@ function buildResourceFilters(): FilterNode {
   return {
     id: 'resources',
     label: 'Resource Dependencies',
-    icon: '⛏️',
+    icon: '',
     type: 'group',
     children: [
       {
@@ -564,7 +564,7 @@ function buildResourceFilters(): FilterNode {
           {
             id: 'res_energy',
             label: 'Energy',
-            icon: '⚡',
+            icon: '',
             type: 'group',
             children: [
               { id: 'res_oil', label: 'Oil', type: 'toggle' },
@@ -576,7 +576,7 @@ function buildResourceFilters(): FilterNode {
           {
             id: 'res_minerals',
             label: 'Critical Minerals',
-            icon: '💎',
+            icon: '',
             type: 'group',
             children: [
               { id: 'res_rare_earths', label: 'Rare Earths', type: 'toggle' },
@@ -588,7 +588,7 @@ function buildResourceFilters(): FilterNode {
           {
             id: 'res_strategic',
             label: 'Strategic',
-            icon: '🏭',
+            icon: '',
             type: 'group',
             children: [
               { id: 'res_semiconductors', label: 'Semiconductors', type: 'toggle' },
@@ -638,7 +638,7 @@ function buildConflictFilters(): FilterNode {
   return {
     id: 'conflicts',
     label: 'Conflict Trajectories',
-    icon: '🔥',
+    icon: '',
     type: 'group',
     children: [
       {
@@ -646,13 +646,13 @@ function buildConflictFilters(): FilterNode {
         label: 'Phase',
         type: 'multi',
         options: [
-          { value: 'latent', label: 'Latent', icon: '💤' },
-          { value: 'emerging', label: 'Emerging', icon: '⚠️' },
-          { value: 'escalating', label: 'Escalating', icon: '📈' },
-          { value: 'crisis', label: 'Crisis', icon: '🚨' },
-          { value: 'active_conflict', label: 'Active', icon: '🔥' },
-          { value: 'de_escalating', label: 'De-escalating', icon: '📉' },
-          { value: 'post_conflict', label: 'Post-conflict', icon: '🕊️' },
+          { value: 'latent', label: 'Latent', icon: '' },
+          { value: 'emerging', label: 'Emerging', icon: '' },
+          { value: 'escalating', label: 'Escalating', icon: '' },
+          { value: 'crisis', label: 'Crisis', icon: '' },
+          { value: 'active_conflict', label: 'Active', icon: '' },
+          { value: 'de_escalating', label: 'De-escalating', icon: '' },
+          { value: 'post_conflict', label: 'Post-conflict', icon: '' },
         ],
       },
       {
@@ -660,12 +660,12 @@ function buildConflictFilters(): FilterNode {
         label: 'Conflict Drivers',
         type: 'group',
         children: [
-          { id: 'driver_territorial', label: 'Territorial', icon: '🗺️', type: 'toggle' },
-          { id: 'driver_resource', label: 'Resource', icon: '⛏️', type: 'toggle' },
-          { id: 'driver_ideological', label: 'Ideological', icon: '📜', type: 'toggle' },
-          { id: 'driver_ethnic', label: 'Ethnic', icon: '👥', type: 'toggle' },
-          { id: 'driver_religious', label: 'Religious', icon: '🕊️', type: 'toggle' },
-          { id: 'driver_proxy', label: 'Proxy', icon: '🎭', type: 'toggle' },
+          { id: 'driver_territorial', label: 'Territorial', icon: '', type: 'toggle' },
+          { id: 'driver_resource', label: 'Resource', icon: '', type: 'toggle' },
+          { id: 'driver_ideological', label: 'Ideological', icon: '', type: 'toggle' },
+          { id: 'driver_ethnic', label: 'Ethnic', icon: '', type: 'toggle' },
+          { id: 'driver_religious', label: 'Religious', icon: '', type: 'toggle' },
+          { id: 'driver_proxy', label: 'Proxy', icon: '', type: 'toggle' },
         ],
       },
       {
@@ -688,7 +688,7 @@ function buildDemographicFilters(): FilterNode {
   return {
     id: 'demographics',
     label: 'Population & Trends',
-    icon: '👥',
+    icon: '',
     type: 'group',
     children: [
       {
@@ -718,20 +718,20 @@ function buildDemographicFilters(): FilterNode {
           {
             id: 'youth_bulge',
             label: 'Youth bulge risk',
-            icon: '👶',
+            icon: '',
             type: 'toggle',
             description: 'Large young population = instability risk',
           },
           {
             id: 'aging_crisis',
             label: 'Aging crisis',
-            icon: '👴',
+            icon: '',
             type: 'toggle',
           },
           {
             id: 'migration_pressure',
             label: 'Migration pressure',
-            icon: '🚶',
+            icon: '',
             type: 'toggle',
           },
         ],
@@ -757,7 +757,7 @@ function buildGovernanceFilters(): FilterNode {
   return {
     id: 'governance',
     label: 'Governance & Stability',
-    icon: '🏛️',
+    icon: '',
     type: 'group',
     children: [
       {
@@ -765,10 +765,10 @@ function buildGovernanceFilters(): FilterNode {
         label: 'Regime Type',
         type: 'multi',
         options: [
-          { value: 'democracy', label: 'Democracy', icon: '🗳️' },
-          { value: 'hybrid', label: 'Hybrid', icon: '⚖️' },
-          { value: 'authoritarian', label: 'Authoritarian', icon: '👑' },
-          { value: 'failed_state', label: 'Failed State', icon: '💔' },
+          { value: 'democracy', label: 'Democracy', icon: '' },
+          { value: 'hybrid', label: 'Hybrid', icon: '' },
+          { value: 'authoritarian', label: 'Authoritarian', icon: '' },
+          { value: 'failed_state', label: 'Failed State', icon: '' },
         ],
       },
       {
