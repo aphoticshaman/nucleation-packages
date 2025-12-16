@@ -10,7 +10,7 @@
  */
 
 import { ElleGuardian, type ElleInteraction, type ElleInteractionType } from '../reasoning/security';
-import { encrypt, decrypt, type EncryptedPayload } from '../study/encryption';
+import { encrypt, decrypt, type EncryptedPayload } from '../crypto/encryption';
 import {
   detectPatternAnomaly,
   detectTemporalBreak,
