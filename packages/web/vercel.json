@@ -33,10 +33,6 @@
     {
       "path": "/api/analyze/cascades",
       "schedule": "30 0 * * *"
-    },
-    {
-      "path": "/api/cron/guardian-audit",
-      "schedule": "0 0 * * *"
     }
   ]
 }

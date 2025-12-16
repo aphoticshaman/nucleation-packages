@@ -61,16 +61,7 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  // DEBUG: Log auth state
-  console.log('[MIDDLEWARE] Path:', path);
-  console.log('[MIDDLEWARE] Hostname:', request.nextUrl.hostname);
-  console.log('[MIDDLEWARE] isProduction:', isProduction);
-  console.log('[MIDDLEWARE] User exists:', !!user);
-  console.log('[MIDDLEWARE] User error:', userError?.message || 'none');
-  if (user) {
-    console.log('[MIDDLEWARE] User email:', user.email);
-  }
-  console.log('[MIDDLEWARE] Cookies received:', request.cookies.getAll().map(c => c.name));
+  // Auth state available: user, userError, path
 
   // Protected routes
   const protectedPaths = ['/admin', '/dashboard', '/app'];
