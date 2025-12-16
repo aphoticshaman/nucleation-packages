@@ -199,6 +199,12 @@ interface CategoryMetrics {
   trend: 'improving' | 'stable' | 'worsening';
   alertCount: number;
   keyFactors: string[]; // Generic factors, not our specific weightings
+  decisionBasis: {
+    threshold: number;
+    rationale: string;
+    inputSignals: string[];
+    confidenceInterval: [number, number];
+  };
 }
 
 interface Alert {
@@ -281,11 +287,20 @@ function computeCategoryRisk(nations: NationData[], category: string): CategoryM
   // Generic factors (not our specific indicators)
   const keyFactors = getGenericFactors(category, quantizedRisk);
 
+  // Decision basis for explainability (required by defense/intel buyers)
+  const decisionBasis = {
+    threshold: 50, // Risk threshold for elevated status
+    rationale: getCategoryRationale(category),
+    inputSignals: ['basin_strength', 'transition_risk'],
+    confidenceInterval: [Math.max(0, quantizedRisk - 10), Math.min(100, quantizedRisk + 10)] as [number, number],
+  };
+
   return {
     riskLevel: quantizedRisk,
     trend,
     alertCount: Math.floor(quantizedRisk / 25), // 0-4 alerts based on risk
     keyFactors,
+    decisionBasis,
   };
 }
 
@@ -427,6 +442,39 @@ function getGenericFactors(category: string, risk: number): string[] {
   const factors = factorsByCategory[category] || factorsByCategory.political;
   const tier = risk < 35 ? 0 : risk < 65 ? 1 : 2;
   return factors[tier];
+}
+
+// Rationale for each category's risk calculation (for explainability)
+function getCategoryRationale(category: string): string {
+  const rationales: Record<string, string> = {
+    political: 'Basin strength (institutional resilience) and transition risk from historical regime change analysis',
+    economic: 'Balanced weighting of institutional stability and economic transition indicators',
+    security: 'Transition risk weighted higher due to security-stability correlation',
+    financial: 'Equal weighting of institutional and transition factors for financial stability',
+    health: 'Institutional capacity weighted for healthcare system resilience',
+    scitech: 'Long-term stability indicators with technology development baseline',
+    resources: 'Resource competition sensitivity to institutional and transition factors',
+    crime: 'Inverse institutional strength correlation with organized crime activity',
+    cyber: 'Infrastructure vulnerability correlated with institutional weakness',
+    terrorism: 'Transition risk primary driver of terrorism threat assessment',
+    domestic: 'Basin strength primary indicator of domestic stability',
+    borders: 'Transition risk weighted for border security assessment',
+    infoops: 'Institutional weakness correlated with information vulnerability',
+    military: 'Transition risk primary driver of military posture assessment',
+    space: 'Long-term institutional stability for space program assessment',
+    industry: 'Economic stability indicators for industrial output',
+    logistics: 'Supply chain sensitivity to regional stability',
+    minerals: 'Resource access correlated with regional stability',
+    energy: 'Energy security tied to regional transition risk',
+    markets: 'Market stability correlated with institutional resilience',
+    religious: 'Sectarian risk correlated with institutional weakness',
+    education: 'Educational stability tied to institutional strength',
+    employment: 'Labor market stability from institutional indicators',
+    housing: 'Housing market stability from economic fundamentals',
+    crypto: 'Regulatory stability and institutional adoption metrics',
+    emerging: 'Weak signal detection from cross-domain convergence',
+  };
+  return rationales[category] || 'Composite risk from basin strength and transition indicators';
 }
 
 interface NationData {
