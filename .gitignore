@@ -45,3 +45,4 @@ temp/
 phi2/adapter_model.safetensors
 phi2/*.safetensors
 *.safetensors
+__pycache__/
