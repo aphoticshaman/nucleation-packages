@@ -1,7 +1,6 @@
 import { requireAdmin } from '@/lib/auth';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
-import { Settings, Server, Database, Shield, Bell, Save } from 'lucide-react';
+import { Settings, Server, Database, Shield, Bell, Lock } from 'lucide-react';
 
 export default async function ConfigPage() {
   await requireAdmin();
@@ -53,9 +52,8 @@ export default async function ConfigPage() {
   const featureFlags = [
     { key: 'new_dashboard', label: 'New Dashboard UI', enabled: true, description: 'Enable the redesigned dashboard interface' },
     { key: 'real_time_updates', label: 'Real-time Updates', enabled: true, description: 'WebSocket-based live data streaming' },
-    { key: 'advanced_analytics', label: 'Advanced Analytics', enabled: false, description: 'Experimental analytics features' },
+    { key: 'advanced_analytics', label: 'Advanced Analytics', enabled: false, description: 'Extended usage analytics features' },
     { key: 'beta_api_v2', label: 'API v2 (Beta)', enabled: false, description: 'Next generation API endpoints' },
-    { key: 'ai_suggestions', label: 'AI Suggestions', enabled: true, description: 'ML-powered simulation suggestions' },
   ];
 
   return (
@@ -63,12 +61,12 @@ export default async function ConfigPage() {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">System Configuration</h1>
-          <p className="text-slate-400">Manage platform settings and feature flags</p>
+          <p className="text-slate-400">View platform settings and feature flags</p>
         </div>
-        <GlassButton variant="primary" glow>
-          <Save className="w-4 h-4 mr-2" />
-          Save Changes
-        </GlassButton>
+        <div className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-lg border border-slate-700">
+          <Lock className="w-4 h-4 text-slate-400" />
+          <span className="text-sm text-slate-400">Read-only view</span>
+        </div>
       </div>
 
       {/* Config Sections */}
@@ -91,19 +89,17 @@ export default async function ConfigPage() {
                   <div key={j} className="flex items-center justify-between">
                     <label className="text-sm text-slate-300">{setting.label}</label>
                     {setting.type === 'toggle' ? (
-                      <button className={`w-12 h-6 rounded-full transition-colors ${
-                        setting.value ? 'bg-blue-500' : 'bg-slate-600'
+                      <div className={`w-12 h-6 rounded-full ${
+                        setting.value ? 'bg-blue-500/50' : 'bg-slate-600/50'
                       }`}>
-                        <div className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                        <div className={`w-5 h-5 rounded-full bg-white/80 transition-transform ${
                           setting.value ? 'translate-x-6' : 'translate-x-0.5'
                         }`} />
-                      </button>
+                      </div>
                     ) : (
-                      <input
-                        type={setting.type}
-                        defaultValue={String(setting.value)}
-                        className="w-48 px-3 py-1.5 bg-black/30 border border-white/[0.08] rounded-lg text-white text-sm focus:outline-none focus:border-blue-500/50"
-                      />
+                      <span className="px-3 py-1.5 bg-black/30 border border-white/[0.08] rounded-lg text-slate-300 text-sm">
+                        {String(setting.value)}
+                      </span>
                     )}
                   </div>
                 ))}
@@ -126,24 +122,20 @@ export default async function ConfigPage() {
                 <p className="text-white font-medium">{flag.label}</p>
                 <p className="text-sm text-slate-400">{flag.description}</p>
               </div>
-              <div className="flex items-center gap-4">
-                <span className={`px-2 py-1 rounded text-xs ${
-                  flag.enabled ? 'bg-green-500/20 text-green-400' : 'bg-slate-500/20 text-slate-400'
-                }`}>
-                  {flag.enabled ? 'Enabled' : 'Disabled'}
-                </span>
-                <button className={`w-12 h-6 rounded-full transition-colors ${
-                  flag.enabled ? 'bg-green-500' : 'bg-slate-600'
-                }`}>
-                  <div className={`w-5 h-5 rounded-full bg-white transition-transform ${
-                    flag.enabled ? 'translate-x-6' : 'translate-x-0.5'
-                  }`} />
-                </button>
-              </div>
+              <span className={`px-3 py-1 rounded text-sm ${
+                flag.enabled ? 'bg-green-500/20 text-green-400' : 'bg-slate-500/20 text-slate-400'
+              }`}>
+                {flag.enabled ? 'Enabled' : 'Disabled'}
+              </span>
             </div>
           ))}
         </div>
       </GlassCard>
+
+      {/* Notice */}
+      <p className="mt-6 text-center text-sm text-slate-500">
+        Configuration changes are made via environment variables and deployment settings.
+      </p>
     </div>
   );
 }

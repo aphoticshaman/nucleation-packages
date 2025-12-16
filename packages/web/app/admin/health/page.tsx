@@ -14,11 +14,10 @@ interface HealthCheck {
 }
 
 const API_ENDPOINTS = [
-  { name: 'Supabase Auth', url: '/api/health/supabase', critical: true },
-  { name: 'Supabase Database', url: '/api/health/database', critical: true },
-  { name: 'Intel Briefing Cache', url: '/api/intel-briefing', method: 'POST', body: { preset: 'global' }, critical: false },
-  { name: 'Stripe API', url: '/api/health/stripe', critical: true },
+  { name: 'Intel Briefing Cache', url: '/api/intel-briefing', method: 'POST', body: { preset: 'global' }, critical: true },
+  { name: 'US Economic Brief', url: '/api/us-brief', method: 'POST', critical: true },
   { name: 'GDELT Ingest', url: '/api/ingest/gdelt', needsCron: true, critical: false },
+  { name: 'Nation Risk Compute', url: '/api/compute/nation-risk', needsCron: true, critical: false },
 ];
 
 function StatusBadge({ status }: { status: HealthCheck['status'] }) {
@@ -269,23 +268,44 @@ export default function AdminHealthPage() {
           <div className="flex items-center justify-between p-3 bg-black/20 rounded-lg">
             <div className="flex items-center gap-3">
               <span className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-white">Intel Briefing Warm Cache</span>
+              <span className="text-white">Cache Warm</span>
             </div>
-            <span className="text-slate-400 text-sm">Every 30 min</span>
+            <span className="text-slate-400 text-sm">Every 10 min</span>
           </div>
           <div className="flex items-center justify-between p-3 bg-black/20 rounded-lg">
             <div className="flex items-center gap-3">
               <span className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-white">GDELT Data Ingest</span>
+              <span className="text-white">GDELT Ingest</span>
             </div>
-            <span className="text-slate-400 text-sm">Every 15 min</span>
+            <span className="text-slate-400 text-sm">Hourly at :05</span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-black/20 rounded-lg">
+            <div className="flex items-center gap-3">
+              <span className="w-2 h-2 rounded-full bg-green-500" />
+              <span className="text-white">Sentiment Analysis</span>
+            </div>
+            <span className="text-slate-400 text-sm">Every 4h at :15</span>
           </div>
           <div className="flex items-center justify-between p-3 bg-black/20 rounded-lg">
             <div className="flex items-center gap-3">
               <span className="w-2 h-2 rounded-full bg-green-500" />
               <span className="text-white">Nation Risk Compute</span>
             </div>
-            <span className="text-slate-400 text-sm">Every hour</span>
+            <span className="text-slate-400 text-sm">Every 4h at :25</span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-black/20 rounded-lg">
+            <div className="flex items-center gap-3">
+              <span className="w-2 h-2 rounded-full bg-green-500" />
+              <span className="text-white">Daily Alerts</span>
+            </div>
+            <span className="text-slate-400 text-sm">Daily at 08:00 UTC</span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-black/20 rounded-lg">
+            <div className="flex items-center gap-3">
+              <span className="w-2 h-2 rounded-full bg-green-500" />
+              <span className="text-white">World Bank Sync</span>
+            </div>
+            <span className="text-slate-400 text-sm">Weekly (Sunday 06:00)</span>
           </div>
         </div>
       </GlassCard>
