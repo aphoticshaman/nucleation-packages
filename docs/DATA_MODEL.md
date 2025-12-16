@@ -218,38 +218,74 @@ CREATE INDEX idx_keys_tier ON api_keys(client_tier);
 
 ### UniversalSignal
 
-Standard format for all ingested events.
+Standard format for all ingested events. Full provenance tracking for audit compliance.
 
 ```typescript
 interface UniversalSignal {
-    id: string;                         // UUID
-    source: SignalSource;
-    event_type: string;                 // Normalized category
-    location: {
-        country_code: string;           // ISO 3166-1 alpha-3
-        region?: string;
-        admin1?: string;                // State/province
-        admin2?: string;                // County/district
-        coordinates?: [number, number]; // [lat, lon]
-    };
+    id: string;                         // Deterministic hash-based ID
+    signal_type: SignalType;            // event | news | metric | indicator | alert
     timestamp: string;                  // ISO 8601
-    severity: number;                   // [0,1] normalized
-    confidence: number;                 // [0,1] source reliability
-    fatalities?: number;
-    actors?: string[];
-    tags?: string[];
-    payload: Record<string, unknown>;   // Source-specific data
+
+    // Spatial
+    geo?: {
+        country_code: string;           // ISO 3166-1 alpha-2
+        country_name?: string;
+        region?: string;
+        lat?: number;
+        lon?: number;
+        precision: 'country' | 'region' | 'city' | 'exact';
+    };
+
+    // Content
+    title?: string;
+    content?: string;
+    value?: number;
+    value_type?: string;
+    unit?: string;
+
+    // Confidence
+    confidence: ConfidenceLevel;        // unknown | low | medium | high | confirmed
+    confidence_score: number;           // [0,1]
+
+    // Classification
+    categories: string[];
+    tags: string[];
+
+    // PROVENANCE (Critical for audit - see below)
+    provenance: Provenance;
+
+    // Raw data (for audit replay)
+    raw?: Record<string, unknown>;
 }
 
-type SignalSource =
-    | 'acled'
-    | 'ucdp'
-    | 'reliefweb'
-    | 'gdelt'
-    | 'world_bank'
-    | 'imf'
-    | 'manual';
+// Provenance for data integrity verification
+interface Provenance {
+    source_id: string;                  // e.g., 'acled', 'fred'
+    source_name: string;                // Human-readable name
+    source_tier: SourceTier;            // official | institutional | open | derived
+    source_url?: string;                // Original URL
+    fetched_at: string;                 // ISO timestamp of retrieval
+    attribution?: string;               // Required attribution text
+    license?: string;                   // License type
+    transformations: string[];          // Processing chain applied
+    original_hash: string;              // SHA-256 of raw response (INTEGRITY)
+}
+
+type SignalSource = 'acled' | 'ucdp' | 'reliefweb' | 'gdelt' | 'world_bank' | 'imf' | 'manual';
+type SourceTier = 'official' | 'institutional' | 'commercial' | 'open' | 'derived';
 ```
+
+### Provenance Fields (Acquisition-Critical)
+
+| Field | Purpose | Example |
+|-------|---------|---------|
+| `source_id` | Unique source identifier | `acled`, `fred` |
+| `source_tier` | Reliability classification | `official`, `institutional` |
+| `fetched_at` | When data was retrieved | `2024-12-16T10:30:00Z` |
+| `original_hash` | SHA-256 of raw response | `a1b2c3d4...` |
+| `transformations` | Processing steps | `['normalize', 'geocode']` |
+
+**Why this matters:** Buyers can trace any output to exact source data and verify integrity.
 
 ### NationData
 
