@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button } from '@/components/ui';
 import { GlassSelect, GlassToggle } from '@/components/ui/GlassInput';
 
 interface Integration {
@@ -194,17 +193,17 @@ export default function IntegrationsSettings() {
 
   if (loading) {
     return (
-      <GlassCard>
+      <Card>
         <div className="animate-pulse">
           <div className="h-6 w-32 bg-white/10 rounded mb-4" />
           <div className="h-20 bg-white/5 rounded" />
         </div>
-      </GlassCard>
+      </Card>
     );
   }
 
   return (
-    <GlassCard>
+    <Card>
       <h2 className="text-lg font-medium text-white mb-5">Integrations</h2>
 
       {/* Notification */}
@@ -253,13 +252,13 @@ export default function IntegrationsSettings() {
                 </button>
               </div>
             ) : (
-              <GlassButton
+              <Button
                 onClick={connectSlack}
                 disabled={!providers.find((p) => p.id === 'slack')?.configured}
                 className="w-full sm:w-auto bg-[#4A154B] hover:bg-[#611f69] border-[#4A154B]"
               >
                 Connect Slack
-              </GlassButton>
+              </Button>
             )}
           </div>
 
@@ -343,7 +342,7 @@ export default function IntegrationsSettings() {
                     </p>
                   ) : null}
                 </div>
-                <GlassButton
+                <Button
                   variant="secondary"
                   size="sm"
                   onClick={testSlackConnection}
@@ -352,7 +351,7 @@ export default function IntegrationsSettings() {
                   className="w-full sm:w-auto"
                 >
                   Send Test
-                </GlassButton>
+                </Button>
               </div>
             </div>
           )}
@@ -397,6 +396,6 @@ export default function IntegrationsSettings() {
             </div>
           ))}
       </div>
-    </GlassCard>
+    </Card>
   );
 }

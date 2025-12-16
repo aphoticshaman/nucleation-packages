@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { GlassCard } from '@/components/ui/GlassCard';
+import { Card } from '@/components/ui';
 import { Server, Zap, BarChart3, Info } from 'lucide-react';
 
 /**
@@ -143,7 +143,7 @@ export default function APIUsageSimulator() {
   };
 
   return (
-    <GlassCard blur="heavy" className="p-6">
+    <Card>
       <div className="flex items-center gap-3 mb-6">
         <Server className="w-6 h-6 text-purple-400" />
         <div>
@@ -287,6 +287,6 @@ export default function APIUsageSimulator() {
           </div>
         </div>
       </div>
-    </GlassCard>
+    </Card>
   );
 }

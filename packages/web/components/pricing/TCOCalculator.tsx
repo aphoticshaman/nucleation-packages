@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button } from '@/components/ui';
 import { Calculator, TrendingUp, Download, ChevronDown, ChevronUp } from 'lucide-react';
 
 /**
@@ -172,7 +171,7 @@ export default function TCOCalculator() {
   };
 
   return (
-    <GlassCard blur="heavy" className="p-6">
+    <Card>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Calculator className="w-6 h-6 text-blue-400" />
@@ -181,10 +180,10 @@ export default function TCOCalculator() {
             <p className="text-sm text-slate-400">5-year projection with growth modeling</p>
           </div>
         </div>
-        <GlassButton variant="secondary" onClick={handleExport}>
+        <Button variant="secondary" onClick={handleExport}>
           <Download className="w-4 h-4 mr-2" />
           Export CSV
-        </GlassButton>
+        </Button>
       </div>
 
       {/* Input Section */}
@@ -342,6 +341,6 @@ export default function TCOCalculator() {
           </div>
         </div>
       </div>
-    </GlassCard>
+    </Card>
   );
 }

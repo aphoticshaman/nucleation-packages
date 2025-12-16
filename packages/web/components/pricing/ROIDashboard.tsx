@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { GlassCard } from '@/components/ui/GlassCard';
+import { Card } from '@/components/ui';
 import {
   TrendingUp,
   Clock,
@@ -157,7 +157,7 @@ export default function ROIDashboard({ metrics: initialMetrics, onExport }: ROID
   };
 
   return (
-    <GlassCard blur="heavy" className="p-6">
+    <Card>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <TrendingUp className="w-6 h-6 text-green-400" />
@@ -315,6 +315,6 @@ export default function ROIDashboard({ metrics: initialMetrics, onExport }: ROID
           </div>
         </div>
       </div>
-    </GlassCard>
+    </Card>
   );
 }
