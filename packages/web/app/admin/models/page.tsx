@@ -1,6 +1,5 @@
 import { requireAdmin } from '@/lib/auth';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button } from '@/components/ui';
 import { Brain, Cpu, TrendingUp, Clock, Play, Pause, Settings } from 'lucide-react';
 
 export default async function ModelsPage() {
@@ -58,34 +57,34 @@ export default async function ModelsPage() {
     <div className="pl-72 p-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">ML Models</h1>
+          <h1 className="text-lg font-bold text-white">ML Models</h1>
           <p className="text-slate-400">Manage and monitor deployed models</p>
         </div>
-        <GlassButton variant="primary" glow>
+        <Button variant="secondary">
           <Brain className="w-4 h-4 mr-2" />
           Deploy New Model
-        </GlassButton>
+        </Button>
       </div>
 
       {/* Model Stats */}
       <div className="grid grid-cols-4 gap-6 mb-8">
-        <GlassCard blur="heavy" compact>
+        <Card>
           <div className="flex items-center gap-3 mb-2">
             <Brain className="w-5 h-5 text-blue-400" />
             <span className="text-sm text-slate-400">Total Models</span>
           </div>
           <p className="text-3xl font-bold text-white">{models.length}</p>
-        </GlassCard>
+        </Card>
 
-        <GlassCard blur="heavy" compact>
+        <Card>
           <div className="flex items-center gap-3 mb-2">
             <Cpu className="w-5 h-5 text-green-400" />
             <span className="text-sm text-slate-400">Active</span>
           </div>
           <p className="text-3xl font-bold text-white">{models.filter(m => m.status === 'active').length}</p>
-        </GlassCard>
+        </Card>
 
-        <GlassCard blur="heavy" compact>
+        <Card>
           <div className="flex items-center gap-3 mb-2">
             <TrendingUp className="w-5 h-5 text-purple-400" />
             <span className="text-sm text-slate-400">Avg Accuracy</span>
@@ -93,25 +92,25 @@ export default async function ModelsPage() {
           <p className="text-3xl font-bold text-white">
             {(models.reduce((acc, m) => acc + m.accuracy, 0) / models.length).toFixed(1)}%
           </p>
-        </GlassCard>
+        </Card>
 
-        <GlassCard blur="heavy" compact>
+        <Card>
           <div className="flex items-center gap-3 mb-2">
             <Clock className="w-5 h-5 text-amber-400" />
             <span className="text-sm text-slate-400">Avg Latency</span>
           </div>
           <p className="text-3xl font-bold text-white">44ms</p>
-        </GlassCard>
+        </Card>
       </div>
 
       {/* Model List */}
-      <GlassCard blur="heavy">
+      <Card>
         <h2 className="text-lg font-bold text-white mb-4">Deployed Models</h2>
         <div className="space-y-3">
           {models.map((model, i) => (
-            <div key={i} className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/[0.04]">
+            <div key={i} className="flex items-center justify-between p-4 bg-black/20 rounded-md border border-white/[0.04]">
               <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                <div className={`w-10 h-10 rounded-md flex items-center justify-center ${
                   model.status === 'active' ? 'bg-green-500/10' :
                   model.status === 'training' ? 'bg-blue-500/10' :
                   'bg-amber-500/10'
@@ -146,10 +145,10 @@ export default async function ModelsPage() {
                   {model.status}
                 </span>
                 <div className="flex gap-1">
-                  <button className="p-2 text-slate-400 hover:text-white hover:bg-white/[0.05] rounded-lg transition-all">
+                  <button className="p-2 text-slate-400 hover:text-white hover:bg-white/[0.05] rounded-md transition-all">
                     {model.status === 'active' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                   </button>
-                  <button className="p-2 text-slate-400 hover:text-white hover:bg-white/[0.05] rounded-lg transition-all">
+                  <button className="p-2 text-slate-400 hover:text-white hover:bg-white/[0.05] rounded-md transition-all">
                     <Settings className="w-4 h-4" />
                   </button>
                 </div>
@@ -157,7 +156,7 @@ export default async function ModelsPage() {
             </div>
           ))}
         </div>
-      </GlassCard>
+      </Card>
     </div>
   );
 }

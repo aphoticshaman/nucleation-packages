@@ -3,6 +3,7 @@
 import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Globe, Target, Zap, Shield } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 function SignupForm() {
@@ -396,16 +397,16 @@ export default function SignupPage() {
             {/* Feature pills */}
             <div className="flex flex-wrap gap-2">
               {[
-                { icon: '🌐', text: '195 Countries' },
-                { icon: '🎯', text: '72% Accuracy' },
-                { icon: '⚡', text: 'Real-time Intel' },
-                { icon: '🔒', text: 'AES-256 Encrypted' },
+                { icon: Globe, text: '195 Countries' },
+                { icon: Target, text: '72% Accuracy' },
+                { icon: Zap, text: 'Real-time Intel' },
+                { icon: Shield, text: 'AES-256 Encrypted' },
               ].map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center gap-2 px-3 py-2 bg-white/[0.05] backdrop-blur-sm rounded-lg border border-white/[0.08]"
+                  className="flex items-center gap-2 px-3 py-2 bg-slate-800/50 rounded border border-slate-700"
                 >
-                  <span className="text-sm">{item.icon}</span>
+                  <item.icon className="w-4 h-4 text-blue-400" />
                   <span className="text-xs text-slate-300">{item.text}</span>
                 </div>
               ))}

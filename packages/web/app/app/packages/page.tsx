@@ -23,7 +23,7 @@ export default function PackagesPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Deliverable Packages</h1>
+        <h1 className="text-lg font-bold text-white">Deliverable Packages</h1>
         <p className="text-slate-400 mt-1">
           Build mission-focused intelligence packages for any audience. Select a preset or customize your own.
         </p>

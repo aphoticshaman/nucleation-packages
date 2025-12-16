@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { GitBranch, Activity, RefreshCw, ArrowRight, Clock, Zap } from 'lucide-react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button } from '@/components/ui';
+
 
 interface CascadeRelation {
   trigger_domain: string;
@@ -69,7 +69,7 @@ export default function CascadesPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Cascade Analysis</h1>
+          <h1 className="text-lg font-bold text-white">Cascade Analysis</h1>
           <p className="text-slate-400 mt-1">Domain-to-domain event propagation patterns</p>
         </div>
         <div className="flex items-center gap-4">
@@ -77,16 +77,16 @@ export default function CascadesPage() {
             <Clock className="w-4 h-4" />
             <span>Updated: {formatTime(lastUpdate)}</span>
           </div>
-          <GlassButton variant="secondary" size="sm" onClick={fetchData}>
+          <Button variant="secondary" size="sm" onClick={fetchData}>
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
-          </GlassButton>
+          </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Active Domains */}
-        <GlassCard blur="heavy">
+        <Card>
           <div className="flex items-center gap-2 mb-4">
             <Activity className="w-5 h-5 text-green-400" />
             <h2 className="text-lg font-semibold text-white">Active Domains (24h)</h2>
@@ -121,11 +121,11 @@ export default function CascadesPage() {
               ))}
             </div>
           )}
-        </GlassCard>
+        </Card>
 
         {/* Cascade Relationships */}
         <div className="lg:col-span-2">
-          <GlassCard blur="heavy">
+          <Card>
             <div className="flex items-center gap-2 mb-4">
               <GitBranch className="w-5 h-5 text-purple-400" />
               <h2 className="text-lg font-semibold text-white">Top Cascade Patterns</h2>
@@ -171,7 +171,7 @@ export default function CascadesPage() {
 
                       {/* Stats */}
                       <div className="text-right">
-                        <p className="text-2xl font-bold text-cyan-400">{cascade.co_occurrences}</p>
+                        <p className="text-lg font-bold text-cyan-400">{cascade.co_occurrences}</p>
                         <p className="text-xs text-slate-500">co-occurrences</p>
                       </div>
                     </div>
@@ -186,12 +186,12 @@ export default function CascadesPage() {
                 ))}
               </div>
             )}
-          </GlassCard>
+          </Card>
         </div>
       </div>
 
       {/* Explanation */}
-      <GlassCard className="p-4 border-dashed">
+      <Card className="p-4 border-dashed">
         <div className="flex items-center gap-3 text-slate-400">
           <GitBranch className="w-5 h-5" />
           <div>
@@ -203,7 +203,7 @@ export default function CascadesPage() {
             </p>
           </div>
         </div>
-      </GlassCard>
+      </Card>
     </div>
   );
 }

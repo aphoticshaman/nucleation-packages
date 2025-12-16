@@ -1,6 +1,5 @@
 import { requireAdmin } from '@/lib/auth';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button } from '@/components/ui';
 import { Database, RefreshCw, CheckCircle, AlertCircle, Clock, Play } from 'lucide-react';
 
 export default async function PipelinesPage() {
@@ -19,58 +18,58 @@ export default async function PipelinesPage() {
     <div className="pl-72 p-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Data Pipelines</h1>
+          <h1 className="text-lg font-bold text-white">Data Pipelines</h1>
           <p className="text-slate-400">Monitor and manage data ingestion pipelines</p>
         </div>
-        <GlassButton variant="primary" glow>
+        <Button variant="secondary">
           <RefreshCw className="w-4 h-4 mr-2" />
           Run All
-        </GlassButton>
+        </Button>
       </div>
 
       {/* Pipeline Stats */}
       <div className="grid grid-cols-4 gap-6 mb-8">
-        <GlassCard blur="heavy" compact>
+        <Card>
           <div className="flex items-center gap-3 mb-2">
             <Database className="w-5 h-5 text-blue-400" />
             <span className="text-sm text-slate-400">Total Pipelines</span>
           </div>
           <p className="text-3xl font-bold text-white">{pipelines.length}</p>
-        </GlassCard>
+        </Card>
 
-        <GlassCard blur="heavy" compact>
+        <Card>
           <div className="flex items-center gap-3 mb-2">
             <RefreshCw className="w-5 h-5 text-green-400 animate-spin" />
             <span className="text-sm text-slate-400">Running</span>
           </div>
           <p className="text-3xl font-bold text-white">{pipelines.filter(p => p.status === 'running').length}</p>
-        </GlassCard>
+        </Card>
 
-        <GlassCard blur="heavy" compact>
+        <Card>
           <div className="flex items-center gap-3 mb-2">
             <CheckCircle className="w-5 h-5 text-emerald-400" />
             <span className="text-sm text-slate-400">Completed (24h)</span>
           </div>
           <p className="text-3xl font-bold text-white">142</p>
-        </GlassCard>
+        </Card>
 
-        <GlassCard blur="heavy" compact>
+        <Card>
           <div className="flex items-center gap-3 mb-2">
             <AlertCircle className="w-5 h-5 text-red-400" />
             <span className="text-sm text-slate-400">Failed</span>
           </div>
           <p className="text-3xl font-bold text-white">{pipelines.filter(p => p.status === 'failed').length}</p>
-        </GlassCard>
+        </Card>
       </div>
 
       {/* Pipeline List */}
-      <GlassCard blur="heavy">
+      <Card>
         <h2 className="text-lg font-bold text-white mb-4">All Pipelines</h2>
         <div className="space-y-3">
           {pipelines.map((pipeline, i) => (
-            <div key={i} className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/[0.04]">
+            <div key={i} className="flex items-center justify-between p-4 bg-black/20 rounded-md border border-white/[0.04]">
               <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                <div className={`w-10 h-10 rounded-md flex items-center justify-center ${
                   pipeline.status === 'running' ? 'bg-blue-500/10' :
                   pipeline.status === 'completed' ? 'bg-green-500/10' :
                   pipeline.status === 'failed' ? 'bg-red-500/10' :
@@ -86,13 +85,13 @@ export default async function PipelinesPage() {
                   <p className="text-sm text-slate-400">{pipeline.schedule} • Last: {pipeline.lastRun}</p>
                 </div>
               </div>
-              <button className="p-2 text-slate-400 hover:text-white hover:bg-white/[0.05] rounded-lg transition-all">
+              <button className="p-2 text-slate-400 hover:text-white hover:bg-white/[0.05] rounded-md transition-all">
                 <Play className="w-4 h-4" />
               </button>
             </div>
           ))}
         </div>
-      </GlassCard>
+      </Card>
     </div>
   );
 }

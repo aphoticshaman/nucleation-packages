@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { ALL_FINANCIAL_SOURCES, MARKET_INDICATORS, type FinancialSource } from '@/lib/signals/financialSources';
 import { TrendingUp, Fuel, DollarSign, Bitcoin, Building, Globe, Bell, Plus, BookOpen, AlertTriangle, Newspaper, Activity } from 'lucide-react';
 import Glossary from '@/components/Glossary';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button } from '@/components/ui';
+
 import { DataFreshness } from '@/components/DataFreshness';
 
 const SIGNAL_CATEGORIES = [
@@ -96,7 +96,7 @@ export default function SignalsPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Market Signals</h1>
+          <h1 className="text-lg font-bold text-white">Market Signals</h1>
           <p className="text-slate-400 mt-1">Real-time data from GDELT, USGS, and market feeds</p>
         </div>
         <div className="flex items-center gap-4">
@@ -107,7 +107,7 @@ export default function SignalsPage() {
             <BookOpen className="w-4 h-4" />
             <span className="text-sm">Terms</span>
           </button>
-          <DataFreshness compact />
+          <DataFreshness />
         </div>
       </div>
 
@@ -135,9 +135,9 @@ export default function SignalsPage() {
       {selectedCategory === 'live' ? (
         <div className="space-y-4">
           {/* Data Freshness */}
-          <GlassCard blur="light" compact>
+          <Card>
             <DataFreshness />
-          </GlassCard>
+          </Card>
 
           {/* Source Filter */}
           <div className="flex items-center gap-2">
@@ -155,13 +155,13 @@ export default function SignalsPage() {
                 {src === 'all' ? 'All' : src.toUpperCase()}
               </button>
             ))}
-            <GlassButton variant="secondary" size="sm" onClick={fetchSignals} className="ml-auto">
+            <Button variant="secondary" size="sm" onClick={fetchSignals} className="ml-auto">
               Refresh
-            </GlassButton>
+            </Button>
           </div>
 
           {/* Live Signal Feed */}
-          <GlassCard blur="heavy">
+          <Card>
             <h3 className="text-lg font-semibold text-white mb-4">Signal Feed</h3>
 
             {loading ? (
@@ -218,12 +218,12 @@ export default function SignalsPage() {
                 ))}
               </div>
             )}
-          </GlassCard>
+          </Card>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Data Sources Panel */}
-          <GlassCard blur="heavy">
+          <Card>
             <h2 className="text-lg font-semibold text-white mb-4">Data Sources</h2>
             <div className="space-y-2">
               {ALL_FINANCIAL_SOURCES.map((api: FinancialSource) => (
@@ -244,23 +244,23 @@ export default function SignalsPage() {
                 </button>
               ))}
             </div>
-          </GlassCard>
+          </Card>
 
           {/* Main signals view */}
           <div className="lg:col-span-2 space-y-4">
             {/* Quick indicators */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {MARKET_INDICATORS.us_indices.slice(0, 4).map((indicator) => (
-                <GlassCard key={indicator.symbol} blur="light" compact>
+                <Card key={indicator.symbol}>
                   <p className="text-xs text-slate-400">{indicator.name}</p>
                   <p className="text-xl font-bold text-white mt-1">--</p>
                   <p className="text-xs text-slate-500 mt-1">{indicator.symbol}</p>
-                </GlassCard>
+                </Card>
               ))}
             </div>
 
             {/* Alert rules */}
-            <GlassCard blur="heavy" compact>
+            <Card>
               <div className="flex items-center gap-2 mb-3">
                 <Bell className="w-5 h-5 text-amber-400" />
                 <h3 className="text-lg font-semibold text-white">Alert Rules</h3>
@@ -285,7 +285,7 @@ export default function SignalsPage() {
                   Add Alert Rule
                 </button>
               </div>
-            </GlassCard>
+            </Card>
           </div>
         </div>
       )}

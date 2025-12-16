@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import {
+  Globe, Globe2, LayoutDashboard, Radio, Package, TrendingUp, Bell,
+  Save, Settings, RefreshCw, Search, Upload, Target, Folder, Plus, User
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
@@ -14,7 +18,7 @@ interface ConsumerNavProps {
 interface NavItem {
   href: string;
   label: string;
-  icon: string;
+  icon: React.ComponentType<{ className?: string }>;
   minTier?: UserTier;
 }
 
@@ -46,43 +50,43 @@ function getTierDisplay(tier: UserTier, role?: string): { name: string; color: s
 }
 
 // Page-specific quick actions for LF menu
-const PAGE_ACTIONS: Record<string, { label: string; icon: string; action?: string }[]> = {
+const PAGE_ACTIONS: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; action?: string }[]> = {
   '/app': [
-    { label: 'Refresh Map', icon: '🔄' },
-    { label: 'Filter Nations', icon: '🔍' },
-    { label: 'Export View', icon: '📤' },
+    { label: 'Refresh Map', icon: RefreshCw },
+    { label: 'Filter Nations', icon: Search },
+    { label: 'Export View', icon: Upload },
   ],
   '/app/briefings': [
-    { label: 'Generate New', icon: '📡' },
-    { label: 'Change Preset', icon: '🎯' },
-    { label: 'Export Brief', icon: '📤' },
+    { label: 'Generate New', icon: Radio },
+    { label: 'Change Preset', icon: Target },
+    { label: 'Export Brief', icon: Upload },
   ],
   '/app/packages': [
-    { label: 'New Package', icon: '📦' },
-    { label: 'Load Template', icon: '📂' },
-    { label: 'Export', icon: '📤' },
+    { label: 'New Package', icon: Package },
+    { label: 'Load Template', icon: Folder },
+    { label: 'Export', icon: Upload },
   ],
   '/app/dashboards': [
-    { label: 'Create Dashboard', icon: '➕' },
-    { label: 'Refresh All', icon: '🔄' },
+    { label: 'Create Dashboard', icon: Plus },
+    { label: 'Refresh All', icon: RefreshCw },
   ],
   '/app/signals': [
-    { label: 'New Signal', icon: '📈' },
-    { label: 'Alert Settings', icon: '🔔' },
+    { label: 'New Signal', icon: TrendingUp },
+    { label: 'Alert Settings', icon: Bell },
   ],
 }
 
 // Core navigation - mobile-optimized (fewer items visible)
 const navItems: NavItem[] = [
-  { href: '/app', label: 'Globe', icon: '🌍' },
-  { href: '/app/navigator', label: '3D Nav', icon: '🌐', minTier: 'starter' },
-  { href: '/app/dashboards', label: 'Dash', icon: '📊' },
-  { href: '/app/briefings', label: 'Intel', icon: '📡' },
-  { href: '/app/packages', label: 'Packages', icon: '📦' },
-  { href: '/app/signals', label: 'Signals', icon: '📈', minTier: 'starter' },
-  { href: '/app/alerts', label: 'Alerts', icon: '🔔', minTier: 'starter' },
-  { href: '/app/saved', label: 'Saved', icon: '💾' },
-  { href: '/app/settings', label: 'Settings', icon: '⚙️' },
+  { href: '/app', label: 'Globe', icon: Globe },
+  { href: '/app/navigator', label: '3D Nav', icon: Globe2, minTier: 'starter' },
+  { href: '/app/dashboards', label: 'Dash', icon: LayoutDashboard },
+  { href: '/app/briefings', label: 'Intel', icon: Radio },
+  { href: '/app/packages', label: 'Packages', icon: Package },
+  { href: '/app/signals', label: 'Signals', icon: TrendingUp, minTier: 'starter' },
+  { href: '/app/alerts', label: 'Alerts', icon: Bell, minTier: 'starter' },
+  { href: '/app/saved', label: 'Saved', icon: Save },
+  { href: '/app/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function ConsumerNav({ user }: ConsumerNavProps) {
@@ -188,7 +192,7 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
                       onClick={() => setLfMenuOpen(false)}
                       className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-300 hover:bg-white/5 rounded-lg transition-colors"
                     >
-                      <span>{action.icon}</span>
+                      {<action.icon className="w-4 h-4" />}
                       {action.label}
                     </button>
                   ))}
@@ -204,21 +208,21 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
                     onClick={() => setLfMenuOpen(false)}
                     className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-300 hover:bg-white/5 rounded-lg transition-colors"
                   >
-                    <span>🌍</span> Globe View
+                    <Globe className="w-4 h-4 inline mr-2" />Globe View
                   </Link>
                   <Link
                     href="/app/briefings"
                     onClick={() => setLfMenuOpen(false)}
                     className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-300 hover:bg-white/5 rounded-lg transition-colors"
                   >
-                    <span>📡</span> Intel Briefings
+                    <Radio className="w-4 h-4 inline mr-2" />Intel Briefings
                   </Link>
                   <Link
                     href="/app/packages"
                     onClick={() => setLfMenuOpen(false)}
                     className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-300 hover:bg-white/5 rounded-lg transition-colors"
                   >
-                    <span>📦</span> Packages
+                    <Package className="w-4 h-4 inline mr-2" />Packages
                   </Link>
                 </div>
 
@@ -228,7 +232,7 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
                     onClick={() => { setLfMenuOpen(false); setMobileMenuOpen(true); }}
                     className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-400 hover:bg-white/5 rounded-lg transition-colors"
                   >
-                    <span>👤</span> Account & Settings
+                    <User className="w-4 h-4" /> Account & Settings
                   </button>
                 </div>
               </div>
@@ -411,7 +415,7 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
                   }
                 `}
               >
-                <span className="text-xl w-7 text-center">{item.icon}</span>
+                {<item.icon className="w-6 h-6" />}
                 <span className="font-medium">{item.label}</span>
                 {isActive && (
                   <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
@@ -436,7 +440,7 @@ export default function ConsumerNav({ user }: ConsumerNavProps) {
                   className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-slate-500
                     min-h-[52px] touch-manipulation active:bg-white/[0.03]"
                 >
-                  <span className="text-xl w-7 text-center opacity-40">{item.icon}</span>
+                  <item.icon className="w-5 h-5 text-slate-500" />
                   <span>{item.label}</span>
                   <svg className="ml-auto w-4 h-4 opacity-50" fill="currentColor" viewBox="0 0 20 20">
                     <path

@@ -4,8 +4,13 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { BookOpen, Menu, X } from 'lucide-react';
+import {
+  BookOpen, Menu, X, LayoutDashboard, MessageSquare, User, Ban, Palette,
+  Users, CreditCard, TrendingUp, Activity, RefreshCw, Bot, Shield, Settings,
+  Radio, Package
+} from 'lucide-react';
 import type { UserProfile } from '@/lib/auth';
+import type { LucideIcon } from 'lucide-react';
 import ViewAsSwitcher from '@/components/admin/ViewAsSwitcher';
 import Glossary from '@/components/Glossary';
 import ExecBriefButton from '@/components/ExecBriefButton';
@@ -14,27 +19,27 @@ interface AdminNavProps {
   user: UserProfile;
 }
 
-const navItems = [
-  { href: '/admin', label: 'Overview', icon: '📊' },
-  { href: '/admin/feedback', label: 'Feedback', icon: '💬' },
-  { href: '/admin/users', label: 'Users', icon: '👤' },
-  { href: '/admin/banned-ips', label: 'Banned IPs', icon: '🚫' },
-  { href: '/admin/builder', label: 'Builder', icon: '🎨' },
-  { href: '/admin/customers', label: 'Customers', icon: '👥' },
-  { href: '/admin/billing', label: 'Billing', icon: '💳' },
-  { href: '/admin/analytics', label: 'Analytics', icon: '📈' },
-  { href: '/admin/health', label: 'API Health', icon: '🩺' },
-  { href: '/admin/pipelines', label: 'Pipelines', icon: '🔄' },
-  { href: '/admin/models', label: 'ML Models', icon: '🤖' },
-  { href: '/admin/compliance', label: 'Compliance', icon: '🛡️' },
-  { href: '/admin/config', label: 'Config', icon: '⚙️' },
+const navItems: Array<{ href: string; label: string; icon: LucideIcon }> = [
+  { href: '/admin', label: 'Overview', icon: LayoutDashboard },
+  { href: '/admin/feedback', label: 'Feedback', icon: MessageSquare },
+  { href: '/admin/users', label: 'Users', icon: User },
+  { href: '/admin/banned-ips', label: 'Banned IPs', icon: Ban },
+  { href: '/admin/builder', label: 'Builder', icon: Palette },
+  { href: '/admin/customers', label: 'Customers', icon: Users },
+  { href: '/admin/billing', label: 'Billing', icon: CreditCard },
+  { href: '/admin/analytics', label: 'Analytics', icon: TrendingUp },
+  { href: '/admin/health', label: 'API Health', icon: Activity },
+  { href: '/admin/pipelines', label: 'Pipelines', icon: RefreshCw },
+  { href: '/admin/models', label: 'ML Models', icon: Bot },
+  { href: '/admin/compliance', label: 'Compliance', icon: Shield },
+  { href: '/admin/config', label: 'Config', icon: Settings },
 ];
 
-const quickLinks: Array<{ href: string; label: string; icon: string; highlight?: boolean }> = [
-  { href: '/app', label: 'Consumer App', icon: '👤' },
-  { href: '/app/briefings', label: 'Briefings', icon: '📡' },
-  { href: '/app/packages', label: 'Packages', icon: '📦' },
-  { href: '/app/signals', label: 'Signals', icon: '📈' },
+const quickLinks: Array<{ href: string; label: string; icon: LucideIcon; highlight?: boolean }> = [
+  { href: '/app', label: 'Consumer App', icon: User },
+  { href: '/app/briefings', label: 'Briefings', icon: Radio },
+  { href: '/app/packages', label: 'Packages', icon: Package },
+  { href: '/app/signals', label: 'Signals', icon: TrendingUp },
 ];
 
 export default function AdminNav({ user }: AdminNavProps) {
@@ -86,19 +91,20 @@ export default function AdminNav({ user }: AdminNavProps) {
         {navItems.map((item) => {
           const isActive =
             pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
+          const IconComponent = item.icon;
 
           return (
             <Link
               key={item.href}
               href={item.href}
               onClick={onNavClick}
-              className={`flex items-center gap-3 px-3 lg:px-4 py-2.5 lg:py-3 rounded-xl transition-all duration-150 touch-manipulation ${
+              className={`flex items-center gap-3 px-3 lg:px-4 py-2.5 lg:py-3 rounded-md transition-all duration-150 touch-manipulation ${
                 isActive
                   ? 'bg-blue-600/90 text-white shadow-[0_0_20px_rgba(59,130,246,0.25)]'
                   : 'text-slate-400 hover:bg-white/[0.05] hover:text-white active:bg-white/[0.08]'
               }`}
             >
-              <span className="text-lg">{item.icon}</span>
+              <IconComponent className="w-5 h-5" />
               <span className="font-medium text-sm lg:text-base">{item.label}</span>
               {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />}
             </Link>
@@ -110,29 +116,32 @@ export default function AdminNav({ user }: AdminNavProps) {
       <div className="px-2 lg:px-3 py-3 border-t border-white/[0.06]">
         <p className="text-[10px] text-slate-500 uppercase tracking-wider font-medium mb-2 px-3 lg:px-4">Quick Jump</p>
         <div className="space-y-0.5">
-          {quickLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={onNavClick}
-              className={`flex items-center gap-2 px-3 lg:px-4 py-2 lg:py-2.5 text-sm rounded-lg transition-all touch-manipulation ${
-                link.highlight
-                  ? 'text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30'
-                  : 'text-slate-400 hover:text-white hover:bg-white/[0.03] active:bg-white/[0.06]'
-              }`}
-            >
-              <span>{link.icon}</span>
-              <span>{link.label}</span>
-              <svg className="w-3 h-3 ml-auto opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </Link>
-          ))}
+          {quickLinks.map((link) => {
+            const IconComponent = link.icon;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={onNavClick}
+                className={`flex items-center gap-2 px-3 lg:px-4 py-2 lg:py-2.5 text-sm rounded-md transition-all touch-manipulation ${
+                  link.highlight
+                    ? 'text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30'
+                    : 'text-slate-400 hover:text-white hover:bg-white/[0.03] active:bg-white/[0.06]'
+                }`}
+              >
+                <IconComponent className="w-4 h-4" />
+                <span>{link.label}</span>
+                <svg className="w-3 h-3 ml-auto opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </Link>
+            );
+          })}
         </div>
         {/* Glossary Button */}
         <button
           onClick={() => { setShowGlossary(true); onNavClick?.(); }}
-          className="flex items-center gap-2 w-full px-3 lg:px-4 py-2 lg:py-2.5 mt-2 text-sm text-slate-400 hover:text-white hover:bg-white/[0.03] active:bg-white/[0.06] rounded-lg transition-all touch-manipulation"
+          className="flex items-center gap-2 w-full px-3 lg:px-4 py-2 lg:py-2.5 mt-2 text-sm text-slate-400 hover:text-white hover:bg-white/[0.03] active:bg-white/[0.06] rounded-md transition-all touch-manipulation"
         >
           <BookOpen className="w-4 h-4" />
           <span>Terminology</span>
@@ -141,7 +150,7 @@ export default function AdminNav({ user }: AdminNavProps) {
 
       {/* View As Switcher - hidden on very small screens, shown on tablet+ */}
       <div className="hidden sm:block px-2 lg:px-3 pb-3">
-        <div className="bg-black/20 rounded-xl p-2 lg:p-3 border border-white/[0.06]">
+        <div className="bg-black/20 rounded-md p-2 lg:p-3 border border-white/[0.06]">
           <ViewAsSwitcher />
         </div>
       </div>
@@ -160,7 +169,7 @@ export default function AdminNav({ user }: AdminNavProps) {
             href="/api/auth/signout"
             prefetch={false}
             onClick={onNavClick}
-            className="p-2 text-slate-500 hover:text-white hover:bg-white/[0.05] active:bg-white/[0.1] rounded-lg transition-all touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2 text-slate-500 hover:text-white hover:bg-white/[0.05] active:bg-white/[0.1] rounded-md transition-all touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
             title="Sign out"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -178,7 +187,7 @@ export default function AdminNav({ user }: AdminNavProps) {
       <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-[rgba(10,10,15,0.97)] backdrop-blur-xl border-b border-white/[0.08] z-50 flex items-center justify-between px-3">
         <button
           onClick={() => setMobileMenuOpen(true)}
-          className="p-2 -ml-2 text-slate-400 hover:text-white active:bg-white/[0.06] rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+          className="p-2 -ml-2 text-slate-400 hover:text-white active:bg-white/[0.06] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
           aria-label="Open menu"
         >
           <Menu className="w-6 h-6" />
@@ -231,7 +240,7 @@ export default function AdminNav({ user }: AdminNavProps) {
         {/* Close button */}
         <button
           onClick={() => setMobileMenuOpen(false)}
-          className="absolute top-3 right-3 p-2 text-slate-400 hover:text-white active:bg-white/[0.06] rounded-lg transition-colors z-10 min-w-[44px] min-h-[44px] flex items-center justify-center"
+          className="absolute top-3 right-3 p-2 text-slate-400 hover:text-white active:bg-white/[0.06] rounded-md transition-colors z-10 min-w-[44px] min-h-[44px] flex items-center justify-center"
           aria-label="Close menu"
         >
           <X className="w-5 h-5" />

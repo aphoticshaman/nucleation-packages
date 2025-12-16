@@ -11,8 +11,7 @@ import {
   Check,
   RefreshCw,
 } from 'lucide-react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button } from '@/components/ui';
 import Link from 'next/link';
 
 interface Alert {
@@ -113,7 +112,7 @@ export default function AlertsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Alerts</h1>
+          <h1 className="text-lg font-bold text-white">Alerts</h1>
           <p className="text-slate-400 text-sm mt-1">
             {loading
               ? 'Loading...'
@@ -123,21 +122,21 @@ export default function AlertsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <GlassButton variant="secondary" size="sm" onClick={fetchAlerts}>
+          <Button variant="secondary" size="sm" onClick={fetchAlerts}>
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
-          </GlassButton>
+          </Button>
           <Link href="/app/notifications">
-            <GlassButton variant="secondary" size="sm">
+            <Button variant="secondary" size="sm">
               <Bell className="w-4 h-4 mr-2" />
               Settings
-            </GlassButton>
+            </Button>
           </Link>
           {unreadCount > 0 && (
-            <GlassButton variant="secondary" size="sm" onClick={markAllRead}>
+            <Button variant="secondary" size="sm" onClick={markAllRead}>
               <Check className="w-4 h-4 mr-2" />
               Mark All Read
-            </GlassButton>
+            </Button>
           )}
         </div>
       </div>
@@ -174,12 +173,12 @@ export default function AlertsPage() {
       {/* Alerts List */}
       <div className="space-y-3">
         {loading ? (
-          <GlassCard className="p-8 text-center">
+          <Card className="p-8 text-center">
             <RefreshCw className="w-8 h-8 text-slate-500 mx-auto mb-4 animate-spin" />
             <p className="text-slate-400">Loading alerts...</p>
-          </GlassCard>
+          </Card>
         ) : filteredAlerts.length === 0 ? (
-          <GlassCard className="p-8 text-center">
+          <Card className="p-8 text-center">
             <Bell className="w-12 h-12 text-slate-500 mx-auto mb-4" />
             <p className="text-slate-400">
               {filter === 'unread'
@@ -189,13 +188,13 @@ export default function AlertsPage() {
             <Link href="/app/notifications" className="text-cyan-400 text-sm mt-2 inline-block hover:underline">
               Configure alert settings →
             </Link>
-          </GlassCard>
+          </Card>
         ) : (
           filteredAlerts.map((alert) => {
             const style = typeStyles[alert.type];
             const isRead = readAlerts.has(alert.id);
             return (
-              <GlassCard
+              <Card
                 key={alert.id}
                 className={`p-4 cursor-pointer transition-all hover:bg-white/5 ${
                   !isRead ? 'border-l-2 border-l-cyan-500' : ''
@@ -236,14 +235,14 @@ export default function AlertsPage() {
                     </div>
                   </div>
                 </div>
-              </GlassCard>
+              </Card>
             );
           })
         )}
       </div>
 
       {/* Info */}
-      <GlassCard className="p-4 border-dashed">
+      <Card className="p-4 border-dashed">
         <div className="flex items-center gap-3 text-slate-400">
           <Shield className="w-5 h-5" />
           <div>
@@ -256,7 +255,7 @@ export default function AlertsPage() {
             </p>
           </div>
         </div>
-      </GlassCard>
+      </Card>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { requireAdmin } from '@/lib/auth';
-import { GlassCard } from '@/components/ui/GlassCard';
+import { Card } from '@/components/ui';
 import { Settings, Server, Database, Shield, Bell, Lock } from 'lucide-react';
 
 export default async function ConfigPage() {
@@ -60,10 +60,10 @@ export default async function ConfigPage() {
     <div className="pl-72 p-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">System Configuration</h1>
+          <h1 className="text-lg font-bold text-white">System Configuration</h1>
           <p className="text-slate-400">View platform settings and feature flags</p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-lg border border-slate-700">
+        <div className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-md border border-slate-700">
           <Lock className="w-4 h-4 text-slate-400" />
           <span className="text-sm text-slate-400">Read-only view</span>
         </div>
@@ -74,7 +74,7 @@ export default async function ConfigPage() {
         {configSections.map((section, i) => {
           const IconComponent = section.icon;
           return (
-            <GlassCard key={i} blur="heavy">
+            <Card key={i}>
               <div className="flex items-center gap-3 mb-4">
                 <IconComponent className={`w-5 h-5 ${
                   section.color === 'blue' ? 'text-blue-400' :
@@ -97,27 +97,27 @@ export default async function ConfigPage() {
                         }`} />
                       </div>
                     ) : (
-                      <span className="px-3 py-1.5 bg-black/30 border border-white/[0.08] rounded-lg text-slate-300 text-sm">
+                      <span className="px-3 py-1.5 bg-black/30 border border-white/[0.08] rounded-md text-slate-300 text-sm">
                         {String(setting.value)}
                       </span>
                     )}
                   </div>
                 ))}
               </div>
-            </GlassCard>
+            </Card>
           );
         })}
       </div>
 
       {/* Feature Flags */}
-      <GlassCard blur="heavy">
+      <Card>
         <div className="flex items-center gap-3 mb-4">
           <Bell className="w-5 h-5 text-amber-400" />
           <h2 className="text-lg font-bold text-white">Feature Flags</h2>
         </div>
         <div className="space-y-3">
           {featureFlags.map((flag, i) => (
-            <div key={i} className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/[0.04]">
+            <div key={i} className="flex items-center justify-between p-4 bg-black/20 rounded-md border border-white/[0.04]">
               <div>
                 <p className="text-white font-medium">{flag.label}</p>
                 <p className="text-sm text-slate-400">{flag.description}</p>
@@ -130,7 +130,7 @@ export default async function ConfigPage() {
             </div>
           ))}
         </div>
-      </GlassCard>
+      </Card>
 
       {/* Notice */}
       <p className="mt-6 text-center text-sm text-slate-500">

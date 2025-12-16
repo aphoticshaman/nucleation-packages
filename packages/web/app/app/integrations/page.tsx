@@ -18,8 +18,8 @@ import {
   Zap,
   ArrowRight,
 } from 'lucide-react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button } from '@/components/ui';
+
 
 interface Integration {
   id: string;
@@ -155,7 +155,7 @@ export default function IntegrationsPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-48 bg-white/5 rounded-xl animate-pulse" />
+            <div key={i} className="h-48 bg-white/5 rounded-md animate-pulse" />
           ))}
         </div>
       </div>
@@ -167,7 +167,7 @@ export default function IntegrationsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Integrations</h1>
+          <h1 className="text-lg font-bold text-white">Integrations</h1>
           <p className="text-slate-400 mt-1">Connect LatticeForge to your favorite tools</p>
         </div>
         <div className="flex items-center gap-2 text-sm">
@@ -186,13 +186,13 @@ export default function IntegrationsPage() {
             placeholder="Search integrations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-[rgba(18,18,26,0.7)] backdrop-blur-sm border border-white/[0.06] rounded-xl text-white placeholder-slate-500 focus:border-blue-500/50 focus:outline-none transition-colors"
+            className="w-full pl-10 pr-4 py-3 bg-[rgba(18,18,26,0.7)] backdrop-blur-sm border border-white/[0.06] rounded-md text-white placeholder-slate-500 focus:border-blue-500/50 focus:outline-none transition-colors"
           />
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1">
           <button
             onClick={() => setSelectedCategory(null)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all min-h-[44px] ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium whitespace-nowrap transition-all min-h-[44px] ${
               !selectedCategory
                 ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white'
                 : 'bg-[rgba(18,18,26,0.7)] text-slate-400 hover:text-white border border-white/[0.06]'
@@ -207,7 +207,7 @@ export default function IntegrationsPage() {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all min-h-[44px] ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium whitespace-nowrap transition-all min-h-[44px] ${
                   selectedCategory === cat
                     ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white'
                     : 'bg-[rgba(18,18,26,0.7)] text-slate-400 hover:text-white border border-white/[0.06]'
@@ -262,14 +262,14 @@ export default function IntegrationsPage() {
         </div>
 
         {filteredIntegrations.length === 0 && (
-          <GlassCard blur="light" className="text-center py-12">
+          <Card className="text-center py-12">
             <p className="text-slate-400">No integrations found matching your search.</p>
-          </GlassCard>
+          </Card>
         )}
       </section>
 
       {/* Request Integration */}
-      <GlassCard blur="light" className="text-center">
+      <Card className="text-center">
         <p className="text-slate-400 mb-4">Don&apos;t see what you need?</p>
         <a
           href="mailto:contact@crystallinelabs.io?subject=Integration%20Request"
@@ -278,7 +278,7 @@ export default function IntegrationsPage() {
           Request an integration
           <ExternalLink className="w-4 h-4" />
         </a>
-      </GlassCard>
+      </Card>
     </div>
   );
 }
@@ -297,8 +297,8 @@ function IntegrationCard({
   const categoryInfo = CATEGORY_INFO[integration.category];
 
   return (
-    <GlassCard
-      blur="heavy"
+    <Card
+     
       className={`relative overflow-hidden transition-all ${
         integration.comingSoon ? 'opacity-60' : 'hover:border-blue-500/30'
       }`}
@@ -322,7 +322,7 @@ function IntegrationCard({
       )}
 
       <div className="flex items-start gap-4">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white shrink-0 ${bgColor}`}>
+        <div className={`w-12 h-12 rounded-md flex items-center justify-center text-white shrink-0 ${bgColor}`}>
           {icon}
         </div>
         <div className="flex-1 min-w-0">
@@ -339,7 +339,7 @@ function IntegrationCard({
 
       <div className="mt-4 pt-4 border-t border-white/[0.06]">
         {isConnected ? (
-          <GlassButton
+          <Button
             variant="secondary"
             size="sm"
             onClick={onConnect}
@@ -347,18 +347,18 @@ function IntegrationCard({
           >
             Manage
             <ArrowRight className="w-4 h-4 ml-2" />
-          </GlassButton>
+          </Button>
         ) : integration.comingSoon ? (
-          <GlassButton
+          <Button
             variant="secondary"
             size="sm"
             disabled
             className="w-full"
           >
             Coming Soon
-          </GlassButton>
+          </Button>
         ) : (
-          <GlassButton
+          <Button
             variant="primary"
             size="sm"
             onClick={onConnect}
@@ -366,9 +366,9 @@ function IntegrationCard({
           >
             Connect
             <ArrowRight className="w-4 h-4 ml-2" />
-          </GlassButton>
+          </Button>
         )}
       </div>
-    </GlassCard>
+    </Card>
   );
 }

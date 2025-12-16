@@ -1,6 +1,7 @@
 'use client';
 
 import type { Widget } from '@/lib/dashboard/types';
+import { LayoutDashboard, TrendingUp, BarChart3, PieChart, Award } from 'lucide-react';
 
 interface WidgetRendererProps {
   widget: Widget;
@@ -17,7 +18,7 @@ export default function WidgetRenderer({ widget, isEditing }: WidgetRendererProp
         return (
           <div className="p-4 h-full flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-2xl">{config.icon || '📊'}</span>
+              <LayoutDashboard className="w-8 h-8 text-slate-400" />
               {config.change !== undefined && (
                 <span className={`text-xs px-2 py-0.5 rounded ${
                   config.trend === 'up' ? 'bg-green-900/50 text-green-400' :
@@ -39,13 +40,14 @@ export default function WidgetRenderer({ widget, isEditing }: WidgetRendererProp
       case 'chart_line':
       case 'chart_bar':
       case 'chart_pie': {
+        const ChartIcon = widget.type === 'chart_line' ? TrendingUp : widget.type === 'chart_bar' ? BarChart3 : PieChart;
         return (
           <div className="p-4 h-full flex flex-col">
             {widget.title && <h3 className="text-sm font-medium text-white mb-2">{widget.title}</h3>}
             <div className="flex-1 flex items-center justify-center border border-dashed border-slate-700 rounded">
-              <span className="text-slate-500 text-sm">
-                {widget.type === 'chart_line' ? '📈' : widget.type === 'chart_bar' ? '📊' : '🥧'}
-                {' '}Chart - connect data source
+              <span className="text-slate-500 text-sm flex items-center gap-2">
+                <ChartIcon className="w-5 h-5" />
+                Chart - connect data source
               </span>
             </div>
           </div>
@@ -153,7 +155,7 @@ export default function WidgetRenderer({ widget, isEditing }: WidgetRendererProp
         return (
           <div className="p-4 h-full flex flex-col">
             <div className="flex items-center gap-2 mb-2">
-              <span>🎖️</span>
+              <Award className="w-5 h-5 text-blue-400" />
               <h3 className="text-sm font-medium text-white">Intel Brief</h3>
             </div>
             <p className="text-xs text-slate-400 flex-1">

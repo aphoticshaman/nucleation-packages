@@ -1,5 +1,5 @@
 import { requireAdmin, createClient } from '@/lib/auth';
-import { GlassCard } from '@/components/ui/GlassCard';
+import { Card } from '@/components/ui';
 import { Users, Building2, TrendingUp, DollarSign } from 'lucide-react';
 
 export default async function CustomersPage() {
@@ -15,47 +15,47 @@ export default async function CustomersPage() {
   return (
     <div className="p-4 lg:pl-72 lg:p-8">
       <div className="mb-6 lg:mb-8">
-        <h1 className="text-xl lg:text-2xl font-bold text-white">Customers</h1>
+        <h1 className="text-lg font-bold text-white">Customers</h1>
         <p className="text-slate-400 text-sm lg:text-base">Manage customer organizations and subscriptions</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
-        <GlassCard blur="heavy" compact>
+        <Card>
           <div className="flex items-center gap-3 mb-2">
             <Building2 className="w-5 h-5 text-blue-400" />
             <span className="text-sm text-slate-400">Total Customers</span>
           </div>
           <p className="text-3xl font-bold text-white">{count || 0}</p>
-        </GlassCard>
+        </Card>
 
-        <GlassCard blur="heavy" compact>
+        <Card>
           <div className="flex items-center gap-3 mb-2">
             <Users className="w-5 h-5 text-green-400" />
             <span className="text-sm text-slate-400">Active This Month</span>
           </div>
           <p className="text-3xl font-bold text-white">{organizations?.filter(o => o.api_calls_used > 0).length || 0}</p>
-        </GlassCard>
+        </Card>
 
-        <GlassCard blur="heavy" compact>
+        <Card>
           <div className="flex items-center gap-3 mb-2">
             <TrendingUp className="w-5 h-5 text-purple-400" />
             <span className="text-sm text-slate-400">Enterprise</span>
           </div>
           <p className="text-3xl font-bold text-white">{organizations?.filter(o => o.plan === 'enterprise').length || 0}</p>
-        </GlassCard>
+        </Card>
 
-        <GlassCard blur="heavy" compact>
+        <Card>
           <div className="flex items-center gap-3 mb-2">
             <DollarSign className="w-5 h-5 text-amber-400" />
             <span className="text-sm text-slate-400">MRR</span>
           </div>
           <p className="text-3xl font-bold text-white">$12.4k</p>
-        </GlassCard>
+        </Card>
       </div>
 
       {/* Customer List */}
-      <GlassCard blur="heavy">
+      <Card>
         <h2 className="text-lg font-bold text-white mb-4">All Customers</h2>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -109,7 +109,7 @@ export default async function CustomersPage() {
             </tbody>
           </table>
         </div>
-      </GlassCard>
+      </Card>
     </div>
   );
 }

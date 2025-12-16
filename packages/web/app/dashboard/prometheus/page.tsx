@@ -85,11 +85,11 @@ export default function PROMETHEUSPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-purple-500/30">
+          <div className="p-3 rounded-md bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-purple-500/30">
             <Sparkles size={28} className="text-purple-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white font-mono">
+            <h1 className="text-lg font-bold text-white font-mono">
               P.R.O.M.E.T.H.E.U.S.
             </h1>
             <p className="text-sm text-slate-400">
@@ -101,7 +101,7 @@ export default function PROMETHEUSPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={runNoveltyDetection}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-sm font-mono text-slate-300 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-600 text-sm font-mono text-slate-300 transition-colors"
           >
             <RefreshCw size={16} />
             Scan Novelty
@@ -109,7 +109,7 @@ export default function PROMETHEUSPage() {
           <button
             onClick={() => void runPipeline()}
             disabled={isRunning}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-sm font-mono text-white transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 rounded-md bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-sm font-mono text-white transition-all disabled:opacity-50"
           >
             {isRunning ? (
               <RefreshCw size={16} className="animate-spin" />
@@ -122,7 +122,7 @@ export default function PROMETHEUSPage() {
       </div>
 
       {/* Target Subject Input */}
-      <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700">
+      <div className="p-4 rounded-md bg-slate-800/50 border border-slate-700">
         <label className="block text-xs font-mono text-slate-400 uppercase tracking-wider mb-2">
           Target Subject
         </label>
@@ -130,7 +130,7 @@ export default function PROMETHEUSPage() {
           type="text"
           value={targetSubject}
           onChange={(e) => setTargetSubject(e.target.value)}
-          className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-700 text-white font-mono focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none"
+          className="w-full px-4 py-3 rounded-md bg-slate-900 border border-slate-700 text-white font-mono focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none"
           placeholder="Enter subject for knowledge extraction..."
         />
       </div>
@@ -164,7 +164,7 @@ export default function PROMETHEUSPage() {
         {activeTab === 'pipeline' ? (
           <>
             {/* Pipeline Visualization */}
-            <div className="p-6 rounded-xl bg-slate-800/30 border border-slate-700">
+            <div className="p-6 rounded-md bg-slate-800/30 border border-slate-700">
               {pipelineState ? (
                 <CognitivePipeline state={pipelineState} />
               ) : (
@@ -179,7 +179,7 @@ export default function PROMETHEUSPage() {
             </div>
 
             {/* Gradients of Ignorance */}
-            <div className="p-6 rounded-xl bg-slate-800/30 border border-slate-700">
+            <div className="p-6 rounded-md bg-slate-800/30 border border-slate-700">
               <h3 className="text-sm font-mono font-bold text-slate-300 mb-4 flex items-center gap-2">
                 <AlertCircle size={16} className="text-amber-400" />
                 Gradients of Ignorance
@@ -189,7 +189,7 @@ export default function PROMETHEUSPage() {
                   {performArchaeology(targetSubject, ['Information Theory', 'Network Science']).map((gradient, i) => (
                     <div
                       key={i}
-                      className="p-3 rounded-lg bg-slate-900/50 border border-slate-700"
+                      className="p-3 rounded-md bg-slate-900/50 border border-slate-700"
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-mono text-slate-300">
@@ -221,7 +221,7 @@ export default function PROMETHEUSPage() {
         ) : (
           <>
             {/* Novelty Radar */}
-            <div className="p-6 rounded-xl bg-slate-800/30 border border-slate-700">
+            <div className="p-6 rounded-md bg-slate-800/30 border border-slate-700">
               <NoveltyRadar
                 signals={noveltySignals}
                 quadrant={quadrant}
@@ -233,7 +233,7 @@ export default function PROMETHEUSPage() {
             </div>
 
             {/* Knowledge Quadrant Details */}
-            <div className="p-6 rounded-xl bg-slate-800/30 border border-slate-700">
+            <div className="p-6 rounded-md bg-slate-800/30 border border-slate-700">
               <h3 className="text-sm font-mono font-bold text-slate-300 mb-4">
                 Epistemic Quadrants
               </h3>
@@ -248,7 +248,7 @@ export default function PROMETHEUSPage() {
                   const config = labels[key];
 
                   return (
-                    <div key={key} className="p-3 rounded-lg bg-slate-900/50">
+                    <div key={key} className="p-3 rounded-md bg-slate-900/50">
                       <div className="flex items-center justify-between mb-2">
                         <span className={`text-sm font-mono ${config.color}`}>
                           {config.title}
@@ -283,7 +283,7 @@ export default function PROMETHEUSPage() {
       </div>
 
       {/* Protocol Description */}
-      <div className="p-6 rounded-xl bg-gradient-to-br from-purple-900/20 to-cyan-900/20 border border-purple-700/30">
+      <div className="p-6 rounded-md bg-gradient-to-br from-purple-900/20 to-cyan-900/20 border border-purple-700/30">
         <h3 className="text-sm font-mono font-bold text-purple-400 mb-3">
           About P.R.O.M.E.T.H.E.U.S.
         </h3>

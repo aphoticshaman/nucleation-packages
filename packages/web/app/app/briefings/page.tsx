@@ -9,8 +9,7 @@ import {
 } from 'lucide-react';
 import Glossary from '@/components/Glossary';
 import HelpTip from '@/components/HelpTip';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button } from '@/components/ui';
 import { WarmupScreen } from '@/components/ui/WarmupScreen';
 import { supabase } from '@/lib/supabase';
 
@@ -268,7 +267,7 @@ export default function BriefingsPage() {
               <Radio className="w-5 h-5 text-cyan-400" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Intelligence Briefing</h1>
+              <h1 className="text-lg font-bold text-white tracking-tight">Intelligence Briefing</h1>
               <p className="text-slate-500 text-xs sm:text-sm flex items-center gap-2">
                 <Clock className="w-3 h-3" />
                 <span className="hidden xs:inline">Multi-source fusion • Real-time analysis • Actionable intelligence</span>
@@ -340,8 +339,8 @@ export default function BriefingsPage() {
 
       {/* Load button or briefing content */}
       {!hasLoaded && !isWarming ? (
-        <GlassCard blur="heavy" className="p-8 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-cyan-500/20 flex items-center justify-center">
+        <Card className="p-8 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-md bg-cyan-500/20 flex items-center justify-center">
             <FileText className="w-8 h-8 text-cyan-400" />
           </div>
           <h2 className="text-lg font-semibold text-white mb-2">
@@ -350,42 +349,41 @@ export default function BriefingsPage() {
           <p className="text-slate-400 mb-6 max-w-md mx-auto">
             Generate a comprehensive intelligence assessment covering political, economic, security, technology, and social domains.
           </p>
-          <GlassButton
+          <Button
             variant="primary"
-            glow
             onClick={() => void handleLoad()}
             className="px-6"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Generate Briefing
-          </GlassButton>
+          </Button>
           <p className="text-xs text-slate-600 mt-4">
             Synthesized from wire services, OSINT, institutional research, and proprietary analysis
           </p>
-        </GlassCard>
+        </Card>
       ) : loading && !isWarming ? (
         <div className="space-y-4">
-          <GlassCard blur="heavy" className="p-6">
+          <Card className="p-6">
             <div className="animate-pulse space-y-4">
               <div className="h-6 bg-white/10 rounded w-1/3" />
               <div className="h-4 bg-white/10 rounded w-full" />
               <div className="h-4 bg-white/10 rounded w-5/6" />
             </div>
-          </GlassCard>
+          </Card>
           {[...Array(3)].map((_, i) => (
-            <GlassCard key={i} blur="light" className="p-4">
+            <Card key={i} className="p-4">
               <div className="animate-pulse space-y-3">
                 <div className="h-4 bg-white/10 rounded w-40" />
                 <div className="h-3 bg-white/10 rounded w-full" />
                 <div className="h-3 bg-white/10 rounded w-4/5" />
               </div>
-            </GlassCard>
+            </Card>
           ))}
         </div>
       ) : !isWarming ? (
         <div className="space-y-6">
           {/* Executive Summary - Lead Story */}
-          <GlassCard blur="heavy" className="p-6 border-l-4 border-cyan-500">
+          <Card className="p-6 border-l-4 border-cyan-500">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <div className="flex items-center gap-2 mb-2">
@@ -412,7 +410,7 @@ export default function BriefingsPage() {
             <p className="text-slate-300 leading-relaxed text-[15px]">
               {briefings?.summary}
             </p>
-          </GlassCard>
+          </Card>
 
           {/* Domain Categories - Accordion */}
           <div className="space-y-3">
@@ -499,8 +497,8 @@ export default function BriefingsPage() {
                                 {section.type === 'usimpact' && (
                                   <div className="mt-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
                                     <div className="flex items-start gap-2">
-                                      <span className="text-[10px] font-bold text-red-400 bg-red-500/20 px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">
-                                        🇺🇸 US
+                                      <span className="text-[10px] font-bold text-red-400 bg-red-500/20 px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5 flex items-center gap-1">
+                                        <Globe className="w-3 h-3" /> US
                                       </span>
                                       <p className="text-sm text-red-200 leading-relaxed">{section.content}</p>
                                     </div>
@@ -548,7 +546,7 @@ export default function BriefingsPage() {
 
           {/* NSM - Call to Action */}
           {briefings?.nsm && (
-            <GlassCard blur="heavy" className="p-6 border-2 border-cyan-500/30 bg-gradient-to-r from-cyan-500/10 to-blue-500/10">
+            <Card className="p-6 border-2 border-cyan-500/30 bg-gradient-to-r from-cyan-500/10 to-blue-500/10">
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-cyan-500/20 rounded-xl shrink-0">
                   <Target className="w-6 h-6 text-cyan-400" />
@@ -565,7 +563,7 @@ export default function BriefingsPage() {
                   </p>
                 </div>
               </div>
-            </GlassCard>
+            </Card>
           )}
 
           {/* Footer */}
@@ -573,7 +571,7 @@ export default function BriefingsPage() {
             <div className="flex items-center gap-2">
               <span>Sources: Wire services, OSINT, institutional research, proprietary signals</span>
             </div>
-            <GlassButton
+            <Button
               variant="ghost"
               size="sm"
               onClick={() => {
@@ -583,7 +581,7 @@ export default function BriefingsPage() {
             >
               <RefreshCw className="w-3 h-3 mr-1" />
               Refresh
-            </GlassButton>
+            </Button>
           </div>
         </div>
       ) : null}

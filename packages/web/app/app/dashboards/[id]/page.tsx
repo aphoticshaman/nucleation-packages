@@ -19,8 +19,8 @@ import {
   Clock,
   Database,
 } from 'lucide-react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button } from '@/components/ui';
+
 import { useIntelBriefing } from '@/hooks/useIntelBriefing';
 
 // Mock dashboard data - in production this would come from the database
@@ -111,14 +111,14 @@ export default function DashboardDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
         <LayoutDashboard className="w-16 h-16 text-slate-600 mb-4" />
-        <h1 className="text-2xl font-bold text-white mb-2">Dashboard Not Found</h1>
+        <h1 className="text-lg font-bold text-white mb-2">Dashboard Not Found</h1>
         <p className="text-slate-400 mb-6">
           The dashboard you're looking for doesn't exist or has been deleted.
         </p>
-        <GlassButton variant="primary" onClick={() => router.push('/app/dashboards')}>
+        <Button variant="primary" onClick={() => router.push('/app/dashboards')}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Dashboard Hub
-        </GlassButton>
+        </Button>
       </div>
     );
   }
@@ -146,7 +146,7 @@ export default function DashboardDetailPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <GlassButton
+          <Button
             variant="ghost"
             size="sm"
             onClick={() => void handleRefresh()}
@@ -154,19 +154,19 @@ export default function DashboardDetailPage() {
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             <span className="ml-2 hidden sm:inline">Refresh</span>
-          </GlassButton>
-          <GlassButton variant="ghost" size="sm">
+          </Button>
+          <Button variant="ghost" size="sm">
             <Share2 className="w-4 h-4" />
             <span className="ml-2 hidden sm:inline">Share</span>
-          </GlassButton>
-          <GlassButton variant="ghost" size="sm">
+          </Button>
+          <Button variant="ghost" size="sm">
             <Download className="w-4 h-4" />
             <span className="ml-2 hidden sm:inline">Export</span>
-          </GlassButton>
-          <GlassButton variant="secondary" size="sm">
+          </Button>
+          <Button variant="secondary" size="sm">
             <Settings className="w-4 h-4" />
             <span className="ml-2 hidden sm:inline">Configure</span>
-          </GlassButton>
+          </Button>
         </div>
       </div>
 
@@ -189,7 +189,7 @@ export default function DashboardDetailPage() {
       {/* Main Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Primary Widget - 2 cols - Deep Dive Content */}
-        <GlassCard blur="heavy" className="lg:col-span-2">
+        <Card className="lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               <Activity className="w-5 h-5 text-cyan-400" />
@@ -256,10 +256,10 @@ export default function DashboardDetailPage() {
               })}
             </div>
           )}
-        </GlassCard>
+        </Card>
 
         {/* Risk Indicators */}
-        <GlassCard blur="heavy">
+        <Card>
           <h3 className="text-sm font-medium text-slate-400 mb-4">Risk Indicators</h3>
           <div className="space-y-3">
             <RiskIndicator
@@ -283,10 +283,10 @@ export default function DashboardDetailPage() {
               color="purple"
             />
           </div>
-        </GlassCard>
+        </Card>
 
         {/* Market Signals Widget */}
-        <GlassCard blur="heavy">
+        <Card>
           <h3 className="text-sm font-medium text-slate-400 mb-4 flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-emerald-400" />
             Market Signals
@@ -301,10 +301,10 @@ export default function DashboardDetailPage() {
               {briefings?.markets || 'Market data not available for this dashboard configuration.'}
             </p>
           )}
-        </GlassCard>
+        </Card>
 
         {/* Key Developments */}
-        <GlassCard blur="heavy">
+        <Card>
           <h3 className="text-sm font-medium text-slate-400 mb-4 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-400" />
             Key Developments
@@ -319,10 +319,10 @@ export default function DashboardDetailPage() {
               {briefings?.security || briefings?.economic || 'No significant developments at this time.'}
             </p>
           )}
-        </GlassCard>
+        </Card>
 
         {/* Cascade Watch */}
-        <GlassCard blur="heavy">
+        <Card>
           <h3 className="text-sm font-medium text-slate-400 mb-4 flex items-center gap-2">
             <Zap className="w-4 h-4 text-cyan-400" />
             Cascade Watch
@@ -354,11 +354,11 @@ export default function DashboardDetailPage() {
               </div>
             </div>
           )}
-        </GlassCard>
+        </Card>
       </div>
 
       {/* Secondary Intelligence Domains */}
-      <GlassCard blur="heavy">
+      <Card>
         <h3 className="text-sm font-medium text-slate-400 mb-4">
           Extended Analysis
         </h3>
@@ -406,11 +406,11 @@ export default function DashboardDetailPage() {
             })}
           </div>
         )}
-      </GlassCard>
+      </Card>
 
       {/* Next Strategic Move */}
       {briefings?.nsm && (
-        <GlassCard blur="heavy" className="border-l-4 border-cyan-500">
+        <Card className="border-l-4 border-cyan-500">
           <div className="flex items-start gap-3">
             <div className="p-2 bg-cyan-500/20 rounded-lg">
               <Zap className="w-5 h-5 text-cyan-400" />
@@ -424,7 +424,7 @@ export default function DashboardDetailPage() {
               </p>
             </div>
           </div>
-        </GlassCard>
+        </Card>
       )}
     </div>
   );

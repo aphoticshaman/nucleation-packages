@@ -77,11 +77,11 @@ export default function PhaseDynamicsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30">
+          <div className="p-3 rounded-md bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30">
             <Activity size={28} className="text-cyan-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white font-mono">
+            <h1 className="text-lg font-bold text-white font-mono">
               Phase Dynamics
             </h1>
             <p className="text-sm text-slate-400">
@@ -97,7 +97,7 @@ export default function PhaseDynamicsPage() {
                 ? phaseTransition.stopSimulation()
                 : phaseTransition.startSimulation()
             }
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-mono transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-mono transition-colors ${
               phaseTransition.isSimulating
                 ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                 : 'bg-green-500/20 text-green-400 border border-green-500/30'
@@ -115,7 +115,7 @@ export default function PhaseDynamicsPage() {
           </button>
           <button
             onClick={phaseTransition.reset}
-            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 transition-colors"
+            className="p-2 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-600 transition-colors"
           >
             <RotateCcw size={16} />
           </button>
@@ -124,26 +124,26 @@ export default function PhaseDynamicsPage() {
 
       {/* Key Metrics */}
       <div className="grid grid-cols-4 gap-4">
-        <div className={`p-4 rounded-xl border ${getRegimeColor(regimeDetection.currentRegime)}`}>
+        <div className={`p-4 rounded-md border ${getRegimeColor(regimeDetection.currentRegime)}`}>
           <div className="text-xs font-mono text-slate-400 mb-1">Current Regime</div>
           <div className="text-2xl font-bold font-mono">{regimeDetection.regimeName}</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700">
+        <div className="p-4 rounded-md bg-slate-800/50 border border-slate-700">
           <div className="text-xs font-mono text-slate-400 mb-1">Transition Risk</div>
           <div className="text-2xl font-bold font-mono text-amber-400">
             {(regimeDetection.transitionRisk * 100).toFixed(1)}%
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700">
+        <div className="p-4 rounded-md bg-slate-800/50 border border-slate-700">
           <div className="text-xs font-mono text-slate-400 mb-1">Escape Rate</div>
           <div className="text-2xl font-bold font-mono text-cyan-400">
             {phaseTransition.escapeRate.toFixed(4)}
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700">
+        <div className="p-4 rounded-md bg-slate-800/50 border border-slate-700">
           <div className="text-xs font-mono text-slate-400 mb-1">Basin Stability</div>
           <div className="text-2xl font-bold font-mono text-green-400">
             {(phaseTransition.currentState.stability * 100).toFixed(0)}%
@@ -154,7 +154,7 @@ export default function PhaseDynamicsPage() {
       {/* Main Visualization */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Landau-Ginzburg Potential */}
-        <div className="p-6 rounded-xl bg-slate-800/30 border border-slate-700">
+        <div className="p-6 rounded-md bg-slate-800/30 border border-slate-700">
           <h3 className="text-sm font-mono font-bold text-slate-300 mb-4 flex items-center gap-2">
             <Zap size={16} className="text-cyan-400" />
             Landau-Ginzburg Potential Landscape
@@ -170,7 +170,7 @@ export default function PhaseDynamicsPage() {
         </div>
 
         {/* Stress Factor Controls */}
-        <div className="p-6 rounded-xl bg-slate-800/30 border border-slate-700">
+        <div className="p-6 rounded-md bg-slate-800/30 border border-slate-700">
           <h3 className="text-sm font-mono font-bold text-slate-300 mb-4 flex items-center gap-2">
             <AlertTriangle size={16} className="text-amber-400" />
             Stress Factors
@@ -201,7 +201,7 @@ export default function PhaseDynamicsPage() {
                       key === 'political' ? newValue : stressFactors.political
                     );
                   }}
-                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                  className="w-full h-2 bg-slate-700 rounded-md appearance-none cursor-pointer accent-cyan-500"
                 />
               </div>
             ))}
@@ -251,7 +251,7 @@ export default function PhaseDynamicsPage() {
       {/* Regime Probabilities & Forecasts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Current Regime Probabilities */}
-        <div className="p-6 rounded-xl bg-slate-800/30 border border-slate-700">
+        <div className="p-6 rounded-md bg-slate-800/30 border border-slate-700">
           <h3 className="text-sm font-mono font-bold text-slate-300 mb-4">
             Regime Probabilities
           </h3>
@@ -281,7 +281,7 @@ export default function PhaseDynamicsPage() {
         </div>
 
         {/* Forecasts */}
-        <div className="p-6 rounded-xl bg-slate-800/30 border border-slate-700 col-span-2">
+        <div className="p-6 rounded-md bg-slate-800/30 border border-slate-700 col-span-2">
           <h3 className="text-sm font-mono font-bold text-slate-300 mb-4 flex items-center gap-2">
             <TrendingUp size={16} className="text-green-400" />
             Regime Forecasts
@@ -291,7 +291,7 @@ export default function PhaseDynamicsPage() {
               const forecast = regimeDetection.getForecast(horizon);
 
               return (
-                <div key={horizon} className="p-3 rounded-lg bg-slate-900/50">
+                <div key={horizon} className="p-3 rounded-md bg-slate-900/50">
                   <div className="text-xs font-mono text-slate-500 mb-2">
                     T+{horizon} periods
                   </div>
@@ -321,7 +321,7 @@ export default function PhaseDynamicsPage() {
 
       {/* Transition History */}
       {phaseTransition.transitions.length > 0 && (
-        <div className="p-6 rounded-xl bg-slate-800/30 border border-slate-700">
+        <div className="p-6 rounded-md bg-slate-800/30 border border-slate-700">
           <h3 className="text-sm font-mono font-bold text-slate-300 mb-4">
             Phase Transition History
           </h3>

@@ -14,9 +14,10 @@ import {
   VolumeX,
   Save,
 } from 'lucide-react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button } from '@/components/ui';
 import { GlassToggle, GlassSelect } from '@/components/ui/GlassInput';
+
+
 
 interface NotificationChannel {
   id: string;
@@ -135,14 +136,14 @@ export default function NotificationsPage() {
     <div className="space-y-6 max-w-3xl mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Notification Preferences</h1>
+        <h1 className="text-lg font-bold text-white">Notification Preferences</h1>
         <p className="text-slate-400 mt-1">
           Control how and when you receive alerts from LatticeForge
         </p>
       </div>
 
       {/* Notification Channels */}
-      <GlassCard blur="heavy">
+      <Card>
         <h2 className="text-lg font-semibold text-white mb-4">Notification Channels</h2>
         <div className="space-y-3">
           {channels.map((channel) => (
@@ -169,21 +170,21 @@ export default function NotificationsPage() {
                   onChange={() => toggleChannel(channel.id)}
                 />
               ) : (
-                <GlassButton
+                <Button
                   variant="secondary"
                   size="sm"
                   onClick={() => window.location.href = '/app/integrations'}
                 >
                   Connect
-                </GlassButton>
+                </Button>
               )}
             </div>
           ))}
         </div>
-      </GlassCard>
+      </Card>
 
       {/* Alert Categories */}
-      <GlassCard blur="heavy">
+      <Card>
         <h2 className="text-lg font-semibold text-white mb-4">Alert Categories</h2>
         <p className="text-sm text-slate-400 mb-4">
           Choose which channels receive each type of alert
@@ -229,10 +230,10 @@ export default function NotificationsPage() {
             </div>
           ))}
         </div>
-      </GlassCard>
+      </Card>
 
       {/* Digest Settings */}
-      <GlassCard blur="heavy">
+      <Card>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-white">Daily Digest</h2>
           <GlassToggle
@@ -281,10 +282,10 @@ export default function NotificationsPage() {
             </GlassSelect>
           </div>
         )}
-      </GlassCard>
+      </Card>
 
       {/* Quiet Hours */}
-      <GlassCard blur="heavy">
+      <Card>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
@@ -336,20 +337,19 @@ export default function NotificationsPage() {
             />
           </div>
         )}
-      </GlassCard>
+      </Card>
 
       {/* Save Button */}
       <div className="sticky bottom-4 flex justify-end">
-        <GlassButton
+        <Button
           variant="primary"
           size="lg"
-          glow
           loading={saving}
           onClick={() => void handleSave()}
         >
           <Save className="w-4 h-4 mr-2" />
           Save Preferences
-        </GlassButton>
+        </Button>
       </div>
     </div>
   );

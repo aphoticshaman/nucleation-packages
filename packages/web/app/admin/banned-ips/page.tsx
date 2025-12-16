@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button } from '@/components/ui';
 
 interface BannedIP {
   id: string;
@@ -123,36 +122,36 @@ export default function BannedIPsPage() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Banned IP Addresses</h1>
+          <h1 className="text-lg font-bold text-white">Banned IP Addresses</h1>
           <p className="text-slate-400">Manage IP-based access restrictions</p>
         </div>
-        <GlassButton variant="primary" onClick={() => setShowAddModal(true)}>
+        <Button variant="secondary" onClick={() => setShowAddModal(true)}>
           + Ban IP Address
-        </GlassButton>
+        </Button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-8">
-        <GlassCard compact>
+        <Card>
           <p className="text-2xl font-bold text-white">{stats.total}</p>
           <p className="text-sm text-slate-400">Total Bans</p>
-        </GlassCard>
-        <GlassCard compact>
+        </Card>
+        <Card>
           <p className="text-2xl font-bold text-red-400">{stats.active}</p>
           <p className="text-sm text-slate-400">Active Bans</p>
-        </GlassCard>
-        <GlassCard compact>
+        </Card>
+        <Card>
           <p className="text-2xl font-bold text-amber-400">{stats.permanent}</p>
           <p className="text-sm text-slate-400">Permanent</p>
-        </GlassCard>
-        <GlassCard compact>
+        </Card>
+        <Card>
           <p className="text-2xl font-bold text-blue-400">{stats.temporary}</p>
           <p className="text-sm text-slate-400">Temporary</p>
-        </GlassCard>
+        </Card>
       </div>
 
       {/* Banned IPs Table */}
-      <GlassCard blur="heavy" className="p-0 overflow-hidden">
+      <Card className="p-0 overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-slate-400">Loading banned IPs...</div>
         ) : (
@@ -209,13 +208,13 @@ export default function BannedIPsPage() {
                     </td>
                     <td className="py-4 px-4">
                       {ip.is_active && (
-                        <GlassButton
+                        <Button
                           variant="secondary"
                           size="sm"
                           onClick={() => void unbanIP(ip.id)}
                         >
                           Unban
-                        </GlassButton>
+                        </Button>
                       )}
                     </td>
                   </tr>
@@ -231,12 +230,12 @@ export default function BannedIPsPage() {
             </table>
           </div>
         )}
-      </GlassCard>
+      </Card>
 
       {/* Add Ban Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowAddModal(false)}>
-          <div className="bg-slate-900 border border-white/10 rounded-lg p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-slate-900 border border-white/10 rounded-md p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-white mb-4">Ban IP Address</h3>
 
             <div className="space-y-4">
@@ -247,7 +246,7 @@ export default function BannedIPsPage() {
                   value={newIP}
                   onChange={(e) => setNewIP(e.target.value)}
                   placeholder="e.g., 192.168.1.1 or 192.168.1.0/24"
-                  className="w-full bg-slate-800 text-white rounded-lg px-4 py-2 border border-white/10 focus:border-red-500 focus:outline-none font-mono"
+                  className="w-full bg-slate-800 text-white rounded-md px-4 py-2 border border-white/10 focus:border-red-500 focus:outline-none font-mono"
                 />
               </div>
 
@@ -257,7 +256,7 @@ export default function BannedIPsPage() {
                   value={newReason}
                   onChange={(e) => setNewReason(e.target.value)}
                   placeholder="e.g., Brute force attempts, suspicious activity, VPN abuse..."
-                  className="w-full bg-slate-800 text-white rounded-lg px-4 py-2 border border-white/10 focus:border-red-500 focus:outline-none resize-none"
+                  className="w-full bg-slate-800 text-white rounded-md px-4 py-2 border border-white/10 focus:border-red-500 focus:outline-none resize-none"
                   rows={2}
                 />
               </div>
@@ -267,7 +266,7 @@ export default function BannedIPsPage() {
                 <select
                   value={duration}
                   onChange={(e) => setDuration(e.target.value as typeof duration)}
-                  className="w-full bg-slate-800 text-white rounded-lg px-4 py-2 border border-white/10"
+                  className="w-full bg-slate-800 text-white rounded-md px-4 py-2 border border-white/10"
                 >
                   <option value="permanent">Permanent</option>
                   <option value="24h">24 Hours</option>
@@ -278,18 +277,17 @@ export default function BannedIPsPage() {
             </div>
 
             <div className="flex gap-3 justify-end mt-6">
-              <GlassButton variant="secondary" onClick={() => setShowAddModal(false)}>
+              <Button variant="secondary" onClick={() => setShowAddModal(false)}>
                 Cancel
-              </GlassButton>
-              <GlassButton
-                variant="primary"
+              </Button>
+              <Button
+                variant="secondary"
                 onClick={() => void addBannedIP()}
                 disabled={saving || !newIP.trim() || !newReason.trim()}
-                loading={saving}
                 className="bg-red-600 hover:bg-red-700"
               >
-                Ban IP
-              </GlassButton>
+                {saving ? 'Saving...' : 'Ban IP'}
+              </Button>
             </div>
           </div>
         </div>

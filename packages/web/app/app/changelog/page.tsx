@@ -12,7 +12,7 @@ import {
   ExternalLink,
   Rocket,
 } from 'lucide-react';
-import { GlassCard } from '@/components/ui/GlassCard';
+import { Card } from '@/components/ui';
 
 interface ChangelogEntry {
   version: string;
@@ -184,7 +184,7 @@ export default function ChangelogPage() {
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
             <Rocket className="w-5 h-5 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white">What&apos;s New</h1>
+          <h1 className="text-lg font-bold text-white">What&apos;s New</h1>
         </div>
         <p className="text-slate-400">
           Stay up to date with the latest features and improvements
@@ -192,7 +192,7 @@ export default function ChangelogPage() {
       </div>
 
       {/* Latest version highlight */}
-      <GlassCard blur="heavy" accent glow className="relative overflow-hidden">
+      <Card className="relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/20 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="relative">
           <div className="flex items-center gap-2 mb-2">
@@ -225,10 +225,10 @@ export default function ChangelogPage() {
             )}
           </div>
         </div>
-      </GlassCard>
+      </Card>
 
       {/* Subscribe */}
-      <GlassCard blur="light" className="flex items-center justify-between gap-4 flex-wrap">
+      <Card className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <Bell className="w-5 h-5 text-blue-400" />
           <div>
@@ -243,14 +243,14 @@ export default function ChangelogPage() {
           Manage notifications
           <ExternalLink className="w-3 h-3" />
         </a>
-      </GlassCard>
+      </Card>
 
       {/* All releases */}
       <div>
         <h2 className="text-lg font-semibold text-white mb-4">All Releases</h2>
         <div className="space-y-4">
           {CHANGELOG.map((entry) => (
-            <GlassCard key={entry.version} blur="heavy">
+            <Card key={entry.version}>
               <button
                 onClick={() => toggleVersion(entry.version)}
                 className="w-full flex items-center justify-between gap-4"
@@ -299,13 +299,13 @@ export default function ChangelogPage() {
                   </div>
                 </div>
               )}
-            </GlassCard>
+            </Card>
           ))}
         </div>
       </div>
 
       {/* Footer */}
-      <GlassCard blur="light" className="text-center">
+      <Card className="text-center">
         <p className="text-slate-400 mb-2">Looking for older releases?</p>
         <a
           href="https://github.com/latticeforge/changelog"
@@ -316,7 +316,7 @@ export default function ChangelogPage() {
           View full changelog on GitHub
           <ExternalLink className="w-4 h-4" />
         </a>
-      </GlassCard>
+      </Card>
     </div>
   );
 }

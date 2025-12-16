@@ -2,9 +2,9 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button } from '@/components/ui';
 import { GlassInput, GlassSelect, GlassToggle } from '@/components/ui/GlassInput';
+
 import { supabase } from '@/lib/supabase';
 import { useAccessibility, type AccessibilitySettings } from '@/contexts/AccessibilityContext';
 
@@ -29,19 +29,19 @@ function AccessibilitySettingsCard() {
 
   if (!accessibilityContext) {
     return (
-      <GlassCard>
+      <Card>
         <h2 className="text-lg font-medium text-white mb-5">Accessibility</h2>
         <p className="text-slate-400 text-sm">
           Accessibility settings are not available on this page.
         </p>
-      </GlassCard>
+      </Card>
     );
   }
 
   const { settings, updateSetting, resetSettings, isColorblindMode } = accessibilityContext;
 
   return (
-    <GlassCard>
+    <Card>
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-lg font-medium text-white">Accessibility</h2>
         {(isColorblindMode || settings.highContrast || settings.reducedMotion || settings.largeText) && (
@@ -170,7 +170,7 @@ function AccessibilitySettingsCard() {
           />
         </div>
       </div>
-    </GlassCard>
+    </Card>
   );
 }
 
@@ -208,19 +208,19 @@ function PlanCard() {
 
   if (loading) {
     return (
-      <GlassCard>
+      <Card>
         <div className="animate-pulse">
           <div className="h-6 w-24 bg-white/10 rounded mb-2" />
           <div className="h-4 w-48 bg-white/5 rounded" />
         </div>
-      </GlassCard>
+      </Card>
     );
   }
 
   // Admin users - show admin status, no upgrade
   if (userRole === 'admin') {
     return (
-      <GlassCard className="relative overflow-hidden border-amber-500/30">
+      <Card className="relative overflow-hidden border-amber-500/30">
         <div
           className="absolute -right-20 -top-20 w-40 h-40 rounded-full opacity-20 pointer-events-none"
           style={{
@@ -237,15 +237,15 @@ function PlanCard() {
             </div>
             <p className="text-slate-400 mt-1 text-sm">Unlimited access to all features</p>
           </div>
-          <GlassButton
+          <Button
             variant="secondary"
-            fullWidthMobile
+            
             onClick={() => (window.location.href = '/admin')}
           >
             Admin Panel
-          </GlassButton>
+          </Button>
         </div>
-      </GlassCard>
+      </Card>
     );
   }
 
@@ -260,7 +260,7 @@ function PlanCard() {
   const display = tierDisplay[userTier] || tierDisplay.free;
 
   return (
-    <GlassCard accent={userTier !== 'free'} glow={userTier !== 'free'} className="relative overflow-hidden">
+    <Card className="relative overflow-hidden">
       <div
         className="absolute -right-20 -top-20 w-40 h-40 rounded-full opacity-20 pointer-events-none"
         style={{
@@ -278,25 +278,25 @@ function PlanCard() {
           <p className="text-slate-400 mt-1 text-sm">{display.limits}</p>
         </div>
         {userTier === 'free' ? (
-          <GlassButton
+          <Button
             variant="primary"
-            glow
-            fullWidthMobile
+           
+            
             onClick={() => (window.location.href = '/pricing')}
           >
             Upgrade
-          </GlassButton>
+          </Button>
         ) : (
-          <GlassButton
+          <Button
             variant="secondary"
-            fullWidthMobile
+            
             onClick={() => (window.location.href = '/pricing')}
           >
             Manage Plan
-          </GlassButton>
+          </Button>
         )}
       </div>
-    </GlassCard>
+    </Card>
   );
 }
 
@@ -306,12 +306,12 @@ const IntegrationsSettings = dynamic(
   {
     ssr: false,
     loading: () => (
-      <GlassCard>
+      <Card>
         <div className="animate-pulse">
           <div className="h-6 w-32 bg-white/10 rounded mb-4" />
           <div className="h-20 bg-white/5 rounded" />
         </div>
-      </GlassCard>
+      </Card>
     ),
   }
 );
@@ -415,14 +415,14 @@ export default function ConsumerSettingsPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Header */}
       <div className="pt-2">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white">Settings</h1>
+        <h1 className="text-lg font-bold text-white">Settings</h1>
         <p className="text-slate-400 mt-1 text-sm sm:text-base">
           Manage your account and preferences
         </p>
       </div>
 
       {/* Profile */}
-      <GlassCard>
+      <Card>
         <h2 className="text-lg font-medium text-white mb-5">Profile</h2>
         <div className="space-y-4">
           <GlassInput
@@ -437,10 +437,10 @@ export default function ConsumerSettingsPage() {
             hint="Contact support to change email"
           />
         </div>
-      </GlassCard>
+      </Card>
 
       {/* Preferences */}
-      <GlassCard>
+      <Card>
         <h2 className="text-lg font-medium text-white mb-5">Preferences</h2>
         <div className="space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -473,10 +473,10 @@ export default function ConsumerSettingsPage() {
             />
           </div>
         </div>
-      </GlassCard>
+      </Card>
 
       {/* Daily Intel Email */}
-      <GlassCard>
+      <Card>
         <h2 className="text-lg font-medium text-white mb-5">Daily Intel Brief</h2>
         <div className="space-y-5">
           <GlassToggle
@@ -515,7 +515,7 @@ export default function ConsumerSettingsPage() {
             </div>
           )}
         </div>
-      </GlassCard>
+      </Card>
 
       {/* Accessibility */}
       <AccessibilitySettingsCard />
@@ -523,19 +523,19 @@ export default function ConsumerSettingsPage() {
       {/* Integrations */}
       <Suspense
         fallback={
-          <GlassCard>
+          <Card>
             <div className="animate-pulse">
               <div className="h-6 w-32 bg-white/10 rounded mb-4" />
               <div className="h-20 bg-white/5 rounded" />
             </div>
-          </GlassCard>
+          </Card>
         }
       >
         <IntegrationsSettings />
       </Suspense>
 
       {/* Usage */}
-      <GlassCard>
+      <Card>
         <h2 className="text-lg font-medium text-white mb-5">Usage</h2>
         <div className="space-y-5">
           <div>
@@ -565,13 +565,13 @@ export default function ConsumerSettingsPage() {
             </div>
           </div>
         </div>
-      </GlassCard>
+      </Card>
 
       {/* Plan - fetched from user context */}
       <PlanCard />
 
       {/* Danger zone */}
-      <GlassCard className="border-red-900/30">
+      <Card className="border-red-900/30">
         <h2 className="text-lg font-medium text-red-400 mb-4">Danger Zone</h2>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -580,25 +580,25 @@ export default function ConsumerSettingsPage() {
               Permanently delete your account and all data
             </p>
           </div>
-          <GlassButton variant="danger" fullWidthMobile>
+          <Button variant="danger" >
             Delete
-          </GlassButton>
+          </Button>
         </div>
-      </GlassCard>
+      </Card>
 
       {/* Save button - sticky on mobile */}
       <div className="sticky bottom-4 sm:static pt-2 pb-safe">
         <div className="flex justify-end">
-          <GlassButton
+          <Button
             variant="primary"
             size="lg"
-            glow
+           
             loading={saving}
-            fullWidthMobile
+            
             onClick={() => void handleSave()}
           >
             Save Changes
-          </GlassButton>
+          </Button>
         </div>
       </div>
     </div>

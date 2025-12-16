@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Folder, Save } from 'lucide-react';
+import { Card, Button } from '@/components/ui';
+
 import { supabase } from '@/lib/supabase';
 
 interface Simulation {
@@ -83,9 +84,9 @@ export default function SavedSimulationsPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map(i => (
-            <GlassCard key={i} className="h-64 animate-pulse">
+            <Card key={i} className="h-64 animate-pulse">
               <div className="h-full bg-white/5 rounded" />
-            </GlassCard>
+            </Card>
           ))}
         </div>
       </div>
@@ -97,7 +98,7 @@ export default function SavedSimulationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">My Simulations</h1>
+          <h1 className="text-lg font-bold text-white">My Simulations</h1>
           <p className="text-slate-400 mt-1">
             {isAdmin ? (
               <span className="text-amber-400">Admin - Unlimited storage</span>
@@ -107,13 +108,13 @@ export default function SavedSimulationsPage() {
           </p>
         </div>
         {(isAdmin || usedSlots < maxSlots) && (
-          <GlassButton
+          <Button
             variant="primary"
-            glow
+           
             onClick={() => window.location.href = '/app'}
           >
             New Simulation
-          </GlassButton>
+          </Button>
         )}
       </div>
 
@@ -121,14 +122,14 @@ export default function SavedSimulationsPage() {
       {simulations.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {simulations.map((sim) => (
-            <GlassCard
+            <Card
               key={sim.id}
-              interactive
+             
               className="overflow-hidden"
             >
               {/* Preview placeholder */}
               <div className="h-40 bg-gradient-to-br from-slate-800/50 to-slate-900/50 flex items-center justify-center border-b border-white/[0.06] -m-4 sm:-m-6 mb-4">
-                <span className="text-4xl">🗺️</span>
+                <span className="text-4xl"><Folder className="w-10 h-10 text-slate-500" /></span>
               </div>
 
               <div className="pt-4">
@@ -141,25 +142,25 @@ export default function SavedSimulationsPage() {
                     {new Date(sim.updated_at).toLocaleDateString()}
                   </span>
                   <div className="flex gap-2">
-                    <GlassButton
+                    <Button
                       variant="secondary"
                       size="sm"
                       onClick={() => window.location.href = `/app?load=${sim.id}`}
                     >
                       Load
-                    </GlassButton>
-                    <GlassButton
+                    </Button>
+                    <Button
                       variant="ghost"
                       size="sm"
                       loading={deleting === sim.id}
                       onClick={() => void handleDelete(sim.id)}
                     >
                       Delete
-                    </GlassButton>
+                    </Button>
                   </div>
                 </div>
               </div>
-            </GlassCard>
+            </Card>
           ))}
 
           {/* Empty slots - only show for non-admins */}
@@ -178,37 +179,37 @@ export default function SavedSimulationsPage() {
           ))}
         </div>
       ) : (
-        <GlassCard className="p-12 text-center">
-          <span className="text-4xl">📭</span>
+        <Card className="p-12 text-center">
+          <span className="text-4xl"><Save className="w-12 h-12 text-slate-500" /></span>
           <h3 className="text-lg font-medium text-white mt-4">No saved simulations</h3>
           <p className="text-slate-400 mt-2">Run a simulation and save it to access it later</p>
-          <GlassButton
+          <Button
             variant="primary"
-            glow
+           
             className="mt-6"
             onClick={() => window.location.href = '/app'}
           >
             Start Exploring
-          </GlassButton>
-        </GlassCard>
+          </Button>
+        </Card>
       )}
 
       {/* Upgrade prompt - only for non-admins */}
       {!isAdmin && (
-        <GlassCard accent glow className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <Card className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <h3 className="font-medium text-white">Need more storage?</h3>
             <p className="text-sm text-slate-300 mt-1">
               Enterprise accounts get unlimited simulation saves
             </p>
           </div>
-          <GlassButton
+          <Button
             variant="primary"
             onClick={() => window.location.href = '/pricing'}
           >
             Upgrade
-          </GlassButton>
-        </GlassCard>
+          </Button>
+        </Card>
       )}
     </div>
   );

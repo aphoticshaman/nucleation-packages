@@ -2,12 +2,13 @@
 
 import type { DragEvent } from 'react';
 import { WIDGET_CATALOG, type WidgetCatalogItem } from '@/lib/dashboard/types';
+import { LayoutDashboard, TrendingUp, FileText, Award, Layers } from 'lucide-react';
 
 const CATEGORIES = [
-  { id: 'data', name: 'Data', icon: '📊' },
-  { id: 'visualization', name: 'Charts', icon: '📈' },
-  { id: 'content', name: 'Content', icon: '📝' },
-  { id: 'intelligence', name: 'Intel', icon: '🎖️' },
+  { id: 'data', name: 'Data', icon: <LayoutDashboard className="w-4 h-4" /> },
+  { id: 'visualization', name: 'Charts', icon: <TrendingUp className="w-4 h-4" /> },
+  { id: 'content', name: 'Content', icon: <FileText className="w-4 h-4" /> },
+  { id: 'intelligence', name: 'Intel', icon: <Award className="w-4 h-4" /> },
 ] as const;
 
 interface WidgetPaletteProps {
@@ -30,7 +31,7 @@ export default function WidgetPalette({ isExpanded, onToggle }: WidgetPalettePro
         onClick={onToggle}
         className="w-full p-4 flex items-center gap-3 border-b border-slate-800 hover:bg-slate-800/50"
       >
-        <span className="text-xl">🧩</span>
+        <Layers className="w-5 h-5 text-slate-400" />
         {isExpanded && <span className="text-sm font-medium text-white">Widgets</span>}
       </button>
 
@@ -39,7 +40,7 @@ export default function WidgetPalette({ isExpanded, onToggle }: WidgetPalettePro
         <div className="p-2 max-h-[calc(100vh-200px)] overflow-y-auto">
           {CATEGORIES.map((category) => (
             <div key={category.id} className="mb-4">
-              <p className="text-xs text-slate-500 uppercase tracking-wider px-2 mb-2">
+              <p className="text-xs text-slate-500 uppercase tracking-wider px-2 mb-2 flex items-center gap-2">
                 {category.icon} {category.name}
               </p>
               <div className="space-y-1">
@@ -71,10 +72,10 @@ export default function WidgetPalette({ isExpanded, onToggle }: WidgetPalettePro
             <button
               key={category.id}
               onClick={onToggle}
-              className="w-10 h-10 flex items-center justify-center bg-slate-800 hover:bg-slate-700 rounded-lg"
+              className="w-10 h-10 flex items-center justify-center bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white"
               title={category.name}
             >
-              <span className="text-lg">{category.icon}</span>
+              {category.icon}
             </button>
           ))}
         </div>

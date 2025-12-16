@@ -1,5 +1,5 @@
 import { requireAdmin } from '@/lib/auth';
-import { GlassCard } from '@/components/ui/GlassCard';
+import { Card } from '@/components/ui';
 import { BarChart3, Construction } from 'lucide-react';
 
 export default async function AnalyticsPage() {
@@ -8,11 +8,11 @@ export default async function AnalyticsPage() {
   return (
     <div className="p-4 lg:pl-72 lg:p-8">
       <div className="mb-6 lg:mb-8">
-        <h1 className="text-xl lg:text-2xl font-bold text-white">Analytics</h1>
+        <h1 className="text-lg font-bold text-white">Analytics</h1>
         <p className="text-slate-400 text-sm lg:text-base">Platform usage and engagement metrics</p>
       </div>
 
-      <GlassCard blur="heavy" className="max-w-2xl">
+      <Card className="max-w-2xl">
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mb-4">
             <Construction className="w-8 h-8 text-amber-400" />
@@ -26,7 +26,7 @@ export default async function AnalyticsPage() {
             <span>Tracking API requests, user sessions, and endpoint usage</span>
           </div>
         </div>
-      </GlassCard>
+      </Card>
     </div>
   );
 }

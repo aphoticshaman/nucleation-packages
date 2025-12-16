@@ -7,7 +7,14 @@ import { useSupabaseNations } from '@/hooks/useSupabaseNations';
 import { useIntelBriefing, getRiskBadgeStyle } from '@/hooks/useIntelBriefing';
 import HelpTip from '@/components/HelpTip';
 import Glossary from '@/components/Glossary';
-import { Map, Share2 } from 'lucide-react';
+import {
+  Home,
+  Globe, Shield, LayoutDashboard, TrendingUp, Target, Clock, Dices, BookOpen,
+  Heart, Microscope, Leaf, AlertCircle, Laptop, Zap, Map, Monitor, Award,
+  Satellite, Factory, Ship, Pickaxe, Bird, GraduationCap, Briefcase, Bitcoin,
+  Sparkles, Palette, MapPin, Anchor, Landmark, AlertTriangle, Save, Settings,
+  Radio, Share2
+} from "lucide-react";
 import { supabase } from '@/lib/supabase';
 
 // Dynamic import for map (client-side only)
@@ -37,9 +44,9 @@ type ViewMode = 'map' | 'causal';
 type SkillLevel = 'simple' | 'standard' | 'detailed';
 
 const SKILL_LEVELS = [
-  { id: 'simple' as const, label: 'Basic', icon: '👀', desc: 'Easy to understand' },
-  { id: 'standard' as const, label: 'Analyst', icon: '📊', desc: 'Industry context' },
-  { id: 'detailed' as const, label: 'Expert', icon: '🔬', desc: 'Full tradecraft' },
+  { id: 'simple' as const, label: 'Basic', icon: Home, desc: 'Easy to understand' },
+  { id: 'standard' as const, label: 'Analyst', icon: LayoutDashboard, desc: 'Industry context' },
+  { id: 'detailed' as const, label: 'Expert', icon: Microscope, desc: 'Full tradecraft' },
 ];
 
 // Region presets with progressive complexity
@@ -48,7 +55,7 @@ const PRESETS = [
     id: 'global',
     name: 'Global',
     fullName: 'World Overview',
-    icon: '🌍',
+    icon: Globe,
     simpleDesc: 'Every country in the world',
     standardDesc: 'Full 195-nation geopolitical landscape',
     detailedDesc: 'Complete basin-state manifold with cross-border influence tensors and transition probability matrices',
@@ -57,7 +64,7 @@ const PRESETS = [
     id: 'nato',
     name: 'NATO',
     fullName: 'NATO Alliance',
-    icon: '🛡️',
+    icon: Shield,
     simpleDesc: 'US and European allies',
     standardDesc: '32-member collective defense treaty',
     detailedDesc: 'Article 5 alliance coherence metrics, burden-sharing deltas, and interoperability indices',
@@ -66,7 +73,7 @@ const PRESETS = [
     id: 'brics',
     name: 'BRICS+',
     fullName: 'BRICS Nations',
-    icon: '🌏',
+    icon: Globe,
     simpleDesc: 'China, Russia, and friends',
     standardDesc: 'Emerging market bloc challenging Western order',
     detailedDesc:
@@ -76,7 +83,7 @@ const PRESETS = [
     id: 'conflict',
     name: 'Hot Spots',
     fullName: 'Active Tensions',
-    icon: '⚠️',
+    icon: AlertTriangle,
     simpleDesc: 'Where wars are happening',
     standardDesc: 'Active conflict zones and flashpoints',
     detailedDesc: 'Kinetic theaters, frozen conflicts, and gray-zone escalation ladders with phase transition indicators',
@@ -88,7 +95,7 @@ const LAYERS = [
   {
     id: 'basin' as const,
     name: 'Stability',
-    icon: '⚓',
+    icon: Anchor,
     color: 'blue',
     simpleDesc: 'Is this country stable or shaky?',
     standardDesc: 'Resistance to political and economic disruption',
@@ -104,7 +111,7 @@ const LAYERS = [
   {
     id: 'risk' as const,
     name: 'Risk',
-    icon: '📈',
+    icon: TrendingUp,
     color: 'red',
     simpleDesc: 'Might something big happen soon?',
     standardDesc: 'Likelihood of major change in 1-6 months',
@@ -119,7 +126,7 @@ const LAYERS = [
   {
     id: 'regime' as const,
     name: 'Government Type',
-    icon: '🏛️',
+    icon: Landmark,
     color: 'purple',
     simpleDesc: 'Democracy or dictatorship?',
     standardDesc: 'Political system classification (Polity V scale)',
@@ -136,7 +143,7 @@ const LAYERS = [
 // Key insight cards with progressive complexity
 const KEY_INSIGHTS = [
   {
-    icon: '🎯',
+    icon: Target,
     title: 'What This Shows',
     simple: 'A map showing which countries are doing okay and which ones might have problems soon.',
     standard:
@@ -145,7 +152,7 @@ const KEY_INSIGHTS = [
       'Multi-dimensional attractor state visualization. Each nation\'s position in phase space reflects basin depth (stability), velocity vectors (momentum), and cross-border coupling coefficients.',
   },
   {
-    icon: '⏱️',
+    icon: Clock,
     title: 'How Current',
     simple: 'Updated every day with the latest news.',
     standard: 'Continuous ingestion from 500+ global sources. Model retrains hourly.',
@@ -153,7 +160,7 @@ const KEY_INSIGHTS = [
       'Sub-hourly GDELT/ACLED fusion, real-time sentiment NLP across 50+ languages, with Bayesian posterior updates on transition probability distributions.',
   },
   {
-    icon: '🎲',
+    icon: Dices,
     title: 'Methodology',
     simple: 'Rigorous analysis with transparent uncertainty.',
     standard:
@@ -362,7 +369,7 @@ export default function ConsumerDashboard() {
                   }`}
                   title={level.desc}
                 >
-                  <span className="text-base">{level.icon}</span>
+                  <level.icon className="w-4 h-4" />
                   <span className="hidden sm:inline">{level.label}</span>
                 </button>
               ))}
@@ -373,7 +380,7 @@ export default function ConsumerDashboard() {
               className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
               title="Terminology Reference"
             >
-              <span className="text-lg">📖</span>
+              <BookOpen className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -393,7 +400,7 @@ export default function ConsumerDashboard() {
             {KEY_INSIGHTS.map((insight) => (
               <div key={insight.title} className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span>{insight.icon}</span>
+                  <insight.icon className="w-4 h-4 text-blue-400" />
                   <span className="font-medium text-white text-sm">{insight.title}</span>
                 </div>
                 <p className="text-xs md:text-sm text-slate-400 leading-relaxed">
@@ -422,7 +429,7 @@ export default function ConsumerDashboard() {
                   : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-800/50'
               }`}
             >
-              <span className="text-2xl md:text-3xl">{preset.icon}</span>
+              <preset.icon className="w-8 h-8 md:w-10 md:h-10" />
               <p className="font-medium mt-2 text-sm md:text-base 2xl:text-lg">{preset.fullName}</p>
               <p className="text-xs md:text-sm opacity-75 mt-1 line-clamp-2">
                 {getDescription(preset)}
@@ -477,7 +484,7 @@ export default function ConsumerDashboard() {
                 {/* Political */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-amber-400 flex items-center gap-2">
-                    <span>🏛️</span> Political
+                    <Landmark className="w-4 h-4" /> Political
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.political || 'No data available'}
@@ -487,7 +494,7 @@ export default function ConsumerDashboard() {
                 {/* Economic & Trade */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-green-400 flex items-center gap-2">
-                    <span>📈</span> Economic & Trade
+                    <TrendingUp className="w-4 h-4" /> Economic & Trade
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.economic || 'No data available'}
@@ -517,7 +524,7 @@ export default function ConsumerDashboard() {
                 {/* Health */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-pink-400 flex items-center gap-2">
-                    <span>🏥</span> Health
+                    <Heart className="w-4 h-4" /> Health
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.health || 'No data available'}
@@ -527,7 +534,7 @@ export default function ConsumerDashboard() {
                 {/* Science & Tech */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-cyan-400 flex items-center gap-2">
-                    <span>🔬</span> Science & Tech
+                    <Microscope className="w-4 h-4" /> Science & Tech
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.scitech || 'No data available'}
@@ -537,7 +544,7 @@ export default function ConsumerDashboard() {
                 {/* Natural Resources */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-emerald-400 flex items-center gap-2">
-                    <span>🌿</span> Natural Resources
+                    <Leaf className="w-4 h-4" /> Natural Resources
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.resources || 'No data available'}
@@ -547,7 +554,7 @@ export default function ConsumerDashboard() {
                 {/* Crime & Drugs */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-orange-400 flex items-center gap-2">
-                    <span>🚨</span> Crime & Drugs
+                    <AlertCircle className="w-4 h-4" /> Crime & Drugs
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.crime || 'No data available'}
@@ -557,7 +564,7 @@ export default function ConsumerDashboard() {
                 {/* Cyber Threats */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-violet-400 flex items-center gap-2">
-                    <span>💻</span> Cyber Threats
+                    <Laptop className="w-4 h-4" /> Cyber Threats
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.cyber || 'No data available'}
@@ -567,7 +574,7 @@ export default function ConsumerDashboard() {
                 {/* Terrorism & Extremism */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-rose-400 flex items-center gap-2">
-                    <span>⚡</span> Terrorism & Extremism
+                    <Zap className="w-4 h-4" /> Terrorism & Extremism
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.terrorism || 'No data available'}
@@ -587,7 +594,7 @@ export default function ConsumerDashboard() {
                 {/* Border & Incursions */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                    <span>🗺️</span> Border & Incursions
+                    <Map className="w-4 h-4" /> Border & Incursions
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.borders || 'No data available'}
@@ -597,7 +604,7 @@ export default function ConsumerDashboard() {
                 {/* Media & Info Ops */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-indigo-400 flex items-center gap-2">
-                    <span>📺</span> Media & Info Ops
+                    <Monitor className="w-4 h-4" /> Media & Info Ops
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.infoops || 'No data available'}
@@ -607,7 +614,7 @@ export default function ConsumerDashboard() {
                 {/* Military */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-stone-400 flex items-center gap-2">
-                    <span>🎖️</span> Military
+                    <Award className="w-4 h-4" /> Military
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.military || 'No data available'}
@@ -617,7 +624,7 @@ export default function ConsumerDashboard() {
                 {/* Space */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-purple-400 flex items-center gap-2">
-                    <span>🛰️</span> Space
+                    <Satellite className="w-4 h-4" /> Space
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.space || 'No data available'}
@@ -627,7 +634,7 @@ export default function ConsumerDashboard() {
                 {/* Industry & Manufacturing */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-zinc-400 flex items-center gap-2">
-                    <span>🏭</span> Industry
+                    <Factory className="w-4 h-4" /> Industry
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.industry || 'No data available'}
@@ -637,7 +644,7 @@ export default function ConsumerDashboard() {
                 {/* Logistics */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-amber-500 flex items-center gap-2">
-                    <span>🚢</span> Logistics
+                    <Ship className="w-4 h-4" /> Logistics
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.logistics || 'No data available'}
@@ -647,7 +654,7 @@ export default function ConsumerDashboard() {
                 {/* Minerals */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-teal-400 flex items-center gap-2">
-                    <span>⛏️</span> Minerals
+                    <Pickaxe className="w-4 h-4" /> Minerals
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.minerals || 'No data available'}
@@ -657,7 +664,7 @@ export default function ConsumerDashboard() {
                 {/* Energy & Petrochemicals */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-lime-400 flex items-center gap-2">
-                    <span>⚡</span> Energy
+                    <Zap className="w-4 h-4" /> Energy
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.energy || 'No data available'}
@@ -667,7 +674,7 @@ export default function ConsumerDashboard() {
                 {/* Markets & Exchanges */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-sky-400 flex items-center gap-2">
-                    <span>📊</span> Markets
+                    <LayoutDashboard className="w-4 h-4" /> Markets
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.markets || 'No data available'}
@@ -677,7 +684,7 @@ export default function ConsumerDashboard() {
                 {/* Religious & Ideological */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-fuchsia-400 flex items-center gap-2">
-                    <span>🕊️</span> Religious & Ideological
+                    <Bird className="w-4 h-4" /> Religious & Ideological
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.religious || 'No data available'}
@@ -687,7 +694,7 @@ export default function ConsumerDashboard() {
                 {/* Education */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-blue-300 flex items-center gap-2">
-                    <span>🎓</span> Education
+                    <GraduationCap className="w-4 h-4" /> Education
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.education || 'No data available'}
@@ -697,7 +704,7 @@ export default function ConsumerDashboard() {
                 {/* Employment */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-green-300 flex items-center gap-2">
-                    <span>💼</span> Employment
+                    <Briefcase className="w-4 h-4" /> Employment
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.employment || 'No data available'}
@@ -707,7 +714,7 @@ export default function ConsumerDashboard() {
                 {/* Housing */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-orange-300 flex items-center gap-2">
-                    <span>🏠</span> Housing
+                    <Home className="w-4 h-4" /> Housing
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.housing || 'No data available'}
@@ -717,7 +724,7 @@ export default function ConsumerDashboard() {
                 {/* Crypto */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-yellow-300 flex items-center gap-2">
-                    <span>₿</span> Crypto
+                    <Bitcoin className="w-4 h-4" /> Crypto
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {briefings?.crypto || 'No data available'}
@@ -727,7 +734,7 @@ export default function ConsumerDashboard() {
                 {/* Emerging Trends */}
                 <div className="space-y-2 pt-3 border-t border-slate-800/50">
                   <h3 className="text-sm font-medium text-white flex items-center gap-2">
-                    <span>🔮</span> Emerging Trends
+                    <Sparkles className="w-4 h-4" /> Emerging Trends
                   </h3>
                   <p className="text-xs text-slate-300 leading-relaxed">
                     {briefings?.emerging || 'No data available'}
@@ -738,7 +745,7 @@ export default function ConsumerDashboard() {
                 {briefings?.nsm && (
                   <div className="space-y-2 pt-3 border-t border-blue-800/50 bg-blue-950/30 -mx-4 px-4 py-3 rounded-lg">
                     <h3 className="text-sm font-medium text-blue-300 flex items-center gap-2">
-                      <span>🎯</span> Next Strategic Move
+                      <Target className="w-4 h-4" /> Next Strategic Move
                     </h3>
                     <p className="text-xs text-blue-200 leading-relaxed">{briefings.nsm}</p>
                   </div>
@@ -771,12 +778,12 @@ export default function ConsumerDashboard() {
             {/* Header with view toggle */}
             <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="text-xl">{currentPreset.icon}</span>
+                <currentPreset.icon className="w-5 h-5" />
                 <div>
                   <p className="text-white font-medium text-sm">{currentPreset.fullName}</p>
                   <p className="text-slate-500 text-xs">
                     {viewMode === 'map'
-                      ? `Viewing: ${currentLayer.name} ${currentLayer.icon}`
+                      ? `Viewing: ${currentLayer.name}`
                       : 'Causal Topology • Transfer Entropy Flows'}
                   </p>
                 </div>
@@ -875,7 +882,7 @@ export default function ConsumerDashboard() {
           {/* View selector */}
           <div className="bg-slate-900 rounded-xl border border-slate-800 p-4">
             <h3 className="font-medium text-white mb-3 text-sm flex items-center gap-2">
-              <span>🎨</span>
+              <Palette className="w-4 h-4" />
               <span>{skillLevel === 'simple' ? 'What to show' : skillLevel === 'detailed' ? 'Render Layer' : 'Map Layer'}</span>
             </h3>
             <div className="space-y-2">
@@ -890,7 +897,7 @@ export default function ConsumerDashboard() {
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <span>{layer.icon}</span>
+                    <layer.icon className="w-4 h-4" />
                     <span className="font-medium text-sm">{layer.name}</span>
                     <HelpTip
                       term={layer.id === 'basin' ? 'Basin' : layer.id === 'risk' ? 'Transition Risk' : 'Regime'}
@@ -908,7 +915,7 @@ export default function ConsumerDashboard() {
           {/* Simulate */}
           <div className="bg-slate-900 rounded-xl border border-slate-800 p-4">
             <h3 className="font-medium text-white mb-2 text-sm flex items-center gap-2">
-              <span>⚡</span>
+              <Zap className="w-4 h-4" />
               <span>{skillLevel === 'simple' ? 'See the future' : skillLevel === 'detailed' ? 'Propagate Dynamics' : 'Run Simulation'}</span>
               <HelpTip term="Monte Carlo" skillLevel={skillLevel} size={12} position="right" />
             </h3>
@@ -946,7 +953,7 @@ export default function ConsumerDashboard() {
           {/* Save - 44px touch target */}
           <div className="bg-slate-900 rounded-xl border border-slate-800 p-4">
             <button className="w-full min-h-[44px] rounded-lg font-medium bg-slate-800 text-white hover:bg-slate-700 active:bg-slate-600 transition-colors text-sm">
-              💾 Save This View
+              <Save className="w-4 h-4 mr-1" /> Save This View
             </button>
             <p className="text-xs text-slate-500 mt-2 text-center">3 of 5 slots used</p>
           </div>
@@ -956,7 +963,7 @@ export default function ConsumerDashboard() {
             onClick={() => setControlsOpen(!controlsOpen)}
             className="fixed bottom-4 right-4 lg:hidden z-30 min-h-[48px] px-4 bg-blue-600 text-white rounded-full shadow-lg flex items-center gap-2 active:bg-blue-500"
           >
-            <span>⚙️</span>
+            <Settings className="w-4 h-4" />
             <span className="text-sm font-medium">Controls</span>
           </button>
         </div>
@@ -974,7 +981,7 @@ export default function ConsumerDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 md:p-5">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-lg">📍</span>
+            <MapPin className="w-5 h-5" />
             <h3 className="font-medium text-white text-sm md:text-base">Reading the Map</h3>
           </div>
           <p className="text-xs md:text-sm text-slate-400 leading-relaxed">
@@ -987,7 +994,7 @@ export default function ConsumerDashboard() {
         </div>
         <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 md:p-5">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-lg">🔮</span>
+            <Sparkles className="w-5 h-5" />
             <h3 className="font-medium text-white text-sm md:text-base">{skillLevel === 'detailed' ? 'Forecast Methodology' : 'What We Predict'}</h3>
           </div>
           <p className="text-xs md:text-sm text-slate-400 leading-relaxed">
@@ -1000,7 +1007,7 @@ export default function ConsumerDashboard() {
         </div>
         <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 md:p-5 sm:col-span-2 lg:col-span-1">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-lg">⚠️</span>
+            <AlertTriangle className="w-5 h-5" />
             <h3 className="font-medium text-white text-sm md:text-base">{skillLevel === 'detailed' ? 'Model Limitations' : 'Important Limits'}</h3>
           </div>
           <p className="text-xs md:text-sm text-slate-400 leading-relaxed">

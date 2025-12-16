@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import TierBadge, { TierType } from '@/components/TierBadge';
 import { Check, ArrowLeft, Zap, Shield, Globe, Users, Crown } from 'lucide-react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 
 interface UserStatus {
@@ -96,7 +95,7 @@ const VISIBLE_PLANS: {
       'On-premise option',
     ],
     cta: 'Contact Sales',
-    href: 'mailto:contact@crystallinelabs.io?subject=LatticeForge%20Enterprise%20Inquiry',
+    href: 'mailto:contact@latticeforge.ai?subject=LatticeForge%20Enterprise%20Inquiry',
   },
 ];
 
@@ -136,7 +135,6 @@ export default function PricingPage() {
         return;
       }
 
-      // Get profile with role and org info
       const { data: profile } = await supabase
         .from('profiles')
         .select('role, organizations(plan)')
@@ -146,7 +144,6 @@ export default function PricingPage() {
       const role = profile?.role || 'consumer';
       const orgPlan = profile?.organizations?.plan || 'free';
 
-      // Blocked roles can't purchase - they already have full access
       const blockedRoles = ['admin', 'enterprise', 'support'];
       const canPurchase = !blockedRoles.includes(role) && orgPlan !== 'enterprise';
 
@@ -162,7 +159,6 @@ export default function PricingPage() {
   }, []);
 
   const handleSelectPlan = async (plan: (typeof VISIBLE_PLANS)[0]) => {
-    // Check if user can't purchase
     if (!userStatus.canPurchase && userStatus.isLoggedIn) {
       alert('Your account already has full access. No purchase required.');
       return;
@@ -203,7 +199,6 @@ export default function PricingPage() {
     }
   };
 
-  // Get display text for user's current access level
   const getAccessLevelText = () => {
     if (!userStatus.isLoggedIn) return null;
     if (userStatus.role === 'admin') return 'Administrator';
@@ -214,49 +209,16 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] relative">
-      {/* Atmospheric background */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        {/* Base gradient */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
-          }}
-        />
-        {/* Grid pattern */}
-        <div
-          className="absolute inset-0 opacity-30"
-          style={{
-            backgroundImage: `
-              linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)
-            `,
-            backgroundSize: '60px 60px',
-            maskImage: 'radial-gradient(ellipse at center, black 0%, transparent 70%)',
-            WebkitMaskImage: 'radial-gradient(ellipse at center, black 0%, transparent 70%)',
-          }}
-        />
-        {/* Obsidian texture */}
-        <div
-          className="absolute inset-0 opacity-20 mix-blend-overlay"
-          style={{
-            backgroundImage: 'url(/images/bg/obsidian.png)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        />
-      </div>
-
+    <div className="min-h-screen bg-slate-950 relative">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[rgba(10,10,15,0.8)] backdrop-blur-xl border-b border-white/[0.06]">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900 border-b border-slate-800">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <button
             onClick={() => router.push('/app')}
-            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors min-h-[44px] px-2 -ml-2"
+            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="hidden sm:inline">Back to App</span>
+            <span className="hidden sm:inline text-sm">Back</span>
           </button>
           <button
             onClick={() => router.push('/')}
@@ -265,78 +227,71 @@ export default function PricingPage() {
             <Image
               src="/images/brand/monogram.png"
               alt="LatticeForge"
-              width={32}
-              height={32}
+              width={28}
+              height={28}
             />
-            <span className="text-xl font-bold text-white hover:text-blue-400 transition-colors">
+            <span className="text-base font-semibold text-white">
               LatticeForge
             </span>
           </button>
           <button
             onClick={() => router.push('/app')}
-            className="text-slate-400 hover:text-white transition-colors min-h-[44px] px-3"
+            className="text-slate-400 hover:text-white transition-colors text-sm"
           >
             Dashboard
           </button>
         </div>
       </nav>
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 pt-28 pb-20">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 pt-24 pb-16">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+        <div className="text-center mb-12">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">
             Simple, transparent pricing
           </h1>
-          <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto">
-            Start free, scale as you grow. No hidden fees, cancel anytime.
+          <p className="text-base text-slate-400 max-w-xl mx-auto">
+            Start free, scale as you grow. No hidden fees.
           </p>
         </div>
 
-        {/* Full access banner for admin/enterprise/support users */}
+        {/* Full access banner */}
         {!userStatus.canPurchase && userStatus.isLoggedIn && (
-          <GlassCard
-            blur="heavy"
-            className="mb-12 border-amber-500/30 bg-amber-500/5"
-          >
+          <Card padding="md" className="mb-10 border-amber-600/30 bg-amber-600/5">
             <div className="flex items-center gap-4 text-center sm:text-left flex-col sm:flex-row">
-              <div className="flex-shrink-0 p-3 rounded-full bg-amber-500/20">
-                <Crown className="w-8 h-8 text-amber-400" />
+              <div className="flex-shrink-0 p-3 rounded-md bg-amber-600/20">
+                <Crown className="w-6 h-6 text-amber-500" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-white mb-1">
-                  You already have full access
+                <h3 className="text-base font-semibold text-white mb-1">
+                  Full access enabled
                 </h3>
-                <p className="text-slate-400">
-                  As {getAccessLevelText()}, you have unlimited access to all features.
-                  No purchase necessary.
+                <p className="text-sm text-slate-400">
+                  As {getAccessLevelText()}, you have access to all features.
                 </p>
               </div>
-              <GlassButton
+              <Button
                 variant="secondary"
                 onClick={() => router.push('/app')}
-                className="border-amber-500/30 text-amber-300 hover:bg-amber-500/10"
               >
                 Go to Dashboard
-              </GlassButton>
+              </Button>
             </div>
-          </GlassCard>
+          </Card>
         )}
 
         {/* Plans grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-16">
           {VISIBLE_PLANS.map((plan) => (
-            <GlassCard
+            <Card
               key={plan.id}
-              blur="heavy"
-              accent={plan.popular}
-              glow={plan.popular}
+              padding="md"
               className={`relative flex flex-col ${
-                plan.popular ? 'border-blue-500/50' : ''
+                plan.popular ? 'border-blue-600/50' : ''
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-xs font-medium rounded-full shadow-lg shadow-blue-500/25">
-                  Most Popular
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 text-white text-[10px] font-medium rounded uppercase tracking-wide">
+                  Popular
                 </div>
               )}
 
@@ -345,81 +300,77 @@ export default function PricingPage() {
                 <TierBadge tier={plan.tier} size="lg" />
               </div>
 
-              <div className="mb-6 text-center">
-                <h3 className="text-xl font-bold text-white">{plan.name}</h3>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold text-white">{plan.priceLabel}</span>
-                  {plan.interval && <span className="text-slate-400">/{plan.interval}</span>}
+              <div className="mb-5 text-center">
+                <h3 className="text-lg font-semibold text-white">{plan.name}</h3>
+                <div className="mt-3">
+                  <span className="text-3xl font-bold text-white">{plan.priceLabel}</span>
+                  {plan.interval && <span className="text-slate-500 text-sm">/{plan.interval}</span>}
                 </div>
               </div>
 
-              <ul className="space-y-3 mb-8 flex-1">
+              <ul className="space-y-2.5 mb-6 flex-1">
                 {plan.features.map((feature, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-slate-300 text-sm">{feature}</span>
+                  <li key={i} className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-slate-400 text-sm">{feature}</span>
                   </li>
                 ))}
               </ul>
 
-              <GlassButton
-                variant={plan.popular ? 'primary' : plan.id === 'enterprise' ? 'secondary' : 'secondary'}
-                glow={plan.popular && userStatus.canPurchase}
-                fullWidthMobile
+              <Button
+                variant={plan.popular ? 'primary' : 'secondary'}
                 onClick={() => void handleSelectPlan(plan)}
                 disabled={loading === plan.id || (!userStatus.canPurchase && userStatus.isLoggedIn && !plan.href)}
                 loading={loading === plan.id}
-                className={`w-full ${plan.id === 'enterprise' ? 'border-amber-500/30 text-amber-300' : ''} ${
-                  !userStatus.canPurchase && userStatus.isLoggedIn && !plan.href ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+                className="w-full"
               >
-                {!userStatus.canPurchase && userStatus.isLoggedIn && !plan.href ? 'Already Included' : plan.cta}
-              </GlassButton>
-            </GlassCard>
+                {!userStatus.canPurchase && userStatus.isLoggedIn && !plan.href ? 'Included' : plan.cta}
+              </Button>
+            </Card>
           ))}
         </div>
 
         {/* Features highlight */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-16">
           {[
             { icon: Zap, title: 'Instant Setup', desc: 'Get started in minutes' },
             { icon: Shield, title: 'Bank-level Security', desc: 'AES-256 encryption' },
             { icon: Globe, title: '195 Countries', desc: 'Global coverage' },
             { icon: Users, title: 'Team Collaboration', desc: 'Share insights' },
           ].map((item, idx) => (
-            <GlassCard key={idx} blur="light" compact className="text-center">
-              <item.icon className="w-8 h-8 text-blue-400 mx-auto mb-3" />
+            <Card key={idx} padding="sm" className="text-center">
+              <item.icon className="w-6 h-6 text-slate-400 mx-auto mb-2" />
               <h4 className="text-white font-medium text-sm">{item.title}</h4>
-              <p className="text-slate-500 text-xs mt-1">{item.desc}</p>
-            </GlassCard>
+              <p className="text-slate-500 text-xs mt-0.5">{item.desc}</p>
+            </Card>
           ))}
         </div>
 
         {/* FAQ */}
-        <div className="mb-20">
-          <h2 className="text-2xl font-bold text-white text-center mb-12">
+        <div className="mb-16">
+          <h2 className="text-lg font-semibold text-white text-center mb-8">
             Frequently Asked Questions
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
             {FAQ.map((item, idx) => (
-              <GlassCard key={idx} blur="light">
-                <h3 className="text-base font-medium text-white mb-2">{item.q}</h3>
-                <p className="text-slate-400 text-sm leading-relaxed">{item.a}</p>
-              </GlassCard>
+              <Card key={idx} padding="md">
+                <h3 className="text-sm font-medium text-white mb-2">{item.q}</h3>
+                <p className="text-slate-500 text-xs leading-relaxed">{item.a}</p>
+              </Card>
             ))}
           </div>
         </div>
 
         {/* CTA */}
         <div className="text-center">
-          <p className="text-slate-400 mb-4">Need a custom plan for your organization?</p>
+          <p className="text-slate-500 text-sm mb-3">Need a custom plan?</p>
           <a
-            href="mailto:contact@crystallinelabs.io?subject=LatticeForge%20Custom%20Plan"
-            className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium min-h-[44px]"
+            href="mailto:contact@latticeforge.ai?subject=LatticeForge%20Custom%20Plan"
+            className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-medium"
           >
-            Contact our sales team
-            <ArrowLeft className="w-4 h-4 rotate-180" />
+            Contact sales
+            <ArrowLeft className="w-3.5 h-3.5 rotate-180" />
           </a>
         </div>
       </div>

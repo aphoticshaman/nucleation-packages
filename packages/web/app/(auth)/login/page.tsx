@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { Shield, Zap, Brain, Target, Globe, TrendingUp } from 'lucide-react';
+import { Shield, Zap, Brain, Target, Globe, TrendingUp, AlertTriangle } from 'lucide-react';
 
 function LoginForm() {
   const _router = useRouter();
@@ -203,7 +203,7 @@ function LoginForm() {
             </div>
             {rememberMe && (
               <p className="text-xs text-amber-400/80 flex items-start gap-1.5 pl-6">
-                <span className="mt-0.5">&#9888;</span>
+                <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" />
                 <span>Don&apos;t use on shared or public devices. This keeps you signed in even after closing your browser.</span>
               </p>
             )}
@@ -356,7 +356,7 @@ export default function LoginPage() {
               {DIFFERENTIATORS.map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center gap-2 px-3 py-2 bg-white/[0.05] backdrop-blur-sm rounded-lg border border-white/[0.08]"
+                  className="flex items-center gap-2 px-3 py-2 bg-slate-800/50 rounded border border-slate-700"
                 >
                   <item.icon className="w-4 h-4 text-orange-400" />
                   <span className="text-xs text-slate-300">{item.title}</span>

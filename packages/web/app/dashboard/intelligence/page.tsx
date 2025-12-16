@@ -13,6 +13,7 @@ import {
   CommandPalette,
   useCommandPalette,
 } from '@/components/intelligence';
+import { Radio, Brain, Map, Settings, Menu } from 'lucide-react';
 
 export default function IntelligenceDashboard() {
   const { isOpen, open, close } = useCommandPalette();
@@ -66,19 +67,19 @@ export default function IntelligenceDashboard() {
 
           {/* Nav items */}
           <NavButton
-            icon="📡"
+            icon={Radio}
             label="Signals"
             isActive={selectedView === 'feed'}
             onClick={() => setSelectedView('feed')}
           />
           <NavButton
-            icon="🧠"
+            icon={Brain}
             label="Logic"
             isActive={selectedView === 'logic'}
             onClick={() => setSelectedView('logic')}
           />
           <NavButton
-            icon="🗺️"
+            icon={Map}
             label="Map"
             isActive={selectedView === 'map'}
             onClick={() => setSelectedView('map')}
@@ -89,15 +90,15 @@ export default function IntelligenceDashboard() {
           {/* Command palette trigger */}
           <button
             onClick={open}
-            className="w-11 h-11 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+            className="w-11 h-11 rounded-md bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
             title="Command Palette (⌘K)"
           >
             ⌘
           </button>
 
           {/* Settings */}
-          <button className="w-11 h-11 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
-            ⚙️
+          <button className="w-11 h-11 rounded-md bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+            <Settings className="w-5 h-5" />
           </button>
         </aside>
 
@@ -128,15 +129,15 @@ export default function IntelligenceDashboard() {
               {/* Search - touch-friendly on mobile */}
               <button
                 onClick={open}
-                className="hidden md:flex items-center gap-2 px-3 py-2 bg-slate-800 rounded-lg text-sm text-slate-400 hover:text-white transition-colors"
+                className="hidden md:flex items-center gap-2 px-3 py-2 bg-slate-800 rounded-md text-sm text-slate-400 hover:text-white transition-colors"
               >
                 <span>Search...</span>
                 <kbd className="px-1.5 py-0.5 bg-slate-700 rounded text-xs">⌘K</kbd>
               </button>
 
               {/* Mobile filter button */}
-              <button className="md:hidden min-h-[44px] min-w-[44px] flex items-center justify-center bg-slate-800 rounded-lg text-slate-400 active:bg-slate-700">
-                <span className="text-lg">☰</span>
+              <button className="md:hidden min-h-[44px] min-w-[44px] flex items-center justify-center bg-slate-800 rounded-md text-slate-400 active:bg-slate-700">
+                <Menu className="w-5 h-5" />
               </button>
             </div>
           </header>
@@ -146,7 +147,7 @@ export default function IntelligenceDashboard() {
             {selectedView === 'feed' && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
                 {/* Signal Feed - 2 cols */}
-                <div className="lg:col-span-2 bg-[rgba(18,18,26,0.6)] backdrop-blur-xl rounded-xl border border-white/[0.06] overflow-hidden">
+                <div className="lg:col-span-2 bg-[rgba(18,18,26,0.6)] backdrop-blur-xl rounded-md border border-white/[0.06] overflow-hidden">
                   <div className="p-4 border-b border-white/[0.06] flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <h2 className="font-medium">Live Signals</h2>
@@ -169,7 +170,7 @@ export default function IntelligenceDashboard() {
                 {/* Stats Panel - 1 col */}
                 <div className="space-y-4">
                   {/* Domain breakdown */}
-                  <div className="bg-[rgba(18,18,26,0.6)] backdrop-blur-xl rounded-xl border border-white/[0.06] p-4">
+                  <div className="bg-[rgba(18,18,26,0.6)] backdrop-blur-xl rounded-md border border-white/[0.06] p-4">
                     <h3 className="text-sm font-medium text-slate-400 mb-3">Domain Activity</h3>
                     <div className="space-y-2">
                       <DomainBar domain="Cyber" count={23} total={100} color="bg-red-500" />
@@ -181,7 +182,7 @@ export default function IntelligenceDashboard() {
                   </div>
 
                   {/* Risk summary */}
-                  <div className="bg-[rgba(18,18,26,0.6)] backdrop-blur-xl rounded-xl border border-white/[0.06] p-4">
+                  <div className="bg-[rgba(18,18,26,0.6)] backdrop-blur-xl rounded-md border border-white/[0.06] p-4">
                     <h3 className="text-sm font-medium text-slate-400 mb-3">Risk Summary</h3>
                     <div className="grid grid-cols-2 gap-3">
                       <RiskCard level="CRITICAL" count={2} />
@@ -192,7 +193,7 @@ export default function IntelligenceDashboard() {
                   </div>
 
                   {/* Active cascades */}
-                  <div className="bg-[rgba(18,18,26,0.6)] backdrop-blur-xl rounded-xl border border-white/[0.06] p-4">
+                  <div className="bg-[rgba(18,18,26,0.6)] backdrop-blur-xl rounded-md border border-white/[0.06] p-4">
                     <h3 className="text-sm font-medium text-slate-400 mb-3">Active Cascades</h3>
                     <div className="space-y-2">
                       <CascadeItem
@@ -230,9 +231,9 @@ export default function IntelligenceDashboard() {
             )}
 
             {selectedView === 'map' && (
-              <div className="h-full bg-[rgba(18,18,26,0.6)] backdrop-blur-xl rounded-xl border border-white/[0.06] flex items-center justify-center">
+              <div className="h-full bg-[rgba(18,18,26,0.6)] backdrop-blur-xl rounded-md border border-white/[0.06] flex items-center justify-center">
                 <div className="text-center text-slate-500">
-                  <span className="text-4xl mb-4 block">🗺️</span>
+                  <Map className="w-16 h-16 mx-auto mb-4 opacity-50" />
                   <p>Hexbin Risk Map</p>
                   <p className="text-sm">Component 11 - Coming next</p>
                 </div>
@@ -245,25 +246,25 @@ export default function IntelligenceDashboard() {
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[rgba(18,18,26,0.95)] backdrop-blur-xl border-t border-white/[0.06] px-2 pb-safe">
           <div className="flex items-center justify-around h-16">
             <MobileNavButton
-              icon="📡"
+              icon={Radio}
               label="Signals"
               isActive={selectedView === 'feed'}
               onClick={() => setSelectedView('feed')}
             />
             <MobileNavButton
-              icon="🧠"
+              icon={Brain}
               label="Logic"
               isActive={selectedView === 'logic'}
               onClick={() => setSelectedView('logic')}
             />
             <MobileNavButton
-              icon="🗺️"
+              icon={Map}
               label="Map"
               isActive={selectedView === 'map'}
               onClick={() => setSelectedView('map')}
             />
             <MobileNavButton
-              icon="⌘"
+              icon={Settings}
               label="Search"
               isActive={false}
               onClick={open}
@@ -277,12 +278,12 @@ export default function IntelligenceDashboard() {
 
 // Helper Components
 function NavButton({
-  icon,
+  icon: Icon,
   label,
   isActive,
   onClick,
 }: {
-  icon: string;
+  icon: React.ComponentType<{ className?: string }>;
   label: string;
   isActive: boolean;
   onClick: () => void;
@@ -291,26 +292,26 @@ function NavButton({
     <button
       onClick={onClick}
       className={`
-        w-11 h-11 rounded-lg flex items-center justify-center transition-all
+        w-11 h-11 rounded-md flex items-center justify-center transition-all
         ${isActive
-          ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.3)] border border-cyan-500/30'
+          ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
           : 'text-slate-400 hover:bg-black/30 hover:text-white border border-transparent hover:border-white/[0.06]'
         }
       `}
       title={label}
     >
-      <span className="text-lg">{icon}</span>
+      <Icon className="w-5 h-5" />
     </button>
   );
 }
 
 function MobileNavButton({
-  icon,
+  icon: Icon,
   label,
   isActive,
   onClick,
 }: {
-  icon: string;
+  icon: React.ComponentType<{ className?: string }>;
   label: string;
   isActive: boolean;
   onClick: () => void;
@@ -319,14 +320,14 @@ function MobileNavButton({
     <button
       onClick={onClick}
       className={`
-        min-w-[56px] h-12 px-3 rounded-lg flex flex-col items-center justify-center gap-0.5 transition-all
+        min-w-[56px] h-12 px-3 rounded-md flex flex-col items-center justify-center gap-0.5 transition-all
         ${isActive
           ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
           : 'text-slate-400 active:bg-black/30 active:text-white border border-transparent'
         }
       `}
     >
-      <span className="text-lg">{icon}</span>
+      <Icon className="w-5 h-5" />
       <span className="text-[10px] font-medium">{label}</span>
     </button>
   );
@@ -382,7 +383,7 @@ function RiskCard({ level, count }: { level: string; count: number }) {
     LOW: 'bg-green-500/20 border-green-500/50 text-green-400',
   };
   return (
-    <div className={`p-3 rounded-lg border ${colors[level]}`}>
+    <div className={`p-3 rounded-md border ${colors[level]}`}>
       <div className="text-2xl font-bold">{count}</div>
       <div className="text-xs opacity-80">{level}</div>
     </div>

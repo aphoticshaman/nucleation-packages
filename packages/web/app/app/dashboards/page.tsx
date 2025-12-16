@@ -25,7 +25,7 @@ import {
 import { DASHBOARD_PRESETS, type PresetId } from '@/lib/config/dashboardPresets';
 import { FOCUS_TEMPLATES } from '@/lib/pipeline/DataPipeline';
 import Glossary from '@/components/Glossary';
-import { GlassCard } from '@/components/ui/GlassCard';
+import { Card } from '@/components/ui';
 
 interface UserDashboard {
   id: string;
@@ -130,7 +130,7 @@ export default function DashboardHub() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+          <h1 className="text-lg font-bold text-white flex items-center gap-3">
             <LayoutDashboard className="w-7 h-7 text-cyan-400" />
             Dashboard Hub
           </h1>
@@ -162,38 +162,38 @@ export default function DashboardHub() {
 
       {/* Data Health Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <GlassCard blur="heavy" compact>
+        <Card padding="sm">
           <div className="flex items-center gap-3 mb-2">
             <Database className="w-5 h-5 text-cyan-400" />
             <span className="text-sm text-slate-400">Active Sources</span>
           </div>
-          <div className="text-2xl font-bold text-white">12</div>
+          <div className="text-lg font-bold text-white">12</div>
           <div className="text-xs text-green-400 mt-1">All connected</div>
-        </GlassCard>
-        <GlassCard blur="heavy" compact>
+        </Card>
+        <Card padding="sm">
           <div className="flex items-center gap-3 mb-2">
             <Activity className="w-5 h-5 text-emerald-400" />
             <span className="text-sm text-slate-400">Data Freshness</span>
           </div>
-          <div className="text-2xl font-bold text-white">94%</div>
+          <div className="text-lg font-bold text-white">94%</div>
           <div className="text-xs text-slate-500 mt-1">Last 24 hours</div>
-        </GlassCard>
-        <GlassCard blur="heavy" compact>
+        </Card>
+        <Card padding="sm">
           <div className="flex items-center gap-3 mb-2">
             <RefreshCw className="w-5 h-5 text-amber-400" />
             <span className="text-sm text-slate-400">Last Refresh</span>
           </div>
-          <div className="text-2xl font-bold text-white">2m ago</div>
+          <div className="text-lg font-bold text-white">2m ago</div>
           <div className="text-xs text-slate-500 mt-1">Auto-refresh: ON</div>
-        </GlassCard>
-        <GlassCard blur="heavy" compact>
+        </Card>
+        <Card padding="sm">
           <div className="flex items-center gap-3 mb-2">
             <LineChart className="w-5 h-5 text-purple-400" />
             <span className="text-sm text-slate-400">Data Points</span>
           </div>
-          <div className="text-2xl font-bold text-white">1.2M</div>
+          <div className="text-lg font-bold text-white">1.2M</div>
           <div className="text-xs text-slate-500 mt-1">This month</div>
-        </GlassCard>
+        </Card>
       </div>
 
       {/* Favorite Dashboards */}

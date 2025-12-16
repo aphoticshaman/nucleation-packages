@@ -1,5 +1,5 @@
 import { requireEnterprise, createClient } from '@/lib/auth';
-import { GlassCard } from '@/components/ui/GlassCard';
+import { Card } from '@/components/ui';
 import { TrendingUp, BarChart3, Calendar } from 'lucide-react';
 
 export default async function UsagePage() {
@@ -17,7 +17,7 @@ export default async function UsagePage() {
   return (
     <div>
       <div className="mb-6 md:mb-8">
-        <h1 className="text-xl md:text-2xl font-bold text-white">Usage & Analytics</h1>
+        <h1 className="text-lg font-bold text-white">Usage & Analytics</h1>
         <p className="text-slate-400 text-sm md:text-base">
           Monitor your API usage and performance metrics
         </p>
@@ -25,7 +25,7 @@ export default async function UsagePage() {
 
       {/* Usage Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-        <GlassCard blur="heavy" compact>
+        <Card className="p-4">
           <div className="flex items-center gap-3 mb-3">
             <BarChart3 className="w-5 h-5 text-blue-400" />
             <span className="text-sm text-slate-400">API Calls This Month</span>
@@ -42,34 +42,34 @@ export default async function UsagePage() {
               style={{ width: `${Math.min(usagePercent, 100)}%` }}
             />
           </div>
-        </GlassCard>
+        </Card>
 
-        <GlassCard blur="heavy" compact>
+        <Card className="p-4">
           <div className="flex items-center gap-3 mb-3">
             <TrendingUp className="w-5 h-5 text-green-400" />
             <span className="text-sm text-slate-400">Avg Response Time</span>
           </div>
           <p className="text-2xl md:text-3xl font-bold text-white">142ms</p>
           <p className="text-sm text-green-400 mt-1">↓ 8ms from last week</p>
-        </GlassCard>
+        </Card>
 
-        <GlassCard blur="heavy" compact>
+        <Card className="p-4">
           <div className="flex items-center gap-3 mb-3">
             <Calendar className="w-5 h-5 text-purple-400" />
             <span className="text-sm text-slate-400">Billing Period</span>
           </div>
           <p className="text-2xl md:text-3xl font-bold text-white">Day 15</p>
           <p className="text-sm text-slate-500 mt-1">Resets in 15 days</p>
-        </GlassCard>
+        </Card>
       </div>
 
       {/* Usage Chart Placeholder */}
-      <GlassCard blur="heavy">
+      <Card className="p-6">
         <h2 className="text-lg font-bold text-white mb-4">Usage Over Time</h2>
-        <div className="h-64 flex items-center justify-center bg-black/20 rounded-xl border border-white/[0.04]">
+        <div className="h-64 flex items-center justify-center bg-black/20 rounded-md border border-white/[0.04]">
           <p className="text-slate-500">Usage chart visualization</p>
         </div>
-      </GlassCard>
+      </Card>
     </div>
   );
 }

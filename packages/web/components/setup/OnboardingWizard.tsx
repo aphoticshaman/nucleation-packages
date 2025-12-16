@@ -3,6 +3,14 @@
 import { useState, useCallback, useMemo } from 'react';
 import type { UserPreferences, UserTier } from '@/lib/config/powerUser';
 import { DEFAULT_PREFERENCES, TIER_CAPABILITIES } from '@/lib/config/powerUser';
+import {
+  Hand, LayoutDashboard, Target, Smartphone, Bell, Palette, Keyboard, Settings, Rocket,
+  Sprout, BarChart3, Microscope, Wrench, Globe, TrendingUp, Shield, Newspaper, Building,
+  AlertTriangle, GraduationCap, Briefcase, Users, Euro, Earth, MapPin, Landmark, Swords, Award,
+  Laptop, Zap, Hospital, Beaker, Pickaxe, DollarSign, Satellite, Calendar, Sparkles,
+  ClipboardList, Map, Radio, MessageSquare, Activity, Link, Flame, Phone, Mail, MessageCircle,
+  Moon, Sun, Stars, Circle, Mountain, Check, PartyPopper, Key, Upload, FlaskConical, X
+} from 'lucide-react';
 
 /**
  * LatticeForge Onboarding Wizard
@@ -37,20 +45,20 @@ interface StepConfig {
   id: WizardStep;
   title: string;
   subtitle: string;
-  icon: string;
+  icon: React.ReactNode;
   minTier?: UserTier;
 }
 
 const STEPS: StepConfig[] = [
-  { id: 'welcome', title: 'Welcome', subtitle: 'Let\'s set up your intelligence platform', icon: '👋' },
-  { id: 'experience', title: 'Experience Level', subtitle: 'How familiar are you with geopolitical analysis?', icon: '📊' },
-  { id: 'interests', title: 'Focus Areas', subtitle: 'What intelligence matters to you?', icon: '🎯' },
-  { id: 'dashboard', title: 'Dashboard', subtitle: 'Configure your command center', icon: '📱' },
-  { id: 'notifications', title: 'Alerts', subtitle: 'How should we keep you informed?', icon: '🔔' },
-  { id: 'visual', title: 'Appearance', subtitle: 'Make it yours', icon: '🎨' },
-  { id: 'shortcuts', title: 'Shortcuts', subtitle: 'Power user controls', icon: '⌨️', minTier: 'analyst' },
-  { id: 'advanced', title: 'Advanced', subtitle: 'Unlock full potential', icon: '⚙️', minTier: 'strategist' },
-  { id: 'review', title: 'Ready', subtitle: 'Review your configuration', icon: '🚀' },
+  { id: 'welcome', title: 'Welcome', subtitle: 'Let\'s set up your intelligence platform', icon: <Hand className="w-4 h-4" /> },
+  { id: 'experience', title: 'Experience Level', subtitle: 'How familiar are you with geopolitical analysis?', icon: <BarChart3 className="w-4 h-4" /> },
+  { id: 'interests', title: 'Focus Areas', subtitle: 'What intelligence matters to you?', icon: <Target className="w-4 h-4" /> },
+  { id: 'dashboard', title: 'Dashboard', subtitle: 'Configure your command center', icon: <Smartphone className="w-4 h-4" /> },
+  { id: 'notifications', title: 'Alerts', subtitle: 'How should we keep you informed?', icon: <Bell className="w-4 h-4" /> },
+  { id: 'visual', title: 'Appearance', subtitle: 'Make it yours', icon: <Palette className="w-4 h-4" /> },
+  { id: 'shortcuts', title: 'Shortcuts', subtitle: 'Power user controls', icon: <Keyboard className="w-4 h-4" />, minTier: 'analyst' },
+  { id: 'advanced', title: 'Advanced', subtitle: 'Unlock full potential', icon: <Settings className="w-4 h-4" />, minTier: 'strategist' },
+  { id: 'review', title: 'Ready', subtitle: 'Review your configuration', icon: <Rocket className="w-4 h-4" /> },
 ];
 
 // ============================================
@@ -132,7 +140,9 @@ interface StepProps {
 function WelcomeStep({ config, onChange, userTier }: StepProps) {
   return (
     <div className="text-center space-y-6 py-8">
-      <div className="text-6xl">🌐</div>
+      <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center">
+        <Globe className="w-10 h-10 text-white" />
+      </div>
       <div>
         <h2 className="text-2xl font-bold text-white mb-2">Welcome to LatticeForge</h2>
         <p className="text-slate-400 max-w-md mx-auto">
@@ -145,7 +155,7 @@ function WelcomeStep({ config, onChange, userTier }: StepProps) {
         <h3 className="text-sm font-medium text-white mb-4">Your Plan: {userTier.toUpperCase()}</h3>
         <div className="grid grid-cols-2 gap-3 text-xs">
           <div className="flex items-center gap-2">
-            <span className="text-green-400">✓</span>
+            <Check className="w-4 h-4 text-green-400" />
             <span className="text-slate-400">
               {TIER_CAPABILITIES[userTier].maxEntities === -1
                 ? 'Unlimited entities'
@@ -153,7 +163,7 @@ function WelcomeStep({ config, onChange, userTier }: StepProps) {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-green-400">✓</span>
+            <Check className="w-4 h-4 text-green-400" />
             <span className="text-slate-400">
               {TIER_CAPABILITIES[userTier].maxSavedViews === -1
                 ? 'Unlimited views'
@@ -161,15 +171,19 @@ function WelcomeStep({ config, onChange, userTier }: StepProps) {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className={TIER_CAPABILITIES[userTier].apiAccess ? 'text-green-400' : 'text-slate-600'}>
-              {TIER_CAPABILITIES[userTier].apiAccess ? '✓' : '✗'}
-            </span>
+            {TIER_CAPABILITIES[userTier].apiAccess ? (
+              <Check className="w-4 h-4 text-green-400" />
+            ) : (
+              <X className="w-4 h-4 text-slate-600" />
+            )}
             <span className="text-slate-400">API Access</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className={TIER_CAPABILITIES[userTier].customDashboards ? 'text-green-400' : 'text-slate-600'}>
-              {TIER_CAPABILITIES[userTier].customDashboards ? '✓' : '✗'}
-            </span>
+            {TIER_CAPABILITIES[userTier].customDashboards ? (
+              <Check className="w-4 h-4 text-green-400" />
+            ) : (
+              <X className="w-4 h-4 text-slate-600" />
+            )}
             <span className="text-slate-400">Custom Dashboards</span>
           </div>
         </div>
@@ -187,42 +201,42 @@ function ExperienceStep({ config, onChange }: StepProps) {
     {
       id: 'beginner',
       title: 'New to This',
-      icon: '🌱',
+      icon: <Sprout className="w-8 h-8" />,
       desc: 'I want simple explanations and guidance',
       features: ['Simplified views', 'Guided tours', 'Plain language'],
     },
     {
       id: 'intermediate',
       title: 'Some Experience',
-      icon: '📊',
+      icon: <BarChart3 className="w-8 h-8" />,
       desc: 'I understand the basics, show me more',
       features: ['Standard dashboards', 'Key metrics', 'Contextual help'],
     },
     {
       id: 'advanced',
       title: 'Experienced Analyst',
-      icon: '🔬',
+      icon: <Microscope className="w-8 h-8" />,
       desc: 'I know what I\'m doing, give me power',
       features: ['Full controls', 'Raw data', 'Advanced filters'],
     },
     {
       id: 'expert',
       title: 'Expert / Developer',
-      icon: '🛠️',
+      icon: <Wrench className="w-8 h-8" />,
       desc: 'Show me everything, I\'ll configure it myself',
       features: ['All features', 'API access', 'Custom integrations'],
     },
   ];
 
   const useCases = [
-    { id: 'general', label: 'General awareness', icon: '🌍' },
-    { id: 'investment', label: 'Investment decisions', icon: '📈' },
-    { id: 'security', label: 'Security monitoring', icon: '🛡️' },
-    { id: 'journalism', label: 'Journalism / Research', icon: '📰' },
-    { id: 'government', label: 'Government / Policy', icon: '🏛️' },
-    { id: 'risk', label: 'Risk management', icon: '⚠️' },
-    { id: 'academic', label: 'Academic research', icon: '🎓' },
-    { id: 'business', label: 'Business intelligence', icon: '💼' },
+    { id: 'general', label: 'General awareness', icon: <Globe className="w-6 h-6" /> },
+    { id: 'investment', label: 'Investment decisions', icon: <TrendingUp className="w-6 h-6" /> },
+    { id: 'security', label: 'Security monitoring', icon: <Shield className="w-6 h-6" /> },
+    { id: 'journalism', label: 'Journalism / Research', icon: <Newspaper className="w-6 h-6" /> },
+    { id: 'government', label: 'Government / Policy', icon: <Landmark className="w-6 h-6" /> },
+    { id: 'risk', label: 'Risk management', icon: <AlertTriangle className="w-6 h-6" /> },
+    { id: 'academic', label: 'Academic research', icon: <GraduationCap className="w-6 h-6" /> },
+    { id: 'business', label: 'Business intelligence', icon: <Briefcase className="w-6 h-6" /> },
   ];
 
   return (
@@ -241,7 +255,7 @@ function ExperienceStep({ config, onChange }: StepProps) {
                   : 'bg-slate-900 border-slate-700 hover:border-slate-600'
               }`}
             >
-              <div className="text-2xl mb-2">{level.icon}</div>
+              <div className="mb-2">{level.icon}</div>
               <div className="font-medium text-sm">{level.title}</div>
               <div className={`text-xs mt-1 ${config.experienceLevel === level.id ? 'text-blue-200' : 'text-slate-400'}`}>
                 {level.desc}
@@ -279,7 +293,7 @@ function ExperienceStep({ config, onChange }: StepProps) {
                   : 'bg-slate-900 border-slate-700 hover:border-slate-600'
               }`}
             >
-              <div className="text-xl mb-1">{uc.icon}</div>
+              <div className="mb-1 flex justify-center">{uc.icon}</div>
               <div className="text-xs">{uc.label}</div>
             </button>
           ))}
@@ -291,29 +305,29 @@ function ExperienceStep({ config, onChange }: StepProps) {
 
 function InterestsStep({ config, onChange }: StepProps) {
   const regions = [
-    { id: 'global', label: 'Global', icon: '🌍' },
-    { id: 'north_america', label: 'North America', icon: '🇺🇸' },
-    { id: 'europe', label: 'Europe', icon: '🇪🇺' },
-    { id: 'asia_pacific', label: 'Asia Pacific', icon: '🌏' },
-    { id: 'middle_east', label: 'Middle East', icon: '🏜️' },
-    { id: 'africa', label: 'Africa', icon: '🌍' },
-    { id: 'latin_america', label: 'Latin America', icon: '🌎' },
-    { id: 'russia_eurasia', label: 'Russia & Eurasia', icon: '🇷🇺' },
+    { id: 'global', label: 'Global', icon: <Globe className="w-6 h-6" /> },
+    { id: 'north_america', label: 'North America', icon: <MapPin className="w-6 h-6" /> },
+    { id: 'europe', label: 'Europe', icon: <Euro className="w-6 h-6" /> },
+    { id: 'asia_pacific', label: 'Asia Pacific', icon: <Earth className="w-6 h-6" /> },
+    { id: 'middle_east', label: 'Middle East', icon: <MapPin className="w-6 h-6" /> },
+    { id: 'africa', label: 'Africa', icon: <Globe className="w-6 h-6" /> },
+    { id: 'latin_america', label: 'Latin America', icon: <Earth className="w-6 h-6" /> },
+    { id: 'russia_eurasia', label: 'Russia & Eurasia', icon: <MapPin className="w-6 h-6" /> },
   ];
 
   const categories = [
-    { id: 'political', label: 'Political', icon: '🏛️' },
-    { id: 'economic', label: 'Economic', icon: '📈' },
-    { id: 'security', label: 'Security', icon: '⚔️' },
-    { id: 'military', label: 'Military', icon: '🎖️' },
-    { id: 'cyber', label: 'Cyber', icon: '💻' },
-    { id: 'terrorism', label: 'Terrorism', icon: '⚡' },
-    { id: 'health', label: 'Health', icon: '🏥' },
-    { id: 'scitech', label: 'Science & Tech', icon: '🔬' },
-    { id: 'resources', label: 'Resources', icon: '⛏️' },
-    { id: 'energy', label: 'Energy', icon: '⚡' },
-    { id: 'financial', label: 'Financial', icon: '💰' },
-    { id: 'space', label: 'Space', icon: '🛰️' },
+    { id: 'political', label: 'Political', icon: <Landmark className="w-6 h-6" /> },
+    { id: 'economic', label: 'Economic', icon: <TrendingUp className="w-6 h-6" /> },
+    { id: 'security', label: 'Security', icon: <Swords className="w-6 h-6" /> },
+    { id: 'military', label: 'Military', icon: <Award className="w-6 h-6" /> },
+    { id: 'cyber', label: 'Cyber', icon: <Laptop className="w-6 h-6" /> },
+    { id: 'terrorism', label: 'Terrorism', icon: <Zap className="w-6 h-6" /> },
+    { id: 'health', label: 'Health', icon: <Hospital className="w-6 h-6" /> },
+    { id: 'scitech', label: 'Science & Tech', icon: <Beaker className="w-6 h-6" /> },
+    { id: 'resources', label: 'Resources', icon: <Pickaxe className="w-6 h-6" /> },
+    { id: 'energy', label: 'Energy', icon: <Zap className="w-6 h-6" /> },
+    { id: 'financial', label: 'Financial', icon: <DollarSign className="w-6 h-6" /> },
+    { id: 'space', label: 'Space', icon: <Satellite className="w-6 h-6" /> },
   ];
 
   const toggleRegion = (id: string) => {
@@ -349,7 +363,7 @@ function InterestsStep({ config, onChange }: StepProps) {
                   : 'bg-slate-900 border-slate-700 hover:border-slate-600'
               }`}
             >
-              <div className="text-xl mb-1">{r.icon}</div>
+              <div className="mb-1 flex justify-center">{r.icon}</div>
               <div className="text-xs">{r.label}</div>
             </button>
           ))}
@@ -371,7 +385,7 @@ function InterestsStep({ config, onChange }: StepProps) {
                   : 'bg-slate-900 border-slate-700 hover:border-slate-600'
               }`}
             >
-              <div className="text-xl mb-1">{c.icon}</div>
+              <div className="mb-1 flex justify-center">{c.icon}</div>
               <div className="text-xs">{c.label}</div>
             </button>
           ))}
@@ -383,9 +397,9 @@ function InterestsStep({ config, onChange }: StepProps) {
         <h3 className="text-sm font-medium text-slate-300 mb-2">Analysis Horizon</h3>
         <div className="flex gap-3">
           {[
-            { id: 'short', label: 'Short-term (days-weeks)', icon: '⚡' },
-            { id: 'medium', label: 'Medium-term (months)', icon: '📅' },
-            { id: 'long', label: 'Long-term (years)', icon: '🔮' },
+            { id: 'short', label: 'Short-term (days-weeks)', icon: <Zap className="w-6 h-6" /> },
+            { id: 'medium', label: 'Medium-term (months)', icon: <Calendar className="w-6 h-6" /> },
+            { id: 'long', label: 'Long-term (years)', icon: <Sparkles className="w-6 h-6" /> },
           ].map((h) => (
             <button
               key={h.id}
@@ -396,7 +410,7 @@ function InterestsStep({ config, onChange }: StepProps) {
                   : 'bg-slate-900 border-slate-700 hover:border-slate-600'
               }`}
             >
-              <div className="text-xl mb-2">{h.icon}</div>
+              <div className="mb-2 flex justify-center">{h.icon}</div>
               <div className="text-xs">{h.label}</div>
             </button>
           ))}
@@ -412,53 +426,53 @@ function DashboardStep({ config, onChange, userTier }: StepProps) {
       id: 'intel_first',
       name: 'Intel First',
       desc: 'Executive summary front and center',
-      preview: '📋 Intel | 🗺️ Map (collapsed)',
+      preview: 'Intel | Map (collapsed)',
     },
     {
       id: 'map_focus',
       name: 'Map Focus',
       desc: 'Interactive map as primary view',
-      preview: '🗺️ Map | 📋 Side Panel',
+      preview: 'Map | Side Panel',
     },
     {
       id: 'balanced',
       name: 'Balanced',
       desc: 'Equal weight to all sections',
-      preview: '📋 | 🗺️ | 📊',
+      preview: 'Intel | Map | Charts',
     },
     {
       id: 'data_heavy',
       name: 'Data Heavy',
       desc: 'Multiple charts and tables',
-      preview: '📊 | 📈 | 📋 | 🗺️',
+      preview: 'Charts | Graphs | Intel | Map',
     },
     {
       id: '3d_tree',
       name: '3D Navigator',
       desc: 'Temporal tree visualization',
-      preview: '🌳 3D Tree | 📋 Details',
+      preview: '3D Tree | Details',
     },
     {
       id: 'custom',
       name: 'Custom Layout',
       desc: 'Build from scratch',
-      preview: '🛠️ Drag & drop',
+      preview: 'Drag & drop',
     },
   ];
 
   const widgets = [
-    { id: 'summary', name: 'Executive Summary', icon: '📋', default: true },
-    { id: 'map', name: 'Interactive Map', icon: '🗺️', default: true },
-    { id: 'threats', name: 'Threat Matrix', icon: '⚠️', default: true },
-    { id: 'trends', name: 'Trends Chart', icon: '📈', default: true },
-    { id: 'alerts', name: 'Alert Feed', icon: '🔔', default: false },
-    { id: 'news', name: 'News Ticker', icon: '📰', default: false },
-    { id: 'xyza', name: 'XYZA Metrics', icon: '🧠', default: false },
-    { id: 'flow', name: 'Flow State', icon: '🌊', default: false },
-    { id: 'timeline', name: 'Event Timeline', icon: '📅', default: false },
-    { id: 'relations', name: 'Relation Graph', icon: '🔗', default: false },
-    { id: 'resources', name: 'Resource Flow', icon: '⛏️', default: false },
-    { id: 'conflicts', name: 'Conflict Tracker', icon: '🔥', default: false },
+    { id: 'summary', name: 'Executive Summary', icon: <ClipboardList className="w-5 h-5" />, default: true },
+    { id: 'map', name: 'Interactive Map', icon: <Map className="w-5 h-5" />, default: true },
+    { id: 'threats', name: 'Threat Matrix', icon: <AlertTriangle className="w-5 h-5" />, default: true },
+    { id: 'trends', name: 'Trends Chart', icon: <TrendingUp className="w-5 h-5" />, default: true },
+    { id: 'alerts', name: 'Alert Feed', icon: <Bell className="w-5 h-5" />, default: false },
+    { id: 'news', name: 'News Ticker', icon: <Radio className="w-5 h-5" />, default: false },
+    { id: 'xyza', name: 'XYZA Metrics', icon: <Activity className="w-5 h-5" />, default: false },
+    { id: 'flow', name: 'Flow State', icon: <MessageSquare className="w-5 h-5" />, default: false },
+    { id: 'timeline', name: 'Event Timeline', icon: <Calendar className="w-5 h-5" />, default: false },
+    { id: 'relations', name: 'Relation Graph', icon: <Link className="w-5 h-5" />, default: false },
+    { id: 'resources', name: 'Resource Flow', icon: <Pickaxe className="w-5 h-5" />, default: false },
+    { id: 'conflicts', name: 'Conflict Tracker', icon: <Flame className="w-5 h-5" />, default: false },
   ];
 
   const toggleWidget = (id: string) => {
@@ -514,7 +528,7 @@ function DashboardStep({ config, onChange, userTier }: StepProps) {
                   : 'bg-slate-900 border-slate-700 hover:border-slate-600'
               }`}
             >
-              <div className="text-xl mb-1">{widget.icon}</div>
+              <div className="mb-1 flex justify-center">{widget.icon}</div>
               <div className="text-xs">{widget.name}</div>
             </button>
           ))}
@@ -530,7 +544,7 @@ function DashboardStep({ config, onChange, userTier }: StepProps) {
               const widget = widgets.find((w) => w.id === widgetId);
               return (
                 <div key={widgetId} className="flex items-center justify-between bg-slate-900 rounded-lg p-2">
-                  <span className="text-sm text-slate-300">
+                  <span className="text-sm text-slate-300 flex items-center gap-2">
                     {widget?.icon} {widget?.name}
                   </span>
                   <div className="flex gap-1">
@@ -562,11 +576,11 @@ function DashboardStep({ config, onChange, userTier }: StepProps) {
 
 function NotificationsStep({ config, onChange }: StepProps) {
   const channels = [
-    { id: 'push', label: 'Push Notifications', icon: '📱', desc: 'Browser/mobile alerts' },
-    { id: 'email', label: 'Email', icon: '📧', desc: 'Daily digest or instant' },
-    { id: 'sms', label: 'SMS', icon: '💬', desc: 'Text for critical alerts' },
-    { id: 'slack', label: 'Slack', icon: '💼', desc: 'Channel integration' },
-    { id: 'webhook', label: 'Webhook', icon: '🔗', desc: 'Custom endpoint' },
+    { id: 'push', label: 'Push Notifications', icon: <Smartphone className="w-6 h-6" />, desc: 'Browser/mobile alerts' },
+    { id: 'email', label: 'Email', icon: <Mail className="w-6 h-6" />, desc: 'Daily digest or instant' },
+    { id: 'sms', label: 'SMS', icon: <Phone className="w-6 h-6" />, desc: 'Text for critical alerts' },
+    { id: 'slack', label: 'Slack', icon: <MessageCircle className="w-6 h-6" />, desc: 'Channel integration' },
+    { id: 'webhook', label: 'Webhook', icon: <Link className="w-6 h-6" />, desc: 'Custom endpoint' },
   ];
 
   const frequencies = [
@@ -602,7 +616,7 @@ function NotificationsStep({ config, onChange }: StepProps) {
               }`}
             >
               <div className="flex items-center gap-3">
-                <span className="text-xl">{ch.icon}</span>
+                {ch.icon}
                 <div className="text-left">
                   <div className="text-sm font-medium text-white">{ch.label}</div>
                   <div className="text-xs text-slate-400">{ch.desc}</div>
@@ -666,10 +680,10 @@ function NotificationsStep({ config, onChange }: StepProps) {
 
 function VisualStep({ config, onChange }: StepProps) {
   const themes = [
-    { id: 'dark', label: 'Dark', preview: 'bg-slate-900', icon: '🌙' },
-    { id: 'light', label: 'Light', preview: 'bg-white', icon: '☀️' },
-    { id: 'midnight', label: 'Midnight', preview: 'bg-slate-950', icon: '🌌' },
-    { id: 'military', label: 'Military', preview: 'bg-green-950', icon: '🎖️' },
+    { id: 'dark', label: 'Dark', preview: 'bg-slate-900', icon: <Moon className="w-5 h-5" /> },
+    { id: 'light', label: 'Light', preview: 'bg-white', icon: <Sun className="w-5 h-5" /> },
+    { id: 'midnight', label: 'Midnight', preview: 'bg-slate-950', icon: <Stars className="w-5 h-5" /> },
+    { id: 'military', label: 'Military', preview: 'bg-green-950', icon: <Award className="w-5 h-5" /> },
   ];
 
   const densities = [
@@ -679,10 +693,10 @@ function VisualStep({ config, onChange }: StepProps) {
   ];
 
   const mapStyles = [
-    { id: 'dark', label: 'Dark', icon: '🌑' },
-    { id: 'satellite', label: 'Satellite', icon: '🛰️' },
-    { id: 'terrain', label: 'Terrain', icon: '🏔️' },
-    { id: 'political', label: 'Political', icon: '🗺️' },
+    { id: 'dark', label: 'Dark', icon: <Circle className="w-5 h-5" /> },
+    { id: 'satellite', label: 'Satellite', icon: <Satellite className="w-5 h-5" /> },
+    { id: 'terrain', label: 'Terrain', icon: <Mountain className="w-5 h-5" /> },
+    { id: 'political', label: 'Political', icon: <Map className="w-5 h-5" /> },
   ];
 
   return (
@@ -702,7 +716,7 @@ function VisualStep({ config, onChange }: StepProps) {
               }`}
             >
               <div className={`w-full h-12 rounded-lg ${t.preview} mb-2`} />
-              <div className="text-sm text-center">
+              <div className="text-sm text-center flex items-center justify-center gap-1">
                 {t.icon} {t.label}
               </div>
             </button>
@@ -747,7 +761,7 @@ function VisualStep({ config, onChange }: StepProps) {
                   : 'bg-slate-900 border-slate-700 hover:border-slate-600'
               }`}
             >
-              <div className="text-xl mb-1">{m.icon}</div>
+              <div className="mb-1 flex justify-center">{m.icon}</div>
               <div className="text-xs">{m.label}</div>
             </button>
           ))}
@@ -846,28 +860,28 @@ function AdvancedStep({ config, onChange, userTier }: StepProps) {
       id: 'developerMode',
       label: 'Developer Mode',
       desc: 'Show raw data, debug info, and console logs',
-      icon: '🛠️',
+      icon: <Wrench className="w-6 h-6" />,
       tier: 'analyst' as UserTier,
     },
     {
       id: 'apiAccess',
       label: 'API Access',
       desc: 'Enable API key generation and programmatic access',
-      icon: '🔑',
+      icon: <Key className="w-6 h-6" />,
       tier: 'analyst' as UserTier,
     },
     {
       id: 'dataExports',
       label: 'Data Exports',
       desc: 'Export raw data in CSV, JSON, or Excel format',
-      icon: '📤',
+      icon: <Upload className="w-6 h-6" />,
       tier: 'analyst' as UserTier,
     },
     {
       id: 'experimentalFeatures',
       label: 'Experimental Features',
       desc: 'Early access to new features (may be unstable)',
-      icon: '🧪',
+      icon: <FlaskConical className="w-6 h-6" />,
       tier: 'strategist' as UserTier,
     },
   ];
@@ -879,7 +893,7 @@ function AdvancedStep({ config, onChange, userTier }: StepProps) {
     <div className="space-y-6">
       <div className="bg-amber-950/30 border border-amber-800 rounded-lg p-4">
         <div className="flex items-start gap-3">
-          <span className="text-xl">⚡</span>
+          <Zap className="w-6 h-6 text-amber-400" />
           <div>
             <h4 className="font-medium text-amber-300">Power User Features</h4>
             <p className="text-xs text-amber-400/70 mt-1">
@@ -905,7 +919,7 @@ function AdvancedStep({ config, onChange, userTier }: StepProps) {
               }`}
             >
               <div className="flex items-center gap-3">
-                <span className="text-xl">{feature.icon}</span>
+                {feature.icon}
                 <div>
                   <div className="text-sm font-medium text-white flex items-center gap-2">
                     {feature.label}
@@ -944,7 +958,9 @@ function ReviewStep({ config, userTier }: StepProps & { config: OnboardingConfig
   return (
     <div className="space-y-6">
       <div className="text-center py-4">
-        <div className="text-4xl mb-3">🎉</div>
+        <div className="w-20 h-20 mx-auto rounded-full bg-green-500/20 flex items-center justify-center mb-3">
+          <PartyPopper className="w-10 h-10 text-green-400" />
+        </div>
         <h2 className="text-xl font-bold text-white">You're All Set!</h2>
         <p className="text-slate-400 text-sm mt-1">Here's a summary of your configuration</p>
       </div>
@@ -977,9 +993,12 @@ function ReviewStep({ config, userTier }: StepProps & { config: OnboardingConfig
       </div>
 
       <div className="bg-blue-950/30 border border-blue-800 rounded-lg p-4">
-        <p className="text-sm text-blue-300">
-          <strong>Pro tip:</strong> You can change any of these settings later from the
-          Settings menu (⚙️) in the top navigation bar.
+        <p className="text-sm text-blue-300 flex items-start gap-2">
+          <Settings className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <span>
+            <strong>Pro tip:</strong> You can change any of these settings later from the
+            Settings menu in the top navigation bar.
+          </span>
         </p>
       </div>
     </div>
@@ -1058,7 +1077,7 @@ export function OnboardingWizard({
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">🌐</span>
+          <Globe className="w-6 h-6 text-blue-400" />
           <span className="font-bold text-white">LatticeForge Setup</span>
         </div>
         {onSkip && (
@@ -1087,9 +1106,9 @@ export function OnboardingWizard({
               }`}
             >
               {idx < currentStep ? (
-                <span>✓</span>
+                <Check className="w-4 h-4" />
               ) : (
-                <span className="text-sm">{step.icon}</span>
+                step.icon
               )}
               <span className="text-sm">{step.title}</span>
             </button>
@@ -1102,7 +1121,7 @@ export function OnboardingWizard({
         <div className="max-w-3xl mx-auto px-6 py-8">
           <div className="mb-8">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span>{currentStepConfig.icon}</span>
+              {currentStepConfig.icon}
               <span>{currentStepConfig.title}</span>
             </h2>
             <p className="text-slate-400 text-sm mt-1">{currentStepConfig.subtitle}</p>
@@ -1132,9 +1151,15 @@ export function OnboardingWizard({
 
         <button
           onClick={handleNext}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-500 transition-colors"
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-500 transition-colors flex items-center gap-2"
         >
-          {currentStep === availableSteps.length - 1 ? 'Launch LatticeForge 🚀' : 'Next →'}
+          {currentStep === availableSteps.length - 1 ? (
+            <>
+              Launch LatticeForge <Rocket className="w-4 h-4" />
+            </>
+          ) : (
+            'Next →'
+          )}
         </button>
       </div>
     </div>

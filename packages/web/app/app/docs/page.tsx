@@ -14,7 +14,7 @@ import {
   Shield,
   ExternalLink,
 } from 'lucide-react';
-import { GlassCard } from '@/components/ui/GlassCard';
+import { Card } from '@/components/ui';
 
 const API_ENDPOINTS = [
   {
@@ -190,7 +190,7 @@ export default function APIDocsPage() {
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center">
             <Book className="w-5 h-5 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white">API Documentation</h1>
+          <h1 className="text-lg font-bold text-white">API Documentation</h1>
         </div>
         <p className="text-slate-400">
           Integrate LatticeForge intelligence into your applications
@@ -198,7 +198,7 @@ export default function APIDocsPage() {
       </div>
 
       {/* Quick Start */}
-      <GlassCard blur="heavy">
+      <Card>
         <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <Zap className="w-5 h-5 text-yellow-400" />
           Quick Start
@@ -238,10 +238,10 @@ export default function APIDocsPage() {
             </div>
           </div>
         </div>
-      </GlassCard>
+      </Card>
 
       {/* Authentication */}
-      <GlassCard blur="heavy">
+      <Card>
         <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <Key className="w-5 h-5 text-amber-400" />
           Authentication
@@ -260,10 +260,10 @@ export default function APIDocsPage() {
             Keep your API key secure. Never expose it in client-side code.
           </p>
         </div>
-      </GlassCard>
+      </Card>
 
       {/* Code Examples */}
-      <GlassCard blur="heavy">
+      <Card>
         <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <Code className="w-5 h-5 text-cyan-400" />
           Code Examples
@@ -298,7 +298,7 @@ export default function APIDocsPage() {
             )}
           </button>
         </div>
-      </GlassCard>
+      </Card>
 
       {/* Endpoints */}
       <div>
@@ -319,7 +319,7 @@ export default function APIDocsPage() {
       </div>
 
       {/* Webhook Events */}
-      <GlassCard blur="heavy">
+      <Card>
         <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <Webhook className="w-5 h-5 text-orange-400" />
           Webhook Events
@@ -338,10 +338,10 @@ export default function APIDocsPage() {
             </div>
           ))}
         </div>
-      </GlassCard>
+      </Card>
 
       {/* Rate Limits */}
-      <GlassCard blur="heavy">
+      <Card>
         <h2 className="text-lg font-semibold text-white mb-4">Rate Limits</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -376,10 +376,10 @@ export default function APIDocsPage() {
             </tbody>
           </table>
         </div>
-      </GlassCard>
+      </Card>
 
       {/* SDKs */}
-      <GlassCard blur="light" className="text-center">
+      <Card className="text-center">
         <p className="text-slate-400 mb-4">Need an SDK?</p>
         <div className="flex justify-center gap-4">
           <a
@@ -401,7 +401,7 @@ export default function APIDocsPage() {
             <ExternalLink className="w-4 h-4" />
           </a>
         </div>
-      </GlassCard>
+      </Card>
     </div>
   );
 }
@@ -425,7 +425,7 @@ function EndpointCard({
   };
 
   return (
-    <GlassCard blur="heavy">
+    <Card>
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center gap-4"
@@ -483,6 +483,6 @@ function EndpointCard({
           </div>
         </div>
       )}
-    </GlassCard>
+    </Card>
   );
 }

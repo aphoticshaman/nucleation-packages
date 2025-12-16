@@ -1,6 +1,5 @@
 import { requireAdmin } from '@/lib/auth';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button } from '@/components/ui';
 import { Shield, CheckCircle, AlertTriangle, FileText, Download, Clock } from 'lucide-react';
 
 export default async function CompliancePage() {
@@ -56,60 +55,60 @@ export default async function CompliancePage() {
     <div className="p-4 lg:pl-72 lg:p-8">
       <div className="mb-6 lg:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl lg:text-2xl font-bold text-white">Compliance</h1>
+          <h1 className="text-lg font-bold text-white">Compliance</h1>
           <p className="text-slate-400 text-sm lg:text-base">Security certifications and audit logs</p>
         </div>
-        <GlassButton variant="primary" glow>
+        <Button variant="secondary">
           <Download className="w-4 h-4 mr-2" />
           Export Report
-        </GlassButton>
+        </Button>
       </div>
 
       {/* Compliance Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
-        <GlassCard blur="heavy" compact>
+        <Card>
           <div className="flex items-center gap-3 mb-2">
             <Shield className="w-5 h-5 text-green-400" />
             <span className="text-sm text-slate-400">Certifications</span>
           </div>
           <p className="text-3xl font-bold text-white">{complianceItems.filter(c => c.status === 'compliant').length}</p>
           <p className="text-sm text-green-400 mt-1">Active</p>
-        </GlassCard>
+        </Card>
 
-        <GlassCard blur="heavy" compact>
+        <Card>
           <div className="flex items-center gap-3 mb-2">
             <Clock className="w-5 h-5 text-amber-400" />
             <span className="text-sm text-slate-400">In Progress</span>
           </div>
           <p className="text-3xl font-bold text-white">{complianceItems.filter(c => c.status === 'in_progress').length}</p>
-        </GlassCard>
+        </Card>
 
-        <GlassCard blur="heavy" compact>
+        <Card>
           <div className="flex items-center gap-3 mb-2">
             <FileText className="w-5 h-5 text-blue-400" />
             <span className="text-sm text-slate-400">Audit Logs (30d)</span>
           </div>
           <p className="text-3xl font-bold text-white">1,247</p>
-        </GlassCard>
+        </Card>
 
-        <GlassCard blur="heavy" compact>
+        <Card>
           <div className="flex items-center gap-3 mb-2">
             <AlertTriangle className="w-5 h-5 text-red-400" />
             <span className="text-sm text-slate-400">Open Issues</span>
           </div>
           <p className="text-3xl font-bold text-white">0</p>
-        </GlassCard>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
         {/* Compliance Status */}
-        <GlassCard blur="heavy">
+        <Card>
           <h2 className="text-lg font-bold text-white mb-4">Certification Status</h2>
           <div className="space-y-3">
             {complianceItems.map((item, i) => (
-              <div key={i} className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/[0.04]">
+              <div key={i} className="flex items-center justify-between p-4 bg-black/20 rounded-md border border-white/[0.04]">
                 <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  <div className={`w-10 h-10 rounded-md flex items-center justify-center ${
                     item.status === 'compliant' ? 'bg-green-500/10' :
                     item.status === 'in_progress' ? 'bg-amber-500/10' :
                     'bg-slate-500/10'
@@ -151,14 +150,14 @@ export default async function CompliancePage() {
               </div>
             ))}
           </div>
-        </GlassCard>
+        </Card>
 
         {/* Audit Logs */}
-        <GlassCard blur="heavy">
+        <Card>
           <h2 className="text-lg font-bold text-white mb-4">Recent Audit Logs</h2>
           <div className="space-y-3">
             {auditLogs.map((log, i) => (
-              <div key={i} className="p-4 bg-black/20 rounded-xl border border-white/[0.04]">
+              <div key={i} className="p-4 bg-black/20 rounded-md border border-white/[0.04]">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-white font-medium">{log.action}</p>
@@ -178,7 +177,7 @@ export default async function CompliancePage() {
               </div>
             ))}
           </div>
-        </GlassCard>
+        </Card>
       </div>
     </div>
   );

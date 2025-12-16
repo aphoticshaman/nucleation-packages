@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button } from '@/components/ui';
 
 interface UserProfile {
   id: string;
@@ -147,31 +146,30 @@ function UserRow({
       <td className="py-4 px-4">
         {editing ? (
           <div className="flex gap-2">
-            <GlassButton
-              variant="primary"
+            <Button
+              variant="secondary"
               size="sm"
               onClick={() => void handleSave()}
               disabled={saving}
-              loading={saving}
             >
-              Save
-            </GlassButton>
-            <GlassButton
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+            <Button
               variant="secondary"
               size="sm"
               onClick={handleCancel}
             >
               Cancel
-            </GlassButton>
+            </Button>
           </div>
         ) : (
-          <GlassButton
+          <Button
             variant="secondary"
             size="sm"
             onClick={() => setEditing(true)}
           >
             Edit
-          </GlassButton>
+          </Button>
         )}
       </td>
     </tr>
@@ -242,32 +240,32 @@ export default function AdminUsersPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">User Management</h1>
+        <h1 className="text-lg font-bold text-white">User Management</h1>
         <p className="text-slate-400">View and manage all user accounts</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-5 gap-4 mb-8">
-        <GlassCard compact>
+        <Card>
           <p className="text-2xl font-bold text-white">{stats.total}</p>
           <p className="text-sm text-slate-400">Total Users</p>
-        </GlassCard>
-        <GlassCard compact>
+        </Card>
+        <Card>
           <p className="text-2xl font-bold text-purple-400">{stats.admins}</p>
           <p className="text-sm text-slate-400">Admins</p>
-        </GlassCard>
-        <GlassCard compact>
+        </Card>
+        <Card>
           <p className="text-2xl font-bold text-blue-400">{stats.enterprise}</p>
           <p className="text-sm text-slate-400">Enterprise</p>
-        </GlassCard>
-        <GlassCard compact>
+        </Card>
+        <Card>
           <p className="text-2xl font-bold text-slate-300">{stats.consumers}</p>
           <p className="text-sm text-slate-400">Consumers</p>
-        </GlassCard>
-        <GlassCard compact>
+        </Card>
+        <Card>
           <p className="text-2xl font-bold text-green-400">{stats.active}</p>
           <p className="text-sm text-slate-400">Active</p>
-        </GlassCard>
+        </Card>
       </div>
 
       {/* Filters */}
@@ -277,25 +275,25 @@ export default function AdminUsersPage() {
           placeholder="Search by email or name..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 bg-slate-800 text-white rounded-lg px-4 py-2 border border-white/10 focus:border-blue-500 focus:outline-none"
+          className="flex-1 bg-slate-800 text-white rounded-md px-4 py-2 border border-white/10 focus:border-blue-500 focus:outline-none"
         />
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value as typeof filter)}
-          className="bg-slate-800 text-white rounded-lg px-4 py-2 border border-white/10"
+          className="bg-slate-800 text-white rounded-md px-4 py-2 border border-white/10"
         >
           <option value="all">All Roles</option>
           <option value="admin">Admins</option>
           <option value="enterprise">Enterprise</option>
           <option value="consumer">Consumers</option>
         </select>
-        <GlassButton variant="primary" onClick={() => void loadUsers()}>
+        <Button variant="secondary" onClick={() => void loadUsers()}>
           Refresh
-        </GlassButton>
+        </Button>
       </div>
 
       {/* Users Table */}
-      <GlassCard blur="heavy" className="p-0 overflow-hidden">
+      <Card className="p-0 overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-slate-400">Loading users...</div>
         ) : (
@@ -326,7 +324,7 @@ export default function AdminUsersPage() {
             </table>
           </div>
         )}
-      </GlassCard>
+      </Card>
     </div>
   );
 }

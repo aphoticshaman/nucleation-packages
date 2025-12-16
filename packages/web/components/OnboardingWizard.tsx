@@ -14,9 +14,7 @@ import {
   Target,
   BarChart3,
 } from 'lucide-react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
-import { GlassToggle } from '@/components/ui/GlassInput';
+import { Card, Button } from '@/components/ui';
 
 interface OnboardingWizardProps {
   isOpen: boolean;
@@ -160,10 +158,10 @@ export default function OnboardingWizard({ isOpen, onClose, onComplete }: Onboar
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/70" />
 
       {/* Modal */}
-      <div className="relative w-full max-w-2xl bg-[rgba(18,18,26,0.95)] backdrop-blur-xl border border-white/[0.08] rounded-2xl shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-2xl bg-[rgba(18,18,26,0.95)] border border-white/[0.08] rounded-2xl shadow-2xl overflow-hidden">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -228,21 +226,20 @@ export default function OnboardingWizard({ isOpen, onClose, onComplete }: Onboar
         <div className="px-8 py-4 border-t border-white/[0.06] flex items-center justify-between">
           <div>
             {step > 0 && (
-              <GlassButton variant="secondary" onClick={handleBack}>
+              <Button variant="secondary" onClick={handleBack}>
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 Back
-              </GlassButton>
+              </Button>
             )}
           </div>
-          <GlassButton
-            variant="primary"
-            glow
+          <Button
+            variant="secondary"
             onClick={handleNext}
             disabled={!canProceed()}
           >
             {step === steps.length - 1 ? 'Get Started' : 'Continue'}
             <ChevronRight className="w-4 h-4 ml-1" />
-          </GlassButton>
+          </Button>
         </div>
       </div>
     </div>
@@ -407,32 +404,63 @@ function NotificationsStep({
 }) {
   return (
     <div className="space-y-4 max-w-md mx-auto">
-      <GlassCard blur="light">
-        <GlassToggle
+      <Card className="p-4">
+        <ToggleSwitch
           checked={preferences.email}
           onChange={(checked) => onChange({ ...preferences, email: checked })}
           label="Email Notifications"
           description="Receive critical alerts via email"
         />
-      </GlassCard>
+      </Card>
 
-      <GlassCard blur="light">
-        <GlassToggle
+      <Card className="p-4">
+        <ToggleSwitch
           checked={preferences.push}
           onChange={(checked) => onChange({ ...preferences, push: checked })}
           label="Push Notifications"
           description="Browser notifications for urgent events"
         />
-      </GlassCard>
+      </Card>
 
-      <GlassCard blur="light">
-        <GlassToggle
+      <Card className="p-4">
+        <ToggleSwitch
           checked={preferences.digest}
           onChange={(checked) => onChange({ ...preferences, digest: checked })}
           label="Daily Digest"
           description="Morning summary of key events"
         />
-      </GlassCard>
+      </Card>
+    </div>
+  );
+}
+
+function ToggleSwitch({
+  checked,
+  onChange,
+  label,
+  description,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label: string;
+  description: string;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <div>
+        <div className="text-sm font-medium text-white">{label}</div>
+        <div className="text-xs text-slate-400">{description}</div>
+      </div>
+      <button
+        onClick={() => onChange(!checked)}
+        className={`w-12 h-6 rounded-full transition-colors ${
+          checked ? 'bg-blue-500' : 'bg-slate-700'
+        }`}
+      >
+        <div className={`w-5 h-5 bg-white rounded-full mt-0.5 transition-transform ${
+          checked ? 'translate-x-6' : 'translate-x-0.5'
+        }`} />
+      </button>
     </div>
   );
 }

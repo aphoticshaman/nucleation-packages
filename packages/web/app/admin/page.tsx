@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/auth';
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { GlassCard } from '@/components/ui/GlassCard';
+import { Card } from '@/components/ui';
 
 function StatCard({
   label,
@@ -21,11 +21,11 @@ function StatCard({
   };
 
   return (
-    <GlassCard blur="heavy">
+    <Card>
       <p className="text-sm text-slate-400">{label}</p>
       <p className="text-3xl font-bold text-white mt-2">{value}</p>
       {change && <p className={`text-sm mt-2 ${changeColors[changeType]}`}>{change}</p>}
-    </GlassCard>
+    </Card>
   );
 }
 
@@ -167,7 +167,7 @@ async function DashboardContent() {
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Enterprise Customers */}
-        <GlassCard blur="heavy" className="p-0 overflow-hidden">
+        <Card className="p-0 overflow-hidden">
           <div className="p-6 border-b border-white/[0.06] flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold text-white">Enterprise Customers</h2>
@@ -202,10 +202,10 @@ async function DashboardContent() {
               </tbody>
             </table>
           </div>
-        </GlassCard>
+        </Card>
 
         {/* Consumer Users */}
-        <GlassCard blur="heavy" className="p-0 overflow-hidden">
+        <Card className="p-0 overflow-hidden">
           <div className="p-6 border-b border-white/[0.06] flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold text-white">Consumer Users</h2>
@@ -239,11 +239,11 @@ async function DashboardContent() {
               </tbody>
             </table>
           </div>
-        </GlassCard>
+        </Card>
       </div>
 
       {/* System Health */}
-      <GlassCard blur="heavy" className="mt-8">
+      <Card className="mt-8">
         <h2 className="text-lg font-bold text-white mb-4">System Health</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="flex items-center gap-4">
@@ -268,7 +268,7 @@ async function DashboardContent() {
             </div>
           </div>
         </div>
-      </GlassCard>
+      </Card>
     </>
   );
 }
@@ -277,7 +277,7 @@ export default function AdminDashboard() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+        <h1 className="text-lg font-bold text-white">Dashboard</h1>
         <p className="text-slate-400">System overview and customer status</p>
       </div>
 

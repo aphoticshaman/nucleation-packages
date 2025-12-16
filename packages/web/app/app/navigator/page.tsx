@@ -2,11 +2,12 @@
 
 import { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
+import { LayoutDashboard, Radio } from 'lucide-react';
 import { useIntelBriefing } from '@/hooks/useIntelBriefing';
 import { useSupabaseNations } from '@/hooks/useSupabaseNations';
 import { briefingsToTreeNodes, type IntelNode, type IntelCategory } from '@/components/intelligence/TreeNavigator3D';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button } from '@/components/ui';
+
 
 // Dynamic import to avoid SSR issues with Three.js
 const TreeNavigator3D = dynamic(
@@ -120,7 +121,7 @@ export default function NavigatorPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">3D Navigator</h1>
+          <h1 className="text-lg font-bold text-white">3D Navigator</h1>
           <p className="text-slate-400 text-sm mt-1">
             Explore geopolitical relationships in 3D space
           </p>
@@ -129,14 +130,14 @@ export default function NavigatorPage() {
         {/* Preset selector */}
         <div className="flex items-center gap-2">
           {['global', 'nato', 'brics', 'conflict'].map((preset) => (
-            <GlassButton
+            <Button
               key={preset}
               variant={selectedPreset === preset ? 'primary' : 'ghost'}
               size="sm"
               onClick={() => setSelectedPreset(preset)}
             >
               {preset.charAt(0).toUpperCase() + preset.slice(1)}
-            </GlassButton>
+            </Button>
           ))}
         </div>
 
@@ -151,7 +152,7 @@ export default function NavigatorPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* 3D View */}
-        <GlassCard blur="heavy" className="lg:col-span-3 overflow-hidden h-[calc(100vh-12rem)] !p-0">
+        <Card className="lg:col-span-3 overflow-hidden h-[calc(100vh-12rem)] !p-0">
           {loading ? (
             <div className="w-full h-full flex items-center justify-center">
               <div className="text-center">
@@ -170,10 +171,10 @@ export default function NavigatorPage() {
               <p className="text-slate-500">No data available. Check back soon.</p>
             </div>
           )}
-        </GlassCard>
+        </Card>
 
         {/* Details Panel */}
-        <GlassCard blur="heavy" className="lg:col-span-1">
+        <Card className="lg:col-span-1">
           <h3 className="text-white font-medium mb-4">Node Details</h3>
           {selectedNode ? (
             <div className="space-y-3">
@@ -224,10 +225,10 @@ export default function NavigatorPage() {
               {selectedNode.parentId && (
                 <div>
                   <p className="text-xs text-slate-500">Data Source</p>
-                  <p className="text-slate-400 text-xs">
+                  <p className="text-slate-400 text-xs flex items-center gap-1">
                     {selectedNode.id.startsWith('nation-')
-                      ? '📊 Supabase nations table'
-                      : '🤖 Elle intel briefing'
+                      ? <><LayoutDashboard className="w-3 h-3" /> Supabase nations table</>
+                      : <><Radio className="w-3 h-3" /> Elle intel briefing</>
                     }
                   </p>
                 </div>
@@ -241,7 +242,7 @@ export default function NavigatorPage() {
               </p>
             </div>
           )}
-        </GlassCard>
+        </Card>
       </div>
     </div>
   );

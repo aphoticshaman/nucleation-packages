@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import { User, Building2, MapPin, Calendar, MessageSquare, Package, Users, Trash2, X, ArrowUp, ArrowDown, ArrowRight, ClipboardList, AlertTriangle, Eye, Target, Search, Globe, Briefcase, Shield, Zap } from 'lucide-react';
 
 type EntityType = 'person' | 'organization' | 'location' | 'event' | 'topic' | 'asset';
 
@@ -43,6 +44,22 @@ interface WatchlistManagerProps {
   currentUser?: { id: string; name: string };
 }
 
+// Icon mapping helper
+const getIconComponent = (iconId?: string) => {
+  const iconMap: Record<string, React.ReactNode> = {
+    clipboard: <ClipboardList className="w-4 h-4" />,
+    alert: <AlertTriangle className="w-4 h-4" />,
+    eye: <Eye className="w-4 h-4" />,
+    target: <Target className="w-4 h-4" />,
+    search: <Search className="w-4 h-4" />,
+    globe: <Globe className="w-4 h-4" />,
+    briefcase: <Briefcase className="w-4 h-4" />,
+    shield: <Shield className="w-4 h-4" />,
+    zap: <Zap className="w-4 h-4" />,
+  };
+  return iconMap[iconId || 'clipboard'] || iconMap.clipboard;
+};
+
 // Component 48: Watchlist Entity Manager
 export function WatchlistManager({
   watchlists,
@@ -60,13 +77,13 @@ export function WatchlistManager({
   const [isAddingEntity, setIsAddingEntity] = useState(false);
   const [sortBy, setSortBy] = useState<'name' | 'risk' | 'activity'>('risk');
 
-  const typeConfig: Record<EntityType, { icon: string; color: string; label: string }> = {
-    person: { icon: '👤', color: 'cyan', label: 'Person' },
-    organization: { icon: '🏢', color: 'purple', label: 'Organization' },
-    location: { icon: '📍', color: 'green', label: 'Location' },
-    event: { icon: '📅', color: 'amber', label: 'Event' },
-    topic: { icon: '💭', color: 'blue', label: 'Topic' },
-    asset: { icon: '📦', color: 'slate', label: 'Asset' },
+  const typeConfig: Record<EntityType, { icon: React.ReactNode; color: string; label: string }> = {
+    person: { icon: <User className="w-5 h-5" />, color: 'cyan', label: 'Person' },
+    organization: { icon: <Building2 className="w-5 h-5" />, color: 'purple', label: 'Organization' },
+    location: { icon: <MapPin className="w-5 h-5" />, color: 'green', label: 'Location' },
+    event: { icon: <Calendar className="w-5 h-5" />, color: 'amber', label: 'Event' },
+    topic: { icon: <MessageSquare className="w-5 h-5" />, color: 'blue', label: 'Topic' },
+    asset: { icon: <Package className="w-5 h-5" />, color: 'slate', label: 'Asset' },
   };
 
   const activeWatchlist = watchlists.find(w => w.id === selectedWatchlist);
@@ -152,11 +169,11 @@ export function WatchlistManager({
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: watchlist.color }}
                   />
-                  <span className={`text-sm ${isSelected ? 'text-cyan-400' : 'text-slate-200'}`}>
-                    {watchlist.icon} {watchlist.name}
+                  <span className={`text-sm flex items-center gap-2 ${isSelected ? 'text-cyan-400' : 'text-slate-200'}`}>
+                    {getIconComponent(watchlist.icon)} {watchlist.name}
                   </span>
                   {watchlist.shared && (
-                    <span className="ml-auto text-xs text-slate-500">👥</span>
+                    <Users className="ml-auto w-3 h-3 text-slate-500" />
                   )}
                 </div>
                 <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
@@ -183,8 +200,8 @@ export function WatchlistManager({
                     className="w-4 h-4 rounded-full"
                     style={{ backgroundColor: activeWatchlist.color }}
                   />
-                  <h2 className="text-lg font-medium text-slate-200">
-                    {activeWatchlist.icon} {activeWatchlist.name}
+                  <h2 className="text-lg font-medium text-slate-200 flex items-center gap-2">
+                    {getIconComponent(activeWatchlist.icon)} {activeWatchlist.name}
                   </h2>
                 </div>
                 <div className="flex items-center gap-2">
@@ -198,7 +215,7 @@ export function WatchlistManager({
                     onClick={() => onWatchlistDelete?.(activeWatchlist.id)}
                     className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
                   >
-                    🗑
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -319,14 +336,14 @@ function EntityRow({
   onRemove,
 }: {
   entity: WatchlistEntity;
-  typeConfig: { icon: string; color: string; label: string };
+  typeConfig: { icon: React.ReactNode; color: string; label: string };
   onClick: () => void;
   onRemove: () => void;
 }) {
   const trendConfig = {
-    rising: { icon: '↑', color: 'text-red-400' },
-    falling: { icon: '↓', color: 'text-green-400' },
-    stable: { icon: '→', color: 'text-slate-400' },
+    rising: { icon: <ArrowUp className="w-4 h-4" />, color: 'text-red-400' },
+    falling: { icon: <ArrowDown className="w-4 h-4" />, color: 'text-green-400' },
+    stable: { icon: <ArrowRight className="w-4 h-4" />, color: 'text-slate-400' },
   };
 
   const trend = entity.trend ? trendConfig[entity.trend] : null;
@@ -394,7 +411,7 @@ function EntityRow({
         }}
         className="p-2 text-slate-500 hover:text-red-400 transition-colors"
       >
-        ✕
+        <X className="w-4 h-4" />
       </button>
     </div>
   );
@@ -413,11 +430,20 @@ function CreateWatchlistModal({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [color, setColor] = useState('#06b6d4');
-  const [icon, setIcon] = useState('📋');
+  const [icon, setIcon] = useState('clipboard');
   const [shared, setShared] = useState(false);
 
   const colors = ['#06b6d4', '#f59e0b', '#ef4444', '#22c55e', '#8b5cf6', '#ec4899'];
-  const icons = ['📋', '⚠', '👁', '🎯', '🔍', '🌍', '💼', '🛡'];
+  const iconOptions = [
+    { id: 'clipboard', icon: <ClipboardList className="w-4 h-4" /> },
+    { id: 'alert', icon: <AlertTriangle className="w-4 h-4" /> },
+    { id: 'eye', icon: <Eye className="w-4 h-4" /> },
+    { id: 'target', icon: <Target className="w-4 h-4" /> },
+    { id: 'search', icon: <Search className="w-4 h-4" /> },
+    { id: 'globe', icon: <Globe className="w-4 h-4" /> },
+    { id: 'briefcase', icon: <Briefcase className="w-4 h-4" /> },
+    { id: 'shield', icon: <Shield className="w-4 h-4" /> },
+  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
@@ -449,15 +475,15 @@ function CreateWatchlistModal({
           <div>
             <label className="block text-xs text-slate-400 mb-2">Icon</label>
             <div className="flex gap-2">
-              {icons.map(i => (
+              {iconOptions.map(opt => (
                 <button
-                  key={i}
-                  onClick={() => setIcon(i)}
+                  key={opt.id}
+                  onClick={() => setIcon(opt.id)}
                   className={`w-8 h-8 rounded flex items-center justify-center ${
-                    icon === i ? 'bg-cyan-500/20 ring-2 ring-cyan-500' : 'bg-slate-700'
+                    icon === opt.id ? 'bg-cyan-500/20 ring-2 ring-cyan-500' : 'bg-slate-700'
                   }`}
                 >
-                  {i}
+                  {opt.icon}
                 </button>
               ))}
             </div>
@@ -521,7 +547,7 @@ function AddEntityModal({
   onClose,
   onAdd,
 }: {
-  typeConfig: Record<EntityType, { icon: string; color: string; label: string }>;
+  typeConfig: Record<EntityType, { icon: React.ReactNode; color: string; label: string }>;
   currentUser: { id: string; name: string };
   onClose: () => void;
   onAdd: (data: Omit<WatchlistEntity, 'id' | 'addedAt'>) => void;
@@ -615,7 +641,7 @@ export const mockWatchlists: Watchlist[] = [
     name: 'Priority Actors',
     description: 'Key state and non-state actors requiring continuous monitoring',
     color: '#ef4444',
-    icon: '🎯',
+    icon: 'target',
     shared: true,
     createdBy: 'user-1',
     createdAt: '2024-01-01T00:00:00Z',
@@ -665,7 +691,7 @@ export const mockWatchlists: Watchlist[] = [
     name: 'Critical Infrastructure',
     description: 'Key infrastructure assets and systems',
     color: '#f59e0b',
-    icon: '⚡',
+    icon: 'zap',
     shared: false,
     createdBy: 'user-1',
     createdAt: '2024-01-05T00:00:00Z',

@@ -5,12 +5,13 @@ import type { Widget, Dashboard } from '@/lib/dashboard/types';
 import DashboardCanvas from './DashboardCanvas';
 import WidgetPalette from './WidgetPalette';
 import PropertiesPanel from './PropertiesPanel';
+import { Award, DollarSign, FileText } from 'lucide-react';
 
 // Sample templates
-const TEMPLATES: { name: string; icon: string; widgets: Widget[] }[] = [
+const TEMPLATES: { name: string; icon: React.ReactNode; widgets: Widget[] }[] = [
   {
     name: 'Executive Overview',
-    icon: '🎖️',
+    icon: <Award className="w-4 h-4" />,
     widgets: [
       { id: 'w1', type: 'stat_card', position: { x: 0, y: 0, w: 3, h: 2 }, title: 'Active Alerts', config: { value: '12', label: 'Critical items', icon: '🚨', trend: 'up' } },
       { id: 'w2', type: 'stat_card', position: { x: 3, y: 0, w: 3, h: 2 }, title: 'Countries', config: { value: '47', label: 'Monitored', icon: '🌍', trend: 'neutral' } },
@@ -23,7 +24,7 @@ const TEMPLATES: { name: string; icon: string; widgets: Widget[] }[] = [
   },
   {
     name: 'Financial Dashboard',
-    icon: '💰',
+    icon: <DollarSign className="w-4 h-4" />,
     widgets: [
       { id: 'w1', type: 'signal_ticker', position: { x: 0, y: 0, w: 12, h: 1 } },
       { id: 'w2', type: 'chart_line', position: { x: 0, y: 1, w: 6, h: 4 }, title: 'Portfolio Performance' },
@@ -34,7 +35,7 @@ const TEMPLATES: { name: string; icon: string; widgets: Widget[] }[] = [
   },
   {
     name: 'Blank Canvas',
-    icon: '📄',
+    icon: <FileText className="w-4 h-4" />,
     widgets: [],
   },
 ];
@@ -112,9 +113,9 @@ export default function DashboardBuilder({ initialDashboard, onSave }: Dashboard
                 <button
                   key={template.name}
                   onClick={() => loadTemplate(template)}
-                  className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 first:rounded-t-lg last:rounded-b-lg"
+                  className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 first:rounded-t-lg last:rounded-b-lg flex items-center gap-2"
                 >
-                  <span className="mr-2">{template.icon}</span>
+                  {template.icon}
                   {template.name}
                 </button>
               ))}
