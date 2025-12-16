@@ -1,8 +1,9 @@
 /**
  * EMBEDDING GENERATION UTILITY
  *
- * Generates embeddings for semantic search using OpenAI's embedding model.
- * Used for historical case matching and semantic similarity.
+ * Optional semantic search via embeddings.
+ * Zero-LLM architecture uses feature-based similarity by default.
+ * Embeddings are only used if OPENAI_API_KEY is explicitly configured.
  */
 
 // Embedding model configuration
