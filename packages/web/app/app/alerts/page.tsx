@@ -9,7 +9,6 @@ import {
   Globe,
   Clock,
   Check,
-  Filter,
   RefreshCw,
 } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -26,39 +25,6 @@ interface Alert {
   timestamp: string;
   read: boolean;
 }
-
-// Mock alerts for now - would come from Supabase in production
-const mockAlerts: Alert[] = [
-  {
-    id: '1',
-    type: 'critical',
-    category: 'security',
-    title: 'Elevated Security Risk',
-    message: 'Security conditions have deteriorated significantly in the monitored region.',
-    nation: 'UKR',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    read: false,
-  },
-  {
-    id: '2',
-    type: 'warning',
-    category: 'risk',
-    title: 'Risk Score Increase',
-    message: 'Transition risk has increased above the 60% threshold.',
-    nation: 'RUS',
-    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-    read: false,
-  },
-  {
-    id: '3',
-    type: 'info',
-    category: 'briefing',
-    title: 'New Briefing Available',
-    message: 'A new intelligence briefing has been generated for your watchlist.',
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    read: true,
-  },
-];
 
 const typeStyles = {
   critical: {
@@ -89,25 +55,44 @@ const categoryIcons = {
 };
 
 export default function AlertsPage() {
-  const [alerts, setAlerts] = useState<Alert[]>(mockAlerts);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [readAlerts, setReadAlerts] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    fetchAlerts();
+  }, []);
+
+  async function fetchAlerts() {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/query/alerts');
+      if (res.ok) {
+        const data = await res.json();
+        setAlerts(data.alerts || []);
+      }
+    } catch (e) {
+      console.error('Failed to fetch alerts:', e);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const filteredAlerts = alerts.filter((a) => {
-    if (filter === 'unread') return !a.read;
+    const isRead = readAlerts.has(a.id);
+    if (filter === 'unread') return !isRead;
     return true;
   });
 
-  const unreadCount = alerts.filter((a) => !a.read).length;
+  const unreadCount = alerts.filter((a) => !readAlerts.has(a.id)).length;
 
   const markAsRead = (id: string) => {
-    setAlerts((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, read: true } : a))
-    );
+    setReadAlerts((prev) => new Set(prev).add(id));
   };
 
   const markAllRead = () => {
-    setAlerts((prev) => prev.map((a) => ({ ...a, read: true })));
+    setReadAlerts(new Set(alerts.map((a) => a.id)));
   };
 
   const formatTime = (timestamp: string) => {
@@ -130,12 +115,18 @@ export default function AlertsPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Alerts</h1>
           <p className="text-slate-400 text-sm mt-1">
-            {unreadCount > 0
-              ? `${unreadCount} unread alert${unreadCount > 1 ? 's' : ''}`
-              : 'No unread alerts'}
+            {loading
+              ? 'Loading...'
+              : unreadCount > 0
+                ? `${unreadCount} unread alert${unreadCount > 1 ? 's' : ''}`
+                : 'No unread alerts'}
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <GlassButton variant="secondary" size="sm" onClick={fetchAlerts}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </GlassButton>
           <Link href="/app/notifications">
             <GlassButton variant="secondary" size="sm">
               <Bell className="w-4 h-4 mr-2" />
@@ -182,13 +173,18 @@ export default function AlertsPage() {
 
       {/* Alerts List */}
       <div className="space-y-3">
-        {filteredAlerts.length === 0 ? (
+        {loading ? (
+          <GlassCard className="p-8 text-center">
+            <RefreshCw className="w-8 h-8 text-slate-500 mx-auto mb-4 animate-spin" />
+            <p className="text-slate-400">Loading alerts...</p>
+          </GlassCard>
+        ) : filteredAlerts.length === 0 ? (
           <GlassCard className="p-8 text-center">
             <Bell className="w-12 h-12 text-slate-500 mx-auto mb-4" />
             <p className="text-slate-400">
               {filter === 'unread'
-                ? 'No unread alerts. You\'re all caught up!'
-                : 'No alerts yet. Alerts will appear here when triggered.'}
+                ? "No unread alerts. You're all caught up!"
+                : 'No high-risk signals detected in the past 7 days.'}
             </p>
             <Link href="/app/notifications" className="text-cyan-400 text-sm mt-2 inline-block hover:underline">
               Configure alert settings →
@@ -197,11 +193,12 @@ export default function AlertsPage() {
         ) : (
           filteredAlerts.map((alert) => {
             const style = typeStyles[alert.type];
+            const isRead = readAlerts.has(alert.id);
             return (
               <GlassCard
                 key={alert.id}
                 className={`p-4 cursor-pointer transition-all hover:bg-white/5 ${
-                  !alert.read ? 'border-l-2 border-l-cyan-500' : ''
+                  !isRead ? 'border-l-2 border-l-cyan-500' : ''
                 }`}
                 onClick={() => markAsRead(alert.id)}
               >
@@ -214,7 +211,7 @@ export default function AlertsPage() {
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className={`font-medium ${!alert.read ? 'text-white' : 'text-slate-300'}`}>
+                      <span className={`font-medium ${!isRead ? 'text-white' : 'text-slate-300'}`}>
                         {alert.title}
                       </span>
                       {alert.nation && (
@@ -227,13 +224,13 @@ export default function AlertsPage() {
                         {alert.category}
                       </span>
                     </div>
-                    <p className={`text-sm ${!alert.read ? 'text-slate-300' : 'text-slate-400'}`}>
+                    <p className={`text-sm ${!isRead ? 'text-slate-300' : 'text-slate-400'}`}>
                       {alert.message}
                     </p>
                     <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                       <Clock className="w-3 h-3" />
                       {formatTime(alert.timestamp)}
-                      {!alert.read && (
+                      {!isRead && (
                         <span className="w-2 h-2 bg-cyan-500 rounded-full" />
                       )}
                     </div>
@@ -245,16 +242,16 @@ export default function AlertsPage() {
         )}
       </div>
 
-      {/* Coming Soon */}
+      {/* Info */}
       <GlassCard className="p-4 border-dashed">
         <div className="flex items-center gap-3 text-slate-400">
-          <RefreshCw className="w-5 h-5" />
+          <Shield className="w-5 h-5" />
           <div>
-            <p className="text-sm font-medium">Real-time alerts coming soon</p>
+            <p className="text-sm font-medium">Alerts are generated from risk signals</p>
             <p className="text-xs">
-              Alerts will be powered by your watchlist and custom thresholds.
+              High-risk events from GDELT, USGS, and other sources trigger alerts automatically.
               <Link href="/app/notifications" className="text-cyan-400 ml-1 hover:underline">
-                Set up notifications →
+                Customize thresholds →
               </Link>
             </p>
           </div>
