@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { BookOpen, Shield, GitBranch, FlaskConical, ChevronRight, Lock, RefreshCw, AlertTriangle } from 'lucide-react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button, EmptyState, Skeleton, SkeletonList } from '@/components/ui';
 
 interface DoctrineRule {
   id: string;
@@ -34,11 +33,11 @@ const categoryIcons: Record<string, typeof BookOpen> = {
   narrative: BookOpen
 };
 
-const categoryColors: Record<string, string> = {
-  signal_interpretation: 'text-blue-400 bg-blue-500/10',
-  analytic_judgment: 'text-purple-400 bg-purple-500/10',
-  policy_logic: 'text-green-400 bg-green-500/10',
-  narrative: 'text-amber-400 bg-amber-500/10'
+const categoryStyles: Record<string, string> = {
+  signal_interpretation: 'text-blue-400 border-blue-600/30 bg-blue-600/5',
+  analytic_judgment: 'text-purple-400 border-purple-600/30 bg-purple-600/5',
+  policy_logic: 'text-emerald-400 border-emerald-600/30 bg-emerald-600/5',
+  narrative: 'text-amber-400 border-amber-600/30 bg-amber-600/5'
 };
 
 export default function DoctrinePage() {
@@ -58,10 +57,9 @@ export default function DoctrinePage() {
     setLoading(true);
     setError(null);
     try {
-      // In a real app, this would include auth headers
       const res = await fetch('/api/doctrine', {
         headers: {
-          'x-user-tier': 'enterprise_tier' // Demo: simulate enterprise tier
+          'x-user-tier': 'enterprise_tier'
         }
       });
 
@@ -92,7 +90,6 @@ export default function DoctrinePage() {
         body: JSON.stringify({
           doctrine_id: doctrine.id,
           proposed_parameters: {
-            // Example: adjust threshold by 10%
             ...Object.fromEntries(
               Object.entries(doctrine.rule_definition.parameters).map(([k, v]) => [
                 k,
@@ -120,52 +117,56 @@ export default function DoctrinePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <RefreshCw className="w-8 h-8 text-slate-500 animate-spin" />
+      <div className="space-y-5">
+        <div>
+          <Skeleton className="h-5 w-40 mb-2" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <SkeletonList items={5} />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-5">
         <div>
-          <h1 className="text-2xl font-bold text-white">Doctrine Registry</h1>
-          <p className="text-slate-400 mt-1">Rule sets governing intelligence computation</p>
+          <h1 className="text-lg font-semibold text-slate-100">Doctrine Registry</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Rule sets governing intelligence computation</p>
         </div>
 
-        <GlassCard className="p-8 text-center">
-          <Lock className="w-12 h-12 text-amber-400 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-white mb-2">Access Restricted</h2>
-          <p className="text-slate-400 max-w-md mx-auto mb-4">{error}</p>
-          <p className="text-sm text-slate-500">
+        <Card padding="lg" className="text-center">
+          <Lock className="w-10 h-10 text-amber-500 mx-auto mb-4" />
+          <h2 className="text-base font-semibold text-slate-200 mb-2">Access Restricted</h2>
+          <p className="text-sm text-slate-500 max-w-md mx-auto mb-2">{error}</p>
+          <p className="text-xs text-slate-600">
             Doctrine access is available to Integrated and Stewardship tier customers.
           </p>
-        </GlassCard>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Doctrine Registry</h1>
-          <p className="text-slate-400 mt-1">Rule sets governing intelligence computation</p>
+          <h1 className="text-lg font-semibold text-slate-100">Doctrine Registry</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Rule sets governing intelligence computation</p>
         </div>
-        <GlassButton variant="secondary" size="sm" onClick={fetchDoctrines}>
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+        <Button variant="secondary" size="sm" onClick={fetchDoctrines} loading={loading}>
+          <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
           Refresh
-        </GlassButton>
+        </Button>
       </div>
 
       {/* Category Filter */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-1.5 flex-wrap border-b border-slate-800 pb-3">
         <button
           onClick={() => setSelectedCategory(null)}
-          className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-            !selectedCategory ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white'
+          className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+            !selectedCategory ? 'bg-slate-800 text-slate-200' : 'text-slate-500 hover:text-slate-300'
           }`}
         >
           All ({doctrines.length})
@@ -174,8 +175,8 @@ export default function DoctrinePage() {
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-              selectedCategory === cat ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white'
+            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+              selectedCategory === cat ? 'bg-slate-800 text-slate-200' : 'text-slate-500 hover:text-slate-300'
             }`}
           >
             {cat.replace(/_/g, ' ')} ({doctrines.filter(d => d.category === cat).length})
@@ -183,68 +184,77 @@ export default function DoctrinePage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Doctrine List */}
-        <div className="lg:col-span-2 space-y-3">
-          {filteredDoctrines.map((doctrine) => {
-            const Icon = categoryIcons[doctrine.category] || BookOpen;
-            const colorClass = categoryColors[doctrine.category] || 'text-slate-400 bg-slate-500/10';
+        <div className="lg:col-span-2 space-y-2">
+          {filteredDoctrines.length === 0 ? (
+            <EmptyState
+              icon={BookOpen}
+              title="No doctrines found"
+              description="No doctrines match the current filter criteria."
+              action={{ label: 'Clear filter', onClick: () => setSelectedCategory(null) }}
+            />
+          ) : (
+            filteredDoctrines.map((doctrine) => {
+              const Icon = categoryIcons[doctrine.category] || BookOpen;
+              const styleClass = categoryStyles[doctrine.category] || 'text-slate-400 border-slate-700 bg-slate-800';
 
-            return (
-              <GlassCard
-                key={doctrine.id}
-                className={`p-4 cursor-pointer transition-all hover:bg-white/5 ${
-                  selectedDoctrine?.id === doctrine.id ? 'border-cyan-500/50' : ''
-                }`}
-                onClick={() => setSelectedDoctrine(doctrine)}
-              >
-                <div className="flex items-start gap-4">
-                  <div className={`p-2 rounded-lg ${colorClass}`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-white">{doctrine.name}</span>
-                      <span className="text-xs text-slate-500">v{doctrine.version}</span>
+              return (
+                <Card
+                  key={doctrine.id}
+                  padding="sm"
+                  interactive
+                  selected={selectedDoctrine?.id === doctrine.id}
+                  onClick={() => setSelectedDoctrine(doctrine)}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`p-1.5 rounded border ${styleClass}`}>
+                      <Icon className="w-4 h-4" />
                     </div>
-                    <p className="text-sm text-slate-400 line-clamp-2">{doctrine.description}</p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
-                      <span>{doctrine.category.replace(/_/g, ' ')}</span>
-                      <span>Since {new Date(doctrine.effective_from).toLocaleDateString()}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-sm font-medium text-slate-200">{doctrine.name}</span>
+                        <span className="text-[10px] text-slate-600">v{doctrine.version}</span>
+                      </div>
+                      <p className="text-xs text-slate-400 line-clamp-2">{doctrine.description}</p>
+                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-600">
+                        <span>{doctrine.category.replace(/_/g, ' ')}</span>
+                        <span>Since {new Date(doctrine.effective_from).toLocaleDateString()}</span>
+                      </div>
                     </div>
+                    <ChevronRight className="w-4 h-4 text-slate-600 shrink-0" />
                   </div>
-                  <ChevronRight className="w-5 h-5 text-slate-500" />
-                </div>
-              </GlassCard>
-            );
-          })}
+                </Card>
+              );
+            })
+          )}
         </div>
 
         {/* Detail Panel */}
         <div className="space-y-4">
           {selectedDoctrine ? (
             <>
-              <GlassCard blur="heavy">
-                <h2 className="text-lg font-bold text-white mb-4">{selectedDoctrine.name}</h2>
+              <Card padding="md">
+                <h2 className="text-sm font-semibold text-slate-200 mb-4">{selectedDoctrine.name}</h2>
 
                 <div className="space-y-4">
                   <div>
-                    <p className="text-xs text-slate-500 mb-1">Description</p>
-                    <p className="text-sm text-slate-300">{selectedDoctrine.description}</p>
+                    <p className="text-[10px] text-slate-600 uppercase tracking-wide mb-1">Description</p>
+                    <p className="text-xs text-slate-400">{selectedDoctrine.description}</p>
                   </div>
 
                   <div>
-                    <p className="text-xs text-slate-500 mb-1">Rationale</p>
-                    <p className="text-sm text-slate-300">{selectedDoctrine.rationale}</p>
+                    <p className="text-[10px] text-slate-600 uppercase tracking-wide mb-1">Rationale</p>
+                    <p className="text-xs text-slate-400">{selectedDoctrine.rationale}</p>
                   </div>
 
                   <div>
-                    <p className="text-xs text-slate-500 mb-2">Parameters</p>
-                    <div className="bg-black/20 rounded-lg p-3 font-mono text-xs">
+                    <p className="text-[10px] text-slate-600 uppercase tracking-wide mb-2">Parameters</p>
+                    <div className="bg-slate-800/50 rounded p-2.5 font-mono text-[10px]">
                       {Object.entries(selectedDoctrine.rule_definition.parameters).map(([key, value]) => (
-                        <div key={key} className="flex justify-between py-1">
-                          <span className="text-slate-400">{key}:</span>
-                          <span className="text-cyan-400">
+                        <div key={key} className="flex justify-between py-0.5">
+                          <span className="text-slate-500">{key}:</span>
+                          <span className="text-slate-300">
                             {typeof value === 'object' ? JSON.stringify(value) : String(value)}
                           </span>
                         </div>
@@ -252,96 +262,84 @@ export default function DoctrinePage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center justify-between text-[10px] text-slate-600 pt-2 border-t border-slate-800">
                     <span>Type: {selectedDoctrine.rule_definition.type}</span>
                     <span>Version {selectedDoctrine.version}</span>
                   </div>
                 </div>
-              </GlassCard>
+              </Card>
 
               {/* Shadow Evaluation */}
-              <GlassCard blur="heavy">
-                <div className="flex items-center gap-2 mb-4">
-                  <FlaskConical className="w-5 h-5 text-purple-400" />
-                  <h3 className="text-lg font-bold text-white">Shadow Evaluation</h3>
+              <Card padding="md">
+                <div className="flex items-center gap-2 mb-3">
+                  <FlaskConical className="w-4 h-4 text-slate-400" />
+                  <h3 className="text-sm font-semibold text-slate-200">Shadow Evaluation</h3>
                 </div>
 
-                <p className="text-sm text-slate-400 mb-4">
-                  Test how parameter changes would affect historical outputs without changing production.
+                <p className="text-xs text-slate-500 mb-3">
+                  Test parameter changes against historical outputs without affecting production.
                 </p>
 
-                <GlassButton
+                <Button
                   variant="secondary"
                   size="sm"
                   onClick={() => runShadowEvaluation(selectedDoctrine)}
-                  disabled={shadowLoading}
+                  loading={shadowLoading}
                   className="w-full"
                 >
-                  {shadowLoading ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      Evaluating...
-                    </>
-                  ) : (
-                    <>
-                      <FlaskConical className="w-4 h-4 mr-2" />
-                      Run +10% Sensitivity Test
-                    </>
-                  )}
-                </GlassButton>
+                  <FlaskConical className="w-3.5 h-3.5 mr-1.5" />
+                  Run +10% Sensitivity Test
+                </Button>
 
                 {shadowResult && (
-                  <div className="mt-4 p-3 bg-black/20 rounded-lg">
+                  <div className="mt-3 p-2.5 bg-slate-800/50 rounded">
                     <div className="flex items-center gap-2 mb-2">
-                      <AlertTriangle className={`w-4 h-4 ${
-                        shadowResult.recommendation.includes('HIGH') ? 'text-red-400' :
-                        shadowResult.recommendation.includes('MODERATE') ? 'text-amber-400' :
-                        'text-green-400'
+                      <AlertTriangle className={`w-3.5 h-3.5 ${
+                        shadowResult.recommendation.includes('HIGH') ? 'text-red-500' :
+                        shadowResult.recommendation.includes('MODERATE') ? 'text-amber-500' :
+                        'text-emerald-500'
                       }`} />
-                      <span className="text-sm font-medium text-white">
+                      <span className="text-xs font-medium text-slate-300">
                         {shadowResult.recommendation.split(' - ')[0]}
                       </span>
                     </div>
-                    <div className="space-y-1 text-xs">
-                      <div className="flex justify-between text-slate-400">
-                        <span>Events evaluated:</span>
-                        <span className="text-white">{shadowResult.events_evaluated}</span>
+                    <div className="space-y-1 text-[10px]">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Events evaluated:</span>
+                        <span className="text-slate-300">{shadowResult.events_evaluated}</span>
                       </div>
-                      <div className="flex justify-between text-slate-400">
-                        <span>Divergent outputs:</span>
-                        <span className="text-white">{shadowResult.divergence_count}</span>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Divergent outputs:</span>
+                        <span className="text-slate-300">{shadowResult.divergence_count}</span>
                       </div>
-                      <div className="flex justify-between text-slate-400">
-                        <span>Divergence rate:</span>
-                        <span className="text-white">{shadowResult.divergence_rate}</span>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Divergence rate:</span>
+                        <span className="text-slate-300">{shadowResult.divergence_rate}</span>
                       </div>
                     </div>
                   </div>
                 )}
-              </GlassCard>
+              </Card>
             </>
           ) : (
-            <GlassCard blur="heavy" className="p-8 text-center">
-              <BookOpen className="w-10 h-10 text-slate-500 mx-auto mb-3" />
-              <p className="text-slate-400">Select a doctrine to view details</p>
-            </GlassCard>
+            <Card padding="md" className="text-center py-8">
+              <BookOpen className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+              <p className="text-sm text-slate-500">Select a doctrine to view details</p>
+            </Card>
           )}
         </div>
       </div>
 
-      {/* Info */}
-      <GlassCard className="p-4 border-dashed">
-        <div className="flex items-center gap-3 text-slate-400">
-          <Shield className="w-5 h-5" />
-          <div>
-            <p className="text-sm font-medium">Doctrine Governance</p>
-            <p className="text-xs">
-              Doctrines define how LatticeForge interprets signals and produces judgments.
-              Changes require review cycles per your governance agreement.
-            </p>
-          </div>
+      {/* Info Footer */}
+      <Card padding="sm" className="border-dashed border-slate-700">
+        <div className="flex items-center gap-3 text-slate-500">
+          <Shield className="w-4 h-4 shrink-0" />
+          <p className="text-xs">
+            Doctrines define how LatticeForge interprets signals and produces judgments.
+            Changes require review cycles per your governance agreement.
+          </p>
         </div>
-      </GlassCard>
+      </Card>
     </div>
   );
 }

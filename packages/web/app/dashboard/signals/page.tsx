@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { RefreshCw, Radio, Filter } from 'lucide-react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button, EmptyState, SkeletonList } from '@/components/ui';
 import { DataFreshness } from '@/components/DataFreshness';
 
 interface Signal {
@@ -13,11 +12,11 @@ interface Signal {
   [key: string]: unknown;
 }
 
-const sourceColors: Record<string, string> = {
-  gdelt: 'text-blue-400 bg-blue-500/10',
-  usgs: 'text-amber-400 bg-amber-500/10',
-  sentiment: 'text-purple-400 bg-purple-500/10',
-  worldbank: 'text-green-400 bg-green-500/10',
+const sourceStyles: Record<string, string> = {
+  gdelt: 'text-blue-400 border-blue-600/30 bg-blue-600/5',
+  usgs: 'text-amber-400 border-amber-600/30 bg-amber-600/5',
+  sentiment: 'text-purple-400 border-purple-600/30 bg-purple-600/5',
+  worldbank: 'text-emerald-400 border-emerald-600/30 bg-emerald-600/5',
 };
 
 export default function SignalsPage() {
@@ -45,66 +44,75 @@ export default function SignalsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Live Signals</h1>
-          <p className="text-slate-400 mt-1">Real-time signal feed from all sources</p>
+          <h1 className="text-lg font-semibold text-slate-100">Signal Feed</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Aggregated signals from all data sources</p>
         </div>
         <div className="flex items-center gap-3">
           <DataFreshness compact />
-          <GlassButton variant="secondary" size="sm" onClick={fetchSignals}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          <Button variant="secondary" size="sm" onClick={fetchSignals} loading={loading}>
+            <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
             Refresh
-          </GlassButton>
+          </Button>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Filter className="w-4 h-4 text-slate-500" />
+      {/* Filters */}
+      <div className="flex items-center gap-1.5 border-b border-slate-800 pb-3">
+        <Filter className="w-3.5 h-3.5 text-slate-600 mr-1" />
         {['all', 'gdelt', 'usgs', 'sentiment', 'worldbank'].map((s) => (
           <button
             key={s}
             onClick={() => setSource(s)}
-            className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-              source === s ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white'
+            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+              source === s
+                ? 'bg-slate-800 text-slate-200'
+                : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
             }`}
           >
-            {s === 'all' ? 'All Sources' : s.toUpperCase()}
+            {s === 'all' ? 'All' : s.toUpperCase()}
           </button>
         ))}
       </div>
 
+      {/* Content */}
       <div className="space-y-2">
         {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <RefreshCw className="w-8 h-8 text-slate-500 animate-spin" />
-          </div>
+          <SkeletonList items={8} />
         ) : signals.length === 0 ? (
-          <GlassCard className="p-8 text-center">
-            <Radio className="w-10 h-10 text-slate-500 mx-auto mb-3" />
-            <p className="text-slate-400">No signals found</p>
-          </GlassCard>
+          <EmptyState
+            icon={Radio}
+            title="No signals available"
+            description="No signals match the current filter. Adjust source filters or check back when new data arrives."
+            action={{ label: 'Clear filters', onClick: () => setSource('all') }}
+          />
         ) : (
           signals.map((signal, i) => (
-            <GlassCard key={i} className="p-4">
-              <div className="flex items-start gap-4">
-                <div className={`px-2 py-1 rounded text-xs font-mono ${sourceColors[signal.source] || 'text-slate-400 bg-slate-500/10'}`}>
+            <Card key={i} padding="sm" interactive>
+              <div className="flex items-start gap-3">
+                <span
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono uppercase border ${
+                    sourceStyles[signal.source] || 'text-slate-400 border-slate-700 bg-slate-800'
+                  }`}
+                >
                   {signal.source}
-                </div>
+                </span>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-white font-medium">{signal.domain || 'Global'}</span>
-                    <span className="text-xs text-slate-500">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-sm text-slate-200 font-medium">{signal.domain || 'Global'}</span>
+                    <span className="text-xs text-slate-600">
                       {new Date(signal.timestamp).toLocaleString()}
                     </span>
                   </div>
-                  <div className="text-sm text-slate-400 line-clamp-2">
+                  <p className="text-xs text-slate-400 line-clamp-2">
                     {String(signal.title || signal.summary || JSON.stringify(signal.numeric_features || {}))}
-                  </div>
+                  </p>
                 </div>
               </div>
-            </GlassCard>
+            </Card>
           ))
         )}
       </div>

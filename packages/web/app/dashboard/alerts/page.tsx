@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { RefreshCw, AlertTriangle, Bell, CheckCircle } from 'lucide-react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { Card, Button, EmptyState, Skeleton, SkeletonList } from '@/components/ui';
 
 interface Alert {
   id: string;
@@ -43,73 +42,86 @@ export default function AlertsPage() {
   const warningCount = alerts.filter(a => a.type === 'warning').length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Risk Alerts</h1>
-          <p className="text-slate-400 mt-1">High-risk signals requiring attention</p>
+          <h1 className="text-lg font-semibold text-slate-100">Risk Alerts</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Signals exceeding configured thresholds</p>
         </div>
-        <GlassButton variant="secondary" size="sm" onClick={fetchAlerts}>
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+        <Button variant="secondary" size="sm" onClick={fetchAlerts} loading={loading}>
+          <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
           Refresh
-        </GlassButton>
+        </Button>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <GlassCard className="p-4 text-center">
-          <div className="text-3xl font-bold text-red-400">{criticalCount}</div>
-          <div className="text-sm text-slate-400">Critical</div>
-        </GlassCard>
-        <GlassCard className="p-4 text-center">
-          <div className="text-3xl font-bold text-amber-400">{warningCount}</div>
-          <div className="text-sm text-slate-400">Warnings</div>
-        </GlassCard>
-        <GlassCard className="p-4 text-center">
-          <div className="text-3xl font-bold text-green-400">{alerts.length}</div>
-          <div className="text-sm text-slate-400">Total Active</div>
-        </GlassCard>
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        {loading ? (
+          <>
+            <Skeleton className="h-16 rounded-md" />
+            <Skeleton className="h-16 rounded-md" />
+            <Skeleton className="h-16 rounded-md" />
+          </>
+        ) : (
+          <>
+            <Card padding="sm">
+              <p className="text-xs text-slate-500 mb-1">Critical</p>
+              <p className="text-xl font-semibold text-red-500">{criticalCount}</p>
+            </Card>
+            <Card padding="sm">
+              <p className="text-xs text-slate-500 mb-1">Warning</p>
+              <p className="text-xl font-semibold text-amber-500">{warningCount}</p>
+            </Card>
+            <Card padding="sm">
+              <p className="text-xs text-slate-500 mb-1">Total Active</p>
+              <p className="text-xl font-semibold text-slate-300">{alerts.length}</p>
+            </Card>
+          </>
+        )}
       </div>
 
+      {/* Alert List */}
       <div className="space-y-2">
         {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <RefreshCw className="w-8 h-8 text-slate-500 animate-spin" />
-          </div>
+          <SkeletonList items={5} />
         ) : alerts.length === 0 ? (
-          <GlassCard className="p-8 text-center">
-            <CheckCircle className="w-10 h-10 text-green-400 mx-auto mb-3" />
-            <p className="text-slate-400">No active alerts</p>
-          </GlassCard>
+          <EmptyState
+            icon={CheckCircle}
+            title="No active alerts"
+            description="All signals are within configured thresholds. System operating normally."
+          />
         ) : (
           alerts.map((alert) => (
-            <GlassCard
+            <Card
               key={alert.id}
-              className={`p-4 border-l-4 ${
+              padding="sm"
+              className={`border-l-2 ${
                 alert.type === 'critical' ? 'border-l-red-500' : 'border-l-amber-500'
               }`}
             >
-              <div className="flex items-start gap-4">
+              <div className="flex items-start gap-3">
                 {alert.type === 'critical' ? (
-                  <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5" />
+                  <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
                 ) : (
-                  <Bell className="w-5 h-5 text-amber-400 mt-0.5" />
+                  <Bell className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
                 )}
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-white font-medium">{alert.title}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-sm text-slate-200 font-medium">{alert.title}</span>
                     {alert.nation && (
-                      <span className="px-2 py-0.5 bg-slate-700 rounded text-xs text-slate-300">
+                      <span className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] text-slate-400 uppercase">
                         {alert.nation}
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-slate-400">{alert.message}</p>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-slate-400">{alert.message}</p>
+                  <p className="text-[10px] text-slate-600 mt-1">
                     {new Date(alert.timestamp).toLocaleString()}
                   </p>
                 </div>
               </div>
-            </GlassCard>
+            </Card>
           ))
         )}
       </div>

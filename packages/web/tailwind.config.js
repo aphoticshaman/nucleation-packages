@@ -4,6 +4,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Extended slate for enterprise design (between standard Tailwind steps)
+        slate: {
+          750: '#293548',
+          850: '#172032',
+        },
         // Regime colors
         regime: {
           democracy: '#3B82F6',
