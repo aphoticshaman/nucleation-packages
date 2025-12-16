@@ -20,7 +20,6 @@ const navItems = [
   { href: '/admin/users', label: 'Users', icon: '👤' },
   { href: '/admin/banned-ips', label: 'Banned IPs', icon: '🚫' },
   { href: '/admin/builder', label: 'Builder', icon: '🎨' },
-  { href: '/admin/training', label: 'Training', icon: '🧠' },
   { href: '/admin/customers', label: 'Customers', icon: '👥' },
   { href: '/admin/billing', label: 'Billing', icon: '💳' },
   { href: '/admin/analytics', label: 'Analytics', icon: '📈' },
@@ -34,7 +33,6 @@ const navItems = [
 ];
 
 const quickLinks: Array<{ href: string; label: string; icon: string; highlight?: boolean }> = [
-  { href: '/study', label: 'Study Book (Elle)', icon: '✨', highlight: true },
   { href: '/app', label: 'Consumer App', icon: '👤' },
   { href: '/app/briefings', label: 'Briefings', icon: '📡' },
   { href: '/app/packages', label: 'Packages', icon: '📦' },
