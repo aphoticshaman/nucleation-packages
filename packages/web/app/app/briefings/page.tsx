@@ -203,12 +203,13 @@ export default function BriefingsPage() {
     setEmergencyLoading(true);
     setEmergencyResult(null);
     try {
-      const response = await fetch('/api/intel-briefing/emergency-refresh', {
+      const response = await fetch('/api/intel-briefing', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include', // Send auth cookies for server-side admin validation
+        body: JSON.stringify({ preset: 'global' }), // Force fresh generation
       });
 
       // Handle non-JSON responses gracefully
@@ -620,9 +621,9 @@ export default function BriefingsPage() {
               <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
                 <p className="text-emerald-200 text-sm font-medium mb-2">This will:</p>
                 <ul className="text-sm text-slate-300 space-y-1 ml-4 list-disc">
-                  <li>Force a full data refresh via LFBM (self-hosted)</li>
+                  <li>Force a full data refresh (deterministic templates)</li>
                   <li>Regenerate all intelligence briefings</li>
-                  <li>Cost approximately <span className="font-bold text-emerald-300">$0.001</span> per call</li>
+                  <li>Cost approximately <span className="font-bold text-emerald-300">$0.00</span> (zero-LLM)</li>
                   <li>Replace all cached briefing data</li>
                 </ul>
               </div>

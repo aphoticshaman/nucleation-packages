@@ -7,9 +7,9 @@ import { useState } from 'react';
  *
  * Granular controls for meta-analysis using deterministic templates.
  * Three modes:
- * - Realtime: Pure metric translation (~$0.001)
- * - Historical: Meta-analysis of historical patterns (~$0.002)
- * - Hybrid: Current metrics + historical context overlay (~$0.003)
+ * - Realtime: Pure metric translation (~$0.00)
+ * - Historical: Meta-analysis of historical patterns (~$0.00)
+ * - Hybrid: Current metrics + historical context overlay (~$0.00)
  *
  * Zero-LLM architecture - all analysis via deterministic templates
  */
