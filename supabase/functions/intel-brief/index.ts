@@ -133,6 +133,26 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // Verify enterprise tier
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return jsonResponse({ error: 'Authorization required' }, 401);
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: keyData } = await supabase.rpc('validate_api_key', { p_key: token });
+
+    if (!keyData?.[0] || keyData[0].client_tier !== 'enterprise') {
+      return jsonResponse(
+        {
+          error: 'Intel Brief requires Enterprise tier',
+          upgrade_url: '/pricing',
+          current_tier: keyData?.[0]?.client_tier || 'unknown',
+        },
+        403
+      );
+    }
+
     // Gather and analyze signals - ALL DETERMINISTIC
     const brief = await generateDeterministicBrief(supabase);
 
