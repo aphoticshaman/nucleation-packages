@@ -7,9 +7,9 @@ export interface EncryptedPayload {
   ciphertext: string;
   iv: string;
   salt: string;
-  integrityHash?: string;
-  encryptedAt?: string;
-  version?: number;
+  integrityHash: string;
+  encryptedAt: string;
+  version: number;
 }
 
 export interface DecryptedPayload {
