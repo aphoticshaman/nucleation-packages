@@ -493,15 +493,14 @@ export async function POST(req: Request) {
 
   try {
     // ============================================================
-    // SECURITY: Check if this is a privileged internal/cron call
+    // ZERO-LLM: Fresh generation is now $0 cost - allow on cache miss
     // ============================================================
-    // Only cron jobs and internal services can generate fresh data.
-    // User requests ALWAYS get cached data - this prevents abuse,
-    // exploits, and uncontrolled API costs.
-    const isVercelCron = req.headers.get('x-vercel-cron') === '1'; // Set by Vercel, not spoofable
+    // With deterministic templates (no inference calls), there's no cost
+    // to generate fresh briefings. Allow generation on cache miss.
+    const isVercelCron = req.headers.get('x-vercel-cron') === '1';
     const isInternalService = req.headers.get('x-internal-service') === process.env.INTERNAL_SERVICE_SECRET;
-    const hasCronWarmWithSecret = req.headers.get('x-cron-warm') === '1' && isInternalService;
-    const canGenerateFresh = isVercelCron || isInternalService || hasCronWarmWithSecret;
+    // Zero-LLM = zero cost = allow fresh generation for all requests
+    const canGenerateFresh = true; // Was restricted when LFBM had costs
 
     // Parse request body first (needed for preset)
     const { preset = 'global', region } = await req.json();
