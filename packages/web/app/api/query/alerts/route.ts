@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { mapUserTierToPricing, TIER_CAPABILITIES } from '@/lib/doctrine/types';
 
 export const runtime = 'edge';
 
@@ -7,7 +8,18 @@ export const runtime = 'edge';
  * Query recent high-risk signals as alerts
  * GET /api/query/alerts - Returns recent alerts based on risk signals
  */
-export async function GET() {
+export async function GET(req: Request) {
+  // Check tier access - requires Operational or higher
+  const userTier = req.headers.get('x-user-tier') || 'free';
+  const pricingTier = mapUserTierToPricing(userTier);
+
+  if (!TIER_CAPABILITIES[pricingTier].api_access) {
+    return NextResponse.json(
+      { error: 'Alerts API requires Operational tier or higher' },
+      { status: 403 }
+    );
+  }
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!

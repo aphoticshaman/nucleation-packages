@@ -18,6 +18,9 @@ interface EnterpriseNavProps {
 const navItems = [
   { href: '/dashboard', label: 'Overview', icon: '📊' },
   { href: '/dashboard/intelligence', label: 'Intelligence', icon: '📡' },
+  { href: '/dashboard/signals', label: 'Signals', fullLabel: 'Live Signals', icon: '📶' },
+  { href: '/dashboard/alerts', label: 'Alerts', fullLabel: 'Risk Alerts', icon: '🚨' },
+  { href: '/dashboard/cascades', label: 'Cascades', fullLabel: 'Cascade Analysis', icon: '🌀' },
   { href: '/dashboard/causal', label: 'Causal Graph', icon: '🕸️' },
   { href: '/dashboard/regimes', label: 'Regimes', fullLabel: 'Regime Detection', icon: '⚡' },
   { href: '/dashboard/phase-dynamics', label: 'Phase', fullLabel: 'Phase Dynamics', icon: '🌊' },

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { mapUserTierToPricing, TIER_CAPABILITIES } from '@/lib/doctrine/types';
 
 export const runtime = 'edge';
 
@@ -8,6 +9,17 @@ export const runtime = 'edge';
  * GET /api/query/cascades - Returns cascade matrix and recent predictions
  */
 export async function GET(req: Request) {
+  // Check tier access - requires Operational or higher
+  const userTier = req.headers.get('x-user-tier') || 'free';
+  const pricingTier = mapUserTierToPricing(userTier);
+
+  if (!TIER_CAPABILITIES[pricingTier].api_access) {
+    return NextResponse.json(
+      { error: 'Cascade API requires Operational tier or higher' },
+      { status: 403 }
+    );
+  }
+
   const url = new URL(req.url);
   const mode = url.searchParams.get('mode') || 'summary';
 

@@ -27,6 +27,7 @@ const sourceLabels: Record<string, string> = {
   gdelt: 'GDELT News',
   usgs: 'USGS Earthquakes',
   sentiment: 'Market Sentiment',
+  worldbank: 'World Bank Macro',
 };
 
 export function DataFreshness({ compact = false }: { compact?: boolean }) {

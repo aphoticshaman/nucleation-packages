@@ -1,16 +1,29 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { mapUserTierToPricing, TIER_CAPABILITIES } from '@/lib/doctrine/types';
 
 export const runtime = 'edge';
 
 /**
- * Query stored signal data (GDELT, USGS, Sentiment)
+ * Query stored signal data (GDELT, USGS, Sentiment, World Bank)
  * GET /api/query/signals?source=gdelt&limit=50
  * GET /api/query/signals?source=usgs&limit=20
  * GET /api/query/signals?source=sentiment&limit=10
+ * GET /api/query/signals?source=worldbank&limit=100
  * GET /api/query/signals?source=freshness (returns last update times for all sources)
  */
 export async function GET(req: Request) {
+  // Check tier access - requires Operational or higher
+  const userTier = req.headers.get('x-user-tier') || 'free';
+  const pricingTier = mapUserTierToPricing(userTier);
+
+  if (!TIER_CAPABILITIES[pricingTier].api_access) {
+    return NextResponse.json(
+      { error: 'Signal query API requires Operational tier or higher' },
+      { status: 403 }
+    );
+  }
+
   const url = new URL(req.url);
   const source = url.searchParams.get('source') || 'all';
   const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 200);
@@ -23,7 +36,7 @@ export async function GET(req: Request) {
   try {
     // Special case: get freshness data for all sources
     if (source === 'freshness') {
-      const sources = ['gdelt_ingest', 'usgs_ingest', 'sentiment_ingest'];
+      const sources = ['gdelt_ingest', 'usgs_ingest', 'sentiment_ingest', 'worldbank_ingest'];
       const freshness: Record<string, { last_update: string | null; count_24h: number }> = {};
 
       for (const src of sources) {
@@ -54,6 +67,7 @@ export async function GET(req: Request) {
       gdelt: 'gdelt_ingest',
       usgs: 'usgs_ingest',
       sentiment: 'sentiment_ingest',
+      worldbank: 'worldbank_ingest',
     };
 
     const sessionHash = sessionHashMap[source];
@@ -72,7 +86,7 @@ export async function GET(req: Request) {
       query = query.eq('session_hash', sessionHash);
     } else {
       // For 'all', get from all ingest sources
-      query = query.in('session_hash', ['gdelt_ingest', 'usgs_ingest', 'sentiment_ingest']);
+      query = query.in('session_hash', ['gdelt_ingest', 'usgs_ingest', 'sentiment_ingest', 'worldbank_ingest']);
     }
 
     const { data, error } = await query;
