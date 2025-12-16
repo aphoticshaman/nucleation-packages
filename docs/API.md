@@ -382,15 +382,165 @@ async def get_briefing(preset: str = "global") -> dict:
 
 ---
 
-## Webhook Events (Future)
+## Doctrine Registry API
 
-Planned webhook support for:
+### GET /api/doctrine
 
-| Event | Trigger |
-|-------|---------|
-| `briefing.generated` | New briefing cached |
-| `alert.critical` | Critical risk threshold exceeded |
-| `phase.transition` | Nation phase change detected |
+List all active doctrine rules. Requires Integrated tier or higher.
+
+#### Request
+
+```http
+GET /api/doctrine
+x-user-tier: enterprise_tier
+
+Optional query params:
+  ?category=signal_interpretation|analytic_judgment|policy_logic|narrative
+  ?deprecated=true
+```
+
+#### Response
+
+```json
+{
+  "doctrines": [
+    {
+      "id": "default-0",
+      "name": "Basin Strength Threshold",
+      "category": "signal_interpretation",
+      "description": "Minimum institutional resilience score to classify a nation as stable",
+      "rule_definition": {
+        "type": "threshold",
+        "parameters": {
+          "stable_threshold": 0.7,
+          "unstable_threshold": 0.3,
+          "metric": "basin_strength"
+        }
+      },
+      "rationale": "Based on Polity V dataset analysis...",
+      "version": 1,
+      "effective_from": "2024-01-01"
+    }
+  ],
+  "source": "defaults",
+  "tier": "stewardship"
+}
+```
+
+### POST /api/doctrine
+
+Propose a new doctrine or change. Requires Stewardship tier.
+
+#### Request
+
+```http
+POST /api/doctrine
+Content-Type: application/json
+x-user-tier: enterprise_tier
+
+{
+  "doctrine_id": "default-0",
+  "proposed_changes": {
+    "parameters": {
+      "stable_threshold": 0.75
+    }
+  },
+  "change_rationale": "Increase threshold based on recent calibration data"
+}
+```
+
+### POST /api/doctrine/shadow
+
+Run shadow evaluation of proposed changes against historical data.
+
+#### Request
+
+```http
+POST /api/doctrine/shadow
+Content-Type: application/json
+x-user-tier: enterprise_tier
+
+{
+  "doctrine_id": "default-0",
+  "proposed_parameters": {
+    "stable_threshold": 0.75
+  },
+  "evaluation_days": 7
+}
+```
+
+#### Response
+
+```json
+{
+  "evaluation": {
+    "id": "shadow-1702729200000",
+    "doctrine_id": "default-0",
+    "results": {
+      "total_events_evaluated": 500,
+      "divergence_count": 45,
+      "divergence_rate": 0.09
+    },
+    "status": "completed"
+  },
+  "summary": {
+    "doctrine": "Basin Strength Threshold",
+    "events_evaluated": 500,
+    "divergence_rate": "9.0%",
+    "recommendation": "MODERATE_IMPACT - Standard review recommended"
+  }
+}
+```
+
+---
+
+## Signal Query API
+
+### GET /api/query/signals
+
+Query stored signal data from GDELT, USGS, and sentiment sources.
+
+#### Request
+
+```http
+GET /api/query/signals?source=gdelt&limit=100
+
+Query params:
+  source: gdelt|usgs|sentiment|all (default: all)
+  limit: number (default: 100, max: 1000)
+  domain: ISO country code filter
+
+Special modes:
+  ?source=freshness - Returns last update timestamps per source
+```
+
+### GET /api/query/alerts
+
+Query high-risk signals formatted as alerts.
+
+```http
+GET /api/query/alerts?limit=50
+```
+
+### GET /api/query/cascades
+
+Query cascade analysis data.
+
+```http
+GET /api/query/cascades
+```
+
+---
+
+## Tier Access Requirements
+
+| Endpoint | Observer | Operational | Integrated | Stewardship |
+|----------|----------|-------------|------------|-------------|
+| `/api/intel-briefing` | ✓ (cached) | ✓ | ✓ | ✓ (on-demand) |
+| `/api/query/*` | ✗ | ✓ | ✓ | ✓ |
+| `/api/doctrine` GET | ✗ | ✗ | ✓ | ✓ |
+| `/api/doctrine` POST | ✗ | ✗ | ✗ | ✓ |
+| `/api/doctrine/shadow` | ✗ | ✗ | ✗ | ✓ |
 
 ---
 

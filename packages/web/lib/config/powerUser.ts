@@ -21,7 +21,7 @@ export interface TierCapabilities {
   maxEntities: number;
   maxHistoricalDays: number;
   maxProjectionDays: number;
-  realTimeUpdates: boolean;
+  liveFeedAccess: boolean; // Access to live signal feeds (polling-based, not WebSocket)
   rawDataExport: boolean;
 
   // Views & Dashboards
@@ -65,7 +65,7 @@ export const TIER_CAPABILITIES: Record<UserTier, TierCapabilities> = {
     maxEntities: 50, // 1 region focus
     maxHistoricalDays: 7,
     maxProjectionDays: 7,
-    realTimeUpdates: false, // Delayed briefings only
+    liveFeedAccess: false, // Cached briefings only
     rawDataExport: false,
     maxSavedViews: 3,
     customDashboards: false,
@@ -94,7 +94,7 @@ export const TIER_CAPABILITIES: Record<UserTier, TierCapabilities> = {
     maxEntities: -1, // All regions
     maxHistoricalDays: 90,
     maxProjectionDays: 30,
-    realTimeUpdates: true,
+    liveFeedAccess: true, // Live signal feeds
     rawDataExport: true, // PDF/Excel exports
     maxSavedViews: -1, // Unlimited
     customDashboards: true,
@@ -123,7 +123,7 @@ export const TIER_CAPABILITIES: Record<UserTier, TierCapabilities> = {
     maxEntities: -1,
     maxHistoricalDays: 365, // 1 year
     maxProjectionDays: 90,
-    realTimeUpdates: true,
+    liveFeedAccess: true, // Live signal feeds
     rawDataExport: true,
     maxSavedViews: -1,
     customDashboards: true,
@@ -152,7 +152,7 @@ export const TIER_CAPABILITIES: Record<UserTier, TierCapabilities> = {
     maxEntities: -1,
     maxHistoricalDays: -1, // Unlimited history
     maxProjectionDays: -1,
-    realTimeUpdates: true,
+    liveFeedAccess: true, // Live signal feeds + priority refresh
     rawDataExport: true,
     maxSavedViews: -1,
     customDashboards: true,
