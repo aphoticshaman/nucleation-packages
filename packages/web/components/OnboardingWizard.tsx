@@ -258,7 +258,7 @@ function WelcomeStep() {
       <div>
         <h3 className="text-lg font-semibold text-white mb-2">Welcome to LatticeForge</h3>
         <p className="text-slate-400 max-w-md mx-auto">
-          Your AI-powered intelligence platform for monitoring global stability,
+          Your deterministic intelligence platform for monitoring global stability,
           predicting cascades, and making informed decisions.
         </p>
       </div>

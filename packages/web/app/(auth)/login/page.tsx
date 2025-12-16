@@ -96,7 +96,7 @@ function LoginForm() {
           Know what happens next.
         </p>
         <p className="text-slate-500 text-xs sm:text-sm mt-1">
-          AI-powered geopolitical intelligence
+          Deterministic geopolitical intelligence
         </p>
       </div>
 
@@ -348,7 +348,7 @@ export default function LoginPage() {
               </span>
             </h2>
             <p className="text-slate-400 text-sm mb-6">
-              AI watches the world so you can make better decisions.
+              Deterministic analysis so you can make better decisions.
             </p>
 
             {/* Feature pills */}

@@ -146,7 +146,7 @@ function SignupForm() {
           Know what happens next.
         </p>
         <p className="text-slate-500 text-xs sm:text-sm mt-1">
-          AI-powered geopolitical intelligence
+          Deterministic geopolitical intelligence
         </p>
       </div>
 
