@@ -853,25 +853,11 @@ class EdgeFlowStateDetector {
   }
 
   async syncToServer() {
-    const state = this.serialize();
-    const encrypted = await this.encrypt(state);
-
-    try {
-      const response = await fetch('/api/flow-state/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ state: encrypted, eventCount: this.pendingEvents.length })
-      });
-
-      if (response.ok) {
-        this.pendingEvents = [];
-        this.lastSync = Date.now();
-        return true;
-      }
-    } catch (e) {
-      console.warn('Flow state sync failed:', e);
-    }
-    return false;
+    // Server sync disabled - endpoint removed
+    // State is managed client-side only
+    this.pendingEvents = [];
+    this.lastSync = Date.now();
+    return true;
   }
 
   startSyncLoop() {

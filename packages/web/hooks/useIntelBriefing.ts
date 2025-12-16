@@ -271,30 +271,12 @@ export function useIntelBriefing(
     }
   }, [autoFetch, fetchBriefing]);
 
-  // Pulse check - runs every 30 seconds for breaking news (only if enabled)
+  // Pulse check disabled - endpoint removed in zero-LLM architecture
+  // Breaking news detection now handled via threshold checks in main briefing
   const checkPulse = useCallback(async () => {
-    if (!pulseEnabled) return;
-
-    try {
-      setPulseLoading(true);
-      const response = await fetch('/api/intel-briefing/pulse');
-      if (response.ok) {
-        const data = await response.json();
-        setPulse(data);
-
-        // If breaking news detected, force refresh briefing (only if we've already fetched once)
-        if (hasFetchedRef.current && data.breaking && (data.severity === 'major' || data.severity === 'critical')) {
-          console.log('[PULSE] Breaking news detected, refreshing briefing...');
-          cache.delete(preset); // Clear local cache
-          void fetchBriefing(); // Refresh briefing
-        }
-      }
-    } catch (err) {
-      console.error('Pulse check failed:', err);
-    } finally {
-      setPulseLoading(false);
-    }
-  }, [preset, fetchBriefing, pulseEnabled]);
+    // No-op: pulse endpoint removed
+    return;
+  }, []);
 
   // Start/stop pulse polling based on pulseEnabled state
   useEffect(() => {
