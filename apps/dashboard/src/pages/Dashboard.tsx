@@ -35,6 +35,51 @@ function generateSignalData(points: number) {
 
 const mockSignalData = generateSignalData(24);
 
+const governanceControls = [
+  {
+    title: 'Access Governance',
+    detail: 'SCIM-provisioned roles with hourly reconciliation',
+    status: 'healthy',
+    meta: 'Zero drift detected',
+  },
+  {
+    title: 'Data Protection',
+    detail: 'Column-level encryption and PII redaction live',
+    status: 'healthy',
+    meta: 'AES-256-GCM at rest',
+  },
+  {
+    title: 'Audit Integrity',
+    detail: 'Tamper-evident audit ledger streaming to SIEM',
+    status: 'warning',
+    meta: 'Syslog relay lag 220ms',
+  },
+];
+
+const enterpriseReadiness = [
+  {
+    label: 'SLO Adherence',
+    value: '99.94%',
+    delta: '+0.12%',
+    color: 'text-emerald-400',
+    description: 'Error budget intact; priority burn alerts suppressed',
+  },
+  {
+    label: 'Data Residency',
+    value: 'Multi-region',
+    delta: 'EU & US',
+    color: 'text-lattice-400',
+    description: 'Active-active storage with residency-aware routing',
+  },
+  {
+    label: 'Compliance',
+    value: 'SOC 2 Type II',
+    delta: 'Renewal Q3',
+    color: 'text-crystal-400',
+    description: 'Controls validated; automations ready for next audit',
+  },
+];
+
 export function Dashboard({ session }: DashboardProps) {
   const [currentPhase, setCurrentPhase] = useState(0.23);
   const [lastUpdate, setLastUpdate] = useState(new Date());
@@ -130,6 +175,25 @@ export function Dashboard({ session }: DashboardProps) {
         </div>
       </div>
 
+      {/* Enterprise posture */}
+      <div className="grid grid-cols-3 gap-4">
+        {enterpriseReadiness.map((item) => (
+          <div key={item.label} className="glass-card-hover p-5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="label">{item.label}</span>
+              <span className={`text-xs font-semibold ${item.color}`}>{item.delta}</span>
+            </div>
+            <div className="flex items-end justify-between">
+              <div className="text-2xl font-semibold text-white">{item.value}</div>
+              <span className="px-2 py-1 text-[11px] rounded bg-surface-700/80 text-lattice-100 border border-surface-600">
+                Enterprise ready
+              </span>
+            </div>
+            <p className="text-sm text-surface-400 mt-2 leading-5">{item.description}</p>
+          </div>
+        ))}
+      </div>
+
       {/* Charts Row */}
       <div className="grid grid-cols-2 gap-6">
         {/* Signal Chart */}
@@ -216,7 +280,13 @@ export function Dashboard({ session }: DashboardProps) {
       {/* Sources Table */}
       <div className="glass-card">
         <div className="p-6 border-b border-surface-600/50">
-          <h3 className="text-sm font-semibold text-white">Active Data Sources</h3>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-white">Active Data Sources</h3>
+              <p className="text-xs text-surface-500 mt-1">Telemetry normalized with automated data contracts</p>
+            </div>
+            <button className="btn-secondary h-9 px-3 text-xs">Add integration</button>
+          </div>
         </div>
         <table className="data-grid">
           <thead>
@@ -302,6 +372,64 @@ export function Dashboard({ session }: DashboardProps) {
             </tr>
           </tbody>
         </table>
+      </div>
+
+      {/* Governance & Runbooks */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="glass-card p-6 col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-white">Operational Governance</h3>
+              <p className="text-xs text-surface-500 mt-1">Guardrails tuned for regulated enterprise workloads</p>
+            </div>
+            <span className="text-xs px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+              Auto-remediation active
+            </span>
+          </div>
+          <div className="space-y-3">
+            {governanceControls.map((control) => (
+              <div
+                key={control.title}
+                className="flex items-start justify-between p-4 bg-surface-800/60 rounded-lg border border-surface-700"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-white">{control.title}</p>
+                  <p className="text-xs text-surface-400 mt-1">{control.detail}</p>
+                  <p className="text-[11px] text-surface-500 mt-1">{control.meta}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`status-indicator ${
+                      control.status === 'warning' ? 'status-warning' : 'status-healthy'
+                    }`}
+                  />
+                  <span className="text-xs text-surface-300 capitalize">{control.status}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="glass-card p-6">
+          <h3 className="text-sm font-semibold text-white">Critical Runbook</h3>
+          <p className="text-xs text-surface-500 mt-1 mb-4">
+            Enterprise-ready steps to mitigate signal drift and maintain compliance posture.
+          </p>
+          <ol className="space-y-3 list-decimal list-inside text-sm text-surface-200">
+            <li>
+              <span className="font-semibold text-white">Quarantine anomalous sources</span>
+              <p className="text-xs text-surface-500">Auto-revoke tokens and isolate collectors with high jitter.</p>
+            </li>
+            <li>
+              <span className="font-semibold text-white">Escalate via PagerDuty</span>
+              <p className="text-xs text-surface-500">Route Sev1 alerts to enterprise on-call rotation with context.</p>
+            </li>
+            <li>
+              <span className="font-semibold text-white">Regenerate attestations</span>
+              <p className="text-xs text-surface-500">Push compliance evidence to GRC vault and notify auditors.</p>
+            </li>
+          </ol>
+          <button className="btn-primary w-full mt-6 text-sm">Launch automated playbook</button>
+        </div>
       </div>
 
       {/* Footer Attribution */}
