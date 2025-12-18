@@ -6,6 +6,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Settings } from './pages/Settings';
 import { AuthGate } from './components/AuthGate';
 import { supabase, auth } from './lib/supabase';
+import { LoadingState } from './components/LoadingState';
 import type { Session } from '@supabase/supabase-js';
 
 export default function App() {
@@ -43,25 +44,8 @@ export default function App() {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-surface-900 flex items-center justify-center">
-        <div className="text-lattice-400">
-          <svg className="animate-spin w-8 h-8" viewBox="0 0 24 24">
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-              fill="none"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
-        </div>
+      <div className="min-h-screen bg-surface-900 flex items-center justify-center px-4">
+        <LoadingState label="Restoring your secure session" helper="Refreshing credentials and decrypting workspace" />
       </div>
     );
   }
@@ -174,25 +158,8 @@ function AuthCallback({ onAuthenticate }: { onAuthenticate: () => void }) {
   }, [onAuthenticate]);
 
   return (
-    <div className="flex items-center justify-center h-[60vh]">
-      <div className="text-lattice-400">
-        <svg className="animate-spin w-8 h-8" viewBox="0 0 24 24">
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-            fill="none"
-          />
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          />
-        </svg>
-      </div>
+    <div className="flex items-center justify-center h-[60vh] px-4">
+      <LoadingState label="Completing enterprise login" helper="Validating identity provider response" />
     </div>
   );
 }
